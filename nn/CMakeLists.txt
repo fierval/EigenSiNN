@@ -1,6 +1,8 @@
 
 add_library(eigensinn src/dummy.cpp)
 
+message(STATUS "Using C++${CMAKE_CXX_STANDARD}")
+
 add_executable(eigentest test/dummytest.cpp)
 
 target_include_directories(eigentest PRIVATE "src")
