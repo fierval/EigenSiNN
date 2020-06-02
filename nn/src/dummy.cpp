@@ -1,4 +1,5 @@
 #include "dummy.h"
+#include "linear.hpp"
 
 int somefunc()
 {
