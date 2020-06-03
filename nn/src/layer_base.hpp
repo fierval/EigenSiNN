@@ -11,5 +11,5 @@ public:
   
   virtual void forward(const MatrixXd& prev_layer) = 0;
 
-  virtual void backward(const MatrixXd& prev_layer_out, const MatrixXd& next_layer_grad) = 0;
+  virtual void backward(const MatrixXd& next_layer_grad) = 0;
 };
