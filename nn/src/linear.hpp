@@ -31,7 +31,7 @@ public:
       prev_layer.col(prev_layer.cols() - 1) = VectorXd::Constant(prev_layer.rows(), 1);
     }
 
-    layer_output = weights * prev_layer;
+    layer_output.noalias() = weights * prev_layer;
   }
 
   virtual void backward(const MatrixXd &prev_layer_out, const MatrixXd &next_layer_grad)
