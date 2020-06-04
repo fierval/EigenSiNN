@@ -23,7 +23,6 @@ public:
     out_dim(_out_dim),
     use_bias(_use_bias) {
 
-
     biased_dim = use_bias ? in_dim + 1 : in_dim;
   }
 
@@ -32,13 +31,16 @@ public:
 
     MatrixXd& prev_layer = const_cast<MatrixXd&>(prev_layer_out);
 
-    if (use_bias) {
-      prev_layer.conservativeResize(prev_layer_out.rows(), prev_layer_out.cols() + 1);
-      prev_layer.col(prev_layer.cols() - 1) = VectorXd::Ones(prev_layer.rows());
-    }
-
     // dims: [N, D] * [D, M] -> [N, M]
     layer_output.noalias() = prev_layer * weights.transpose();
+
+    // we assume that bias adjustment is done at the end of the forward pass
+    // since weights will include a bias dimension at initialization, we don't need
+    // to worry about biases anymore
+    // (X,1) * W dim: [N, D+1] * [D + 1, M]
+    if (use_bias) {
+      adjust_linear_bias(layer_output);
+    }
   }
 
   // next_layer_grad: delta[l+1] = dL/dX[l+1], dims: [N, M] (same as X[l+1])
@@ -74,6 +76,6 @@ private:
   MatrixXd layer_output, layer_grad_loss_by_weight, layer_grad_loss_by_output;
 
   const bool use_bias;
-  const int in_dim, out_dim, batch_size;
+  const Index in_dim, out_dim, batch_size;
   int biased_dim;
 };
