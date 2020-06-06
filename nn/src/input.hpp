@@ -12,7 +12,7 @@ public:
     }
   }
 
-  const MatrixXd& get_layer() {
+  MatrixXd& get_layer() {
     return layer_content;
   }
 
@@ -24,9 +24,9 @@ public:
     return layer_content.cols();
   }
 
-  virtual void forward(const MatrixXd& prev_layer) {};
+  virtual void forward(MatrixXd& prev_layer) {};
 
-  virtual void backward(const MatrixXd& next_layer_grad) {};
+  virtual void backward(const MatrixXd& prev_layer, const MatrixXd& next_layer_grad) {};
 
 private:
   MatrixXd layer_content;

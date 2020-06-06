@@ -5,6 +5,7 @@
 #include "layer_base.hpp"
 #include <stdexcept>
 #include <type_traits>
+#include "Random.h"
 
 using namespace Eigen;
 
@@ -27,12 +28,11 @@ public:
   }
 
   // prev_layer_out: X[l-1], dim: [N, D]
-  virtual void forward(const MatrixXd& prev_layer_out) {
-
-    MatrixXd& prev_layer = const_cast<MatrixXd&>(prev_layer_out);
+  virtual void forward(MatrixXd& prev_layer) {
 
     // dims: [N, D] * [D, M] -> [N, M]
-    layer_output.noalias() = prev_layer * weights.transpose();
+
+    layer_output.noalias() = prev_layer * weights;
 
     // we assume that bias adjustment is done at the end of the forward pass
     // since weights will include a bias dimension at initialization, we don't need
@@ -44,37 +44,55 @@ public:
   }
 
   // next_layer_grad: delta[l+1] = dL/dX[l+1], dims: [N, M] (same as X[l+1])
-  virtual void backward(const MatrixXd& next_layer_grad) {
-
-    //dim X[l].T * delta[l+1]: [D, N] * [N, M]
-    layer_grad_loss_by_weight.noalias() = layer_output.transpose() * next_layer_grad;
-
+  virtual void backward(const MatrixXd& prev_layer, const MatrixXd& next_layer_grad) {
     // this will be fed to the previous backprop layer as the delta parameter
-    // dim delta[l+1] * w.T: [N, M] * [M, D] -> [N, D] (same as X[l])
+    // dim delta[l+1] * w.T: [N, M] * [M, D] -> [N, D] (same as X[l-1])
     layer_grad_loss_by_output.noalias() = next_layer_grad * weights.transpose();
+
+    //dim X[l].T * delta[l+1]: [D, N] * [N, M] -> [D, M], same as W
+    layer_grad_loss_by_weight.noalias() = prev_layer.transpose() * next_layer_grad;
   }
 
-  void init() {
+  void init(RNG rng, double mu, double sigma, bool debug=false) {
     if (in_dim <= 0 || out_dim <= 0 || in_dim > MAX_ELEM || out_dim > MAX_ELEM) {
       throw std::invalid_argument("inappropriate dimensions");
     }
 
     //weights of dimension (D, M)
     weights.resize(biased_dim, out_dim);
+    if (debug) {
+        init_debug();
+        return;
+    }
+    set_normal_random(weights.data(), weights.size(), rng, mu, sigma);
   }
 
   // this will be fed to compute dL/dW[l-1]
   // it is dL/dX[l]
-  MatrixXd get_loss_by_output_derivative() const {
+  MatrixXd& get_loss_by_output_derivative() {
     return layer_grad_loss_by_output;
   }
 
   // feed to optimizer
-  MatrixXd get_loss_by_weights_derivative() const {
+  MatrixXd& get_loss_by_weights_derivative() {
     return layer_grad_loss_by_weight;
   }
 
+  MatrixXd& get_output() {
+      return layer_output;
+  }
+
+  MatrixXd& get_weights() {
+      return weights;
+  }
+
 private:
+
+    // init weights to 1 for debugging
+    void init_debug() {
+        weights = MatrixXd::Ones(biased_dim, out_dim);
+    }
+
   MatrixXd weights;
   MatrixXd layer_output, layer_grad_loss_by_weight, layer_grad_loss_by_output;
 
