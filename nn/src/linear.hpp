@@ -63,11 +63,14 @@ public:
     weights.resize(biased_dim, out_dim);
   }
 
-  MatrixXd GetGradByX() const {
+  // this will be fed to compute dL/dW[l-1]
+  // it is dL/dX[l]
+  MatrixXd get_loss_by_output_derivative() const {
     return layer_grad_loss_by_output;
   }
 
-  MatrixXd GetWeightsCorrection() const {
+  // feed to optimizer
+  MatrixXd get_loss_by_weights_derivative() const {
     return layer_grad_loss_by_weight;
   }
 
