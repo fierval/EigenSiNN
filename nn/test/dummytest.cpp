@@ -37,11 +37,11 @@ void test_fully_connected() {
   cout << "Y:" << endl;
   cout << linear.get_weights() << endl << endl;
 
-  cout << "dL/dY:" << endl;
-  cout << linear.get_loss_by_output_derivative() << endl << endl;
+  cout << "dL/dX:" << endl;
+  cout << linear.get_loss_by_input_derivative() << endl << endl;
 
   cout << "dL/dW:" << endl;
-  cout << linear.get_loss_by_output_derivative() << endl << endl;
+  cout << linear.get_loss_by_weights_derivative() << endl << endl;
 }
 
 int main(int argc, char* argv[]) {

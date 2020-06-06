@@ -47,7 +47,7 @@ public:
   virtual void backward(const MatrixXd& prev_layer, const MatrixXd& next_layer_grad) {
     // this will be fed to the previous backprop layer as the delta parameter
     // dim delta[l+1] * w.T: [N, M] * [M, D] -> [N, D] (same as X[l-1])
-    layer_grad_loss_by_output.noalias() = next_layer_grad * weights.transpose();
+    layer_grad_loss_by_input.noalias() = next_layer_grad * weights.transpose();
 
     //dim X[l].T * delta[l+1]: [D, N] * [N, M] -> [D, M], same as W
     layer_grad_loss_by_weight.noalias() = prev_layer.transpose() * next_layer_grad;
@@ -69,8 +69,8 @@ public:
 
   // this will be fed to compute dL/dW[l-1]
   // it is dL/dX[l]
-  MatrixXd& get_loss_by_output_derivative() {
-    return layer_grad_loss_by_output;
+  MatrixXd& get_loss_by_input_derivative() {
+    return layer_grad_loss_by_input;
   }
 
   // feed to optimizer
@@ -94,7 +94,7 @@ private:
     }
 
   MatrixXd weights;
-  MatrixXd layer_output, layer_grad_loss_by_weight, layer_grad_loss_by_output;
+  MatrixXd layer_output, layer_grad_loss_by_weight, layer_grad_loss_by_input;
 
   const bool use_bias;
   const Index in_dim, out_dim, batch_size;
