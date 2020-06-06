@@ -17,7 +17,7 @@ _in_dim - input dimension (D)
 class Linear : LayerBase {
 
 public:
-  Linear(int _batch_size, int _in_dim, int _out_dim, bool _use_bias = false) :
+  Linear(Index _batch_size, Index _in_dim, Index _out_dim, bool _use_bias = false) :
     batch_size(_batch_size),
     in_dim(_in_dim),
     out_dim(_out_dim),
