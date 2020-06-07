@@ -64,7 +64,7 @@ public:
         init_debug();
         return;
     }
-    set_normal_random(weights.data(), weights.size(), rng, mu, sigma);
+    set_normal_random(weights.data(), static_cast<int>(weights.size()), rng, mu, sigma);
   }
 
   // this will be fed to compute dL/dW[l-1]
@@ -98,5 +98,5 @@ private:
 
   const bool use_bias;
   const Index in_dim, out_dim, batch_size;
-  int biased_dim;
+  Index biased_dim;
 };

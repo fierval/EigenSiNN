@@ -3,6 +3,7 @@
 
 #include <Eigen/Core>
 #include "RNG.h"
+#include <vector>
 
 // Shuffle the integer array
 inline void shuffle(int* arr, const int n, RNG& rng)
