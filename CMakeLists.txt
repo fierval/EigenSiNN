@@ -10,4 +10,8 @@ set(CMAKE_CUDA_STANDARD 14)
 set(CMAKE_CUDA_STANDARD_REQUIRED TRUE)
 
 include_directories("eigen")
+
+enable_testing()
+include(GoogleTest)
+add_subdirectory(googletest)
 add_subdirectory(nn)
