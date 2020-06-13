@@ -3,7 +3,7 @@
 #include "Random.h"
 #include <iostream>
 
-using namespace std;
+#include "tensortest.hpp"
 
 void test_fully_connected() {
   
@@ -28,20 +28,20 @@ void test_fully_connected() {
   linear.forward(input.get_layer());
   linear.backward(input.get_layer(), final_grad);
 
-  cout << "X: " << endl;
-  cout << input.get_layer() << endl << endl;
+  std::cout << "X: " << std::endl;
+  std::cout << input.get_layer() << std::endl << std::endl;
 
-  cout << "Weights: " << endl;
-  cout << linear.get_weights() << endl << endl;
+  std::cout << "Weights: " << std::endl;
+  std::cout << linear.get_weights() << std::endl << std::endl;
 
-  cout << "Y:" << endl;
-  cout << linear.get_weights() << endl << endl;
+  std::cout << "Y:" << std::endl;
+  std::cout << linear.get_weights() << std::endl << std::endl;
 
-  cout << "dL/dX:" << endl;
-  cout << linear.get_loss_by_input_derivative() << endl << endl;
+  std::cout << "dL/dX:" << std::endl;
+  std::cout << linear.get_loss_by_input_derivative() << std::endl << std::endl;
 
-  cout << "dL/dW:" << endl;
-  cout << linear.get_loss_by_weights_derivative() << endl << endl;
+  std::cout << "dL/dW:" << std::endl;
+  std::cout << linear.get_loss_by_weights_derivative() << std::endl << std::endl;
 }
 
 int main(int argc, char* argv[]) {
