@@ -28,6 +28,19 @@ void test_fully_connected() {
   linear.forward(input.get_layer());
   linear.backward(input.get_layer(), final_grad);
 
+  // expected
+  MatrixXd Y, dLdX, dLdW;
+  Y << 10, 10, 10,
+      26, 26, 26;
+
+  dLdX << 3, 3, 3, 3,
+      3, 3, 3, 3;
+
+  dLdW << 6, 6, 6,
+      8, 8, 8,
+      10, 10, 10,
+      12, 12, 12;
+
   std::cout << "X: " << std::endl;
   std::cout << input.get_layer() << std::endl << std::endl;
 
@@ -35,7 +48,7 @@ void test_fully_connected() {
   std::cout << linear.get_weights() << std::endl << std::endl;
 
   std::cout << "Y:" << std::endl;
-  std::cout << linear.get_weights() << std::endl << std::endl;
+  std::cout << linear.get_output() << std::endl << std::endl;
 
   std::cout << "dL/dX:" << std::endl;
   std::cout << linear.get_loss_by_input_derivative() << std::endl << std::endl;
