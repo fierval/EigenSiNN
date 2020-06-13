@@ -6,7 +6,7 @@
 #include "tensortest.hpp"
 #include <gtest/gtest.h>
 
-namespace eigen_tests {
+namespace nn_tests {
 
     TEST(FullyConnected, BackpropTest) {
         const int linear_layer_out = 3, batch_size = 2, linear_layer_in = 4;
