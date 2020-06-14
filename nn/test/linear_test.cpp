@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-namespace nn_tests {
+namespace EigenSinnTest {
 
     TEST(FullyConnected, BackpropTest) {
         const int linear_layer_out = 3, batch_size = 2, linear_layer_in = 4;
