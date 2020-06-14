@@ -3,6 +3,8 @@
 #include <Eigen/Dense>
 #include "unsupported/Eigen/CXX11/Tensor"
 #include <cassert>
+#include <gtest/gtest.h>
+#include <iostream>
 
 typedef Eigen::Tensor<float, 3> ConvTensor;
 typedef Eigen::Tensor<float, 4> ConvKernel;
@@ -19,13 +21,27 @@ ConvTensor convolve(ConvTensor& input, ConvKernel& kernel) {
     for(int i = 0; i < kernel.dimension(0); i++) {
 
         // final chip(0, 0) removes the third dimension
-        output.chip(i, 2) = input.convolve(kernel.chip(i, 0), dims).chip(0, 0);
+        Eigen::Tensor<float, 3> cur_ker(kernel.dimension(1), kernel.dimension(2), kernel.dimension(3));
+        Eigen::Tensor<float, 3> conv_res(input.dimension(0) - kernel.dimension(1) + 1, input.dimension(1) - kernel.dimension(2) + 1, 1);
+
+        cur_ker = kernel.chip(i, 0);
+        conv_res = input.convolve(cur_ker, dims);
+        output.chip(i, 2) = input.convolve(cur_ker, dims).chip(0, 2);
     }
 
     return output;
 }
 
-void test_tensor_ops() {
+TEST(Convolution, SingleStride) {
+    ConvTensor input(4, 4, 2);
+    ConvKernel kernel(3, 3, 3, 2);
 
+    input.setConstant(3);
+    kernel.setConstant(1);
 
+    ConvTensor output = convolve(input, kernel);
+    EXPECT_EQ(output(0,0,0), 3 * 9 * 2) << "Failed value test";
+    EXPECT_EQ(output.dimension(0), 2) << "Failed dim[0] test";
+    EXPECT_EQ(output.dimension(1), 2) << "Failed dim[1] test";
+    EXPECT_EQ(output.dimension(2), 3) << "Failed dim[2] test";
 }
