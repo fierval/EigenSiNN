@@ -3,7 +3,6 @@
 #include "Random.h"
 #include <iostream>
 
-#include "tensortest.hpp"
 #include <gtest/gtest.h>
 
 namespace nn_tests {
