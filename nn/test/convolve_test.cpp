@@ -12,7 +12,7 @@ namespace EigensinnTest {
     input.setConstant(3);
     kernel.setConstant(1);
 
-    ConvTensor output = convolve_valid(input, kernel);
+    ConvTensor output = convolve(input, kernel);
     EXPECT_EQ(output(0, 0, 0, 0), 3 * 9 * 2) << "Failed value test";
     EXPECT_EQ(output.dimension(1), 2) << "Failed dim[1] test";
     EXPECT_EQ(output.dimension(2), 2) << "Failed dim[2] test";

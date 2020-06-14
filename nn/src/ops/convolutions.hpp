@@ -15,7 +15,7 @@ namespace EigenSinn {
 
   Padding pad2dim(ConvTensor& input, int dim1, int dim2) {
 
-    assert(dim1 > 0 && dim1 < MAX_PAD && dim2 > 0 && dim2 < MAX_PAD);
+    assert(dim1 >= 0 && dim1 < MAX_PAD && dim2 >= 0 && dim2 < MAX_PAD);
 
     Padding paddings;
     paddings[0] = std::make_pair(0, 0);
@@ -27,16 +27,20 @@ namespace EigenSinn {
   }
 
   // NWHC format
-  ConvTensor convolve_valid(ConvTensor& input, ConvTensor& kernel) {
+  ConvTensor convolve(ConvTensor& input, ConvTensor& kernel, int pad_1 = 0, int pad_2 = 0) {
     Eigen::array<Eigen::Index, 3> dims({ 1, 2, 3 });
 
     assert(input.dimension(3) == kernel.dimension(3));
 
-    ConvTensor output(input.dimension(0), input.dimension(1) - kernel.dimension(1) + 1, input.dimension(2) - kernel.dimension(2) + 1, kernel.dimension(0));
+    // Pad if apropriate
+    ConvTensor padded = input.pad(pad2dim(input, pad_1, pad_2)).eval();
+
+    // NWHC output tensor
+    ConvTensor output(padded.dimension(0), padded.dimension(1) - kernel.dimension(1) + 1, padded.dimension(2) - kernel.dimension(2) + 1, kernel.dimension(0));
 
     for (int i = 0; i < kernel.dimension(0); i++) {
       // final chip(0, 0) removes the third dimension
-      output.chip(i, 3) = input.convolve(kernel.chip(i, 0), dims).chip(0, 3);
+      output.chip(i, 3) = padded.convolve(kernel.chip(i, 0), dims).chip(0, 3);
     }
 
     return output;
@@ -46,13 +50,10 @@ namespace EigenSinn {
     int dim1 = kernel.dimension(1) - 1;
     int dim2 = kernel.dimension(2) - 1;
 
-    assert((dim1 & 0x1) == 0 && (dim2 & 0x1) == 0);
-    
     dim1 = dim1 / 2;
     dim2 = dim2 / 2;
 
-    ConvTensor padded = input.pad(pad2dim(input, dim1, dim2));
-    ConvTensor output = convolve_valid(padded, kernel);
+    ConvTensor output = convolve(input, kernel, dim1, dim2);
     return output;
   }
 
@@ -61,8 +62,7 @@ namespace EigenSinn {
     int dim1 = kernel.dimension(1) - 1;
     int dim2 = kernel.dimension(2) - 1;
 
-    ConvTensor padded = input.pad(pad2dim(input, dim1, dim2));
-    ConvTensor output = convolve_valid(padded, kernel);
+    ConvTensor output = convolve(input, kernel, dim1, dim2);
     return output;
   }
 } // namespace EigenSinn
