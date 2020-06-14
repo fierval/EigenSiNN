@@ -47,4 +47,14 @@ namespace EigensinnTest {
     EXPECT_EQ(output.dimension(3), 3) << "Failed dim[3] test";
   }
 
+  TEST(Convolution, SameBadPadding) {
+    ConvTensor input(5, 6, 6, 2);
+    ConvTensor kernel(3, 4, 4, 2);
+
+    input.setConstant(3);
+    kernel.setConstant(1);
+
+    EXPECT_DEATH(convolve_same(input, kernel), "Assertion failed: .*");
+  }
+
 } // namespace EigensinnTest
