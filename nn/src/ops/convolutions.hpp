@@ -7,42 +7,62 @@
 #include <iostream>
 #include <utility>
 
-namespace EigenSinn
-{
-    typedef Eigen::Tensor<float, 4> ConvTensor;
+#define MAX_PAD 1e6
 
-    // NWHC format
-    ConvTensor convolve(ConvTensor &input, ConvTensor &kernel)
-    {
-        Eigen::array<Eigen::Index, 3> dims({1, 2, 3});
+namespace EigenSinn {
+  typedef Eigen::Tensor<float, 4> ConvTensor;
+  typedef Eigen::array<std::pair<int, int>, 4> Padding;
 
-        assert(input.dimension(3) == kernel.dimension(3));
+  Padding pad2dim(ConvTensor& input, int dim1, int dim2) {
 
-        ConvTensor output(input.dimension(0), input.dimension(1) - kernel.dimension(1) + 1, input.dimension(2) - kernel.dimension(2) + 1, kernel.dimension(0));
+    assert(dim1 > 0 && dim1 < MAX_PAD && dim2 > 0 && dim2 < MAX_PAD);
 
-        for (int i = 0; i < kernel.dimension(0); i++)
-        {
-            // final chip(0, 0) removes the third dimension
-            output.chip(i, 3) = input.convolve(kernel.chip(i, 0), dims).chip(0, 3);
-        }
+    Padding paddings;
+    paddings[0] = std::make_pair(0, 0);
+    paddings[1] = std::make_pair(dim1, dim1);
+    paddings[2] = std::make_pair(dim2, dim2);
+    paddings[3] = std::make_pair(0, 0);
 
-        return output;
+    return paddings;
+  }
+
+  // NWHC format
+  ConvTensor convolve_valid(ConvTensor& input, ConvTensor& kernel) {
+    Eigen::array<Eigen::Index, 3> dims({ 1, 2, 3 });
+
+    assert(input.dimension(3) == kernel.dimension(3));
+
+    ConvTensor output(input.dimension(0), input.dimension(1) - kernel.dimension(1) + 1, input.dimension(2) - kernel.dimension(2) + 1, kernel.dimension(0));
+
+    for (int i = 0; i < kernel.dimension(0); i++) {
+      // final chip(0, 0) removes the third dimension
+      output.chip(i, 3) = input.convolve(kernel.chip(i, 0), dims).chip(0, 3);
     }
 
-    ConvTensor convolve_full(ConvTensor &input, ConvTensor &kernel)
-    {
-        int dim1 = kernel.dimension(1) - 1;
-        int dim2 = kernel.dimension(2) - 1;
+    return output;
+  }
 
-        Eigen::array<std::pair<int, int>, 4> paddings;
-        paddings[0] = std::make_pair(0, 0);
-        paddings[1] = std::make_pair(dim1, dim1);
-        paddings[2] = std::make_pair(dim2, dim2);
-        paddings[3] = std::make_pair(0, 0);
+  ConvTensor convolve_same(ConvTensor& input, ConvTensor& kernel) {
+    int dim1 = kernel.dimension(1) - 1;
+    int dim2 = kernel.dimension(2) - 1;
 
-        ConvTensor padded = input.pad(paddings);
+    assert((dim1 & 0x1) == 0 && (dim2 & 0x1) == 0);
+    
+    dim1 = dim1 / 2;
+    dim2 = dim2 / 2;
 
-        ConvTensor output = convolve(padded, kernel);
-        return output;
-    }
+    ConvTensor padded = input.pad(pad2dim(input, dim1, dim2));
+    ConvTensor output = convolve_valid(padded, kernel);
+    return output;
+  }
+
+
+  ConvTensor convolve_full(ConvTensor& input, ConvTensor& kernel) {
+    int dim1 = kernel.dimension(1) - 1;
+    int dim2 = kernel.dimension(2) - 1;
+
+    ConvTensor padded = input.pad(pad2dim(input, dim1, dim2));
+    ConvTensor output = convolve_valid(padded, kernel);
+    return output;
+  }
 } // namespace EigenSinn
