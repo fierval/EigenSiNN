@@ -50,6 +50,8 @@ namespace EigenSinn {
     int dim1 = kernel.dimension(1) - 1;
     int dim2 = kernel.dimension(2) - 1;
 
+    assert((dim1 & 0x1) == 0 && (dim2 & 0x1) == 0);
+
     dim1 = dim1 / 2;
     dim2 = dim2 / 2;
 
