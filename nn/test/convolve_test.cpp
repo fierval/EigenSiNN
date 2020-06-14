@@ -22,20 +22,15 @@ ConvTensor convolve(ConvTensor& input, ConvKernel& kernel) {
     for(int i = 0; i < kernel.dimension(0); i++) {
 
         // final chip(0, 0) removes the third dimension
-        Eigen::Tensor<float, 3> cur_ker(kernel.dimension(1), kernel.dimension(2), kernel.dimension(3));
-        Eigen::Tensor<float, 3> conv_res(input.dimension(0) - kernel.dimension(1) + 1, input.dimension(1) - kernel.dimension(2) + 1, 1);
-
-        cur_ker = kernel.chip(i, 0);
-        conv_res = input.convolve(cur_ker, dims);
-        output.chip(i, 2) = input.convolve(cur_ker, dims).chip(0, 2);
+        output.chip(i, 2) = input.convolve(kernel.chip(i, 0), dims).chip(0, 2);
     }
 
     return output;
 }
 
 ConvTensor convolve_full(ConvTensor& input, ConvKernel& kernel) {
-    int dim1 = input.dimension(0) + kernel.dimension(1) - 1;
-    int dim2 = input.dimension(1) + kernel.dimension(2) - 1;
+    int dim1 = kernel.dimension(1) - 1;
+    int dim2 = kernel.dimension(2) - 1;
 
     Eigen::array<std::pair<int, int>, 3> paddings;
     paddings[0] = std::make_pair(dim1, dim1);
@@ -70,7 +65,7 @@ TEST(Convolution, Full) {
     kernel.setConstant(1);
 
     ConvTensor output = convolve_full(input, kernel);
-    EXPECT_EQ(output(0,0,0), 3) << "Failed value test";
+    EXPECT_EQ(output(0,0,0), 3 * 2) << "Failed value test";
     EXPECT_EQ(output.dimension(0), 6) << "Failed dim[0] test";
     EXPECT_EQ(output.dimension(1), 6) << "Failed dim[1] test";
     EXPECT_EQ(output.dimension(2), 3) << "Failed dim[2] test";
