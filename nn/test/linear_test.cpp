@@ -1,9 +1,11 @@
-#include "input.hpp"
-#include "linear.hpp"
+#include "layers/input.hpp"
+#include "layers/linear.hpp"
 #include "Random.h"
 #include <iostream>
 
 #include <gtest/gtest.h>
+
+using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
