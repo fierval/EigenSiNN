@@ -5,6 +5,7 @@
 #include <cassert>
 #include <gtest/gtest.h>
 #include <iostream>
+#include <utility>
 
 typedef Eigen::Tensor<float, 3> ConvTensor;
 typedef Eigen::Tensor<float, 4> ConvKernel;
@@ -32,6 +33,21 @@ ConvTensor convolve(ConvTensor& input, ConvKernel& kernel) {
     return output;
 }
 
+ConvTensor convolve_full(ConvTensor& input, ConvKernel& kernel) {
+    int dim1 = input.dimension(0) + kernel.dimension(1) - 1;
+    int dim2 = input.dimension(1) + kernel.dimension(2) - 1;
+
+    Eigen::array<std::pair<int, int>, 3> paddings;
+    paddings[0] = std::make_pair(dim1, dim1);
+    paddings[1] = std::make_pair(dim2, dim2);
+    paddings[2] = std::make_pair(0, 0);
+
+    ConvTensor padded = input.pad(paddings);
+
+    ConvTensor output = convolve(padded, kernel);
+    return output;
+}
+
 TEST(Convolution, SingleStride) {
     ConvTensor input(4, 4, 2);
     ConvKernel kernel(3, 3, 3, 2);
@@ -43,5 +59,19 @@ TEST(Convolution, SingleStride) {
     EXPECT_EQ(output(0,0,0), 3 * 9 * 2) << "Failed value test";
     EXPECT_EQ(output.dimension(0), 2) << "Failed dim[0] test";
     EXPECT_EQ(output.dimension(1), 2) << "Failed dim[1] test";
+    EXPECT_EQ(output.dimension(2), 3) << "Failed dim[2] test";
+}
+
+TEST(Convolution, Full) {
+    ConvTensor input(4, 4, 2);
+    ConvKernel kernel(3, 3, 3, 2);
+
+    input.setConstant(3);
+    kernel.setConstant(1);
+
+    ConvTensor output = convolve_full(input, kernel);
+    EXPECT_EQ(output(0,0,0), 3) << "Failed value test";
+    EXPECT_EQ(output.dimension(0), 6) << "Failed dim[0] test";
+    EXPECT_EQ(output.dimension(1), 6) << "Failed dim[1] test";
     EXPECT_EQ(output.dimension(2), 3) << "Failed dim[2] test";
 }
