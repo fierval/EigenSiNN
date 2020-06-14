@@ -1,6 +1,4 @@
 
-add_library(dummy src/dummy.cpp)
-
 message(STATUS "Using C++${CMAKE_CXX_STANDARD}")
 
 get_filename_component(EIGEN_PATH "../eigen" ABSOLUTE)
