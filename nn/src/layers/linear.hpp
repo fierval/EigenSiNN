@@ -2,10 +2,11 @@
 
 #define MAX_ELEM 1e9
 
-#include "layer_base.hpp"
+#include "ops/linearops.hpp"
 #include <stdexcept>
 #include <type_traits>
 #include "Random.h"
+#include <unsupported\Eigen\CXX11\src\Tensor\TensorRandom.h>
 
 using namespace Eigen;
 
@@ -16,7 +17,10 @@ _in_dim - input dimension (D)
 -out_dim - output dimension (M)
 */
 namespace EigenSinn {
-  class Linear : LayerBase {
+
+  typedef array<IndexPair<int>, 1> ProductDims;
+
+  class Linear {
 
   public:
     Linear(Index _batch_size, Index _in_dim, Index _out_dim, bool _use_bias = false) :
@@ -29,29 +33,33 @@ namespace EigenSinn {
     }
 
     // prev_layer_out: X[l-1], dim: [N, D]
-    void forward(MatrixXd& prev_layer) override {
+    void forward(LinearTensor& prev_layer) {
 
       // dims: [N, D] * [D, M] -> [N, M]
 
-      layer_output.noalias() = prev_layer * weights;
+      ProductDims prod_dims = { IndexPair<int>(1, 0) };
+      layer_output = prev_layer.contract(weights, prod_dims);
 
       // we assume that bias adjustment is done at the end of the forward pass
       // since weights will include a bias dimension at initialization, we don't need
       // to worry about biases anymore
       // (X,1) * W dim: [N, D+1] * [D + 1, M]
       if (use_bias) {
-        adjust_linear_bias(layer_output);
+        layer_output = adjust_linear_bias(layer_output);
       }
     }
 
     // next_layer_grad: delta[l+1] = dL/dX[l+1], dims: [N, M] (same as X[l+1])
-    void backward(const MatrixXd& prev_layer, const MatrixXd& next_layer_grad) override {
+    void backward(const LinearTensor& prev_layer, const LinearTensor& next_layer_grad) {
       // this will be fed to the previous backprop layer as the delta parameter
       // dim delta[l+1] * w.T: [N, M] * [M, D] -> [N, D] (same as X[l-1])
-      layer_grad_loss_by_input.noalias() = next_layer_grad * weights.transpose();
+      
+      ProductDims prod_dims = { IndexPair<int>(1, 1) };
+      layer_grad_loss_by_input = next_layer_grad.contract(weights, prod_dims);
 
       //dim X[l].T * delta[l+1]: [D, N] * [N, M] -> [D, M], same as W
-      layer_grad_loss_by_weight.noalias() = prev_layer.transpose() * next_layer_grad;
+      prod_dims = { IndexPair<int>(0, 0) };
+      layer_grad_loss_by_weight = prev_layer.contract(next_layer_grad, prod_dims);
     }
 
     void init(RNG rng, double mu, double sigma, bool debug = false) {
@@ -65,25 +73,27 @@ namespace EigenSinn {
         init_debug();
         return;
       }
-      set_normal_random(weights.data(), static_cast<int>(weights.size()), rng, mu, sigma);
+      
+      weights.setRandom<internal::NormalRandomGenerator<float>>();
+      //set_normal_random(weights.data(), static_cast<int>(weights.size()), rng, mu, sigma);
     }
 
     // this will be fed to compute dL/dW[l-1]
     // it is dL/dX[l]
-    MatrixXd& get_loss_by_input_derivative() {
+    LinearTensor& get_loss_by_input_derivative() {
       return layer_grad_loss_by_input;
     }
 
     // feed to optimizer
-    MatrixXd& get_loss_by_weights_derivative() {
+    LinearTensor& get_loss_by_weights_derivative() {
       return layer_grad_loss_by_weight;
     }
 
-    MatrixXd& get_output() {
+    LinearTensor& get_output() {
       return layer_output;
     }
 
-    MatrixXd& get_weights() {
+    LinearTensor& get_weights() {
       return weights;
     }
 
@@ -91,11 +101,11 @@ namespace EigenSinn {
 
     // init weights to 1 for debugging
     void init_debug() {
-      weights = MatrixXd::Ones(biased_dim, out_dim);
+      weights.setConstant(1);
     }
 
-    MatrixXd weights;
-    MatrixXd layer_output, layer_grad_loss_by_weight, layer_grad_loss_by_input;
+    LinearTensor weights;
+    LinearTensor layer_output, layer_grad_loss_by_weight, layer_grad_loss_by_input;
 
     const bool use_bias;
     const Index in_dim, out_dim, batch_size;

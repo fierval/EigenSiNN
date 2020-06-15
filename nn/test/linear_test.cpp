@@ -2,8 +2,10 @@
 #include "layers/linear.hpp"
 #include "Random.h"
 #include <iostream>
+#include "ops/conversions.hpp"
 
 #include <gtest/gtest.h>
+
 
 using namespace EigenSinn;
 
@@ -11,7 +13,7 @@ namespace EigenSinnTest {
 
     TEST(FullyConnected, BackpropTest) {
         const int linear_layer_out = 3, batch_size = 2, linear_layer_in = 4;
-        MatrixXd input_matrix;
+        MatrixXf input_matrix;
         input_matrix.resize(batch_size, linear_layer_in);
         input_matrix <<
             1, 2, 3, 4,
@@ -22,17 +24,20 @@ namespace EigenSinnTest {
         double mu = 0;
         double sigma = 0.01;
 
-        InputLayer input(input_matrix);
+        LinearTensor input_tensor = Matrix_to_Tensor(input_matrix, batch_size, linear_layer_in);
+        InputLayer input(input_tensor);
         Linear linear(input.batch_size(), input.input_vector_dim(), linear_layer_out);
 
         linear.init(rng, mu, sigma, true);
 
-        MatrixXd final_grad = MatrixXd::Ones(input.batch_size(), linear_layer_out);
+        LinearTensor final_grad(input.batch_size(), linear_layer_out);
+        final_grad.setConstant(1);
+
         linear.forward(input.get_layer());
         linear.backward(input.get_layer(), final_grad);
 
         // expected
-        MatrixXd Y, dLdX, dLdW;
+        MatrixXf Y, dLdX, dLdW;
 
         Y.resize(batch_size, linear_layer_out);
         dLdX.resize(batch_size, linear_layer_in);
@@ -49,8 +54,12 @@ namespace EigenSinnTest {
             10, 10, 10,
             12, 12, 12;
 
-        EXPECT_EQ(true, Y.isApprox(linear.get_output())) << "Failed: output test";
-        EXPECT_EQ(true, dLdX.isApprox(linear.get_loss_by_input_derivative())) << "Failed dL/dX";
-        EXPECT_EQ(true, dLdW.isApprox(linear.get_loss_by_weights_derivative())) << "Failed dL/dW";
+        MatrixXf layer_out = Tensor_to_Matrix(linear.get_output(), linear.get_output().dimension(0), linear.get_output().dimension(1));
+        MatrixXf actual_dLdX = Tensor_to_Matrix(linear.get_loss_by_input_derivative(), linear.get_loss_by_input_derivative().dimension(0), linear.get_loss_by_input_derivative().dimension(1));
+        MatrixXf actual_dLdW = Tensor_to_Matrix(linear.get_loss_by_weights_derivative(), linear.get_loss_by_weights_derivative().dimension(0), linear.get_loss_by_weights_derivative().dimension(1));
+
+        EXPECT_EQ(true, Y.isApprox(layer_out)) << "Failed: output test";
+        EXPECT_EQ(true, dLdX.isApprox(actual_dLdX)) << "Failed dL/dX";
+        EXPECT_EQ(true, dLdW.isApprox(actual_dLdW)) << "Failed dL/dW";
     }
 }

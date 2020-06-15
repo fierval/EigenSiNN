@@ -1,35 +1,33 @@
 #pragma once
 
 #include "layer_base.hpp"
+#include "ops/linearops.hpp"
 
 namespace EigenSinn {
-  class InputLayer : public LayerBase {
+  class InputLayer {
 
   public:
-    InputLayer(MatrixXd& _layer_conent, bool use_bias = false)
-      : layer_content(_layer_conent) {
+    InputLayer(LinearTensor& _layer_content, bool use_bias = false)
+    {
+      layer_content = _layer_content;
       if (use_bias) {
-        adjust_linear_bias(layer_content);
+        layer_content = adjust_linear_bias(layer_content);
       }
     }
 
-    MatrixXd& get_layer() {
+    LinearTensor& get_layer() {
       return layer_content;
     }
 
     const Index batch_size() {
-      return layer_content.rows();
+      return layer_content.dimension(0);
     }
 
     const Index input_vector_dim() {
-      return layer_content.cols();
+      return layer_content.dimension(1);
     }
 
-    void forward(MatrixXd& prev_layer) override {};
-
-    void backward(const MatrixXd& prev_layer, const MatrixXd& next_layer_grad) override {};
-
   private:
-    MatrixXd layer_content;
+    LinearTensor layer_content;
   };
 }
