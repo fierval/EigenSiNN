@@ -54,9 +54,9 @@ namespace EigenSinnTest {
             10, 10, 10,
             12, 12, 12;
 
-        MatrixXf layer_out = Tensor_to_Matrix(linear.get_output(), linear.get_output().dimension(0), linear.get_output().dimension(1));
-        MatrixXf actual_dLdX = Tensor_to_Matrix(linear.get_loss_by_input_derivative(), linear.get_loss_by_input_derivative().dimension(0), linear.get_loss_by_input_derivative().dimension(1));
-        MatrixXf actual_dLdW = Tensor_to_Matrix(linear.get_loss_by_weights_derivative(), linear.get_loss_by_weights_derivative().dimension(0), linear.get_loss_by_weights_derivative().dimension(1));
+        MatrixXf layer_out = Tensor_to_Matrix(linear.get_output());
+        MatrixXf actual_dLdX = Tensor_to_Matrix(linear.get_loss_by_input_derivative());
+        MatrixXf actual_dLdW = Tensor_to_Matrix(linear.get_loss_by_weights_derivative());
 
         EXPECT_EQ(true, Y.isApprox(layer_out)) << "Failed: output test";
         EXPECT_EQ(true, dLdX.isApprox(actual_dLdX)) << "Failed dL/dX";
