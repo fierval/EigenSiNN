@@ -4,7 +4,8 @@
 #include "ops/linearops.hpp"
 
 namespace EigenSinn {
-  class InputLayer {
+
+  class InputLayer : LayerBase {
 
   public:
     InputLayer(LinearTensor& _layer_content, bool use_bias = false)
@@ -25,6 +26,12 @@ namespace EigenSinn {
 
     const Index input_vector_dim() {
       return layer_content.dimension(1);
+    }
+
+    void forward(std::any prev_layer) override {
+    }
+
+    void backward(std::any prev_layer, std::any next_layer_grad) override {
     }
 
   private:
