@@ -12,6 +12,7 @@
 namespace EigenSinn {
   typedef Eigen::Tensor<float, 4> ConvTensor;
   typedef Eigen::array<std::pair<int, int>, 4> Padding;
+  typedef Eigen::IndexPair<int> Dim2D;
 
   Padding pad2dim(int dim1, int dim2, int dim1_1, int dim2_1) {
 

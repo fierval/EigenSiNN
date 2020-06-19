@@ -21,7 +21,7 @@ namespace EigenSinn {
 
   typedef array<IndexPair<int>, 1> ProductDims;
 
-  class Linear {
+  class Linear : LayerBase{
 
   public:
     Linear(Index _batch_size, Index _in_dim, Index _out_dim, bool _use_bias = false) :
@@ -34,7 +34,7 @@ namespace EigenSinn {
     }
 
     // prev_layer_out: X[l-1], dim: [N, D]
-    void forward(std::any prev_layer) {
+    void forward(std::any prev_layer) override {
 
       // dims: [N, D] * [D, M] -> [N, M]
 
@@ -51,16 +51,17 @@ namespace EigenSinn {
     }
 
     // next_layer_grad: delta[l+1] = dL/dX[l+1], dims: [N, M] (same as X[l+1])
-    void backward(std::any prev_layer_any, std::any next_layer_grad_any) {
-      // this will be fed to the previous backprop layer as the delta parameter
-      // dim delta[l+1] * w.T: [N, M] * [M, D] -> [N, D] (same as X[l-1])
+    void backward(std::any prev_layer_any, std::any next_layer_grad_any) override{
+
       LinearTensor prev_layer = std::any_cast<LinearTensor&>(prev_layer_any);
       LinearTensor next_layer_grad = std::any_cast<LinearTensor&>(next_layer_grad_any);
 
+      // this will be fed to the previous backprop layer as the delta parameter
+      // dL/dX = dim delta[l+1] * w.T: [N, M] * [M, D] -> [N, D] (same as X[l-1])
       ProductDims prod_dims = { IndexPair<int>(1, 1) };
       layer_grad_loss_by_input = next_layer_grad.contract(weights, prod_dims);
 
-      //dim X[l].T * delta[l+1]: [D, N] * [N, M] -> [D, M], same as W
+      //dl/dW = dim X[l].T * delta[l+1]: [D, N] * [N, M] -> [D, M], same as W
       prod_dims = { IndexPair<int>(0, 0) };
       layer_grad_loss_by_weight = prev_layer.contract(next_layer_grad, prod_dims);
     }
