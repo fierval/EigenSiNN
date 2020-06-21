@@ -48,6 +48,23 @@ namespace EigenSinn {
       derivative_by_input = convolve_full(rev_kernel, next_layer_grad);
     }
 
+    ConvTensor& get_loss_by_input_derivative() {
+      return derivative_by_input;
+    }
+
+    // feed to optimizer
+    ConvTensor& get_loss_by_weights_derivative() {
+      return derivative_by_filter;
+    }
+
+    ConvTensor& get_output() {
+      return layer_output;
+    }
+
+    ConvTensor& get_weights() {
+      return kernel;
+    }
+
   private:
     ConvTensor kernel, derivative_by_input, derivative_by_filter, layer_output;
   };
