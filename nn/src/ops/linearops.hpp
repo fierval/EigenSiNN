@@ -7,7 +7,7 @@ using namespace Eigen;
 namespace EigenSinn {
   typedef Tensor<float, 2> LinearTensor;
 
-  LinearTensor adjust_linear_bias(LinearTensor& layer) {
+  inline LinearTensor adjust_linear_bias(LinearTensor& layer) {
 
     LinearTensor ones(layer.dimension(0), 1);
     ones.setConstant(1);

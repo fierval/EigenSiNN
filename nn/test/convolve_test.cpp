@@ -1,6 +1,6 @@
-#pragma once
 
 #include "ops/convolutions.hpp"
+#include <gtest/gtest.h>
 
 using namespace EigenSinn;
 
@@ -61,4 +61,26 @@ namespace EigensinnTest {
     EXPECT_EQ(output.dimension(3), 3) << "Failed dim[3] test";
   }
 
+  TEST(Convolution, ComputeDimensions) {
+
+    ConvTensor input(5, 8, 8, 2);
+    ConvTensor kernel(4, 3, 3, 2);
+
+    auto dims = get_output_dimensions(input, kernel, ConvType::valid);
+
+    EXPECT_EQ(dims[0], 5) << "Failed valid dims[0]";
+    EXPECT_EQ(dims[1], 6) << "Failed valid dims[1]";
+    EXPECT_EQ(dims[2], 6) << "Failed valid dims[2]";
+    EXPECT_EQ(dims[3], 4) << "Failed valid dims[3]";
+
+    dims = get_output_dimensions(input, kernel, ConvType::full);
+
+    EXPECT_EQ(dims[1], 10) << "Failed full dims[1]";
+    EXPECT_EQ(dims[2], 10) << "Failed full dims[2]";
+
+    dims = get_output_dimensions(input, kernel, ConvType::same);
+
+    EXPECT_EQ(dims[1], 8) << "Failed same dims[1]";
+    EXPECT_EQ(dims[2], 8) << "Failed same dims[2]";
+  }
 } // namespace EigensinnTest

@@ -3,7 +3,6 @@
 #include "Eigen/Core"
 #include "unsupported/Eigen/CXX11/Tensor"
 #include <cassert>
-#include <gtest/gtest.h>
 #include <iostream>
 #include <utility>
 
@@ -21,7 +20,7 @@ namespace EigenSinn {
     full
   };
 
-  Padding pad2dim(int dim1, int dim2, int dim1_1, int dim2_1) {
+  inline Padding pad2dim(int dim1, int dim2, int dim1_1, int dim2_1) {
 
     assert(dim1 >= 0 && dim1 < MAX_PAD && dim2 >= 0 && dim2 < MAX_PAD && dim2_1 < MAX_PAD && dim1_1 < MAX_PAD);
 
@@ -35,20 +34,21 @@ namespace EigenSinn {
   }
 
   // output dimensions for a convolution with constant padding
-  ConvTensor::Dimensions get_output_dimensions(const ConvTensor& input, const ConvTensor& kernel, const Padding2D& padding, const Eigen::Index stride = 1) {
-    
+  inline ConvTensor::Dimensions get_output_dimensions(const ConvTensor& input, const ConvTensor& kernel, const Padding2D& padding, const Eigen::Index stride = 1) {
+
+    assert(kernel.dimension(3) == input.dimension(3));
+    assert(kernel.dimension(1) > 0 && kernel.dimension(2) > 0);
+
     ConvTensor::Dimensions out_dims;
     out_dims[0] = input.dimension(0);
-    out_dims[1] = (input.dimension(1) + 2 *padding.first - kernel.dimension(1)) / stride;
-    out_dims[2] = (input.dimension(2) + 2 * padding.second - kernel.dimension(2)) / stride;
+    out_dims[1] = (input.dimension(1) + 2 * padding.first - kernel.dimension(1)) / stride + 1;
+    out_dims[2] = (input.dimension(2) + 2 * padding.second - kernel.dimension(2)) / stride + 1;
     out_dims[3] = kernel.dimension(0);
 
     return out_dims;
   }
 
-  ConvTensor::Dimensions get_output_dimensions(const ConvTensor& input, const ConvTensor& kernel, const ConvType paddingType, const Eigen::Index stride = 1) {
-
-    assert(kernel.dimension(1) > 0 && kernel.dimension(2) > 0);
+  inline ConvTensor::Dimensions get_output_dimensions(const ConvTensor& input, const ConvTensor& kernel, const ConvType paddingType, const Eigen::Index stride = 1) {
 
     switch (paddingType) {
     case ConvType::valid:
@@ -65,7 +65,7 @@ namespace EigenSinn {
   }
 
   // NWHC format
-  ConvTensor convolve(ConvTensor& input, ConvTensor& kernel, Padding padding) {
+  inline ConvTensor convolve(ConvTensor& input, ConvTensor& kernel, Padding padding) {
     Eigen::array<Eigen::Index, 3> dims({ 1, 2, 3 });
 
     assert(input.dimension(3) == kernel.dimension(3));
@@ -86,7 +86,7 @@ namespace EigenSinn {
 
   // pad unevenly in case of k % 2 == 1:
   // more zero's goes upfront
-  ConvTensor convolve_same(ConvTensor& input, ConvTensor& kernel) {
+  inline ConvTensor convolve_same(ConvTensor& input, ConvTensor& kernel) {
     int dim1 = kernel.dimension(1) - 1;
     int dim2 = kernel.dimension(2) - 1;
     int dim1_1 = dim1 / 2;
@@ -99,13 +99,13 @@ namespace EigenSinn {
     return output;
   }
 
-  ConvTensor convolve_valid(ConvTensor& input, ConvTensor& kernel) {
+  inline ConvTensor convolve_valid(ConvTensor& input, ConvTensor& kernel) {
     ConvTensor output = convolve(input, kernel, pad2dim(0, 0, 0, 0));
     return output;
   }
 
 
-  ConvTensor convolve_full(ConvTensor& input, ConvTensor& kernel) {
+  inline ConvTensor convolve_full(ConvTensor& input, ConvTensor& kernel) {
     int dim1 = kernel.dimension(1) - 1;
     int dim2 = kernel.dimension(2) - 1;
 
