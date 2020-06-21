@@ -34,8 +34,14 @@ namespace EigenSinn {
       ConvTensor prev_layer = std::any_cast<ConvTensor&>(prev_layer_any);
       ConvTensor next_layer_grad = std::any_cast<ConvTensor&>(next_layer_grad_any);
 
+      // dL/dF = dL/dY * dY/dF
+      // dL/dF = X conv dL/dY (used for gradient computation)
+      // has kernel dim
       derivative_by_filter = convolve_valid(prev_layer, next_layer_grad);
 
+      // dL/dX = dL/dY * dY/dX
+      // dL/dX = F full_conv dL/dY (used for gradients chaining as next_layer_grad)
+      // has layer output dim
       array<bool, 4> rev_idx({ false, true, false, false });
       ConvTensor rev_kernel = kernel.reverse(rev_idx);
       
