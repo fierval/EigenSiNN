@@ -1,4 +1,8 @@
+set(OpenCV_DIR $ENV{OPENCV_INSTALL})
 
+message(STATUS "${OpenCV_DIR}")
+
+find_package( OpenCV REQUIRED )
 message(STATUS "Using C++${CMAKE_CXX_STANDARD}")
 
 get_filename_component(EIGEN_PATH "../eigen" ABSOLUTE)
