@@ -66,6 +66,7 @@ namespace EigenSinn {
       layer_grad_loss_by_weight = prev_layer.contract(next_layer_grad, prod_dims);
     }
 
+    // TODO: actual initialization needed
     void init(RNG rng, double mu, double sigma, bool debug = false) {
       if (in_dim <= 0 || out_dim <= 0 || in_dim > MAX_ELEM || out_dim > MAX_ELEM) {
         throw std::invalid_argument("inappropriate dimensions");

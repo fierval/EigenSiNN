@@ -13,6 +13,13 @@ namespace EigenSinn {
   typedef Eigen::Tensor<float, 4> ConvTensor;
   typedef Eigen::array<std::pair<int, int>, 4> Padding;
   typedef Eigen::IndexPair<int> Dim2D;
+  typedef Eigen::IndexPair<Eigen::Index> Padding2D;
+
+  enum class ConvType : short {
+    valid,
+    same,
+    full
+  };
 
   Padding pad2dim(int dim1, int dim2, int dim1_1, int dim2_1) {
 
@@ -25,6 +32,36 @@ namespace EigenSinn {
     paddings[3] = std::make_pair(0, 0);
 
     return paddings;
+  }
+
+  // output dimensions for a convolution with constant padding
+  ConvTensor::Dimensions get_output_dimensions(const ConvTensor& input, const ConvTensor& kernel, const Padding2D& padding, const Eigen::Index stride = 1) {
+    
+    ConvTensor::Dimensions out_dims;
+    out_dims[0] = input.dimension(0);
+    out_dims[1] = (input.dimension(1) + 2 *padding.first - kernel.dimension(1)) / stride;
+    out_dims[2] = (input.dimension(2) + 2 * padding.second - kernel.dimension(2)) / stride;
+    out_dims[3] = kernel.dimension(0);
+
+    return out_dims;
+  }
+
+  ConvTensor::Dimensions get_output_dimensions(const ConvTensor& input, const ConvTensor& kernel, const ConvType paddingType, const Eigen::Index stride = 1) {
+
+    assert(kernel.dimension(1) > 0 && kernel.dimension(2) > 0);
+
+    switch (paddingType) {
+    case ConvType::valid:
+      return get_output_dimensions(input, kernel, { 0, 0 }, stride);
+    case ConvType::same:
+      // in the case of actual convolutions we enforce same padding on "both sides" of a dimension
+      assert((kernel.dimension(1) & 0x1) != 0 && (kernel.dimension(2) & 0x1) != 0);
+      return get_output_dimensions(input, kernel, { (kernel.dimension(1) - 1) / 2, (kernel.dimension(2) - 1) / 2 }, stride);
+    case ConvType::full:
+      return get_output_dimensions(input, kernel, { kernel.dimension(1) - 1, kernel.dimension(2) - 1 }, stride);
+    default:
+      assert(false);
+    }
   }
 
   // NWHC format
