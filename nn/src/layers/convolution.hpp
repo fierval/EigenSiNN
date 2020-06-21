@@ -11,7 +11,7 @@ namespace EigenSinn {
   class ConvolutionalLayer : LayerBase {
 
   public:
-    ConvolutionalLayer(index batch_size, Index kernel_width, Index kernel_height, Index in_channels, Index out_channels) 
+    ConvolutionalLayer(Index batch_size, Index kernel_width, Index kernel_height, Index in_channels, Index out_channels) 
       : kernel(out_channels, kernel_width, kernel_height, in_channels),
       derivative_by_filter(out_channels, kernel_width, kernel_height, in_channels)
     {
@@ -22,7 +22,6 @@ namespace EigenSinn {
     // Also strides and padding should be added
     void init() {
       kernel.setRandom<Eigen::internal::NormalRandomGenerator<float>>();
-      layer_output.resize(batch_size, )
     }
 
     void forward(std::any prev_layer) override {
@@ -36,7 +35,11 @@ namespace EigenSinn {
       ConvTensor next_layer_grad = std::any_cast<ConvTensor&>(next_layer_grad_any);
 
       derivative_by_filter = convolve_valid(prev_layer, next_layer_grad);
-      derivative_by_input = convolve_full(kernel.reverse({ false, true, false, false }).eval(), next_layer_grad);
+
+      array<bool, 4> rev_idx({ false, true, false, false });
+      ConvTensor rev_kernel = kernel.reverse(rev_idx);
+      
+      derivative_by_input = convolve_full(rev_kernel, next_layer_grad);
     }
 
   private:
