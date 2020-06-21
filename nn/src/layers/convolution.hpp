@@ -4,7 +4,6 @@
 #include "ops/convolutions.hpp"
 
 namespace EigenSinn {
-  typedef Eigen::Tensor<float, 1> ConvBias;
 
   // REVIEW: Not implementing bias for now
   // Batch normalization layers can take care of bias
