@@ -19,4 +19,12 @@ namespace EigenSinnTest {
     d = a + c;
     std::cerr << d;
   }
+
+  TEST(Batchnorm, Pow) {
+    ConvTensorSingle b(5);
+    b.setValues({ 1, 2, 3, 4, 5 });
+
+    std::cerr << b.pow(2.);
+  }
+
 }
