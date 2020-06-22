@@ -25,7 +25,8 @@ namespace EigenSinn {
     return broadcasted;
   }
 
-  inline auto batch_norm(const ConvTensor& x, float gamma, float beta, float eps, float momentum, 
+  template<typename Scalar, Index Dim>
+  inline auto batch_norm(const Eigen::Tensor<Scalar, Dim>& x, float gamma, float beta, float eps, float momentum, 
     ConvTensorSingle& running_mean, ConvTensorSingle running_var, bool isTraining) {
 
     ConvTensorSingle mu, variance;
