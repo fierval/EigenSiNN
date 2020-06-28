@@ -9,6 +9,21 @@ namespace EigenSinn {
 
   typedef Eigen::Tensor<float, 1> TensorSingleDim;
 
+  template<Index Dim = 2>
+
+  inline auto get_broadcast_and_reduction_dims(Eigen::Tensor<float, Dim> x) {
+    // we reduce by all dimensions but the last (channel)
+    // and broadcast all but the last
+    
+    for (int i = 0; i < Dim - 1; i++) {
+      reduction_dims[i] = i;
+      broadcast_dims[i] = x.dimension(i);
+    }
+
+    broadcast_dims[Dim - 1] = 1;
+    return std::make_tuple(reduction_dims, broadcast_dims)
+  }
+
   // broadcast channel dimension - first in the list of arguments, las
   template<Index rank>
   inline ConvTensor broadcast_as_last_dim(TensorSingleDim& t, Eigen::array<int, rank> broadcast_dims) {
@@ -34,14 +49,7 @@ namespace EigenSinn {
     Eigen::array<int, Dim - 1> reduction_dims;
     Eigen::array<int, Dim> broadcast_dims;
 
-    // we reduce by all dimensions but the last (channel)
-    // and broadcast all but the last
-    for (int i = 0; i < Dim - 1; i++) {
-      reduction_dims[i] = i;
-      broadcast_dims[i] = x.dimension(i);
-    }
-
-    broadcast_dims[Dim - 1] = 1;
+    std::tie(reduction_dims, broadcast_dims) = get_broadcast_and_reduction_dims(x);
 
     mu = x.mean(reduction_dims);
     Index batch_size = x.dimension(0);
