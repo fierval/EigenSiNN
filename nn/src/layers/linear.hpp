@@ -24,11 +24,13 @@ namespace EigenSinn {
   class Linear : LayerBase{
 
   public:
-    Linear(Index _batch_size, Index _in_dim, Index _out_dim, bool _use_bias = false) :
+    Linear(Index _batch_size, Index _in_dim, Index _out_dim, bool _use_bias = false, bool _debug = false) :
       batch_size(_batch_size),
       in_dim(_in_dim),
       out_dim(_out_dim),
-      use_bias(_use_bias) {
+      use_bias(_use_bias),
+      debug(_debug)
+    {
 
       biased_dim = use_bias ? in_dim + 1 : in_dim;
     }
@@ -67,7 +69,7 @@ namespace EigenSinn {
     }
 
     // TODO: actual initialization needed
-    void init(RNG rng, double mu, double sigma, bool debug = false) {
+    void init() override {
       if (in_dim <= 0 || out_dim <= 0 || in_dim > MAX_ELEM || out_dim > MAX_ELEM) {
         throw std::invalid_argument("inappropriate dimensions");
       }
@@ -115,5 +117,7 @@ namespace EigenSinn {
     const bool use_bias;
     const Index in_dim, out_dim, batch_size;
     Index biased_dim;
+
+    bool debug;
   };
 }

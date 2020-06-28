@@ -34,6 +34,10 @@ namespace EigenSinn {
     void backward(std::any prev_layer, std::any next_layer_grad) override {
     }
 
+    void init() override {
+
+    }
+
   private:
     LinearTensor layer_content;
   };

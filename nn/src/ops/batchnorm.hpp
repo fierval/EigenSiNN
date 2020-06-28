@@ -24,7 +24,7 @@ namespace EigenSinn {
 
   // NHWC format
   template<typename Scalar, Index Dim>
-  inline auto batch_norm(const Eigen::Tensor<Scalar, Dim>& x, float gamma, float beta, float eps, float momentum, 
+  inline auto batch_norm(const Eigen::Tensor<Scalar, Dim>& x, TensorSingleDim& gamma, TensorSingleDim& beta, float eps, float momentum, 
     TensorSingleDim& running_mean, TensorSingleDim running_var, bool isTraining) {
 
     TensorSingleDim mu, variance;

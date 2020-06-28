@@ -19,7 +19,7 @@ namespace EigenSinn {
 
     // TODO: this needs to be implemented for real
     // Also strides and padding should be added
-    void init() {
+    void init() override {
       kernel.setRandom<Eigen::internal::NormalRandomGenerator<float>>();
     }
 

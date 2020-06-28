@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <ops/batchnorm.hpp>
 #include <ops/convolutions.hpp>
-
+#include <layers/batchnorm.hpp>
 #include <iostream>
 
 using namespace EigenSinn;

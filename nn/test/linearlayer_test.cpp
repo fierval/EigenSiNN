@@ -26,9 +26,9 @@ namespace EigenSinnTest {
 
     LinearTensor input_tensor = Matrix_to_Tensor(input_matrix, batch_size, linear_layer_in);
     InputLayer input(input_tensor);
-    Linear linear(input.batch_size(), input.input_vector_dim(), linear_layer_out);
+    Linear linear(input.batch_size(), input.input_vector_dim(), linear_layer_out, false, true);
 
-    linear.init(rng, mu, sigma, true);
+    linear.init();
 
     LinearTensor final_grad(input.batch_size(), linear_layer_out);
     final_grad.setConstant(1);
