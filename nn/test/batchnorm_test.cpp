@@ -9,7 +9,7 @@ using namespace EigenSinn;
 namespace EigenSinnTest {
 
   TEST(Batchnorm, Broadcast) {
-    ConvTensorSingle b(5);
+    TensorSingleDim b(5);
     b.setValues({1, 2, 3, 4, 5});
 
     Eigen::Tensor<float, 3> a(5, 2, 3), c, d;
@@ -21,7 +21,7 @@ namespace EigenSinnTest {
   }
 
   TEST(Batchnorm, Pow) {
-    ConvTensorSingle b(5);
+    TensorSingleDim b(5);
     b.setValues({ 1, 2, 3, 4, 5 });
 
     std::cerr << b.pow(2.);

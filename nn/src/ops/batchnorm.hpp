@@ -7,11 +7,11 @@
 
 namespace EigenSinn {
 
-  typedef Eigen::Tensor<float, 1> ConvTensorSingle;
+  typedef Eigen::Tensor<float, 1> TensorSingleDim;
 
   // broadcast channel dimension - first in the list of arguments, las
   template<Index rank>
-  inline ConvTensor broadcast_as_last_dim(ConvTensorSingle& t, Eigen::array<int, rank> broadcast_dims) {
+  inline ConvTensor broadcast_as_last_dim(TensorSingleDim& t, Eigen::array<int, rank> broadcast_dims) {
 
     Eigen::array<Index, rank> reshaped_dims;
 
@@ -25,9 +25,9 @@ namespace EigenSinn {
   // NHWC format
   template<typename Scalar, Index Dim>
   inline auto batch_norm(const Eigen::Tensor<Scalar, Dim>& x, float gamma, float beta, float eps, float momentum, 
-    ConvTensorSingle& running_mean, ConvTensorSingle running_var, bool isTraining) {
+    TensorSingleDim& running_mean, TensorSingleDim running_var, bool isTraining) {
 
-    ConvTensorSingle mu, variance;
+    TensorSingleDim mu, variance;
     ConvTensor mu_broadcasted, running_mean_broadcasted, running_var_broadcasted, x_hat, std_broadcasted;
 
     // get sample mean
