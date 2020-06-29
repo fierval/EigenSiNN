@@ -1,6 +1,6 @@
 #pragma once
 
-#include <unsupported/Eigen/CXX11/Tensor>
+#include "opsbase.hpp"
 #include <tuple>
 
 using namespace Eigen;
@@ -9,10 +9,7 @@ namespace EigenSinn {
 
   typedef Eigen::Tensor<float, 1> TensorSingleDim;
 
-  template <Index Rank>
-  using BnTensor = Tensor<float, Rank>;
-
-  template<Index Dim = 2>
+  template<Index Dim>
   inline auto get_broadcast_and_reduction_dims(Eigen::Tensor<float, Dim> x) {
     // we reduce by all dimensions but the last (channel)
     // and broadcast all but the last
@@ -28,7 +25,7 @@ namespace EigenSinn {
 
   // broadcast channel dimension - first in the list of arguments, las
   template<Index Rank>
-  inline BnTensor<Rank> broadcast_as_last_dim(TensorSingleDim& t, Eigen::array<int, Rank> broadcast_dims) {
+  inline NnTensor<Rank> broadcast_as_last_dim(TensorSingleDim& t, Eigen::array<int, Rank> broadcast_dims) {
 
     Eigen::array<Index, Rank> reshaped_dims;
 
@@ -41,15 +38,15 @@ namespace EigenSinn {
 
   // NHWC format
   template<Index Rank>
-  inline auto batch_norm(BnTensor<Rank>& x, TensorSingleDim& gamma, TensorSingleDim& beta, float eps, float momentum, 
+  inline auto batch_norm(NnTensor<Rank>& x, TensorSingleDim& gamma, TensorSingleDim& beta, float eps, float momentum, 
     TensorSingleDim& running_mean, TensorSingleDim& running_var, bool isTraining) {
 
     TensorSingleDim mu, variance;
-    BnTensor<Rank> mu_broadcasted, running_mean_broadcasted, running_var_broadcasted, x_hat, std_broadcasted, x_out;
+    NnTensor<Rank> mu_broadcasted, running_mean_broadcasted, running_var_broadcasted, x_hat, std_broadcasted, x_out;
 
     // get sample mean
-    Eigen::array<int, Dim - 1> reduction_dims;
-    Eigen::array<int, Dim> broadcast_dims;
+    Eigen::array<int, Rank - 1> reduction_dims;
+    Eigen::array<int, Rank> broadcast_dims;
 
     std::tie(reduction_dims, broadcast_dims) = get_broadcast_and_reduction_dims(x);
 
@@ -60,12 +57,12 @@ namespace EigenSinn {
     // variance
     variance = (x - mu_broadcasted).pow(2.).mean(reduction_dims);
 
-    BnTensor<Rank> new_running_mean = momentum * running_mean + (1.0 - momentum) * mu;
-    BnTensor<Rank> new_running_var = momentum * running_var + (1.0 - momentum) * variance;
+    NnTensor<Rank> new_running_mean = momentum * running_mean + (1.0 - momentum) * mu;
+    NnTensor<Rank> new_running_var = momentum * running_var + (1.0 - momentum) * variance;
 
     running_mean_broadcasted = broadcast_as_last_dim(new_running_mean, broadcast_dims);
     running_var_broadcasted = broadcast_as_last_dim(new_running_var, broadcast_dims);
-    BnTensor<Rank> running_std_broadcasted = broadcast_as_last_dim((new_running_var + eps).sqrt(), broadcast_dims);
+    NnTensor<Rank> running_std_broadcasted = broadcast_as_last_dim((new_running_var + eps).sqrt(), broadcast_dims);
 
 
     x_hat = (x - running_mean_broadcasted) / running_std_broadcasted;

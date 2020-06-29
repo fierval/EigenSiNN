@@ -43,8 +43,8 @@ namespace EigenSinn {
     // for derivations
     void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
 
-      BnTensor<Rank> prev_layer = std::any_cast<BnTensor<Rank>&>(prev_layer_any);
-      BnTensor<Rank> dout = std::any_cast<BnTensor<Rank>&>(next_layer_grad_any);
+      NnTensor<Rank> prev_layer = std::any_cast<NnTensor<Rank>&>(prev_layer_any);
+      NnTensor<Rank> dout = std::any_cast<NnTensor<Rank>&>(next_layer_grad_any);
 
       array<int, Rank - 1> reduction_dims;
       array<int, Rank> broadcast_dims;
@@ -57,9 +57,9 @@ namespace EigenSinn {
       std::tie(reduction_dims, broadcast_dims) = get_broadcast_and_reduction_dims(dout);
 
       //broadcast values
-      BnTensor<Rank> broadcast_mean = broadcast_as_last_dim(running_mean, broadcast_dims);
-      BnTensor<Rank> broadcast_var = broadcast_as_last_dim(running_variance, broadcast_dims);
-      BnTensor<Rank> xmu = (prev_layer - broadcast_mean);
+      NnTensor<Rank> broadcast_mean = broadcast_as_last_dim(running_mean, broadcast_dims);
+      NnTensor<Rank> broadcast_var = broadcast_as_last_dim(running_variance, broadcast_dims);
+      NnTensor<Rank> xmu = (prev_layer - broadcast_mean);
 
       // Step 9
       // dbeta = sum(dout, reduced by all dims except channel)
@@ -67,15 +67,15 @@ namespace EigenSinn {
 
       // Step 8
       // dgamma = sum (dout * y, reduced by all dims except channel)
-      BnTensor<Rank> gamma_broad = broadcast_as_last_dim(gamma, broadcast_dims);
-      BnTensor<Rank> dxhat = dout * gamma_broad;
-      BnTensor<Rank> dgamma = (dout * xhat).sum(reduction_dims);
-      BnTensor<Rank> dx_hat = dout * gamma;
+      NnTensor<Rank> gamma_broad = broadcast_as_last_dim(gamma, broadcast_dims);
+      NnTensor<Rank> dxhat = dout * gamma_broad;
+      NnTensor<Rank> dgamma = (dout * xhat).sum(reduction_dims);
+      NnTensor<Rank> dx_hat = dout * gamma;
 
       // Step 7
       // d_inv_std
       //TensorSingleDim d_inv_std = (dxhat * xmu).sum(reduction_dims);
-      BnTensor<Rank> dxmu1 = dxhat * (1. / (broadcast_var + eps).sqrt());
+      NnTensor<Rank> dxmu1 = dxhat * (1. / (broadcast_var + eps).sqrt());
 
       // Step 6
       // TensorSingleDim d_std = -d_inv_std / (running_var + eps);
@@ -84,17 +84,17 @@ namespace EigenSinn {
       TensorSingleDim d_var = -0.5 * (dxhat * xmu).sum(reduction_dims) / (running_var + eps).pow(3./2.);
 
       // Step 4
-      BnTensor<Rank> d_sq = (1 - momentum) * broadcast_as_last_dim(d_var / total_channel, broadcast_dims);
+      NnTensor<Rank> d_sq = (1 - momentum) * broadcast_as_last_dim(d_var / total_channel, broadcast_dims);
 
       // Step 3
-      BnTensor<Rank> dxmu2 = 2 * xmu * d_sq;
+      NnTensor<Rank> dxmu2 = 2 * xmu * d_sq;
 
       // step 2
-      BnTensor<Rank> dx1 = dxmu1 + dxmu2;
+      NnTensor<Rank> dx1 = dxmu1 + dxmu2;
       TensorSingleDim dmu = -dx1.sum(reduction_dims);
 
       // step 1
-      BnTensor<Rank> dx2 = (1 - momentum) * broadcast_as_last_dim(dmu / total_channel, broadcast_dims);
+      NnTensor<Rank> dx2 = (1 - momentum) * broadcast_as_last_dim(dmu / total_channel, broadcast_dims);
 
       // step 0
       layer_gradient = dx1 + dx2;
@@ -102,12 +102,12 @@ namespace EigenSinn {
     }
 
     template <Index Rank = 2>
-    BnTensor<Rank>& get_output() {
+    NnTensor<Rank>& get_output() {
       return layer_output;
     }
 
   private:
-    BnTensor<Rank> layer_output, layer_gradient, xhat;
+    NnTensor<Rank> layer_output, layer_gradient, xhat;
 
     TensorSingleDim gamma, beta, running_mean, running_variance;
     TensorSingleDim dbeta, dgamma;
