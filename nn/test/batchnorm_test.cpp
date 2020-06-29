@@ -24,7 +24,16 @@ namespace EigenSinnTest {
     TensorSingleDim b(5);
     b.setValues({ 1, 2, 3, 4, 5 });
 
-    std::cerr << b.pow(2.);
+    std::cerr << b.pow(2.) << std::endl;
   }
 
+  TEST(Batchnorm, NNTensor) {
+    NnTensor<4> a(2, 3, 5, 7);
+
+    a.setRandom();
+    DimensionList<DenseIndex, 3> dims;
+    std::cerr << a << std::endl;
+    Tensor<float, 1> reduced = a.reduce(dims, internal::MinReducer<float>());
+    std::cerr << "Reduced: " << std::endl << reduced << std::endl;
+  }
 }

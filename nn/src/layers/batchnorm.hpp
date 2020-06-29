@@ -2,7 +2,6 @@
 
 #include "layer_base.hpp"
 #include <ops/batchnorm.hpp>
-#include <ops/convolutions.hpp>
 
 using namespace  Eigen;
 
