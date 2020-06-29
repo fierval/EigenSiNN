@@ -1,9 +1,9 @@
 #pragma once
 
 #include <unsupported/Eigen/CXX11/Tensor>
-#include "linearops.hpp"
-#include "convolutions.hpp"
 #include <tuple>
+
+using namespace Eigen;
 
 namespace EigenSinn {
 
