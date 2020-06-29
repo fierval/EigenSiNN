@@ -74,14 +74,14 @@ namespace EigenSinn {
 
       // Step 7
       // d_inv_std
-      TensorSingleDim d_inv_std = (dxhat * xmu).sum(reduction_dims);
+      //TensorSingleDim d_inv_std = (dxhat * xmu).sum(reduction_dims);
       BnTensor<Rank> dxmu1 = dxhat * (1. / (broadcast_var + eps).sqrt());
 
       // Step 6
-      TensorSingleDim d_std = -d_inv_std / (running_var + eps);
+      // TensorSingleDim d_std = -d_inv_std / (running_var + eps);
 
       // Step 5
-      TensorSingleDim d_var = 0.5 * d_std / (running_var + eps).sqrt();
+      TensorSingleDim d_var = -0.5 * (dxhat * xmu).sum(reduction_dims) / (running_var + eps).pow(3./2.);
 
       // Step 4
       BnTensor<Rank> d_sq = (1 - momentum) * broadcast_as_last_dim(d_var / total_channel, broadcast_dims);
