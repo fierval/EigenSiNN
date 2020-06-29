@@ -42,10 +42,10 @@ namespace EigenSinn {
   // NHWC format
   template<Index Rank>
   inline auto batch_norm(BnTensor<Rank>& x, TensorSingleDim& gamma, TensorSingleDim& beta, float eps, float momentum, 
-    TensorSingleDim& running_mean, TensorSingleDim running_var, bool isTraining) {
+    TensorSingleDim& running_mean, TensorSingleDim& running_var, bool isTraining) {
 
     TensorSingleDim mu, variance;
-    Tensor<Scalar, Dim> mu_broadcasted, running_mean_broadcasted, running_var_broadcasted, x_hat, std_broadcasted, x_out;
+    BnTensor<Rank> mu_broadcasted, running_mean_broadcasted, running_var_broadcasted, x_hat, std_broadcasted, x_out;
 
     // get sample mean
     Eigen::array<int, Dim - 1> reduction_dims;
@@ -55,27 +55,22 @@ namespace EigenSinn {
 
     // mean
     mu = x.mean(reduction_dims);
-    Index batch_size = x.dimension(0);
-    Index n_channels = x.dimension(3);
-    Index rows = x.dimension(1);
-    Index cols = x.dimension(2);
-
     mu_broadcasted = broadcast_as_last_dim(mu, broadcast_dims);
     
     // variance
     variance = (x - mu_broadcasted).pow(2.).mean(reduction_dims);
 
-    running_mean = momentum * running_mean + (1.0 - momentum) * mu;
-    running_var = momentum * running_var + (1.0 - momentum) * variance;
+    BnTensor<Rank> new_running_mean = momentum * running_mean + (1.0 - momentum) * mu;
+    BnTensor<Rank> new_running_var = momentum * running_var + (1.0 - momentum) * variance;
 
-    running_mean_broadcasted = broadcast_as_last_dim(running_mean, broadcast_dims);
-    running_var_broadcasted = broadcast_as_last_dim(running_var, broadcast_dims);
-    running_std_broadcasted = (running_var_broadcasted + eps).sqrt();
+    running_mean_broadcasted = broadcast_as_last_dim(new_running_mean, broadcast_dims);
+    running_var_broadcasted = broadcast_as_last_dim(new_running_var, broadcast_dims);
+    BnTensor<Rank> running_std_broadcasted = broadcast_as_last_dim((new_running_var + eps).sqrt(), broadcast_dims);
 
 
     x_hat = (x - running_mean_broadcasted) / running_std_broadcasted;
     x_out = gamma * x_hat + beta;
 
-    return std::make_tuple(x_out, x_hat, running_mean, running_var);
+    return std::make_tuple(x_out, x_hat, new_running_mean, new_running_var);
   }
 }
