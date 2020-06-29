@@ -84,7 +84,7 @@ namespace EigenSinn {
       TensorSingleDim d_var = 0.5 * d_std / (running_var + eps).sqrt();
 
       // Step 4
-      BnTensor<Rank> d_sq = broadcast_as_last_dim(d_var / total_channel, broadcast_dims);
+      BnTensor<Rank> d_sq = (1 - momentum) * broadcast_as_last_dim(d_var / total_channel, broadcast_dims);
 
       // Step 3
       BnTensor<Rank> dxmu2 = 2 * xmu * d_sq;
@@ -94,7 +94,7 @@ namespace EigenSinn {
       TensorSingleDim dmu = -dx1.sum(reduction_dims);
 
       // step 1
-      BnTensor<Rank> dx2 = broadcast_as_last_dim(dmu / total_channel, broadcast_dims);
+      BnTensor<Rank> dx2 = (1 - momentum) * broadcast_as_last_dim(dmu / total_channel, broadcast_dims);
 
       // step 0
       layer_gradient = dx1 + dx2;
