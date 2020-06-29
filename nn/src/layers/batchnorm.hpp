@@ -12,7 +12,7 @@ namespace EigenSinn {
   // For Linear (fully connected) layers: (N, C)
   // N - batch size
   // C - number of channels (1 for fully connected layers)
-  template <int Rank = 2>
+  template <Index Rank = 2>
   class BatchNormalizationLayer : LayerBase {
   public:
 
@@ -35,34 +35,79 @@ namespace EigenSinn {
     }
 
     void forward(std::any prev_layer) override {
-      std::tie(layer_output, running_mean, running_variance) = 
+      std::tie(layer_output, xhat, running_mean, running_variance) = 
         batch_norm(prev_layer, gamma, beta, eps, momentum, running_mean, running_variance);
     }
 
+    // see https://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html
+    // for derivations
     void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
 
-      Tensor<float, Rank> prev_layer = std::any_cast<Tensor<float, Rank>&>(prev_layer_any);
-      Tensor<float, Rank> dout = std::any_cast<Tensor<float, Rank>&>(next_layer_grad_any);
+      BnTensor<Rank> prev_layer = std::any_cast<BnTensor<Rank>&>(prev_layer_any);
+      BnTensor<Rank> dout = std::any_cast<BnTensor<Rank>&>(next_layer_grad_any);
 
-      Eigen::array<int, Dim - 1> reduction_dims;
-      Eigen::array<int, Dim> broadcast_dims;
+      array<int, Rank - 1> reduction_dims;
+      array<int, Rank> broadcast_dims;
+
+      float total_channel;
+      for (total_channel = 1., int i = 0; i < Rank - 1; i++) {
+        total_channel *= prev_layer.dimension(i);
+      }
 
       std::tie(reduction_dims, broadcast_dims) = get_broadcast_and_reduction_dims(dout);
 
+      //broadcast values
+      BnTensor<Rank> broadcast_mean = broadcast_as_last_dim(running_mean, broadcast_dims);
+      BnTensor<Rank> broadcast_var = broadcast_as_last_dim(running_variance, broadcast_dims);
+      BnTensor<Rank> xmu = (prev_layer - broadcast_mean);
+
+      // Step 9
       // dbeta = sum(dout, reduced by all dims except channel)
       dbeta = dout.sum(reduction_dims);
 
+      // Step 8
       // dgamma = sum (dout * y, reduced by all dims except channel)
-      Eigen::Tensor<float, Dim> gamma_broad = broadcast_as_last_dim(gamma, broadcast_dims);
-      dgamma = (dout * layer_output).sum(reduction_dims);
+      BnTensor<Rank> gamma_broad = broadcast_as_last_dim(gamma, broadcast_dims);
+      BnTensor<Rank> dxhat = dout * gamma_broad;
+      BnTensor<Rank> dgamma = (dout * xhat).sum(reduction_dims);
+      BnTensor<Rank> dx_hat = dout * gamma;
+
+      // Step 7
+      // d_inv_std
+      TensorSingleDim d_inv_std = (dxhat * xmu).sum(reduction_dims);
+      BnTensor<Rank> dxmu1 = dxhat * (1. / (broadcast_var + eps).sqrt());
+
+      // Step 6
+      TensorSingleDim d_std = -d_inv_std / (running_var + eps);
+
+      // Step 5
+      TensorSingleDim d_var = 0.5 * d_std / (running_var + eps).sqrt();
+
+      // Step 4
+      BnTensor<Rank> d_sq = broadcast_as_last_dim(d_var / total_channel, broadcast_dims);
+
+      // Step 3
+      BnTensor<Rank> dxmu2 = 2 * xmu * d_sq;
+
+      // step 2
+      BnTensor<Rank> dx1 = dxmu1 + dxmu2;
+      TensorSingleDim dmu = -dx1.sum(reduction_dims);
+
+      // step 1
+      BnTensor<Rank> dx2 = broadcast_as_last_dim(dmu / total_channel, broadcast_dims);
+
+      // step 0
+      layer_gradient = dx1 + dx2;
+
     }
 
-    Tensor<float, Rank>& get_output() {
+    template <Index Rank = 2>
+    BnTensor<Rank>& get_output() {
       return layer_output;
     }
 
   private:
-    Tensor<float, Rank> layer_output, layer_gradient;
+    BnTensor<Rank> layer_output, layer_gradient, xhat;
 
     TensorSingleDim gamma, beta, running_mean, running_variance;
     TensorSingleDim dbeta, dgamma;

@@ -9,8 +9,10 @@ namespace EigenSinn {
 
   typedef Eigen::Tensor<float, 1> TensorSingleDim;
 
-  template<Index Dim = 2>
+  template <Index Rank>
+  using BnTensor = Tensor<float, Rank>;
 
+  template<Index Dim = 2>
   inline auto get_broadcast_and_reduction_dims(Eigen::Tensor<float, Dim> x) {
     // we reduce by all dimensions but the last (channel)
     // and broadcast all but the last
@@ -25,25 +27,25 @@ namespace EigenSinn {
   }
 
   // broadcast channel dimension - first in the list of arguments, las
-  template<Index rank>
-  inline ConvTensor broadcast_as_last_dim(TensorSingleDim& t, Eigen::array<int, rank> broadcast_dims) {
+  template<Index Rank>
+  inline BnTensor<Rank> broadcast_as_last_dim(TensorSingleDim& t, Eigen::array<int, Rank> broadcast_dims) {
 
-    Eigen::array<Index, rank> reshaped_dims;
+    Eigen::array<Index, Rank> reshaped_dims;
 
     reshaped_dims.fill(1);
-    reshaped_dims[rank] = t.dimension(0);
+    reshaped_dims[Rank] = t.dimension(0);
 
     ConvTensor broadcasted = t.reshape(reshaped_dims).broadcast(broadcast_dims);
     return broadcasted;
   }
 
   // NHWC format
-  template<typename Scalar, Index Dim>
-  inline auto batch_norm(const Eigen::Tensor<Scalar, Dim>& x, TensorSingleDim& gamma, TensorSingleDim& beta, float eps, float momentum, 
+  template<Index Rank>
+  inline auto batch_norm(BnTensor<Rank>& x, TensorSingleDim& gamma, TensorSingleDim& beta, float eps, float momentum, 
     TensorSingleDim& running_mean, TensorSingleDim running_var, bool isTraining) {
 
     TensorSingleDim mu, variance;
-    ConvTensor mu_broadcasted, running_mean_broadcasted, running_var_broadcasted, x_hat, std_broadcasted;
+    Tensor<Scalar, Dim> mu_broadcasted, running_mean_broadcasted, running_var_broadcasted, x_hat, std_broadcasted, x_out;
 
     // get sample mean
     Eigen::array<int, Dim - 1> reduction_dims;
@@ -51,6 +53,7 @@ namespace EigenSinn {
 
     std::tie(reduction_dims, broadcast_dims) = get_broadcast_and_reduction_dims(x);
 
+    // mean
     mu = x.mean(reduction_dims);
     Index batch_size = x.dimension(0);
     Index n_channels = x.dimension(3);
@@ -58,6 +61,8 @@ namespace EigenSinn {
     Index cols = x.dimension(2);
 
     mu_broadcasted = broadcast_as_last_dim(mu, broadcast_dims);
+    
+    // variance
     variance = (x - mu_broadcasted).pow(2.).mean(reduction_dims);
 
     running_mean = momentum * running_mean + (1.0 - momentum) * mu;
@@ -65,11 +70,12 @@ namespace EigenSinn {
 
     running_mean_broadcasted = broadcast_as_last_dim(running_mean, broadcast_dims);
     running_var_broadcasted = broadcast_as_last_dim(running_var, broadcast_dims);
-    std_broadcasted = (running_var_broadcasted + eps).sqrt();
+    running_std_broadcasted = (running_var_broadcasted + eps).sqrt();
 
 
-    x_hat = gamma * (x - running_mean_broadcasted) / std_broadcasted + beta;
+    x_hat = (x - running_mean_broadcasted) / running_std_broadcasted;
+    x_out = gamma * x_hat + beta;
 
-    return std::make_tuple(x_hat, running_mean, running_var);
+    return std::make_tuple(x_out, x_hat, running_mean, running_var);
   }
 }
