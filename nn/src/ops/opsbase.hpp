@@ -3,8 +3,9 @@
 #include "unsupported/Eigen/CXX11/Tensor"
 
 namespace EigenSinn {
+  using namespace Eigen;
 
   template <int Rank>
-  using NnTensor = Eigen::Tensor<float, Rank>;
+  using NnTensor = Tensor<float, Rank>;
 
 }
