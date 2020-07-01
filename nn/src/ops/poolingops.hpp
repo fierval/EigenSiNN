@@ -16,18 +16,19 @@ namespace EigenSinn {
   inline bool check_valid_params(const array<int, Rank/2>& extents, int stride, Dims& dims) {
 
     if (stride <= 0) {
-      return res;
-    }
-
-    if ((Rank != 2 || Rank != 4) && Rank / 2 != dims.size()) {
       return false;
     }
 
-    for (int i = 0; i < Dims; i++) {
+    if ((Rank == 2 || Rank == 4) && Rank / 2 != extents.size()) {
+
+      return false;
+    }
+
+    for (int i = 0; i < Rank/2; i++) {
       // we are interested in the second or second and third dimensions
       // depending on the tensor: 2d or 4d
-      Index tensor_dim = dims[i + 1];
-      Index diff = tensor_dim - extents[i];
+      int tensor_dim = dims[i + 1];
+      int diff = tensor_dim - extents[i];
 
       if (diff < 0) {
         return false;
