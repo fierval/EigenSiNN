@@ -12,18 +12,41 @@ namespace EigenSinn {
     avg
   };
 
-  template <int Rank, int Dim, class Dims>
-  inline bool check_valid_params(const array<int, Dim>& extents, int stride, Dims& dims) {
+  template <int Rank, class Dims>
+  inline bool check_valid_params(const array<int, Rank/2>& extents, int stride, Dims& dims) {
 
-    bool res = false;
-    
-    return res;
+    if (stride <= 0) {
+      return res;
+    }
+
+    if ((Rank != 2 || Rank != 4) && Rank / 2 != dims.size()) {
+      return false;
+    }
+
+    for (int i = 0; i < Dims; i++) {
+      // we are interested in the second or second and third dimensions
+      // depending on the tensor: 2d or 4d
+      Index tensor_dim = dims[i + 1];
+      Index diff = tensor_dim - extents[i];
+
+      if (diff < 0) {
+        return false;
+      }
+
+      if (stride != 1 && diff % stride != 0) {
+        return false;
+      }
+    }
+
+    return true;
   }
+
+  
 
   template <int Rank, int Dim>
   inline auto do_pool(NnTensor<Rank>& t, const array<int, Dim>& extents, int stride) {
     
-    NnTensor<Rank>::Dimensions dims = t.dimensions();
+    auto dims = t.dimensions();
     
     if (!check_valid_params(extens, stirde, dims)) {
 
