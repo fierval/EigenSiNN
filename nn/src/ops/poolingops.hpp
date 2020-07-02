@@ -44,13 +44,13 @@ namespace EigenSinn {
 
 
 
-  template <typename Scalar = float, int Rank>
+  template <typename Scalar, int Rank>
   inline Tensor<Scalar, Rank> do_pool(Tensor<Scalar, Rank>& t, const array<int, Rank / 2>& extents, int stride) {
 
     return Tensor<Scalar, Rank>();
   }
 
-  template <typename Scalar = float>
+  template <typename Scalar>
   inline Tensor<Scalar, 2> do_pool(Tensor<Scalar, 2>& t, const array<int, 1>& extents, int stride) {
     auto dims = t.dimensions();
 
@@ -68,10 +68,43 @@ namespace EigenSinn {
     array<Index, 2> output_starts({ 0, 0 });
     array<Index, 2> output_lengths({ output.dimension(0), 1 });
 
-    for (int i = 0; i + extents[0] < -dims[1]; i++) {
-      Tensor <Scalar, 2> sl(dims[0], 1);
-      sl = t.slice(starts, lengths);
-      output.slice(output_starts, output_lengths) = sl.reduce(reduce_dims, internal::MaxReducer<float>());
+    for (int i = 0; i + extents[0] <= dims[1]; i++) {
+
+      output.slice(output_starts, output_lengths) = t.slice(starts, lengths).reduce(reduce_dims, internal::MaxReducer<Scalar>());
+      output_starts[1]++;
+      starts[1] += extents[0];
+    }
+
+    return output;
+
+  }
+
+  template <typename Scalar>
+  inline Tensor<Scalar, 4> do_pool(Tensor<Scalar, 4>& t, const array<int, 2>& extents, int stride) {
+    auto dims = t.dimensions();
+
+    if (!check_valid_params<2>(extents, stride, dims)) {
+
+      throw std::invalid_argument("Invalid pooling dimensions");
+    }
+
+    Tensor <Scalar, 4> output(dims[0], (dims[1] - extents[0]) / stride + 1, (dims[2] - extents[1]) / stride + 1);
+
+    array<Index, 4> starts({ 0, 0, 0, 0 });
+    array<Index, 4> lengths({ dims[0], extents[0], extents[1], dims[3] });
+    array<Index, 2> reduce_dims({ 1, 2 });
+
+    array<Index, 4> output_starts({ 0, 0, 0, 0 });
+    array<Index, 4> output_lengths({ output.dimension(0), 1, 1, output.dimension(3) });
+
+    for (int i = 0; i + extents[0] <= dims[1]; i++) {
+      for (int j = 0; j + extents[1] <= dims[2]; j++) {
+
+        output.slice(output_starts, output_lengths) = t.slice(starts, lengths).reduce(reduce_dims, internal::MaxReducer<Scalar>());
+        // move by column first
+        output_starts[2]++; 
+        starts[2] += extents[1];
+      }
       output_starts[1]++;
       starts[1] += extents[0];
     }
