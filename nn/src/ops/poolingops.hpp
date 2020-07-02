@@ -50,7 +50,8 @@ namespace EigenSinn {
     return Tensor<Scalar, Rank>();
   }
 
-  inline NnTensor<2> do_pool(NnTensor<2>& t, const array<int, 1>& extents, int stride) {
+  template <typename Scalar = float>
+  inline Tensor<Scalar, 2> do_pool(Tensor<Scalar, 2>& t, const array<int, 1>& extents, int stride) {
     auto dims = t.dimensions();
 
     if (!check_valid_params<2>(extents, stride, dims)) {
@@ -58,7 +59,7 @@ namespace EigenSinn {
       throw std::invalid_argument("Invalid pooling dimensions");
     }
 
-    NnTensor<2> output(dims[0], (dims[1] - extents[0]) / stride + 1);
+    Tensor <Scalar, 2> output(dims[0], (dims[1] - extents[0]) / stride + 1);
 
     array<Index, 2> starts({ 0, 0 });
     array<Index, 2> lengths({ dims[0], extents[0] });
@@ -68,7 +69,7 @@ namespace EigenSinn {
     array<Index, 2> output_lengths({ output.dimension(0), 1 });
 
     for (int i = 0; i + extents[0] < -dims[1]; i++) {
-      NnTensor<2> sl(dims[0], 1);
+      Tensor <Scalar, 2> sl(dims[0], 1);
       sl = t.slice(starts, lengths);
       output.slice(output_starts, output_lengths) = sl.reduce(reduce_dims, internal::MaxReducer<float>());
       output_starts[1]++;
