@@ -7,7 +7,8 @@ using namespace Eigen;
 
 namespace EigenSinn {
 
-  typedef Eigen::Tensor<float, 1> TensorSingleDim;
+  template <typename Scalar>
+  using TensorSingleDim = Eigen::Tensor<Scalar, 1>;
 
   template<Index Dim>
   inline auto get_broadcast_and_reduction_dims(Eigen::Tensor<float, Dim> x) {
@@ -24,8 +25,8 @@ namespace EigenSinn {
   }
 
   // broadcast channel dimension - first in the list of arguments, las
-  template<Index Rank>
-  inline NnTensor<Rank> broadcast_as_last_dim(TensorSingleDim& t, Eigen::array<int, Rank> broadcast_dims) {
+  template  <typename Scalar = float, Index Rank>
+  inline Tensor<Scalar, Rank> broadcast_as_last_dim(TensorSingleDim<Scalar>& t, Eigen::array<int, Rank> broadcast_dims) {
 
     Eigen::array<Index, Rank> reshaped_dims;
 
@@ -37,12 +38,12 @@ namespace EigenSinn {
   }
 
   // NHWC format
-  template<Index Rank>
-  inline auto batch_norm(NnTensor<Rank>& x, TensorSingleDim& gamma, TensorSingleDim& beta, float eps, float momentum, 
-    TensorSingleDim& running_mean, TensorSingleDim& running_var, bool isTraining) {
+  template<typename Scalar = float, Index Rank>
+  inline auto batch_norm(Tensor<Scalar, Rank>& x, TensorSingleDim<Scalar>& gamma, TensorSingleDim<Scalar>& beta, float eps, float momentum, 
+    TensorSingleDim<Scalar>& running_mean, TensorSingleDim<Scalar>& running_var, bool isTraining) {
 
     TensorSingleDim mu, variance;
-    NnTensor<Rank> mu_broadcasted, running_mean_broadcasted, running_var_broadcasted, x_hat, std_broadcasted, x_out;
+    Tensor<Scalar, Rank> mu_broadcasted, running_mean_broadcasted, running_var_broadcasted, x_hat, std_broadcasted, x_out;
 
     // get sample mean
     Eigen::array<int, Rank - 1> reduction_dims;
@@ -57,12 +58,12 @@ namespace EigenSinn {
     // variance
     variance = (x - mu_broadcasted).pow(2.).mean(reduction_dims);
 
-    NnTensor<Rank> new_running_mean = momentum * running_mean + (1.0 - momentum) * mu;
-    NnTensor<Rank> new_running_var = momentum * running_var + (1.0 - momentum) * variance;
+    Tensor<Scalar, Rank> new_running_mean = momentum * running_mean + (1.0 - momentum) * mu;
+    Tensor<Scalar, Rank> new_running_var = momentum * running_var + (1.0 - momentum) * variance;
 
     running_mean_broadcasted = broadcast_as_last_dim(new_running_mean, broadcast_dims);
     running_var_broadcasted = broadcast_as_last_dim(new_running_var, broadcast_dims);
-    NnTensor<Rank> running_std_broadcasted = broadcast_as_last_dim((new_running_var + eps).sqrt(), broadcast_dims);
+    Tensor<Scalar, Rank> running_std_broadcasted = broadcast_as_last_dim((new_running_var + eps).sqrt(), broadcast_dims);
 
 
     x_hat = (x - running_mean_broadcasted) / running_std_broadcasted;

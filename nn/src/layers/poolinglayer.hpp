@@ -11,7 +11,7 @@ namespace EigenSinn {
   // For Linear (fully connected) layers: (N, C)
   // N - batch size
   // C - number of channels (1 for fully connected layers)
-  template <Index Rank>
+  template <typename Scalar = float, Index Rank = 2>
   class MaxPoolingLayer : LayerBase {
   public:
 
@@ -33,13 +33,12 @@ namespace EigenSinn {
 
     }
 
-    template <Index Rank = 2>
-    NnTensor<Rank>& get_output() {
+    Tensor<Scalar, Rank>& get_output() {
       return layer_output;
     }
 
   private:
-    NnTensor<Rank> layer_output, layer_gradient, xhat;
+    Tensor<Scalar, Rank> layer_output, layer_gradient, xhat;
 
     const Index stride;
     const array<Index, Rank / 2> extents;

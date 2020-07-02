@@ -11,7 +11,7 @@ namespace EigenSinn {
   // For Linear (fully connected) layers: (N, C)
   // N - batch size
   // C - number of channels (1 for fully connected layers)
-  template <Index Rank = 2>
+  template <typename Scalar = float, Index Rank = 2>
   class BatchNormalizationLayer : LayerBase {
   public:
 
@@ -42,8 +42,8 @@ namespace EigenSinn {
     // for derivations
     void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
 
-      NnTensor<Rank> prev_layer = std::any_cast<NnTensor<Rank>&>(prev_layer_any);
-      NnTensor<Rank> dout = std::any_cast<NnTensor<Rank>&>(next_layer_grad_any);
+      Tensor<Scalar, Rank> prev_layer = std::any_cast<Tensor<Scalar, Rank>&>(prev_layer_any);
+      Tensor<Scalar, Rank> dout = std::any_cast<Tensor<Scalar, Rank>&>(next_layer_grad_any);
 
       array<int, Rank - 1> reduction_dims;
       array<int, Rank> broadcast_dims;
@@ -56,9 +56,9 @@ namespace EigenSinn {
       std::tie(reduction_dims, broadcast_dims) = get_broadcast_and_reduction_dims(dout);
 
       //broadcast values
-      NnTensor<Rank> broadcast_mean = broadcast_as_last_dim(running_mean, broadcast_dims);
-      NnTensor<Rank> broadcast_var = broadcast_as_last_dim(running_variance, broadcast_dims);
-      NnTensor<Rank> xmu = (prev_layer - broadcast_mean);
+      Tensor<Scalar, Rank> broadcast_mean = broadcast_as_last_dim(running_mean, broadcast_dims);
+      Tensor<Scalar, Rank> broadcast_var = broadcast_as_last_dim(running_variance, broadcast_dims);
+      Tensor<Scalar, Rank> xmu = (prev_layer - broadcast_mean);
 
       // Step 9
       // dbeta = sum(dout, reduced by all dims except channel)
@@ -66,15 +66,15 @@ namespace EigenSinn {
 
       // Step 8
       // dgamma = sum (dout * y, reduced by all dims except channel)
-      NnTensor<Rank> gamma_broad = broadcast_as_last_dim(gamma, broadcast_dims);
-      NnTensor<Rank> dxhat = dout * gamma_broad;
-      NnTensor<Rank> dgamma = (dout * xhat).sum(reduction_dims);
-      NnTensor<Rank> dx_hat = dout * gamma;
+      Tensor<Scalar, Rank> gamma_broad = broadcast_as_last_dim(gamma, broadcast_dims);
+      Tensor<Scalar, Rank> dxhat = dout * gamma_broad;
+      Tensor<Scalar, Rank> dgamma = (dout * xhat).sum(reduction_dims);
+      Tensor<Scalar, Rank> dx_hat = dout * gamma;
 
       // Step 7
       // d_inv_std
       //TensorSingleDim d_inv_std = (dxhat * xmu).sum(reduction_dims);
-      NnTensor<Rank> dxmu1 = dxhat * (1. / (broadcast_var + eps).sqrt());
+      Tensor<Scalar, Rank> dxmu1 = dxhat * (1. / (broadcast_var + eps).sqrt());
 
       // Step 6
       // TensorSingleDim d_std = -d_inv_std / (running_var + eps);
@@ -83,17 +83,17 @@ namespace EigenSinn {
       TensorSingleDim d_var = -0.5 * (dxhat * xmu).sum(reduction_dims) / (running_var + eps).pow(3./2.);
 
       // Step 4
-      NnTensor<Rank> d_sq = (1 - momentum) * broadcast_as_last_dim(d_var / total_channel, broadcast_dims);
+      Tensor<Scalar, Rank> d_sq = (1 - momentum) * broadcast_as_last_dim(d_var / total_channel, broadcast_dims);
 
       // Step 3
-      NnTensor<Rank> dxmu2 = 2 * xmu * d_sq;
+      Tensor<Scalar, Rank> dxmu2 = 2 * xmu * d_sq;
 
       // step 2
-      NnTensor<Rank> dx1 = dxmu1 + dxmu2;
+      Tensor<Scalar, Rank> dx1 = dxmu1 + dxmu2;
       TensorSingleDim dmu = -dx1.sum(reduction_dims);
 
       // step 1
-      NnTensor<Rank> dx2 = (1 - momentum) * broadcast_as_last_dim(dmu / total_channel, broadcast_dims);
+      Tensor<Scalar, Rank> dx2 = (1 - momentum) * broadcast_as_last_dim(dmu / total_channel, broadcast_dims);
 
       // step 0
       layer_gradient = dx1 + dx2;
@@ -101,15 +101,15 @@ namespace EigenSinn {
     }
 
     template <Index Rank = 2>
-    NnTensor<Rank>& get_output() {
+    Tensor<Scalar, Rank>& get_output() {
       return layer_output;
     }
 
   private:
-    NnTensor<Rank> layer_output, layer_gradient, xhat;
+    Tensor<Scalar, Rank> layer_output, layer_gradient, xhat;
 
-    TensorSingleDim gamma, beta, running_mean, running_variance;
-    TensorSingleDim dbeta, dgamma;
+    TensorSingleDim<Scalar> gamma, beta, running_mean, running_variance;
+    TensorSingleDim<Scalar> dbeta, dgamma;
     float momentum, eps;
 
   };

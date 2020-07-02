@@ -44,10 +44,10 @@ namespace EigenSinn {
 
 
 
-  template <int Rank>
-  inline NnTensor<Rank> do_pool(NnTensor<Rank>& t, const array<int, Rank / 2>& extents, int stride) {
+  template <typename Scalar = float, int Rank>
+  inline Tensor<Scalar, Rank> do_pool(Tensor<Scalar, Rank>& t, const array<int, Rank / 2>& extents, int stride) {
 
-    return NnTensor<Rank>();
+    return Tensor<Scalar, Rank>();
   }
 
   inline NnTensor<2> do_pool(NnTensor<2>& t, const array<int, 1>& extents, int stride) {

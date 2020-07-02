@@ -8,7 +8,7 @@ using namespace EigenSinn;
 namespace EigenSinnTest {
 
   TEST(Batchnorm, Broadcast) {
-    TensorSingleDim b(5);
+    TensorSingleDim<float> b(5);
     b.setValues({1, 2, 3, 4, 5});
 
     Eigen::Tensor<float, 3> a(5, 2, 3), c, d;
@@ -20,7 +20,7 @@ namespace EigenSinnTest {
   }
 
   TEST(Batchnorm, Pow) {
-    TensorSingleDim b(5);
+    TensorSingleDim<float> b(5);
     b.setValues({ 1, 2, 3, 4, 5 });
 
     std::cerr << b.pow(2.) << std::endl;
