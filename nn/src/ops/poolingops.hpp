@@ -59,7 +59,10 @@ namespace EigenSinn {
       throw std::invalid_argument("Invalid pooling dimensions");
     }
 
+    // we get the index as well as the value so we can create a mask
+    Tensor <Tuple<DenseIndex, Scalar>, 1> arg_max_tuple(dims[0]);
     Tensor <Scalar, 2> output(dims[0], (dims[1] - extents[0]) / stride + 1);
+    Tensor <byte, 2> mask(dims[0], dims[1])
 
     array<Index, 2> starts({ 0, 0 });
     array<Index, 2> lengths({ dims[0], extents[0] });
@@ -70,7 +73,8 @@ namespace EigenSinn {
 
     for (int i = 0; i + extents[0] <= dims[1]; i++) {
 
-      output.slice(output_starts, output_lengths) = t.slice(starts, lengths).reduce(reduce_dims, internal::MaxReducer<Scalar>());
+      output.slice(output_starts, output_lengths) = 
+        t.slice(starts, lengths).reduce(reduce_dims, internal::ArgMaxTupleReducer<Tuple<DenseIndex, Scalar>>());
       output_starts[1]++;
       starts[1] += extents[0];
     }
@@ -88,7 +92,9 @@ namespace EigenSinn {
       throw std::invalid_argument("Invalid pooling dimensions");
     }
 
-    Tensor <Scalar, 4> output(dims[0], (dims[1] - extents[0]) / stride + 1, (dims[2] - extents[1]) / stride + 1);
+    Tensor <Tuple<DenseIndex, Scalar>, 4> arg_max_tuple(dims[0], dims[3]);
+    Tensor <Tuple<DenseIndex, Scalar>, 4> output(dims[0], (dims[1] - extents[0]) / stride + 1, (dims[2] - extents[1]) / stride + 1);
+    Tensor<Scalar, 4> mask(dims[0], dims[1], dims[2], dims[3]);
 
     array<Index, 4> starts({ 0, 0, 0, 0 });
     array<Index, 4> lengths({ dims[0], extents[0], extents[1], dims[3] });
@@ -100,7 +106,8 @@ namespace EigenSinn {
     for (int i = 0; i + extents[0] <= dims[1]; i++) {
       for (int j = 0; j + extents[1] <= dims[2]; j++) {
 
-        output.slice(output_starts, output_lengths) = t.slice(starts, lengths).reduce(reduce_dims, internal::MaxReducer<Scalar>());
+        output.slice(output_starts, output_lengths) = t.slice(starts, lengths).reduce(reduce_dims, internal::ArgMaxTupleReducer <Tuple<DenseIndex, Scalar>());
+
         // move by column first
         output_starts[2]++; 
         starts[2] += extents[1];
