@@ -88,7 +88,7 @@ namespace EigenSinn {
   }
 
   template <typename Scalar>
-  inline Tensor<Scalar, 4> do_pool(Tensor<Scalar, 4>& t, const array<int, 2>& extents, int stride) {
+  inline Tensor<Scalar, 4> do_max_pool(Tensor<Scalar, 4>& t, const array<int, 2>& extents, int stride) {
     auto dims = t.dimensions();
 
     if (!check_valid_params<2>(extents, stride, dims)) {
@@ -124,4 +124,23 @@ namespace EigenSinn {
     }
     return output;
   }
+
+  template <typename Scalar, int Dim>
+  inline Tensor<Scalar, Dim> do_max_pool_backward(const Tensor<Scalar, Dim>& next_layer_grad, const Tensor<Scalar, Dim>& mask, const array<Index, Dim>& output_dims) {
+    return Tensor<Scalra, Dim>();
+  }
+
+  template <typename Scalar>
+  inline Tensor<Scalar, 2> do_max_pool_backward(const Tensor<Scalar, 2>& next_layer_grad, const Tensor<Scalar, 2>& mask, const array<Index, 2>& output_dims) {
+    return Tensor<Scalra, 2>();
+  }
+
+  template <typename Scalar>
+  inline Tensor<Scalar, 4> do_max_pool_backward(const Tensor<Scalar, 4>& next_layer_grad, const Tensor<Scalar, 4>& mask, const array<Index,4>& output_dims) {
+    
+    array<Index, 4> dims(mask.dimension(0))
+    return Tensor<Scalra, 4>();
+  }
+
+
 }
