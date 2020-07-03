@@ -60,21 +60,27 @@ namespace EigenSinn {
     }
 
     // we get the index as well as the value so we can create a mask
+    Tensor<Tuple<Index, Scalar>, 1> local_pool(dims[0]);
     Tensor <Scalar, 2> output(dims[0], (dims[1] - extents[0]) / stride + 1);
-    Tensor <byte, 2> mask(dims[0], dims[1])
+    Tensor <Index, 2> mask(output.dimensions());
 
     array<Index, 2> starts({ 0, 0 });
     array<Index, 2> lengths({ dims[0], extents[0] });
     array<Index, 1> reduce_dims({ 1 });
 
     array<Index, 2> output_starts({ 0, 0 });
-    array<Index, 2> output_lengths({ output.dimension(0), 1 });
 
-    for (int i = 0; i + extents[0] <= dims[1]; i++) {
+    for (; starts[1] + extents[0] <= dims[1]; starts[1] +=stride, output_starts[1]++ ) {
 
-      output.slice(output_starts, output_lengths) = t.slice(starts, lengths).reduce(reduce_dims, internal::MaxReducer<Scalar>());
-      output_starts[1]++;
-      starts[1] += extents[0];
+      // get the maximums and their indices
+      local_pool = t.slice(starts, lengths).reduce(reduce_dims, internal::ArgMaxTupleReducer<Tuple<Index, Scalar>>());
+      // split the tuple into its arrays: value and index of the input where
+      // gradient will be propagated relative to the current slice
+      for (int k = 0; k < local_pool.dimension(0); k++) {
+
+        output(k, output_starts[1]) = local_pool(k).second();
+        mask(k, output_starts[1]) = local_pool(k).first();
+      }
     }
 
     return output;
@@ -90,31 +96,32 @@ namespace EigenSinn {
       throw std::invalid_argument("Invalid pooling dimensions");
     }
 
+    Tensor<Tuple<Index, Scalar>, 2> local_pool(dims[0], dims[3]);
     Tensor <Tuple<DenseIndex, Scalar>, 4> output(dims[0], (dims[1] - extents[0]) / stride + 1, (dims[2] - extents[1]) / stride + 1);
-    Tensor<Scalar, 4> mask(dims[0], dims[1], dims[2], dims[3]);
+    Tensor<Scalar, 4> mask(output.dimensions());
 
     array<Index, 4> starts({ 0, 0, 0, 0 });
     array<Index, 4> lengths({ dims[0], extents[0], extents[1], dims[3] });
     array<Index, 2> reduce_dims({ 1, 2 });
 
     array<Index, 4> output_starts({ 0, 0, 0, 0 });
-    array<Index, 4> output_lengths({ output.dimension(0), 1, 1, output.dimension(3) });
 
-    for (int i = 0; i + extents[0] <= dims[1]; i++) {
-      for (int j = 0; j + extents[1] <= dims[2]; j++) {
+    for (; starts[1] + extents[0] <= dims[1]; starts[1] += stride, output_starts[1]++) {
+      for (; starts[2] + extents[1] <= dims[2]; starts[2] += stride, output_starts[2]++) {
 
-        output.slice(output_starts, output_lengths) = t.slice(starts, lengths).reduce(reduce_dims, internal::MaxReducer <Scalar>());
+        // get pooling results
+        local_pool = t.slice(starts, lengths).reduce(reduce_dims, internal::ArgMaxTupleReducer<Tuple<Index, Scalar>>());
 
-        // move by column first
-        output_starts[2]++; 
-        starts[2] += extents[1];
+        // unchain indices. TODO: unwinding them in the backward pass will be harder than 2 dims
+        for (int k = 0; k < local_pool.dimension(0); k++) {
+          for (int j = 0; j < local_pool.dimension(1); j++) {
+
+            output(k, output_starts[1], output_starts[2], j)(k, 0, 0, j) = local_pool(k).second();
+            mask(k, output_starts[1], output_starts[2], j) = local_pool(k).first();
+          }
+        }
       }
-      output_starts[1]++;
-      starts[1] += extents[0];
     }
-
     return output;
-
   }
-
 }
