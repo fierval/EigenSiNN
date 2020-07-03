@@ -45,13 +45,13 @@ namespace EigenSinn {
 
 
   template <typename Scalar, int Rank>
-  inline Tensor<Scalar, Rank> do_max_pool(Tensor<Scalar, Rank>& t, const array<int, Rank / 2>& extents, int stride) {
+  inline auto do_max_pool(Tensor<Scalar, Rank>& t, const array<int, Rank / 2>& extents, int stride) {
 
-    return Tensor<Scalar, Rank>();
+    return Tuple<Tensor<Scalar, Rank>, Tensor<Index, Rank>>();
   }
 
   template <typename Scalar>
-  inline Tensor<Scalar, 2> do_max_pool(Tensor<Scalar, 2>& t, const array<int, 1>& extents, int stride) {
+  inline auto do_max_pool(Tensor<Scalar, 2>& t, const array<int, 1>& extents, int stride) {
     auto dims = t.dimensions();
 
     if (!check_valid_params<2>(extents, stride, dims)) {
@@ -83,15 +83,15 @@ namespace EigenSinn {
       }
     }
 
-    return output;
+    return Tuple<Tensor<Scalar, 4>, Tensor<Index, 4>>(output, mask);
 
   }
 
   template <typename Scalar>
-  inline Tensor<Scalar, 4> do_max_pool(Tensor<Scalar, 4>& t, const array<int, 2>& extents, int stride) {
+  inline auto do_max_pool(Tensor<Scalar, 4>& t, const array<int, 2>& extents, int stride) {
     auto dims = t.dimensions();
 
-    if (!check_valid_params<2>(extents, stride, dims)) {
+    if (!check_valid_params<4>(extents, stride, dims)) {
 
       throw std::invalid_argument("Invalid pooling dimensions");
     }
@@ -122,7 +122,7 @@ namespace EigenSinn {
         }
       }
     }
-    return output;
+    return Tuple<Tensor<Scalar, 4>, Tensor<Index, 4>>(output, mask);
   }
 
   template <typename Scalar, int Dim>
