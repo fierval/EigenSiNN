@@ -45,13 +45,13 @@ namespace EigenSinn {
 
 
   template <typename Scalar, int Rank>
-  inline Tensor<Scalar, Rank> do_pool(Tensor<Scalar, Rank>& t, const array<int, Rank / 2>& extents, int stride) {
+  inline Tensor<Scalar, Rank> do_max_pool(Tensor<Scalar, Rank>& t, const array<int, Rank / 2>& extents, int stride) {
 
     return Tensor<Scalar, Rank>();
   }
 
   template <typename Scalar>
-  inline Tensor<Scalar, 2> do_pool(Tensor<Scalar, 2>& t, const array<int, 1>& extents, int stride) {
+  inline Tensor<Scalar, 2> do_max_pool(Tensor<Scalar, 2>& t, const array<int, 1>& extents, int stride) {
     auto dims = t.dimensions();
 
     if (!check_valid_params<2>(extents, stride, dims)) {
