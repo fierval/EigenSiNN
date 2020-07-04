@@ -70,7 +70,7 @@ namespace EigenSinn {
 
     array<Index, 2> output_starts({ 0, 0 });
 
-    for (; starts[1] + extents[0] <= dims[1]; starts[1] +=stride, output_starts[1]++ ) {
+    for (; starts[1] + extents[0] <= dims[1]; starts[1] += stride, output_starts[1]++) {
 
       // get the maximums and their indices
       local_pool = t.slice(starts, lengths).reduce(reduce_dims, internal::ArgMaxTupleReducer<Tuple<Index, Scalar>>());
@@ -79,7 +79,8 @@ namespace EigenSinn {
       for (int k = 0; k < local_pool.dimension(0); k++) {
 
         output(k, output_starts[1]) = local_pool(k).second();
-        mask(k, output_starts[1]) = local_pool(k).first();
+        // unroll the index into the tuple since local_pool(k).first() contains flattened index
+        mask(k, output_starts[1]) = local_pool(k).first() - k * extents[0];
       }
     }
 
@@ -97,7 +98,11 @@ namespace EigenSinn {
     }
 
     Tensor<Tuple<Index, Scalar>, 2> local_pool(dims[0], dims[3]);
-    Tensor <Tuple<DenseIndex, Scalar>, 4> output(dims[0], (dims[1] - extents[0]) / stride + 1, (dims[2] - extents[1]) / stride + 1);
+    Tensor <Tuple<Index, Scalar>, 4> output(dims[0], (dims[1] - extents[0]) / stride + 1, (dims[2] - extents[1]) / stride + 1, dims[3]);
+
+    // here the mask contains (x, y) coordinates of the original argmax
+    Tensor <Tuple<Index, Index>, 4> mask(output.dimensions());
+
     Tensor<Scalar, 4> mask(output.dimensions());
 
     array<Index, 4> starts({ 0, 0, 0, 0 });
@@ -116,33 +121,78 @@ namespace EigenSinn {
         for (int k = 0; k < local_pool.dimension(0); k++) {
           for (int j = 0; j < local_pool.dimension(1); j++) {
 
-            output(k, output_starts[1], output_starts[2], j)(k, 0, 0, j) = local_pool(k).second();
-            mask(k, output_starts[1], output_starts[2], j) = local_pool(k).first();
+            Index idx_flat = local_pool(k, j).first();
+            Index idx_col = idx_flat / lengths.dimension(3) % lengths.dimension(2);
+            Index idx_row = idx_flat / lengths.dimension(3) / lengths.dimension(2) % lengths.dimension(1);
+
+            output(k, output_starts[1], output_starts[2], j) = local_pool(k, j).second();
+            mask(k, output_starts[1], output_starts[2], j) = Tuple(idx_row, idx_col);
           }
         }
       }
     }
-    return Tuple<Tensor<Scalar, 4>, Tensor<Index, 4>>(output, mask);
+    return Tuple(output, mask);
   }
 
   template <typename Scalar, int Dim>
-  inline Tensor<Scalar, Dim> do_max_pool_backward(const Tensor<Scalar, Dim>& next_layer_grad, const Tensor<Scalar, Dim>& mask, 
-    const array<Index, Dim>& output_dims, const array<Index, Dim/2>& extents, int stride) {
+  inline Tensor<Scalar, Dim> do_max_pool_backward(const Tensor<Scalar, Dim>& grads, const Tensor<Scalar, Dim>& mask,
+    const array<Index, Dim>& output_dims, const array<Index, Dim / 2>& extents, int stride) {
     return Tensor<Scalra, Dim>();
   }
 
   template <typename Scalar>
-  inline Tensor<Scalar, 2> do_max_pool_backward(const Tensor<Scalar, 2>& next_layer_grad, const Tensor<Scalar, 2>& mask, 
+  inline Tensor<Scalar, 2> do_max_pool_backward(const Tensor<Scalar, 2>& grads, const Tensor<Scalar, 2>& mask,
     const array<Index, 2>& output_dims, const array<Index, 1>& extents, int stride) {
-    return Tensor<Scalra, 2>();
+
+    array<Index, 2> starts({ 0, 0 });
+    array<Index, 2> lengths({ output_dims[0], extents[0] });
+
+    array<Index, 2> grad_starts({ 0, 0 });
+
+    Tensor<Scalar, 2> output(output_dims);
+    output.setZero();
+
+    for (; starts[1] + extents[0] <= output_dims[1]; starts[1] += stride; grad_starts[1]++) {
+      // unroll the index of the gradient being passed
+      for (int k = 0; k < output_dims[0]; k++) {
+
+        // index has been unrolled during the forward operation
+        output.slice(starts, lengths)(k, mask[k, grad_starts[1]) = grads(k, grad_starts[1]);
+      }
+    }
+    return output;
   }
 
+  //backward 3d
   template <typename Scalar>
-  inline Tensor<Scalar, 4> do_max_pool_backward(const Tensor<Scalar, 4>& next_layer_grad, const Tensor<Scalar, 4>& mask, 
-    const array<Index,4>& output_dims, const array<Index, 2>& extents, int stride) {
+  inline Tensor<Scalar, 4> do_max_pool_backward(const Tensor<Scalar, 4>& grads, const Tensor<Scalar, 4>& mask,
+    const array<Index, 4>& output_dims, const array<Index, 2>& extents, int stride) {
+
+    array<Index, 4> starts({ 0, 0, 0, 0 });
+    array<Index, 4> lengths({ output_dims[0], extents[0] });
     
-    array<Index, 4> dims(mask.dimension(0))
-    return Tensor<Scalra, 4>();
+    array<Index, 4> grad_starts({ 0, 0, 0, 0 });
+
+    Tensor<Scalar, 4> output(output_dims);
+
+    output.setZero();
+
+    for (; starts[1] + extents[0] <= output_dims[1]; starts[1] += stride; grad_starts[1]++) {
+      for (; starts[2] + extents[1] <= output_dims[2]; starts[2] += stride, grad_starts[2]++) {
+        // unroll the index of the gradient being passed
+        for (int k = 0; k < output_dims[0]; k++) {
+          for (int j = 0; j < output_dims[3]; j++) {
+
+            // index has been unrolled during the forward operation
+            Index idx_row = mask(k, grad_starts[1]).first();
+            Index idx_col = mask(k, grad_starts[1]).second();
+
+            output.slice(starts, lengths)(k, idx_row, idx_col, j) = grads(k, grad_starts[1], grad_starts[2], j);
+          }
+        }
+      }
+    }
+    return output;
   }
 
 
