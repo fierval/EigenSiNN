@@ -15,7 +15,7 @@ namespace EigenSinn {
   class BatchNormalizationLayer : LayerBase {
   public:
 
-    BatchNormalizationLayer(float _eps = 0.001, float _momentum = 0.99, int channels = 1)
+    BatchNormalizationLayer(float _eps = 1e-5, float _momentum = 0.9, int channels = 1)
       : beta(1, channels)
       , gamma(1, channels)
       , dbeta(1, channels)
@@ -29,8 +29,9 @@ namespace EigenSinn {
 
     void init() override {
       beta.setZero();
-      gamma.setZero();
-
+      gamma.setConstant(1.);
+      running_variance.setZero();
+      running_mean.setZero();
     }
 
     void forward(std::any prev_layer) override {
