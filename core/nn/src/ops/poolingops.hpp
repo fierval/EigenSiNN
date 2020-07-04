@@ -157,7 +157,7 @@ namespace EigenSinn {
       for (int k = 0; k < output_dims[0]; k++) {
 
         // index has been unrolled during the forward operation
-        output.slice(starts, lengths)(k, mask[k, grad_starts[1]) = grads(k, grad_starts[1]);
+        output.slice(starts, lengths)(k, mask(k, grad_starts[1])) = grads(k, grad_starts[1]);
       }
     }
     return output;
@@ -194,6 +194,4 @@ namespace EigenSinn {
     }
     return output;
   }
-
-
 }
