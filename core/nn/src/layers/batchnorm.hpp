@@ -35,6 +35,11 @@ namespace EigenSinn {
       running_mean.setZero();
     }
 
+    void init(TensorSingleDim<Scalar>& _beta, TensorSingleDim<Scalar> _gamma) {
+      this->init();
+      beta = _beta;
+      gamma = _gamma;
+    }
     void forward(std::any prev_layer_any) override {
 
       Tensor<Scalar, Rank> prev_layer = std::any_cast<Tensor<Scalar, Rank>&>(prev_layer_any);
