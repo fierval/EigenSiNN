@@ -20,7 +20,7 @@ namespace EigenSinnTest {
 
       input = Matrix_to_Tensor(input_matrix, batch_size, cols);
 
-      gamma.setValues({0., 1.0, 2., 3., 4.});
+      gamma.setValues({1., 2.0, 3., 4., 5.});
       beta = gamma * 0.1f;
     }
 
