@@ -21,6 +21,8 @@ namespace EigenSinnTest {
       LinearTensor input = Matrix_to_Tensor(input_matrix, 2, 5);
     }
 
+    //void TearDown() override {}
+
     LinearTensor input;
     const float eps = 1e-5, momentum = 0.9;
   };
