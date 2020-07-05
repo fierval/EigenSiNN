@@ -22,9 +22,9 @@ namespace EigenSinnTest {
 
     BatchNormalizationLayer bn(eps, momentum);
 
-    //bn.init();
+    bn.init();
 
-    //bn.forward(input);
+    bn.forward(input);
 
   }
 }
