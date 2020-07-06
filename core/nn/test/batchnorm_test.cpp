@@ -19,6 +19,8 @@ namespace EigenSinnTest {
         0.1851, 0.0431, 0.5097, 0.8821, 0.5831;
 
       input = Matrix_to_Tensor(input_matrix, batch_size, cols);
+      gamma.resize(batch_size);
+      beta.resize(batch_size);
 
       gamma.setValues({1., 2.0, 3., 4., 5.});
       beta = gamma * 0.1f;
