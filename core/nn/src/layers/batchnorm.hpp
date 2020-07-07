@@ -15,11 +15,11 @@ namespace EigenSinn {
   class BatchNormalizationLayer : LayerBase {
   public:
 
-    BatchNormalizationLayer(float _eps = 1e-5, float _momentum = 0.9, int channels = 1, bool _is_training = true)
-      : beta(channels)
-      , gamma(channels)
-      , dbeta(channels)
-      , dgamma(channels)
+    BatchNormalizationLayer(float _eps = 1e-5, float _momentum = 0.9, bool _is_training = true)
+      : beta()
+      , gamma()
+      , dbeta()
+      , dgamma()
       , momentum(_momentum)
       , eps(_eps)
       , running_variance()
@@ -95,7 +95,7 @@ namespace EigenSinn {
       Tensor<Scalar, 1> d_var = -0.5 * (dxhat * xmu).sum(reduction_dims) / (var + eps).pow(3. / 2.) / total_channel;
 
       // Step 4
-      Tensor<Scalar, Rank> d_sq = (1 - momentum) * broadcast_as_last_dim<Scalar, Rank>(d_var, broadcast_dims);
+      Tensor<Scalar, Rank> d_sq = broadcast_as_last_dim<Scalar, Rank>(d_var, broadcast_dims);
 
       // Step 3
       Tensor<Scalar, Rank> dxmu2 = 2 * xmu * d_sq;
@@ -105,7 +105,7 @@ namespace EigenSinn {
       Tensor<Scalar, 1> dmu = -dx1.sum(reduction_dims) / total_channel;
 
       // step 1
-      Tensor<Scalar, Rank> dx2 = (1 - momentum) * broadcast_as_last_dim<Scalar, Rank>(dmu, broadcast_dims);
+      Tensor<Scalar, Rank> dx2 = broadcast_as_last_dim<Scalar, Rank>(dmu, broadcast_dims);
 
       // step 0
       layer_gradient = dx1 + dx2;
