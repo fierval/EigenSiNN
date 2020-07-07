@@ -34,7 +34,7 @@ namespace EigenSinn {
     Eigen::array<Index, Rank> reshaped_dims;
 
     reshaped_dims.fill(1);
-    reshaped_dims[Rank] = t.dimension(0);
+    reshaped_dims[Rank - 1] = t.dimension(0);
 
     Tensor<Scalar, Rank> broadcasted = t.reshape(reshaped_dims).broadcast(broadcast_dims);
     return broadcasted;

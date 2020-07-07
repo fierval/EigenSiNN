@@ -15,15 +15,15 @@ namespace EigenSinn {
   class BatchNormalizationLayer : LayerBase {
   public:
 
-    BatchNormalizationLayer(float _eps = 1e-5, float _momentum = 0.9, bool _is_training = true)
-      : beta()
-      , gamma()
-      , dbeta()
-      , dgamma()
+    BatchNormalizationLayer(Index num_features, float _eps = 1e-5, float _momentum = 0.9, bool _is_training = true)
+      : beta(num_features)
+      , gamma(num_features)
+      , dbeta(num_features)
+      , dgamma(num_features)
       , momentum(_momentum)
       , eps(_eps)
-      , running_variance()
-      , running_mean()
+      , running_variance(num_features)
+      , running_mean(num_features)
       , mu()
       , var()
       , is_training(_is_training) {

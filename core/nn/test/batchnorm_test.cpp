@@ -36,9 +36,11 @@ namespace EigenSinnTest {
 
   TEST_F(BatchnormTest, Forward1d) {
 
-    BatchNormalizationLayer bn(eps, momentum);
+    BatchNormalizationLayer bn(cols, eps, momentum);
 
-    bn.init();
+    bn.init(beta, gamma);
+
+
 
     bn.forward(input);
 
