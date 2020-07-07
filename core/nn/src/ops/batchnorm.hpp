@@ -45,8 +45,8 @@ namespace EigenSinn {
   inline auto batch_norm(Tensor<Scalar, Rank>& x, TensorSingleDim<Scalar>& gamma, TensorSingleDim<Scalar>& beta, float eps, float momentum, 
     TensorSingleDim<Scalar>& running_mean, TensorSingleDim<Scalar>& running_var, bool is_training) {
 
-    TensorSingleDim<Scalar> mu, variance;
-    Tensor<Scalar, Rank> mu_broadcasted, running_mean_broadcasted, running_var_broadcasted, x_hat, std_broadcasted, x_out;
+    TensorSingleDim<Scalar> mu, variance, std;
+    Tensor<Scalar, Rank> mu_broadcasted, mean_broadcasted, x_hat, std_broadcasted, x_out;
 
     TensorSingleDim<Scalar> new_running_mean = running_mean;
     TensorSingleDim<Scalar> new_running_var = running_var;;
@@ -57,6 +57,8 @@ namespace EigenSinn {
 
     std::tie(reduction_dims, broadcast_dims) = get_broadcast_and_reduction_dims(x);
 
+    // if training we compute all the values.
+    // otherwise use their running analogs
     if (is_training) {
       // mean
       mu = x.mean(reduction_dims);
@@ -64,22 +66,26 @@ namespace EigenSinn {
 
       // variance
       variance = (x - mu_broadcasted).pow(2.).mean(reduction_dims);
+
       new_running_mean = momentum * running_mean + (1.0 - momentum) * mu;
       new_running_var = momentum * running_var + (1.0 - momentum) * variance;
+      
+      std = (variance + eps).sqrt();
+      mean_broadcasted = broadcast_as_last_dim<Scalar, Rank>(mu, broadcast_dims);
     }
+    else {
+      std = (running_var + eps).sqrt();
+      mean_broadcasted = broadcast_as_last_dim<Scalar, Rank>(running_mean, broadcast_dims);
+    }
+    std_broadcasted = broadcast_as_last_dim<Scalar, Rank>(std, broadcast_dims);
 
-
-    running_mean_broadcasted = broadcast_as_last_dim<Scalar, Rank>(new_running_mean, broadcast_dims);
-    running_var_broadcasted = broadcast_as_last_dim<Scalar, Rank>(new_running_var, broadcast_dims);
     
-    TensorSingleDim<Scalar> new_running_std = (new_running_var + eps).sqrt();
-    Tensor<Scalar, Rank> running_std_broadcasted = broadcast_as_last_dim<Scalar, Rank>(new_running_std, broadcast_dims);
     Tensor<Scalar, Rank> gamma_broadcasted = broadcast_as_last_dim<Scalar, Rank>(gamma, broadcast_dims);
     Tensor<Scalar, Rank> beta_broadcasted = broadcast_as_last_dim<Scalar, Rank>(beta, broadcast_dims);
 
-    x_hat = (x - running_mean_broadcasted) / running_std_broadcasted;
+    x_hat = (x - mean_broadcasted) / std_broadcasted;
     x_out = gamma_broadcasted * x_hat + beta_broadcasted;
 
-    return std::make_tuple(x_out, x_hat, new_running_mean, new_running_var);
+    return std::make_tuple(x_out, x_hat, new_running_mean, new_running_var, mu, variance);
   }
 }

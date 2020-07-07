@@ -24,6 +24,8 @@ namespace EigenSinn {
       , eps(_eps)
       , running_variance()
       , running_mean()
+      , mu()
+      , var()
       , is_training(_is_training) {
 
     }
@@ -44,7 +46,7 @@ namespace EigenSinn {
 
       Tensor<Scalar, Rank> prev_layer = std::any_cast<Tensor<Scalar, Rank>&>(prev_layer_any);
 
-      std::tie(layer_output, xhat, running_mean, running_variance) =
+      std::tie(layer_output, xhat, running_mean, running_variance, mu, var) =
         batch_norm(prev_layer, gamma, beta, eps, momentum, running_mean, running_variance, is_training);
     }
 
@@ -66,8 +68,8 @@ namespace EigenSinn {
       std::tie(reduction_dims, broadcast_dims) = get_broadcast_and_reduction_dims(dout);
 
       //broadcast values
-      Tensor<Scalar, Rank> broadcast_mean = broadcast_as_last_dim(running_mean, broadcast_dims);
-      Tensor<Scalar, Rank> broadcast_var = broadcast_as_last_dim(running_variance, broadcast_dims);
+      Tensor<Scalar, Rank> broadcast_mean = broadcast_as_last_dim(mu, broadcast_dims);
+      Tensor<Scalar, Rank> broadcast_var = broadcast_as_last_dim(var, broadcast_dims);
       Tensor<Scalar, Rank> xmu = (prev_layer - broadcast_mean);
 
       // Step 9
@@ -90,7 +92,7 @@ namespace EigenSinn {
       // TensorSingleDim d_std = -d_inv_std / (running_var + eps);
 
       // Step 5
-      Tensor<Scalar, 1> d_var = -0.5 * (dxhat * xmu).sum(reduction_dims) / (running_variance + eps).pow(3. / 2.) / total_channel;
+      Tensor<Scalar, 1> d_var = -0.5 * (dxhat * xmu).sum(reduction_dims) / (var + eps).pow(3. / 2.) / total_channel;
 
       // Step 4
       Tensor<Scalar, Rank> d_sq = (1 - momentum) * broadcast_as_last_dim<Scalar, Rank>(d_var, broadcast_dims);
@@ -126,7 +128,7 @@ namespace EigenSinn {
   private:
     Tensor<Scalar, Rank> layer_output, layer_gradient, xhat;
 
-    TensorSingleDim<Scalar> gamma, beta, running_mean, running_variance;
+    TensorSingleDim<Scalar> gamma, beta, running_mean, running_variance, mu, var;
     TensorSingleDim<Scalar> dbeta, dgamma;
     float momentum, eps;
     bool is_training;
