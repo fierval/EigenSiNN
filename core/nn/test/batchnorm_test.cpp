@@ -15,8 +15,8 @@ namespace EigenSinnTest {
       MatrixXf input_matrix;
       input_matrix.resize(batch_size, cols);
 
-      input_matrix << 0.5628, 0.9343, 0.2593, 0.7921, 0.1589,
-        0.1851, 0.0431, 0.5097, 0.8821, 0.5831;
+      input_matrix << 0.56279999, 0.93430001, 0.25929999, 0.79210001, 0.15889999,
+        0.18510000, 0.04310000, 0.50970000, 0.88209999, 0.58310002;
 
       input = Matrix_to_Tensor(input_matrix, batch_size, cols);
       gamma.resize(cols);
@@ -38,11 +38,14 @@ namespace EigenSinnTest {
 
     BatchNormalizationLayer bn(cols, eps, momentum);
 
+    MatrixXf expected(batch_size, cols); 
+    
+    expected << 1.09985983, 2.19994974, -2.69904351, -3.59016228, -4.49944401,
+      -0.89985991, -1.79994965, 3.29904366, 4.39015722, 5.49944448;
+
     bn.init(beta, gamma);
-
-
-
     bn.forward(input);
 
+    EXPECT_TRUE(expected.isApprox(Tensor_to_Matrix(bn.get_output()), 1e-6));
   }
 }

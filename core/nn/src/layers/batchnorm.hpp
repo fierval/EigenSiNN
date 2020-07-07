@@ -111,8 +111,8 @@ namespace EigenSinn {
       layer_gradient = dx1 + dx2;
     }
 
-    template <Index Rank = 2>
     Tensor<Scalar, Rank>& get_output() {
+
       return layer_output;
     }
 
