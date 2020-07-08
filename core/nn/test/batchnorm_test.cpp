@@ -66,12 +66,13 @@ namespace EigenSinnTest {
     exp_dgamma << -0.25724539, -0.34655440, -0.24452491, -0.22366823, -0.11281815;
 
     expected_derivative <<
-      -1.90764942e-04, -3.93252340e-05, 1.86823844e-03, 4.88163643e-02, 2.97849590e-04,
-      1.90764942e-04, 3.90577152e-05, -1.86752435e-03, -4.88269366e-02, -2.96444632e-04;
+      -1.90824110e-04, -3.91245958e-05, 1.86752446e-03, 4.88124043e-02, 2.96708080e-04,
+      1.90745224e-04, 3.91245958e-05, -1.86752446e-03, -4.88256179e-02, -2.96444632e-04;
 
     bn.init(beta, gamma);
     bn.forward(input);
     bn.backward(input, loss);
+
 
     EXPECT_TRUE(expected_derivative.isApprox(Tensor_to_Matrix(bn.get_loss_by_input_derivative()), 2e-4));
     EXPECT_TRUE(exp_dbeta.isApprox(Tensor_to_Matrix(bn.get_loss_by_bias_derivative(), cols), 1e-5));
