@@ -12,13 +12,18 @@ namespace EigenSinnTest {
   protected:
     void SetUp() override {
 
-      MatrixXf input_matrix;
+      MatrixXf input_matrix, loss_matrix;
       input_matrix.resize(batch_size, cols);
+      loss_matrix.resize(batch_size, cols);
+
+      loss_matrix << 0.07951424, 0.39795890, 0.48816258, 0.58650136, 0.80818069,
+        0.33679566, 0.74452204, 0.24355969, 0.36228219, 0.69534987;
 
       input_matrix << 0.56279999, 0.93430001, 0.25929999, 0.79210001, 0.15889999,
         0.18510000, 0.04310000, 0.50970000, 0.88209999, 0.58310002;
 
       input = Matrix_to_Tensor(input_matrix, batch_size, cols);
+      loss = Matrix_to_Tensor(loss_matrix, batch_size, cols);
       gamma.resize(cols);
       beta.resize(cols);
 
@@ -28,7 +33,7 @@ namespace EigenSinnTest {
 
     //void TearDown() override {}
 
-    Tensor<float, 2> input;
+    Tensor<float, 2> input, loss;
     TensorSingleDim<float> beta, gamma;
     const float eps = 1e-5, momentum = 0.9;
     const Index batch_size = 2, cols = 5;
