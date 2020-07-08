@@ -48,9 +48,17 @@ namespace EigenSinnTest {
     expected << 1.09985983, 2.19994974, -2.69904351, -3.59016228, -4.49944401,
       -0.89985991, -1.79994965, 3.29904366, 4.39015722, 5.49944448;
 
+    MatrixXf expected_derivative(batch_size, cols);
+
+    expected_derivative <<
+      -1.90764942e-04, -3.93252340e-05, 1.86823844e-03, 4.88163643e-02, 2.97849590e-04,
+      1.90764942e-04, 3.90577152e-05, -1.86752435e-03, -4.88269366e-02, -2.96444632e-04;
+
     bn.init(beta, gamma);
     bn.forward(input);
+    bn.backward(input, loss);
 
-    EXPECT_TRUE(expected.isApprox(Tensor_to_Matrix(bn.get_output()), 1e-6));
+    EXPECT_TRUE(expected.isApprox(Tensor_to_Matrix(bn.get_output()), 1e-4));
+    EXPECT_TRUE(expected_derivative.isApprox(Tensor_to_Matrix(bn.get_loss_by_input_derivative()), 1e-3));
   }
 }

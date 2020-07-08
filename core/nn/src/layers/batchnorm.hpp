@@ -81,7 +81,6 @@ namespace EigenSinn {
       Tensor<Scalar, Rank> gamma_broad = broadcast_as_last_dim(gamma, broadcast_dims);
       Tensor<Scalar, Rank> dxhat = dout * gamma_broad;
       Tensor<Scalar, 1> dgamma = (dout * xhat).sum(reduction_dims);
-      Tensor<Scalar, Rank> dx_hat = dout * gamma;
 
       // Step 7
       // d_inv_std
@@ -92,20 +91,20 @@ namespace EigenSinn {
       // TensorSingleDim d_std = -d_inv_std / (running_var + eps);
 
       // Step 5
-      Tensor<Scalar, 1> d_var = -0.5 * (dxhat * xmu).sum(reduction_dims) / (var + eps).pow(3. / 2.) / total_channel;
+      Tensor<Scalar, 1> d_var = -0.5 * (dxhat * xmu).sum(reduction_dims) / (var + eps).pow(3. / 2.);
 
       // Step 4
-      Tensor<Scalar, Rank> d_sq = broadcast_as_last_dim<Scalar, Rank>(d_var, broadcast_dims);
+      Tensor<Scalar, Rank> d_sq = 1. / total_channel * broadcast_as_last_dim<Scalar, Rank>(d_var, broadcast_dims);
 
       // Step 3
       Tensor<Scalar, Rank> dxmu2 = 2 * xmu * d_sq;
 
       // step 2
       Tensor<Scalar, Rank> dx1 = dxmu1 + dxmu2;
-      Tensor<Scalar, 1> dmu = -dx1.sum(reduction_dims) / total_channel;
+      Tensor<Scalar, 1> dmu = -dx1.sum(reduction_dims);
 
       // step 1
-      Tensor<Scalar, Rank> dx2 = broadcast_as_last_dim<Scalar, Rank>(dmu, broadcast_dims);
+      Tensor<Scalar, Rank> dx2 = 1./ total_channel * broadcast_as_last_dim<Scalar, Rank>(dmu, broadcast_dims);
 
       // step 0
       layer_gradient = dx1 + dx2;
@@ -114,6 +113,10 @@ namespace EigenSinn {
     Tensor<Scalar, Rank>& get_output() {
 
       return layer_output;
+    }
+
+    Tensor<Scalar, Rank>& get_loss_by_input_derivative() {
+      return layer_gradient;
     }
 
     inline void SetTraining(bool training) {
