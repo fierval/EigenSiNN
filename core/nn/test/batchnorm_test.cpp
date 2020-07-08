@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
-#include <layers/input.hpp>
 #include <layers/batchnorm.hpp>
 #include <iostream>
-#include <ops\conversions.hpp>
+#include <ops/conversions.hpp>
+#include <ops/comparisons.hpp>
 
 using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
-  class BatchnormTest : public ::testing::Test {
+  class Batchnorm1dTest : public ::testing::Test {
   protected:
     void SetUp() override {
 
@@ -39,7 +39,7 @@ namespace EigenSinnTest {
     const Index batch_size = 2, cols = 5;
   };
 
-  TEST_F(BatchnormTest, Forward1d) {
+  TEST_F(Batchnorm1dTest, Forward1d) {
 
     BatchNormalizationLayer bn(cols, eps, momentum);
 
@@ -55,27 +55,26 @@ namespace EigenSinnTest {
     EXPECT_TRUE(expected.isApprox(Tensor_to_Matrix(bn.get_output()), 1e-5));
   }
 
-  TEST_F(BatchnormTest, Backward1d) {
+  TEST_F(Batchnorm1dTest, Backward1d) {
 
     BatchNormalizationLayer bn(cols, eps, momentum);
 
-    MatrixXf expected_derivative(batch_size, cols);
+    Tensor<float, 2> expected_derivative(batch_size, cols);
     MatrixXf exp_dbeta(1, cols), exp_dgamma(1, cols);
 
     exp_dbeta << 0.41630989, 1.14248097, 0.73172224, 0.94878352, 1.50353050;
     exp_dgamma << -0.25724539, -0.34655440, -0.24452491, -0.22366823, -0.11281815;
 
-    expected_derivative <<
-      -1.90824110e-04, -3.91245958e-05, 1.86752446e-03, 4.88124043e-02, 2.96708080e-04,
-      1.90745224e-04, 3.91245958e-05, -1.86752446e-03, -4.88256179e-02, -2.96444632e-04;
+    expected_derivative.setValues({{-1.90824110e-04, -3.91245958e-05, 1.86752446e-03, 4.88124043e-02, 2.96708080e-04}, 
+      {1.90745224e-04, 3.91245958e-05, -1.86752446e-03, -4.88256179e-02, -2.96444632e-04 }});
 
     bn.init(beta, gamma);
     bn.forward(input);
     bn.backward(input, loss);
 
 
-    EXPECT_TRUE(expected_derivative.isApprox(Tensor_to_Matrix(bn.get_loss_by_input_derivative()), 2e-4));
+    EXPECT_TRUE(is_elementwise_approx_eq(expected_derivative, bn.get_loss_by_input_derivative(), 2e-6));
     EXPECT_TRUE(exp_dbeta.isApprox(Tensor_to_Matrix(bn.get_loss_by_bias_derivative(), cols), 1e-5));
     EXPECT_TRUE(exp_dgamma.isApprox(Tensor_to_Matrix(bn.get_loss_by_weight_derivative(), cols), 1e-5));
-  }
+  } 
 }

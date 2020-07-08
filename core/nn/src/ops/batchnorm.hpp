@@ -3,8 +3,6 @@
 #include "opsbase.hpp"
 #include <tuple>
 
-using namespace Eigen;
-
 namespace EigenSinn {
 
   template <typename Scalar>
