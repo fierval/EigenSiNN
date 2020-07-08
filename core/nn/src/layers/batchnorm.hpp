@@ -80,7 +80,7 @@ namespace EigenSinn {
       // dgamma = sum (dout * y, reduced by all dims except channel)
       Tensor<Scalar, Rank> gamma_broad = broadcast_as_last_dim(gamma, broadcast_dims);
       Tensor<Scalar, Rank> dxhat = dout * gamma_broad;
-      Tensor<Scalar, 1> dgamma = (dout * xhat).sum(reduction_dims);
+      dgamma = (dout * xhat).sum(reduction_dims);
 
       // Step 7
       // d_inv_std
@@ -117,6 +117,14 @@ namespace EigenSinn {
 
     Tensor<Scalar, Rank>& get_loss_by_input_derivative() {
       return layer_gradient;
+    }
+
+    Tensor<Scalar, 1>& get_loss_by_weight_derivative() {
+      return dgamma;
+    }
+
+    Tensor<Scalar, 1>& get_loss_by_bias_derivative() {
+      return dbeta;
     }
 
     inline void SetTraining(bool training) {

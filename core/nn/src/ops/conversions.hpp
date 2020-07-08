@@ -10,6 +10,11 @@ namespace EigenSinn {
     return Eigen::Map<const MatrixType<Scalar>>(tensor.data(), rows, cols);
   }
 
+  template<typename Scalar, typename sizeType>
+  inline auto Tensor_to_Matrix(const Eigen::Tensor<Scalar, 1>& tensor, const sizeType cols) {
+    return Eigen::Map<const MatrixType<Scalar>>(tensor.data(), 1 , cols);
+  }
+
   inline auto Tensor_to_Matrix(const Eigen::Tensor<float, 2>& tensor) {
     return Eigen::Map<const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic>>(tensor.data(), tensor.dimension(0), tensor.dimension(1));
   }
