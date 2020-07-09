@@ -172,4 +172,22 @@ namespace EigenSinnTest {
 
       EXPECT_TRUE(is_elementwise_approx_eq(output, bn.get_output(), 2e-6));
     }
+
+    TEST_F(Batchnorm4dTest, Backward) {
+
+      BatchNormalizationLayer<float, 4> bn(3);
+      bn.init(beta, gamma);
+      bn.forward(input);
+      bn.backward(input, loss);
+
+      Tensor<float, 1> dbeta(dims[1]), dgamma(dims[1]);
+      dbeta.setValues({ 15.55493259, 17.75424004, 14.48464108 });
+      dgamma.setValues({ 0.19619252, -0.61846262,  2.08176923 });
+
+      EXPECT_TRUE(is_elementwise_approx_eq(dinput, bn.get_loss_by_input_derivative(), 2e-6));
+      EXPECT_TRUE(is_elementwise_approx_eq(dbeta, bn.get_loss_by_bias_derivative(), 2e-6));
+      EXPECT_TRUE(is_elementwise_approx_eq(dgamma, bn.get_loss_by_weight_derivative(), 2e-6));
+      
+    }
+
   }

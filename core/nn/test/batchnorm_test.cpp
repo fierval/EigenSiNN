@@ -39,7 +39,7 @@ namespace EigenSinnTest {
     const Index batch_size = 2, cols = 5;
   };
 
-  TEST_F(Batchnorm1dTest, Forward1d) {
+  TEST_F(Batchnorm1dTest, Forward) {
 
     BatchNormalizationLayer<float, 2> bn(cols, eps, momentum);
 
@@ -55,7 +55,7 @@ namespace EigenSinnTest {
     EXPECT_TRUE(expected.isApprox(Tensor_to_Matrix(bn.get_output()), 1e-5));
   }
 
-  TEST_F(Batchnorm1dTest, Backward1d) {
+  TEST_F(Batchnorm1dTest, Backward) {
 
     BatchNormalizationLayer<float, 2> bn(cols, eps, momentum);
 
