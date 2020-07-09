@@ -60,10 +60,10 @@ namespace EigenSinnTest {
     BatchNormalizationLayer<float, 2> bn(cols, eps, momentum);
 
     Tensor<float, 2> expected_derivative(batch_size, cols);
-    MatrixXf exp_dbeta(1, cols), exp_dgamma(1, cols);
+    Tensor<float, 1> exp_dbeta(cols), exp_dgamma(cols);
 
-    exp_dbeta << 0.41630989, 1.14248097, 0.73172224, 0.94878352, 1.50353050;
-    exp_dgamma << -0.25724539, -0.34655440, -0.24452491, -0.22366823, -0.11281815;
+    exp_dbeta.setValues({ 0.41630989, 1.14248097, 0.73172224, 0.94878352, 1.50353050 });
+    exp_dgamma.setValues({ -0.25724539, -0.34655440, -0.24452491, -0.22366823, -0.11281815 });
 
     expected_derivative.setValues({{-1.90824110e-04, -3.91245958e-05, 1.86752446e-03, 4.88124043e-02, 2.96708080e-04}, 
       {1.90745224e-04, 3.91245958e-05, -1.86752446e-03, -4.88256179e-02, -2.96444632e-04 }});
@@ -73,8 +73,8 @@ namespace EigenSinnTest {
     bn.backward(input, loss);
 
 
-    EXPECT_TRUE(is_elementwise_approx_eq(expected_derivative, bn.get_loss_by_input_derivative(), 2e-6));
-    EXPECT_TRUE(exp_dbeta.isApprox(Tensor_to_Matrix(bn.get_loss_by_bias_derivative(), cols), 1e-5));
-    EXPECT_TRUE(exp_dgamma.isApprox(Tensor_to_Matrix(bn.get_loss_by_weight_derivative(), cols), 1e-5));
+    EXPECT_TRUE(is_elementwise_approx_eq(expected_derivative, bn.get_loss_by_input_derivative(), 4e-5));
+    EXPECT_TRUE(is_elementwise_approx_eq(exp_dbeta, bn.get_loss_by_bias_derivative(), 1e-5));
+    EXPECT_TRUE(is_elementwise_approx_eq(exp_dgamma, bn.get_loss_by_weight_derivative(), 1e-5));
   } 
 }
