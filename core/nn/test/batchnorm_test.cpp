@@ -41,7 +41,7 @@ namespace EigenSinnTest {
 
   TEST_F(Batchnorm1dTest, Forward1d) {
 
-    BatchNormalizationLayer bn(cols, eps, momentum);
+    BatchNormalizationLayer<float, 2> bn(cols, eps, momentum);
 
     MatrixXf expected(batch_size, cols); 
     
@@ -57,7 +57,7 @@ namespace EigenSinnTest {
 
   TEST_F(Batchnorm1dTest, Backward1d) {
 
-    BatchNormalizationLayer bn(cols, eps, momentum);
+    BatchNormalizationLayer<float, 2> bn(cols, eps, momentum);
 
     Tensor<float, 2> expected_derivative(batch_size, cols);
     MatrixXf exp_dbeta(1, cols), exp_dgamma(1, cols);

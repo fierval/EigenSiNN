@@ -4,7 +4,9 @@
 #include <ops/conversions.hpp>
 #include <ops/comparisons.hpp>
 
-namespace EigenSinn {
+using namespace EigenSinn;
+
+namespace EigenSinnTest {
   class Batchnorm4dTest : public ::testing::Test {
   protected:
     void SetUp() override {
@@ -154,10 +156,20 @@ namespace EigenSinn {
      //void TearDown() override {}
 
       Tensor<float, 4> input, loss, dinput, output;
-      TensorSingleDim<float> beta, gamma;
+      Tensor<float, 1> beta, gamma;
       const float eps = 1e-5, momentum = 0.9;
 
       // channel first
       const array<Index, 4> dims = { 2, 3, 4, 4 };
+      const float prec = 1e-5;
     };
+
+    TEST_F(Batchnorm4dTest, Forward) {
+
+      BatchNormalizationLayer<float, 4> bn(3);
+      bn.init(beta, gamma);
+      bn.forward(input);
+
+      EXPECT_TRUE(is_elementwise_approx_eq(output, bn.get_output(), 1e-5));
+    }
   }

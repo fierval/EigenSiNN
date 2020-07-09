@@ -11,7 +11,7 @@ namespace EigenSinn {
   // For Linear (fully connected) layers: (N, C)
   // N - batch size
   // C - number of channels (1 for fully connected layers)
-  template <typename Scalar = float, Index Rank = 2>
+  template <typename Scalar, Index Rank>
   class BatchNormalizationLayer : LayerBase {
   public:
 
