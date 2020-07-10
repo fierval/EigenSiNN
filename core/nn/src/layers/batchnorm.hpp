@@ -44,7 +44,7 @@ namespace EigenSinn {
     }
     void forward(std::any prev_layer_any) override {
 
-      Tensor<Scalar, Rank> prev_layer = std::any_cast<Tensor<Scalar, Rank>&>(prev_layer_any);
+      Tensor<Scalar, Rank> prev_layer = from_any<Scalar, Rank>(prev_layer_any);
 
       std::tie(layer_output, xhat, running_mean, running_variance, mu, var) =
         batch_norm(prev_layer, gamma, beta, eps, momentum, running_mean, running_variance, is_training);
@@ -54,8 +54,8 @@ namespace EigenSinn {
     // for derivations
     void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
 
-      Tensor<Scalar, Rank> prev_layer = std::any_cast<Tensor<Scalar, Rank>&>(prev_layer_any);
-      Tensor<Scalar, Rank> dout = std::any_cast<Tensor<Scalar, Rank>&>(next_layer_grad_any);
+      Tensor<Scalar, Rank> prev_layer = from_any<Scalar, Rank>(prev_layer_any);
+      Tensor<Scalar, Rank> dout = from_any<Scalar, Rank>(next_layer_grad_any);
 
       array<int, Rank - 1> reduction_dims;
       array<int, Rank> broadcast_dims;
