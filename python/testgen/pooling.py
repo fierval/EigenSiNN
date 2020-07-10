@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 pl = nn.MaxPool2d(2, stride=2, return_indices=True)
-output = pl(commondata.inp)
+output, idx = pl(commondata.inp)
 
 fakeloss = torch.tensor([[[[0.53762484, 0.08841801],
           [0.26598877, 0.08771902]],
@@ -23,3 +23,5 @@ fakeloss = torch.tensor([[[[0.53762484, 0.08841801],
 
          [[0.78922635, 0.48408800],
           [0.61365259, 0.99544948]]]], dtype=torch.float, device="cpu")
+
+output.backward(fakeloss)
