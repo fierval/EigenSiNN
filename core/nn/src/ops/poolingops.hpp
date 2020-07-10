@@ -24,7 +24,7 @@ namespace EigenSinn {
       return false;
     }
 
-    for (int i = 0; i < Rank / 2; i++) {
+    for (Index i = 0; i < Rank / 2; i++) {
       // we are interested in the second or second and third dimensions
       // depending on the tensor: 2d or 4d
       int tensor_dim = dims[i + 1];
@@ -84,7 +84,7 @@ namespace EigenSinn {
       }
     }
 
-    return Tuple<Tensor<Scalar, 4>, Tensor<Index, 4>>(output, mask);
+    return Tuple(output, mask);
 
   }
 
