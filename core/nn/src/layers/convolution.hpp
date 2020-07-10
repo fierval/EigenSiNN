@@ -56,7 +56,7 @@ namespace EigenSinn {
       return derivative_by_filter;
     }
 
-    ConvTensor& get_output() {
+    const std::any get_output() {
       return layer_output;
     }
 

@@ -5,10 +5,11 @@
 
 namespace EigenSinn {
 
+  template <typename Scalar, Index Dim>
   class InputLayer : LayerBase {
 
   public:
-    InputLayer(LinearTensor& _layer_content, bool use_bias = false)
+    InputLayer(Tensor<Scalar, Dim>& _layer_content, bool use_bias = false)
     {
       layer_content = _layer_content;
       if (use_bias) {
@@ -16,7 +17,7 @@ namespace EigenSinn {
       }
     }
 
-    LinearTensor& get_layer() {
+    const std::any get_output() override {
       return layer_content;
     }
 

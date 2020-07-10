@@ -110,7 +110,7 @@ namespace EigenSinn {
       layer_gradient = dx1 + dx2;
     }
 
-    Tensor<Scalar, Rank>& get_output() {
+    const std::any get_output() {
 
       return layer_output;
     }

@@ -25,7 +25,7 @@ namespace EigenSinnTest {
     double sigma = 0.01;
 
     LinearTensor input_tensor = Matrix_to_Tensor(input_matrix, batch_size, linear_layer_in);
-    InputLayer input(input_tensor);
+    InputLayer<float, 2> input(input_tensor);
     Linear linear(input.batch_size(), input.input_vector_dim(), linear_layer_out, false, true);
 
     linear.init();
@@ -33,8 +33,8 @@ namespace EigenSinnTest {
     LinearTensor final_grad(input.batch_size(), linear_layer_out);
     final_grad.setConstant(1);
 
-    linear.forward(input.get_layer());
-    linear.backward(input.get_layer(), final_grad);
+    linear.forward(input.get_output());
+    linear.backward(input.get_output(), final_grad);
 
     // expected
     MatrixXf Y, dLdX, dLdW;
@@ -54,7 +54,7 @@ namespace EigenSinnTest {
       10, 10, 10,
       12, 12, 12;
 
-    EXPECT_EQ(true, Y.isApprox(Tensor_to_Matrix(linear.get_output()))) << "Failed: output test";
+    EXPECT_EQ(true, Y.isApprox(Tensor_to_Matrix(from_any<float, 2>(linear.get_output())))) << "Failed: output test";
     EXPECT_EQ(true, dLdX.isApprox(Tensor_to_Matrix(linear.get_loss_by_input_derivative()))) << "Failed dL/dX";
     EXPECT_EQ(true, dLdW.isApprox(Tensor_to_Matrix(linear.get_loss_by_weights_derivative()))) << "Failed dL/dW";
   }

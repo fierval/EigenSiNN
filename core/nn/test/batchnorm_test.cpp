@@ -52,7 +52,7 @@ namespace EigenSinnTest {
     bn.init(beta, gamma);
     bn.forward(input);
 
-    EXPECT_TRUE(expected.isApprox(Tensor_to_Matrix(bn.get_output()), 1e-5));
+    EXPECT_TRUE(expected.isApprox(Tensor_to_Matrix(from_any<float, 2>(bn.get_output())), 1e-5));
   }
 
   TEST_F(Batchnorm1dTest, Backward) {

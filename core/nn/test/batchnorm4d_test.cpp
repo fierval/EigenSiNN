@@ -111,7 +111,7 @@ namespace EigenSinnTest {
       bn.init(beta, gamma);
       bn.forward(input);
 
-      EXPECT_TRUE(is_elementwise_approx_eq(output, bn.get_output(), 2e-6));
+      EXPECT_TRUE(is_elementwise_approx_eq(output, from_any<float, 4>(bn.get_output()), 2e-6));
     }
 
     TEST_F(Batchnorm4dTest, Backward) {

@@ -1,5 +1,6 @@
 #pragma once
 #include <unsupported/Eigen/CXX11/Tensor>
+#include <any>
 
 namespace EigenSinn {
   template<typename T>
@@ -25,4 +26,8 @@ namespace EigenSinn {
     return Eigen::TensorMap<Eigen::Tensor<const Scalar, rank>>(matrix.data(), { dims... });
   }
 
+  template<typename Scalar, Index Rank>
+  inline Tensor<Scalar, Rank> from_any(std::any t) {
+    return std::any_cast<Tensor<Scalar, Rank>&>(t);
+  }
 }

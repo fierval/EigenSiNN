@@ -96,7 +96,7 @@ namespace EigenSinn {
       return layer_grad_loss_by_weight;
     }
 
-    LinearTensor& get_output() {
+    const std::any get_output() {
       return layer_output;
     }
 
