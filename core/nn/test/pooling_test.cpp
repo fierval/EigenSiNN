@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 #include <layers/poolinglayer.hpp>
 #include "include/datacontainer.hpp"
+#include "ops/comparisons.hpp"
 
 using namespace EigenSinn;
 
@@ -94,6 +95,11 @@ namespace EigenSinnTest {
 
     CommonData commonData;
     Tensor<float, 4> output, dinput, fakeloss;
+    const array<Index, 2> extents2d = { 2, 2 };
+    const array<Index, 2> extents1d = { 2 };
+
+    const int stride = 2;
+
   };
 
   TEST_F(Pool, Validate4d) {
@@ -150,6 +156,15 @@ namespace EigenSinnTest {
     bool res = check_valid_params<4>(extents, stride, dims);
 
     EXPECT_FALSE(res);
+  }
+
+  TEST_F(Pool, Forward4d) {
+
+    MaxPoolingLayer<float, 4> pl(extents2d, stride);
+    pl.init();
+    pl.forward(commonData.convInput);
+
+    EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 4>(pl.get_output()), output));
   }
 
 }

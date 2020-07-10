@@ -27,27 +27,31 @@ namespace EigenSinn {
     }
 
     void forward(std::any prev_layer) override {
-      auto res = do_max_pool<Scalar, Rank>(from_any<Scalar, Rank>(prev_layer), extents, stride);
+      Tensor<Scalar, Rank> x = from_any<Scalar, Rank>(prev_layer);
+      auto res = do_max_pool<Scalar, Rank>(x, extents, stride);
 
-      layer_output = res.first();
-      mask = res.second();
+      original_dimensions = x.dimensions();
+      layer_output = res.first;
+      mask = res.second;
       
     }
 
     // for derivations
     void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
-      layer_gradient = do_max_pool_backward<Scalar, Rank>(from_any<Scalar, Rank>(next_layer_grad_any), mask, output_dims, layer_output.dimensions(), stride);
+      layer_gradient = do_max_pool_backward<Scalar, Rank>(from_any<Scalar, Rank>(next_layer_grad_any), mask, original_dimensions, extents, stride);
     }
 
-    Tensor<Scalar, Rank>& get_output() {
+    const std::any get_output() override {
       return layer_output;
     }
 
   private:
-    Tensor<Scalar, Rank> layer_output, layer_gradient, mask;
+    Tensor<Scalar, Rank> layer_output, layer_gradient;
+    Tensor<Index, Rank> mask;
 
-    const Index stride;
-    const array<Index, Rank / 2> extents;
+    Index stride;
+    array<Index, Rank / 2> extents;
+    array<Index, Rank> original_dimensions;
 
   };
 
