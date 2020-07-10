@@ -1,6 +1,7 @@
 #pragma once
 
 #include "opsbase.hpp"
+#include <ops/conversions.hpp>
 #include <tuple>
 
 namespace EigenSinn {
