@@ -84,7 +84,7 @@ namespace EigenSinnTest {
       convLoss = tmp.shuffle(shuffleDims);
     }
 
-    const array<Index, 4> dims = { 2, 3, 4, 4 };
+    const array<Index, 4> dims = { 2, 3, 4, 4 }, poolDims = { 2, 3, 2, 2 };
     const array<Index, 4> shuffleDims = { 0, 2, 3, 1 }, unshuffleDims = { 0, 3, 1, 2 };
     Tensor<float, 4> convInput, convLoss;
   };

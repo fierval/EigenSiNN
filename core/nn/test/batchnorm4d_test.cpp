@@ -13,7 +13,7 @@ namespace EigenSinnTest {
   protected:
     void SetUp() override {
 
-      Tensor<float, 4> tmp(2, 3, 4, 4);
+      Tensor<float, 4> tmp(commonData.dims);
       commonData.init();
 
       input = commonData.convInput;
