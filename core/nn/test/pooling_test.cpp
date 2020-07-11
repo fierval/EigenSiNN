@@ -108,7 +108,7 @@ namespace EigenSinnTest {
     t.setConstant(1);
 
     auto dims = t.dimensions();
-    array<int, 2> extents({ 2, 2 });
+    array<Index, 2> extents({ 2, 2 });
     int stride = 2;
 
     bool res = check_valid_params<4>(extents, stride, dims);
@@ -122,7 +122,7 @@ namespace EigenSinnTest {
     t.setConstant(1);
 
     auto dims = t.dimensions();
-    array<int, 1> extents({ 2 });
+    array<Index, 1> extents({ 2 });
     int stride = 2;
 
     bool res = check_valid_params<2>(extents, stride, dims);
@@ -136,7 +136,7 @@ namespace EigenSinnTest {
     t.setConstant(1);
 
     auto dims = t.dimensions();
-    array<int, 1> extents({ 5 });
+    array<Index, 1> extents({ 5 });
     int stride = 2;
 
     bool res = check_valid_params<2>(extents, stride, dims);
@@ -150,7 +150,7 @@ namespace EigenSinnTest {
     t.setConstant(1);
 
     auto dims = t.dimensions();
-    array<int, 2> extents({ 3, 3 });
+    array<Index, 2> extents({ 3, 3 });
     int stride = 2;
 
     bool res = check_valid_params<4>(extents, stride, dims);

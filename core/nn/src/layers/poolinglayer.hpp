@@ -18,7 +18,8 @@ namespace EigenSinn {
 
     MaxPoolingLayer(const array<Index, Rank / 2>& _extents, Index _stride)
       : extents(_extents)
-      , stride(_stride) {
+      , stride(_stride)
+    , max_pooler() {
 
     }
 
@@ -28,7 +29,7 @@ namespace EigenSinn {
 
     void forward(std::any prev_layer) override {
       Tensor<Scalar, Rank> x = from_any<Scalar, Rank>(prev_layer);
-      auto res = do_max_pool<Scalar, Rank>(x, extents, stride);
+      auto res = max_pooler.do_max_pool(x, extents, stride);
 
       original_dimensions = x.dimensions();
       layer_output = res.first;
@@ -38,7 +39,7 @@ namespace EigenSinn {
 
     // for derivations
     void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
-      layer_gradient = do_max_pool_backward<Scalar, Rank>(from_any<Scalar, Rank>(next_layer_grad_any), mask, original_dimensions, extents, stride);
+      layer_gradient = max_pooler.do_max_pool_backward(from_any<Scalar, Rank>(next_layer_grad_any), mask, original_dimensions, extents, stride);
     }
 
     const std::any get_output() override {
@@ -52,7 +53,7 @@ namespace EigenSinn {
     Index stride;
     array<Index, Rank / 2> extents;
     array<Index, Rank> original_dimensions;
-
+    MaxPooler<Scalar, Rank> max_pooler;
   };
 
 }
