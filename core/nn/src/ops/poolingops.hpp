@@ -159,7 +159,7 @@ namespace EigenSinn {
           }
         }
       }
-      return Tuple<Tensor<Scalar, 4>, Tensor<Index, 4>>(output, mask);
+      return Tuple(output, mask);
     }
 
     inline Tensor<Scalar, 4> do_max_pool_backward(const Tensor<Scalar, 4>& grads, const Tensor<Index, 4>& mask,
