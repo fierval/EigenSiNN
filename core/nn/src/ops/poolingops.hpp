@@ -69,7 +69,7 @@ namespace EigenSinn {
 
       Tensor < Tuple<Index, Scalar> index_tuples(lengths);
 
-      for (; starts[1] + extents[0] <= dims[1]; starts[1] += stride, output_starts[1]++) {
+      for (starts[1] = 0, output_starts[1] = 0; starts[1] + extents[0] <= dims[1]; starts[1] += stride, output_starts[1]++) {
 
         index_tuples = t.slice(starts, lengths).index_tuples();
 
@@ -100,7 +100,7 @@ namespace EigenSinn {
       Tensor<Scalar, 2> output(original_dims);
       output.setZero();
 
-      for (; starts[1] + extents[0] <= original_dims[1]; starts[1] += stride; grad_starts[1]++) {
+      for (starts[1] = 0, grad_starts[1] = 0; starts[1] + extents[0] <= original_dims[1]; starts[1] += stride; grad_starts[1]++) {
         // unroll the index of the gradient being passed
         for (int k = 0; k < original_dims[0]; k++) {
 
@@ -139,8 +139,8 @@ namespace EigenSinn {
       // get index tuples in order to use tuple reducer
       Tensor<Tuple<Index, Scalar>, 4> index_tuples(lengths);
 
-      for (; starts[1] + extents[0] <= dims[1]; starts[1] += stride, output_starts[1]++) {
-        for (; starts[2] + extents[1] <= dims[2]; starts[2] += stride, output_starts[2]++) {
+      for (starts[1] = 0, output_starts[1] = 0; starts[1] + extents[0] <= dims[1]; starts[1] += stride, output_starts[1]++) {
+        for (starts[2] = 0, output_starts[2] = 0; starts[2] + extents[1] <= dims[2]; starts[2] += stride, output_starts[2]++) {
 
           index_tuples = t.slice(starts, lengths).index_tuples();
 
@@ -151,10 +151,8 @@ namespace EigenSinn {
           for (int k = 0; k < local_pool.dimension(0); k++) {
             for (int j = 0; j < local_pool.dimension(1); j++) {
 
-              Index idx_flat = local_pool(k, j).first;
-
+              mask(k, output_starts[1], output_starts[2], j) = local_pool(k, j).first;
               output(k, output_starts[1], output_starts[2], j) = local_pool(k, j).second;
-              mask(k, output_starts[1], output_starts[2], j) = idx_flat;
             }
           }
         }
@@ -174,8 +172,8 @@ namespace EigenSinn {
 
       output.setZero();
 
-      for (; starts[1] + extents[0] <= original_dims[1]; starts[1] += stride, grad_starts[1]++) {
-        for (; starts[2] + extents[1] <= original_dims[2]; starts[2] += stride, grad_starts[2]++) {
+      for (starts[1] = 0, grad_starts[1] = 0; starts[1] + extents[0] <= original_dims[1]; starts[1] += stride, grad_starts[1]++) {
+        for (starts[2] = 0, grad_starts[2] = 0; starts[2] + extents[1] <= original_dims[2]; starts[2] += stride, grad_starts[2]++) {
           // unroll the index of the gradient being passed
           for (int k = 0; k < original_dims[0]; k++) {
             for (int j = 0; j < original_dims[3]; j++) {
