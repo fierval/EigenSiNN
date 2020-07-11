@@ -73,7 +73,7 @@ namespace EigenSinnTest {
     bn.backward(input, loss);
 
 
-    EXPECT_TRUE(is_elementwise_approx_eq(expected_derivative, bn.get_loss_by_input_derivative(), 4e-5));
+    EXPECT_TRUE(is_elementwise_approx_eq(expected_derivative, from_any<float, 2>(bn.get_loss_by_input_derivative()), 4e-5));
     EXPECT_TRUE(is_elementwise_approx_eq(exp_dbeta, bn.get_loss_by_bias_derivative(), 1e-5));
     EXPECT_TRUE(is_elementwise_approx_eq(exp_dgamma, bn.get_loss_by_weight_derivative(), 1e-5));
   } 

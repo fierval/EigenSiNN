@@ -115,7 +115,7 @@ namespace EigenSinn {
       return layer_output;
     }
 
-    Tensor<Scalar, Rank>& get_loss_by_input_derivative() {
+    const std::any get_loss_by_input_derivative() {
       return layer_gradient;
     }
 

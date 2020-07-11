@@ -47,7 +47,7 @@ namespace EigenSinn {
       derivative_by_input = convolve_full(rev_kernel, next_layer_grad);
     }
 
-    ConvTensor& get_loss_by_input_derivative() {
+    const std::any get_loss_by_input_derivative() override {
       return derivative_by_input;
     }
 

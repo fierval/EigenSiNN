@@ -18,5 +18,8 @@ namespace EigenSinn {
     virtual void backward(std::any prev_layer, std::any next_layer_grad) = 0;
 
     virtual const std::any get_output() = 0;
+
+    virtual const std::any get_loss_by_input_derivative() = 0;
+
   };
 }

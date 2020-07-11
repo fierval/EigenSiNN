@@ -167,4 +167,15 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 4>(pl.get_output()), output));
   }
 
+  TEST_F(Pool, Backward4d) {
+
+    MaxPoolingLayer<float, 4> pl(extents2d, stride);
+    pl.init();
+    pl.forward(commonData.convInput);
+    pl.backward(commonData.convInput, commonData.convLoss);
+
+    EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 4>(pl.get_output()), output));
+  }
+
+
 }

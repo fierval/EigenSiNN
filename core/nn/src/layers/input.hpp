@@ -39,6 +39,10 @@ namespace EigenSinn {
 
     }
 
+    const std::any get_loss_by_input_derivative() override {
+      return std::any();
+    }
+
   private:
     LinearTensor layer_content;
   };

@@ -125,7 +125,7 @@ namespace EigenSinnTest {
       dbeta.setValues({ 15.55493259, 17.75424004, 14.48464108 });
       dgamma.setValues({ 0.19619252, -0.61846262,  2.08176923 });
 
-      EXPECT_TRUE(is_elementwise_approx_eq(dinput, bn.get_loss_by_input_derivative(), 1e-5));
+      EXPECT_TRUE(is_elementwise_approx_eq(dinput, from_any<float, 4>(bn.get_loss_by_input_derivative()), 1e-5));
       EXPECT_TRUE(is_elementwise_approx_eq(dbeta, bn.get_loss_by_bias_derivative(), 2e-6));
       EXPECT_TRUE(is_elementwise_approx_eq(dgamma, bn.get_loss_by_weight_derivative(), 4e-6));
     }

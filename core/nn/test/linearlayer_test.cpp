@@ -55,7 +55,7 @@ namespace EigenSinnTest {
       12, 12, 12;
 
     EXPECT_EQ(true, Y.isApprox(Tensor_to_Matrix(from_any<float, 2>(linear.get_output())))) << "Failed: output test";
-    EXPECT_EQ(true, dLdX.isApprox(Tensor_to_Matrix(linear.get_loss_by_input_derivative()))) << "Failed dL/dX";
+    EXPECT_EQ(true, dLdX.isApprox(Tensor_to_Matrix(from_any<float, 2>(linear.get_loss_by_input_derivative())))) << "Failed dL/dX";
     EXPECT_EQ(true, dLdW.isApprox(Tensor_to_Matrix(linear.get_loss_by_weights_derivative()))) << "Failed dL/dW";
   }
 }

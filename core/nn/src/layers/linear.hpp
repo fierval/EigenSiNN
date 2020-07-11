@@ -87,7 +87,7 @@ namespace EigenSinn {
 
     // this will be fed to compute dL/dW[l-1]
     // it is dL/dX[l]
-    LinearTensor& get_loss_by_input_derivative() {
+    const std::any get_loss_by_input_derivative() {
       return layer_grad_loss_by_input;
     }
 
