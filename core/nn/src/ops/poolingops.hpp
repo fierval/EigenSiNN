@@ -51,7 +51,7 @@ namespace EigenSinn {
     inline auto do_max_pool(Tensor<Scalar, 2>& t, const array<Index, 1>& extents, int stride) {
       auto dims = t.dimensions();
 
-      if (!check_valid_params(extents, stride, dims)) {
+      if (!check_valid_params<2>(extents, stride, dims)) {
 
         throw std::invalid_argument("Invalid pooling dimensions");
       }
@@ -67,7 +67,7 @@ namespace EigenSinn {
 
       array<Index, 2> output_starts({ 0, 0 });
 
-      Tensor < Tuple<Index, Scalar> index_tuples(lengths);
+      Tensor < Tuple<Index, Scalar>, 2> index_tuples(lengths);
 
       for (starts[1] = 0, output_starts[1] = 0; starts[1] + extents[0] <= dims[1]; starts[1] += stride, output_starts[1]++) {
 
@@ -79,7 +79,7 @@ namespace EigenSinn {
         // gradient will be propagated relative to the current slice
         for (int k = 0; k < local_pool.dimension(0); k++) {
           
-          output(k, output_starts[1]) = local_pool(k).second();
+          output(k, output_starts[1]) = local_pool(k).second;
           mask(k, output_starts[1]) = local_pool(k).first;
         }
       }
@@ -99,7 +99,7 @@ namespace EigenSinn {
       Tensor<Scalar, 2> output(original_dims);
       output.setZero();
 
-      for (starts[1] = 0, grad_starts[1] = 0; starts[1] + extents[0] <= original_dims[1]; starts[1] += stride; grad_starts[1]++) {
+      for (starts[1] = 0, grad_starts[1] = 0; starts[1] + extents[0] <= original_dims[1]; starts[1] += stride, grad_starts[1]++) {
         // unroll the index of the gradient being passed
         for (int k = 0; k < original_dims[0]; k++) {
 
@@ -107,7 +107,7 @@ namespace EigenSinn {
           Index idx_col = (idx_flat - k) / lengths[0];
 
           // index has been unrolled during the forward operation
-          output.slice(starts[0] + k, starts[1] + idx_col) = grads(k, grad_starts[1]);
+          output(starts[0] + k, starts[1] + idx_col) = grads(k, grad_starts[1]);
         }
       }
       return output;

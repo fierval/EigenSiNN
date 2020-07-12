@@ -13,6 +13,13 @@ namespace EigenSinnTest {
   protected:
 
     void SetUp() override {
+
+      output.resize(commonData.dims);
+      fakeloss.resize(commonData.dims);
+      dinput.resize(commonData.dims);
+      
+      commonData.init();
+
       output.setValues({ {0.48233253, 1.93920422, 1.93920422},
         {1.88566184, 1.88566184, 0.52365559},
         {0.73577052, 1.12185359, 1.14444125} });
@@ -31,7 +38,7 @@ namespace EigenSinnTest {
 
     CommonData2d commonData;
     Tensor<float, 2> output, dinput, fakeloss;
-    const array<Index, 2> extents1d = { 4 };
+    const array<Index, 1> extents1d = { 4 };
 
     const int stride = 2;
 
@@ -53,7 +60,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool2d, Forward) {
 
-    MaxPoolingLayer<float, 4> pl(extents1d, stride);
+    MaxPoolingLayer<float, 2> pl(extents1d, stride);
     pl.init();
     pl.forward(commonData.linearInput);
 
@@ -62,7 +69,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool2d, Backward) {
 
-    MaxPoolingLayer<float, 4> pl(extents1d, stride);
+    MaxPoolingLayer<float, 2> pl(extents1d, stride);
     pl.init();
     pl.forward(commonData.linearInput);
     pl.backward(commonData.linearInput, fakeloss);

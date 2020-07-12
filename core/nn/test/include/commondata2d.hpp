@@ -10,7 +10,11 @@ namespace EigenSinnTest {
   struct CommonData2d {
 
     // data will be presented in NHWC format
-    CommonData2d() {
+    CommonData2d() {} 
+    
+    void init() {
+      linearLoss.resize(dims);
+      linearInput.resize(dims);
 
       linearLoss.setValues({ {0.36603546, 0.40687686, 0.87746394, 0.62148917, 0.86859787, 0.51380110,
         0.60315830, 0.00604892},
@@ -27,7 +31,7 @@ namespace EigenSinnTest {
         -0.72033381, -0.39438322, 1.14444125} });
     }
 
-    const array<Index, 4> dims = { 3, 8 };
+    const array<Index, 2> dims = { 3, 8 };
     Tensor<float, 2> linearInput, linearLoss;
   };
 }
