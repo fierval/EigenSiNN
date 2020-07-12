@@ -104,10 +104,10 @@ namespace EigenSinn {
         for (int k = 0; k < original_dims[0]; k++) {
 
           Index idx_flat = mask(k, grad_starts[1]);
-          Index idx_col = (idx_flat - k) / lengths[0];
+          Index idx_col = (idx_flat - k) / lengths[0] % lengths[1];
 
           // index has been unrolled during the forward operation
-          output(starts[0] + k, starts[1] + idx_col) = grads(k, grad_starts[1]);
+          output(starts[0] + k, starts[1] + idx_col) += grads(k, grad_starts[1]);
         }
       }
       return output;
@@ -187,7 +187,7 @@ namespace EigenSinn {
               Index idx_row = (idx_flat - k) / lengths[0] % lengths[1];
               Index idx_col = ((idx_flat  - k) / lengths[0] - idx_row) / lengths[1] % lengths[2];
 
-              output(k, starts[1] + idx_row, starts[2] + idx_col, j) = grads(k, grad_starts[1], grad_starts[2], j);
+              output(k, starts[1] + idx_row, starts[2] + idx_col, j) += grads(k, grad_starts[1], grad_starts[2], j);
             }
           }
         }

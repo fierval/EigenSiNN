@@ -20,9 +20,9 @@ namespace EigenSinnTest {
       
       commonData.init();
 
-      output.setValues({ {0.48233253, 1.93920422, 1.93920422},
-        {1.88566184, 1.88566184, 0.52365559},
-        {0.73577052, 1.12185359, 1.14444125} });
+      output.setValues({ { 0.87322980, 0.63184929, 2.51629639},
+        {2.07474923, 2.07474923, 1.04950535},
+        {-0.23254025, 0.24772950, 0.60365528}} );
 
       fakeloss.setValues({ {0.31773561, 0.25510252, 0.73881042},
         {0.81441122, 0.74392009, 0.56959468},
@@ -74,6 +74,9 @@ namespace EigenSinnTest {
     pl.init();
     pl.forward(commonData.linearInput);
     pl.backward(commonData.linearInput, fakeloss);
+
+    Tensor<float, 2> deriv = from_any<float, 2>(pl.get_loss_by_input_derivative());
+    std::cerr << deriv  << std::endl;
 
     EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(pl.get_loss_by_input_derivative()), dinput));
   }
