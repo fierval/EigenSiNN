@@ -2,7 +2,6 @@
 
 #include <unsupported/Eigen/CXX11/Tensor>
 
-using namespace EigenSinn;
 using namespace Eigen;
 
 namespace EigenSinnTest {
