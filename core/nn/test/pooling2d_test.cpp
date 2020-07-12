@@ -14,8 +14,8 @@ namespace EigenSinnTest {
 
     void SetUp() override {
 
-      output.resize(commonData.dims);
-      fakeloss.resize(commonData.dims);
+      output.resize(poolDims);
+      fakeloss.resize(poolDims);
       dinput.resize(commonData.dims);
       
       commonData.init();
@@ -39,6 +39,7 @@ namespace EigenSinnTest {
     CommonData2d commonData;
     Tensor<float, 2> output, dinput, fakeloss;
     const array<Index, 1> extents1d = { 4 };
+    const array<Index, 2> poolDims = { 3, 3 };
 
     const int stride = 2;
 
