@@ -1,7 +1,7 @@
 #pragma once
 
 #include "layer_base.hpp"
-#include <ops/poolingops.hpp>
+#include <ops/maxpoolingops.hpp>
 #include <ops/conversions.hpp>
 
 using namespace  Eigen;
