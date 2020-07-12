@@ -80,8 +80,7 @@ namespace EigenSinn {
         for (int k = 0; k < local_pool.dimension(0); k++) {
           
           output(k, output_starts[1]) = local_pool(k).second();
-          // unroll the index into the tuple since local_pool(k).first() contains flattened index
-          mask(k, output_starts[1]) = local_pool(k).first - k * extents[0];
+          mask(k, output_starts[1]) = local_pool(k).first;
         }
       }
 
@@ -104,8 +103,11 @@ namespace EigenSinn {
         // unroll the index of the gradient being passed
         for (int k = 0; k < original_dims[0]; k++) {
 
+          Index idx_flat = mask(k, grad_starts[1]);
+          Index idx_col = (idx_flat - k) / lengths[0];
+
           // index has been unrolled during the forward operation
-          output.slice(starts, lengths)(k, mask(k, grad_starts[1])) = grads(k, grad_starts[1]);
+          output.slice(starts[0] + k, starts[1] + idx_col) = grads(k, grad_starts[1]);
         }
       }
       return output;
@@ -181,11 +183,11 @@ namespace EigenSinn {
               // index has been unrolled during the forward operation
               Index idx_flat = mask(k, grad_starts[1], grad_starts[2], j);
 
-              Index idx_col = idx_flat / lengths[3] % lengths[2];
-              Index idx_row = idx_flat / lengths[3] / lengths[2] % lengths[1];
+              // extract column-major order based on: https://en.wikipedia.org/wiki/Row-_and_column-major_order
+              Index idx_row = (idx_flat - k) / lengths[0] % lengths[1];
+              Index idx_col = ((idx_flat  - k) / lengths[0] - idx_row) / lengths[1] % lengths[2];
 
-              //output.slice(starts, lengths)(k, idx_row, idx_col, j) = 
-                grads(k, grad_starts[1], grad_starts[2], j);
+              output(k, starts[1] + idx_row, starts[2] + idx_col, j) = grads(k, grad_starts[1], grad_starts[2], j);
             }
           }
         }

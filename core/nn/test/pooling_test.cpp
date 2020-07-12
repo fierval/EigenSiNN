@@ -172,9 +172,9 @@ namespace EigenSinnTest {
     MaxPoolingLayer<float, 4> pl(extents2d, stride);
     pl.init();
     pl.forward(commonData.convInput);
-    pl.backward(commonData.convInput, commonData.convLoss);
+    pl.backward(commonData.convInput, fakeloss);
 
-    EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 4>(pl.get_output()), output));
+    EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 4>(pl.get_loss_by_input_derivative()), dinput));
   }
 
 
