@@ -19,6 +19,7 @@ namespace EigenSinn {
     MaxPoolingLayer(const array<Index, Rank / 2>& _extents, Index _stride)
       : extents(_extents)
       , stride(_stride)
+      , original_dimensions({0})
     , max_pooler() {
 
     }

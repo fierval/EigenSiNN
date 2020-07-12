@@ -8,7 +8,7 @@ using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
-  class Pool : public ::testing::Test {
+  class Pool4d : public ::testing::Test {
 
   protected:
 
@@ -102,7 +102,7 @@ namespace EigenSinnTest {
 
   };
 
-  TEST_F(Pool, Validate4d) {
+  TEST_F(Pool4d, Validate) {
 
     NnTensor<4> t(1, 4, 4, 3);
     t.setConstant(1);
@@ -116,21 +116,7 @@ namespace EigenSinnTest {
     EXPECT_TRUE(res);
   }
 
-  TEST_F(Pool, Validate2d) {
-
-    NnTensor<2> t(4, 4);
-    t.setConstant(1);
-
-    auto dims = t.dimensions();
-    array<Index, 1> extents({ 2 });
-    int stride = 2;
-
-    bool res = check_valid_params<2>(extents, stride, dims);
-
-    EXPECT_TRUE(res);
-  }
-
-  TEST_F(Pool, BadExtent) {
+  TEST_F(Pool4d, BadExtent) {
 
     NnTensor<2> t(4, 4);
     t.setConstant(1);
@@ -144,7 +130,7 @@ namespace EigenSinnTest {
     EXPECT_FALSE(res);
   }
 
-  TEST_F(Pool, BadStride4d) {
+  TEST_F(Pool4d, BadStride4d) {
 
     NnTensor<4> t(3, 10, 10, 4);
     t.setConstant(1);
@@ -158,7 +144,7 @@ namespace EigenSinnTest {
     EXPECT_FALSE(res);
   }
 
-  TEST_F(Pool, Forward4d) {
+  TEST_F(Pool4d, Forward) {
 
     MaxPoolingLayer<float, 4> pl(extents2d, stride);
     pl.init();
@@ -167,7 +153,7 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 4>(pl.get_output()), output));
   }
 
-  TEST_F(Pool, Backward4d) {
+  TEST_F(Pool4d, Backward) {
 
     MaxPoolingLayer<float, 4> pl(extents2d, stride);
     pl.init();

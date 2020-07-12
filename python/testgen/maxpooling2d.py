@@ -2,27 +2,12 @@ import commondata2d as cd
 import torch
 import torch.nn as nn
 
-inp = torch.randn(1, 2, 10)
-pl = nn.MaxPool1d(3, stride=2, return_indices=True)
+inp = torch.randn(1, 3, 8)
+pl = nn.MaxPool1d(4, stride=2, return_indices=True)
 output, idx = pl(inp)
 
-fakeloss = torch.tensor([[[[0.53762484, 0.08841801],
-          [0.26598877, 0.08771902]],
-
-         [[0.14441812, 0.17294925],
-          [0.08538872, 0.09313697]],
-
-         [[0.27319407, 0.67958736],
-          [0.58928680, 0.76245397]]],
-
-
-        [[[0.93036085, 0.36994016],
-          [0.41254914, 0.93899775]],
-
-         [[0.51614463, 0.66111606],
-          [0.01932418, 0.13548207]],
-
-         [[0.78922635, 0.48408800],
-          [0.61365259, 0.99544948]]]], dtype=torch.float, device="cpu")
+fakeloss = torch.tensor([[[0.31773561, 0.25510252, 0.73881042],
+         [0.81441122, 0.74392009, 0.56959468],
+         [0.94542354, 0.31825888, 0.96742082]]])
 
 output.backward(fakeloss)
