@@ -4,7 +4,7 @@
 #include <ops/conversions.hpp>
 #include <ops/comparisons.hpp>
 
-#include "include/datacontainer.hpp"
+#include "include/commondata4d.hpp"
 
 using namespace EigenSinn;
 
@@ -99,7 +99,7 @@ namespace EigenSinnTest {
       Tensor<float, 1> beta, gamma;
       const float eps = 1e-5, momentum = 0.9;
 
-      CommonData commonData;
+      CommonData4d commonData;
 
       // channel first
       const float prec = 1e-5;

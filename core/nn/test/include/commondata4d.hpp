@@ -7,10 +7,10 @@ using namespace Eigen;
 
 namespace EigenSinnTest {
 
-  struct CommonData {
+  struct CommonData4d {
 
     // data will be presented in NHWC format
-    CommonData() {
+    CommonData4d() {
      
     }
 
@@ -84,6 +84,7 @@ namespace EigenSinnTest {
       convLoss = tmp.shuffle(shuffleDims);
     }
 
+    // 4d testa
     const array<Index, 4> dims = { 2, 3, 4, 4 }, poolDims = { 2, 3, 2, 2 };
     const array<Index, 4> shuffleDims = { 0, 2, 3, 1 }, unshuffleDims = { 0, 3, 1, 2 };
     Tensor<float, 4> convInput, convLoss;

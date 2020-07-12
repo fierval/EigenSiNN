@@ -1,7 +1,7 @@
 #include <iostream>
 #include <gtest/gtest.h>
 #include <layers/poolinglayer.hpp>
-#include "include/datacontainer.hpp"
+#include "include/commondata4d.hpp"
 #include "ops/comparisons.hpp"
 
 using namespace EigenSinn;
@@ -93,7 +93,7 @@ namespace EigenSinnTest {
       dinput = tmp.shuffle(commonData.shuffleDims);
     }
 
-    CommonData commonData;
+    CommonData4d commonData;
     Tensor<float, 4> output, dinput, fakeloss;
     const array<Index, 2> extents2d = { 2, 2 };
     const array<Index, 2> extents1d = { 2 };
