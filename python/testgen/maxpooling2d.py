@@ -1,9 +1,10 @@
-import commondata
+import commondata2d as cd
 import torch
 import torch.nn as nn
 
-pl = nn.MaxPool2d(2, stride=2, return_indices=True)
-output, idx = pl(commondata.inp)
+inp = torch.randn(1, 2, 10)
+pl = nn.MaxPool1d(3, stride=2, return_indices=True)
+output, idx = pl(inp)
 
 fakeloss = torch.tensor([[[[0.53762484, 0.08841801],
           [0.26598877, 0.08771902]],

@@ -7,10 +7,10 @@ using namespace Eigen;
 
 namespace EigenSinnTest {
 
-  struct CommonData4d {
+  struct CommonData2d {
 
     // data will be presented in NHWC format
-    CommonData4d() {
+    CommonData2d() {
 
     }
 

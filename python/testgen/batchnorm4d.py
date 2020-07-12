@@ -1,4 +1,4 @@
-import commondata
+import commondata4d as cd
 import torch
 import torch.nn as nn
 
@@ -10,6 +10,6 @@ bn.bias.data = \
     torch.tensor([0.1, 0.2, 0.3,], dtype=torch.float, device=commondata.device)
 
 
-output = bn(commondata.inp)
-output.backward(commondata.fakeloss)
+output = bn(cd.inp)
+output.backward(cd.fakeloss)
 
