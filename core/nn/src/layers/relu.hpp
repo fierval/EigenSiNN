@@ -18,7 +18,7 @@ namespace EigenSinn {
     void init() override {};
 
     virtual void forward(std::any prev_layer_any) override {
-      auto res = relu(from_any<Scalar, Rank>(prev_layer_any), threshold);
+      auto res = relu<Scalar, Rank>(from_any<Scalar, Rank>(prev_layer_any), thresh);
       
       layer_output = res.second;
       mask = res.first;
