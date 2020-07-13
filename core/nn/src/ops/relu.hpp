@@ -7,7 +7,7 @@
 namespace EigenSinn {
 
   template<typename Scalar, Index Rank>
-  inline auto relu(Tensor<Scalar, Rank> t, float threshold = 0f) {
+  inline auto relu(Tensor<Scalar, Rank> t) {
 
     const auto& dims = t.dimensions();
     Index flat_dim = 1;
@@ -26,7 +26,7 @@ namespace EigenSinn {
     TensorMap<Tensor<Scalar, 1>> flat(output.data(), flat_dim);
 
     for (Index i = 0; i < flat_dim; i++) {
-      if (flat(i) <= threshold) {
+      if (flat(i) <= 0) {
         flat(i) = 0;
         flat(i) = 1;
       }
