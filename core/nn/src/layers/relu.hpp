@@ -8,16 +8,16 @@ using namespace  Eigen;
 namespace EigenSinn {
 
   template <typename Scalar, Index Rank>
-  class ReLU : LayerBase {
+  class LeakyReLU : LayerBase {
   public:
     // leaky relu if necessary
-    ReLU() {
+    LeakyReLU(float _thresh = 0) : thresh(_thresh) {
 
     }
     void init() override {};
 
     void forward(std::any prev_layer_any) override {
-      auto res = relu<Scalar, Rank>(from_any<Scalar, Rank>(prev_layer_any), thresh);
+      auto res = leaky_relu(from_any<Scalar, Rank>(prev_layer_any), thresh);
 
       layer_output = res.second;
       mask = res.first;
@@ -37,7 +37,15 @@ namespace EigenSinn {
 
 
   private:
-    Tensor<byte, 1> mask;
+    float thresh;
+    Tensor<float, 1> mask;
     Tensor<Scalar, Rank> layer_output, layer_grad;
   };
+
+  template<typename Scalar, Index Rank>
+  class ReLU : public LeakyReLU<Scalar, Rank> {
+  public:
+    ReLU() : LeakyReLU(0) {}
+  };
+
 }

@@ -44,7 +44,7 @@ namespace EigenSinnTest {
 
   TEST_F(ReLU2d, Forward) {
 
-    ReLU<float, 2> rl(thresh);
+    ReLU<float, 2> rl;
     rl.init();
     rl.forward(commonData.linearInput);
 
@@ -53,7 +53,7 @@ namespace EigenSinnTest {
 
   TEST_F(ReLU2d, Backward) {
 
-    ReLU<float, 2> rl(thresh);
+    ReLU<float, 2> rl;
     rl.init();
     rl.forward(commonData.linearInput);
     rl.backward(commonData.linearInput, fakeloss);
