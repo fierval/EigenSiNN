@@ -13,7 +13,7 @@ namespace EigenSinn {
   public:
     virtual void init() = 0;
 
-    virtual void forward(std::any prev_layer) = 0;
+    virtual void forward(std::any prev_layer_any) = 0;
 
     virtual void backward(std::any prev_layer, std::any next_layer_grad) = 0;
 
