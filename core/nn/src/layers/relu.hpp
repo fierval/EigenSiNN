@@ -11,7 +11,7 @@ namespace EigenSinn {
   class LeakyReLU : LayerBase {
   public:
     // leaky relu if necessary
-    LeakyReLU(float _thresh = 0) : thresh(_thresh) {
+    LeakyReLU(float _thresh) : thresh(_thresh) {
 
     }
     void init() override {};
