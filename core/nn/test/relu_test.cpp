@@ -16,6 +16,9 @@ namespace EigenSinnTest {
 
       output.resize(commonData.dims);
       dinput.resize(commonData.dims);
+      dinput_leaky.resize(commonData.dims);
+      output_leaky.resize(commonData.dims);
+      
 
       commonData.init();
 
@@ -32,11 +35,26 @@ namespace EigenSinnTest {
           0.52772647, 0.00000000, 0.00000000},
          {0.00000000, 0.00000000, 0.00000000, 0.00000000, 0.00000000,
           0.50212926, 0.00000000, 0.52774191} });
+
+      dinput_leaky.setValues({ {3.66035461e-01, 4.06876858e-03, 8.77463937e-01, 6.21489167e-01,
+        8.68597865e-01, 5.13801072e-03, 6.03158295e-01, 6.04892010e-03},
+        {2.11180025e-03, 1.37558520e-01, 2.36974354e-03, 1.61114872e-01,
+        9.21540707e-03, 5.27726471e-01, 2.71451008e-05, 3.27415229e-03},
+        {3.52327945e-03, 7.94062577e-03, 5.43260481e-03, 4.65490250e-03,
+        1.63546554e-03, 5.02129257e-01, 1.71945989e-03, 5.27741909e-01} });
+
+      output_leaky.setValues({ { 8.73229802e-01, -1.48464823e-02, 6.31849289e-01, 3.85599732e-01,
+        4.12745982e-01, -7.00196670e-03, 1.07072473e-01, 2.51629639e+00},
+        {-1.58931315e-02, 8.12266588e-01, -1.80089306e-02, 2.07474923e+00,
+        -1.81259448e-03, 1.04950535e+00, -4.07818094e-04, -3.25851166e-03},
+        {-2.32540234e-03, -1.10632433e-02, -1.68039929e-02, -5.08756749e-03,
+        -7.07172183e-03, 2.47729495e-01, -8.92369600e-04, 6.03655279e-01} });
     }
 
+
     CommonData2d commonData;
-    Tensor<float, 2> output, dinput;
-    float thresh = 0.3;
+    Tensor<float, 2> output, output_leaky, dinput, dinput_leaky;
+    float thresh = 0.01;
 
   };
 
@@ -57,6 +75,25 @@ namespace EigenSinnTest {
     rl.backward(commonData.linearInput, commonData.linearLoss);
 
     EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(rl.get_loss_by_input_derivative()), dinput, 3e-5));
+  }
+
+  TEST_F(ReLU2d, LeakyForward) {
+
+    LeakyReLU<float, 2> rl(thresh);
+    rl.init();
+    rl.forward(commonData.linearInput);
+
+    EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(rl.get_output()), output_leaky));
+  }
+
+  TEST_F(ReLU2d, LeakyBackward) {
+
+    LeakyReLU<float, 2> rl(thresh);
+    rl.init();
+    rl.forward(commonData.linearInput);
+    rl.backward(commonData.linearInput, commonData.linearLoss);
+
+    EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(rl.get_loss_by_input_derivative()), dinput_leaky, 3e-5));
   }
 
 
