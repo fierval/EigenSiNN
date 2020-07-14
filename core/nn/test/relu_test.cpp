@@ -56,7 +56,7 @@ namespace EigenSinnTest {
     rl.forward(commonData.linearInput);
     rl.backward(commonData.linearInput, commonData.linearLoss);
 
-    EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(rl.get_loss_by_input_derivative()), dinput));
+    EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(rl.get_loss_by_input_derivative()), dinput, 3e-5));
   }
 
 

@@ -18,25 +18,26 @@ namespace EigenSinn {
   }
 
   template<typename Scalar, Index Rank>
-  inline auto leaky_relu(const Tensor<Scalar, Rank>& t, float threshold=0.01) {
+  inline auto leaky_relu(const Tensor<Scalar, Rank>& t, float threshold) {
 
     auto flat_dim = get_flat_dims(t);
 
-    Tensor<float, 1> mask(flat_dim);
+    Tensor<Scalar, Rank> mask(t.dimensions());
     Tensor<Scalar, Rank> output(t.dimensions());
     output = t;
     mask.setZero();
 
     array<Index, 1> flat_dim_arr = { flat_dim };
-    TensorMap<Tensor<Scalar, 1>> flat(output.data(), flat_dim);
+    TensorMap<Tensor<Scalar, 1>> flat_output(output.data(), flat_dim);
+    TensorMap<Tensor<Scalar, 1>> flat_mask(mask.data(), flat_dim);
 
     for (Index i = 0; i < flat_dim; i++) {
-      if (flat(i) < 0) {
-        flat(i) *= threshold;
-        mask(i) = threshold;
+      if (flat_output(i) < 0) {
+        flat_output(i) *= threshold;
+        flat_mask(i) = threshold;
       }
       else {
-        mask(i) = 1.;
+        flat_mask(i) = 1.;
       }
     }
 
@@ -44,10 +45,10 @@ namespace EigenSinn {
   }
 
   template<typename Scalar, Index Rank>
-  inline auto leaky_relu_back(const Tensor<Scalar, Rank>& next_layer_grad, const Tensor<float, 1>& mask) {
+  inline auto leaky_relu_back(Tensor<Scalar, Rank>& next_layer_grad, const Tensor<Scalar, Rank>& mask) {
 
     Tensor<Scalar, Rank> output;
-
+    
     output = next_layer_grad * mask;
     return output;
   }

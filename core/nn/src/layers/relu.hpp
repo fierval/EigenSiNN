@@ -11,7 +11,7 @@ namespace EigenSinn {
   class LeakyReLU : LayerBase {
   public:
     // leaky relu if necessary
-    LeakyReLU(float _thresh) : thresh(_thresh) {
+    LeakyReLU(float _thresh = 0.01) : thresh(_thresh) {
 
     }
     void init() override {};
@@ -38,7 +38,7 @@ namespace EigenSinn {
 
   private:
     float thresh;
-    Tensor<float, 1> mask;
+    Tensor<Scalar, Rank> mask;
     Tensor<Scalar, Rank> layer_output, layer_grad;
   };
 
