@@ -15,29 +15,27 @@ namespace EigenSinnTest {
     void SetUp() override {
 
       output.resize(commonData.dims);
-      fakeloss.resize(commonData.dims);
       dinput.resize(commonData.dims);
 
       commonData.init();
 
-      output.setValues({ { 0.87322980, 0.63184929, 2.51629639},
-        {2.07474923, 2.07474923, 1.04950535},
-        {-0.23254025, 0.24772950, 0.60365528} });
+      output.setValues({ { 0.87322980, 0.00000000, 0.63184929, 0.38559973, 0.41274598,
+          0.00000000, 0.10707247, 2.51629639} ,
+        {0.00000000, 0.81226659, 0.00000000, 2.07474923, 0.00000000,
+          1.04950535, 0.00000000, 0.00000000},
+         {0.00000000, 0.00000000, 0.00000000, 0.00000000, 0.00000000,
+          0.24772950, 0.00000000, 0.60365528} });
 
-      fakeloss.setValues({ {0.31773561, 0.25510252, 0.73881042},
-        {0.81441122, 0.74392009, 0.56959468},
-        {0.94542354, 0.31825888, 0.96742082} });
-
-      dinput.setValues({ {0.31773561, 0.00000000, 0.25510252, 0.00000000, 0.00000000,
-        0.00000000, 0.00000000, 0.73881042},
-        {0.00000000, 0.00000000, 0.00000000, 1.55833125, 0.00000000,
-        0.56959468, 0.00000000, 0.00000000},
-        {0.94542354, 0.00000000, 0.00000000, 0.00000000, 0.00000000,
-        0.31825888, 0.00000000, 0.96742082} });
+      dinput.setValues({ { 0.36603546, 0.00000000, 0.87746394, 0.62148917, 0.86859787,
+          0.00000000, 0.60315830, 0.00604892} ,
+         {0.00000000, 0.1375852, 0.00000000, 0.16111487, 0.00000000,
+          0.52772647, 0.00000000, 0.00000000},
+         {0.00000000, 0.00000000, 0.00000000, 0.00000000, 0.00000000,
+          0.50212926, 0.00000000, 0.52774191} });
     }
 
     CommonData2d commonData;
-    Tensor<float, 2> output, dinput, fakeloss;
+    Tensor<float, 2> output, dinput;
     float thresh = 0.3;
 
   };
@@ -56,7 +54,7 @@ namespace EigenSinnTest {
     ReLU<float, 2> rl;
     rl.init();
     rl.forward(commonData.linearInput);
-    rl.backward(commonData.linearInput, fakeloss);
+    rl.backward(commonData.linearInput, commonData.linearLoss);
 
     EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(rl.get_loss_by_input_derivative()), dinput));
   }
