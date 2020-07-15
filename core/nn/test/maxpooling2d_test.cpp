@@ -75,9 +75,6 @@ namespace EigenSinnTest {
     pl.forward(commonData.linearInput);
     pl.backward(commonData.linearInput, fakeloss);
 
-    Tensor<float, 2> deriv = from_any<float, 2>(pl.get_loss_by_input_derivative());
-    std::cerr << deriv  << std::endl;
-
     EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(pl.get_loss_by_input_derivative()), dinput));
   }
 

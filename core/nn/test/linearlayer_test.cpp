@@ -33,7 +33,7 @@ namespace EigenSinnTest {
           -0.24717081, -0.32011586,  0.18866043} });
 
       fakeloss.resize(outDims);
-      fakeloss.setValues({ {0.13770211, 0.28582627, 0.86899745, 0.27578735},
+      fakeloss.setValues({{0.13770211, 0.28582627, 0.86899745, 0.27578735},
         {0.04713255, 0.51820499, 0.27709258, 0.74432141},
         {0.47782332, 0.82197350, 0.52797425, 0.03082085} });
 
@@ -60,7 +60,7 @@ namespace EigenSinnTest {
 
     linear.init(weights);
     linear.forward(commonData.linearInput);
-    linear.backward(commonData.linearInput, commonData.linearLoss);
+    linear.backward(commonData.linearInput, fakeloss);
     
     EXPECT_TRUE(is_elementwise_approx_eq(output, from_any<float, 2>(linear.get_output())));
     EXPECT_TRUE(is_elementwise_approx_eq(dinput, from_any<float, 2>(linear.get_loss_by_input_derivative())));
