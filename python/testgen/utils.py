@@ -1,2 +1,4 @@
 def to_cpp(x):
-    return str(x).replace("[", "{").replace("]", "}")
+
+    s = str(x).replace("[", "{").replace("]", "}").replace("tensor", "")
+    return s
