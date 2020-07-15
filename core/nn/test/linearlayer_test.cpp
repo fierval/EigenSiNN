@@ -54,11 +54,11 @@ namespace EigenSinnTest {
     array<Index, 2> outDims = { 3, 4 };
   };
 
-  TEST_F(FullyConnected, BackpropTest) {
+  TEST_F(FullyConnected, Backprop) {
 
     Linear<float> linear(commonData.dims[0], commonData.dims[1], outDims[1], false);
 
-    linear.init();
+    linear.init(weights);
     linear.forward(commonData.linearInput);
     linear.backward(commonData.linearInput, commonData.linearLoss);
     
