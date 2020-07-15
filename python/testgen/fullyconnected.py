@@ -1,6 +1,7 @@
 import commondata2d as cd
 import torch
 import torch.nn as nn
+from utils import to_cpp
 
 in_feat = 8
 out_feat = 4
@@ -23,3 +24,13 @@ fakeloss = torch.tensor([[0.13770211, 0.28582627, 0.86899745, 0.27578735],
         [0.47782332, 0.82197350, 0.52797425, 0.03082085]], requires_grad=True)
         
 output.backward(fakeloss)
+
+fakeloss_cpp = to_cpp(fakeloss)
+inp_cpp = to_cpp(cd.inp.reshape((3,8)))
+inp_grad_cpp = to_cpp(cd.inp.grad)
+output_cpp = to_cpp(output)
+
+print(f"fakeloss: {fakeloss_cpp}")
+print(f"input: {cd.inp.reshape((3,8))}")
+print(f"dL/dX: {inp_grad_cpp}")
+print(f"output: {output_cpp}")
