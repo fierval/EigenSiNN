@@ -67,8 +67,9 @@ namespace EigenSinn {
       prod_dims = { IndexPair<int>(0, 0) };
       layer_grad_loss_by_weight = prev_layer.contract(next_layer_grad, prod_dims);
 
+      //db: dL/dY * dY/db = sum_j(dL/dY_j) dim: [1, M], same as bias
       if (use_bias) {
-        bias_grad = prev_layer.sum(reduce_bias_dim);
+        bias_grad = next_layer_grad.sum(reduce_bias_dim);
       }
     }
 
