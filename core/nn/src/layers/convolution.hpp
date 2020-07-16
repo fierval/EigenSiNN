@@ -52,7 +52,7 @@ namespace EigenSinn {
     }
 
     // feed to optimizer
-    ConvTensor& get_loss_by_weights_derivative() {
+    const std::any get_loss_by_weights_derivative() override {
       return derivative_by_filter;
     }
 

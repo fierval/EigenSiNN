@@ -119,11 +119,11 @@ namespace EigenSinn {
       return layer_gradient;
     }
 
-    Tensor<Scalar, 1>& get_loss_by_weight_derivative() {
+    const std::any get_loss_by_weights_derivative() override {
       return dgamma;
     }
 
-    Tensor<Scalar, 1>& get_loss_by_bias_derivative() {
+    const std::any get_loss_by_bias_derivative() override {
       return dbeta;
     }
 

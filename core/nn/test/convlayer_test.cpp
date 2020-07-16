@@ -1,5 +1,4 @@
 #include "ops/convolutions.hpp"
-#include "layers/input.hpp"
 #include <gtest/gtest.h>
 #include <iostream>
 #include "layers/image_input.hpp"

@@ -69,7 +69,7 @@ namespace EigenSinn {
 
       //db: dL/dY * dY/db = sum_j(dL/dY_j) dim: [1, M], same as bias
       if (use_bias) {
-        bias_grad = next_layer_grad.sum(reduce_bias_dim);
+        loss_by_bias_derivative = next_layer_grad.sum(reduce_bias_dim);
       }
     }
 
@@ -99,8 +99,12 @@ namespace EigenSinn {
     }
 
     // feed to optimizer
-    Tensor<Scalar, 2>& get_loss_by_weights_derivative() {
+    const std::any get_loss_by_weights_derivative() {
       return layer_grad_loss_by_weight;
+    }
+
+    const std::any get_loss_by_bias_derivative() override {
+      return loss_by_bias_derivative;
     }
 
     const std::any get_output() {
@@ -115,7 +119,7 @@ namespace EigenSinn {
 
     Tensor<Scalar, 2> weights;
     Tensor<Scalar, 2> layer_output, layer_grad_loss_by_weight, layer_grad_loss_by_input;
-    Tensor<Scalar, 1> bias, bias_grad;
+    Tensor<Scalar, 1> bias, loss_by_bias_derivative;
 
     const bool use_bias;
     const int in_dim, out_dim, batch_size;

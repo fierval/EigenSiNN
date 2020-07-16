@@ -21,5 +21,9 @@ namespace EigenSinn {
 
     virtual const std::any get_loss_by_input_derivative() = 0;
 
+    virtual const std::any get_loss_by_weights_derivative() { return std::any(); };
+
+    virtual const std::any get_loss_by_bias_derivative() { return std::any(); }
+
   };
 }
