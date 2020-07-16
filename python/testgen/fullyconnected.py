@@ -30,9 +30,40 @@ inp_cpp = to_cpp(cd.inp.reshape((3,8)))
 inp_grad_cpp = to_cpp(cd.inp.grad)
 output_cpp = to_cpp(output)
 weights_cpp = to_cpp(fc.weight.transpose(1, 0))
+dweights_cpp = to_cpp(fc.weight.grad.transpose(1, 0))
 
 print(f"fakeloss: {fakeloss_cpp}")
 print(f"input: {cd.inp.reshape((3,8))}")
 print(f"dL/dX: {inp_grad_cpp}")
 print(f"output: {output_cpp}")
 print(f"weights: {weights_cpp}")
+print(f"dweights: {dweights_cpp}")
+
+print("#########################################################")
+
+######## With bias #########
+cd.inp.grad.zero_()
+
+fc = nn.Linear(in_feat, out_feat, bias=True)
+
+fc.weight.data = torch.tensor([[ 0.30841491,  0.16301581,  0.05912393,  0.32572004, -0.00591815,
+         -0.07333553,  0.16375038, -0.35274175],
+        [ 0.19089887, -0.24521475,  0.27066174, -0.00526837, -0.18401390,
+         -0.20650741, -0.28048125,  0.29642352],
+        [-0.15496132,  0.15089461,  0.16939566, -0.25025240, -0.18078347,
+         -0.07853529, -0.32877934,  0.19627282],
+        [-0.28125578, -0.15781732, -0.32488498, -0.08520141, -0.27685770,
+         -0.02988693,  0.18739149,  0.32216403]], requires_grad=True)
+
+fc.bias.data = torch.tensor([0.87039185, 0.08955163, 0.14195210, 0.51105964], requires_grad=True)
+output = fc(cd.inp.reshape((3,8)))
+output.backward(fakeloss)
+
+output_cpp = to_cpp(output)
+dweights_cpp = to_cpp(fc.weight.grad.transpose(1, 0))
+bias_cpp = to_cpp(fc.bias)
+dbias_cpp = to_cpp(fc.bias.grad)
+
+print(f"output: {output_cpp}")
+print(f"bias {bias_cpp}")
+print(f"dL/db {dbias_cpp}")

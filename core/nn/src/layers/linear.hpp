@@ -104,6 +104,9 @@ namespace EigenSinn {
     }
 
     const std::any get_loss_by_bias_derivative() override {
+      if (!use_bias) {
+        throw std::logic_error("Not using bias");
+      }
       return loss_by_bias_derivative;
     }
 
