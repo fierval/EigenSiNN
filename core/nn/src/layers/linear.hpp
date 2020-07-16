@@ -21,18 +21,20 @@ namespace EigenSinn {
 
   typedef array<IndexPair<int>, 1> ProductDims;
 
-  template<typename Scalar, Index Rank = 2>
-  class Linear : LayerBase{
+  template<typename Scalar>
+  class Linear : LayerBase {
 
   public:
-    Linear(Index _batch_size, Index _in_dim, Index _out_dim, bool _use_bias = false) :
+    Linear(int _batch_size, int _in_dim, int _out_dim, bool _use_bias = false) :
       batch_size(_batch_size),
       in_dim(_in_dim),
       out_dim(_out_dim),
-      use_bias(_use_bias)
-    {
+      use_bias(_use_bias),
+      broadcast_bias_dim({ _batch_size, 1 }) {
 
-      biased_dim = use_bias ? in_dim + 1 : in_dim;
+      if (use_bias) {
+        bias.resize(out_dim);
+      }
     }
 
     // prev_layer_out: X[l-1], dim: [N, D]
@@ -41,22 +43,20 @@ namespace EigenSinn {
       // dims: [N, D] * [D, M] -> [N, M]
 
       ProductDims prod_dims = { IndexPair<int>(1, 0) };
-      layer_output = std::any_cast<Tensor<Scalar, Rank>&>(prev_layer).contract(weights, prod_dims);
+      layer_output = std::any_cast<Tensor<Scalar, 2>&>(prev_layer).contract(weights, prod_dims);
 
-      // we assume that bias adjustment is done at the end of the forward pass
-      // since weights will include a bias dimension at initialization, we don't need
-      // to worry about biases anymore
-      // (X,1) * W dim: [N, D+1] * [D + 1, M]
+      // bias: [1, M]
       if (use_bias) {
-        layer_output = adjust_linear_bias(layer_output);
+        Tensor<Scalar, 2> broadcast_bias = bias.reshape(array<Index, 2>{ 1, bias.dimension(0) }).broadcast(broadcast_bias_dim);
+        layer_output += broadcast_bias;
       }
     }
 
     // next_layer_grad: delta[l+1] = dL/dX[l+1], dims: [N, M] (same as X[l+1])
-    void backward(std::any prev_layer_any, std::any next_layer_grad_any) override{
+    void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
 
-      Tensor<Scalar, Rank> prev_layer = std::any_cast<Tensor<Scalar, Rank>&>(prev_layer_any);
-      Tensor<Scalar, Rank> next_layer_grad = std::any_cast<Tensor<Scalar, Rank>&>(next_layer_grad_any);
+      Tensor<Scalar, 2> prev_layer = std::any_cast<Tensor<Scalar, 2>&>(prev_layer_any);
+      Tensor<Scalar, 2> next_layer_grad = std::any_cast<Tensor<Scalar, 2>&>(next_layer_grad_any);
 
       // this will be fed to the previous backprop layer as the delta parameter
       // dL/dX = dim delta[l+1] * w.T: [N, M] * [M, D] -> [N, D] (same as X[l-1])
@@ -66,10 +66,19 @@ namespace EigenSinn {
       //dl/dW = dim X[l].T * delta[l+1]: [D, N] * [N, M] -> [D, M], same as W
       prod_dims = { IndexPair<int>(0, 0) };
       layer_grad_loss_by_weight = prev_layer.contract(next_layer_grad, prod_dims);
+
+      if (use_bias) {
+        bias_grad = prev_layer.sum(reduce_bias_dim);
+      }
     }
 
     void init(const Tensor<Scalar, 2>& _weights) {
       weights = _weights;
+    }
+
+    void init(const Tensor<Scalar, 2>& _weights, const Tensor<Scalar, 1>& _bias) {
+      init(_weights);
+      bias = _bias;
     }
 
     // TODO: actual initialization needed
@@ -79,9 +88,7 @@ namespace EigenSinn {
       }
 
       //weights of dimension (D, M)
-      weights.resize(biased_dim, out_dim);
-      weights.setRandom<internal::NormalRandomGenerator<float>>();
-      //set_normal_random(weights.data(), static_cast<int>(weights.size()), rng, mu, sigma);
+      weights.setRandom<internal::NormalRandomGenerator<Scalar>>();
     }
 
     // this will be fed to compute dL/dW[l-1]
@@ -91,7 +98,7 @@ namespace EigenSinn {
     }
 
     // feed to optimizer
-    Tensor<Scalar, Rank>& get_loss_by_weights_derivative() {
+    Tensor<Scalar, 2>& get_loss_by_weights_derivative() {
       return layer_grad_loss_by_weight;
     }
 
@@ -99,17 +106,19 @@ namespace EigenSinn {
       return layer_output;
     }
 
-    Tensor<Scalar, Rank>& get_weights() {
+    Tensor<Scalar, 2>& get_weights() {
       return weights;
     }
 
   private:
 
-    Tensor<Scalar, Rank> weights;
-    Tensor<Scalar, Rank> layer_output, layer_grad_loss_by_weight, layer_grad_loss_by_input;
+    Tensor<Scalar, 2> weights;
+    Tensor<Scalar, 2> layer_output, layer_grad_loss_by_weight, layer_grad_loss_by_input;
+    Tensor<Scalar, 1> bias, bias_grad;
 
     const bool use_bias;
-    const Index in_dim, out_dim, batch_size;
-    Index biased_dim;
+    const int in_dim, out_dim, batch_size;
+    const array<int, 2> broadcast_bias_dim;
+    const array<int, 1> reduce_bias_dim = { 0 };
   };
 }
