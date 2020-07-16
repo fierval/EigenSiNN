@@ -7,6 +7,7 @@ namespace EigenSinn {
 
   // REVIEW: Not implementing bias for now
   // Batch normalization layers can take care of bias
+  template <typename Scalar, Index Rank = 4>
   class ConvolutionalLayer : LayerBase {
 
   public:
@@ -25,13 +26,13 @@ namespace EigenSinn {
 
     void forward(std::any prev_layer) override {
 
-      layer_output = convolve_valid(std::any_cast<ConvTensor&>(prev_layer), kernel);
+      layer_output = convolve_valid(std::any_cast<Tensor<Scalar, Rank>&>(prev_layer), kernel);
     }
 
     void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
       
-      ConvTensor prev_layer = std::any_cast<ConvTensor&>(prev_layer_any);
-      ConvTensor next_layer_grad = std::any_cast<ConvTensor&>(next_layer_grad_any);
+      Tensor<Scalar, Rank> prev_layer = std::any_cast<Tensor<Scalar, Rank>&>(prev_layer_any);
+      Tensor<Scalar, Rank> next_layer_grad = std::any_cast<Tensor<Scalar, Rank>&>(next_layer_grad_any);
 
       // dL/dF = dL/dY * dY/dF
       // dL/dF = X conv dL/dY (used for gradient computation)
@@ -42,7 +43,7 @@ namespace EigenSinn {
       // dL/dX = F full_conv dL/dY (used for gradients chaining as next_layer_grad)
       // has layer output dim
       array<bool, 4> rev_idx({ false, true, false, false });
-      ConvTensor rev_kernel = kernel.reverse(rev_idx);
+      Tensor<Scalar, Rank> rev_kernel = kernel.reverse(rev_idx);
       
       derivative_by_input = convolve_full(rev_kernel, next_layer_grad);
     }
@@ -60,11 +61,11 @@ namespace EigenSinn {
       return layer_output;
     }
 
-    ConvTensor& get_weights() {
+    Tensor<Scalar, Rank>& get_weights() {
       return kernel;
     }
 
   private:
-    ConvTensor kernel, derivative_by_input, derivative_by_filter, layer_output;
+    Tensor<Scalar, Rank> kernel, derivative_by_input, derivative_by_filter, layer_output;
   };
 }

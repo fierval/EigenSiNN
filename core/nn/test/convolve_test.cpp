@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 using namespace EigenSinn;
+using ConvTensor = Tensor<float, 4>;
 
 namespace EigensinnTest {
   TEST(Convolution, Valid) {

@@ -1,8 +1,6 @@
 #include "layers/linear.hpp"
-#include "Random.h"
 #include "include/commondata2d.hpp"
 #include <iostream>
-#include "ops/conversions.hpp"
 #include "ops/comparisons.hpp"
 
 #include <gtest/gtest.h>

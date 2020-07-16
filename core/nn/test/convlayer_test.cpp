@@ -1,13 +1,23 @@
-#include "ops/convolutions.hpp"
 #include <gtest/gtest.h>
 #include <iostream>
-#include "layers/image_input.hpp"
 #include "layers/convolution.hpp"
+#include "include/commondata4d.hpp"
 
 using namespace EigenSinn;
 
 namespace EigenSinnTest {
-  TEST(Reverse, Reverse) {
+
+  class Convolution : public ::testing::Test {
+
+  protected:
+    void SetUp() {
+
+    }
+
+    Tensor<float, 4> fakeloss;
+  };
+
+  TEST_F(Convolution, Backprop) {
 
     Eigen::Tensor<int, 2> a(4, 3);
 
