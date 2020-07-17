@@ -11,15 +11,14 @@ namespace EigenSinn {
       return false;
     }
 
-    if (Rank != 2 || Rank != 4) {
-
+    if (Rank != 2 && Rank != 4) {
       return false;
     }
 
     for (Index i = 0; i < Rank / 2; i++) {
-      // we are interested in the second or second and third dimensions
+      // we are interested in the second or 3rd and 4th
       // depending on the tensor: 2d or 4d
-      int tensor_dim = dims[i + 1];
+      int tensor_dim = Rank == 2 ? dims[i + 1] : dims[i + 2];
       int diff = tensor_dim - extents[i];
 
       if (diff < 0) {
