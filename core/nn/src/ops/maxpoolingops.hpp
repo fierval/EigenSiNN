@@ -1,16 +1,8 @@
 #pragma once
 
-#include <unsupported/Eigen/CXX11/Tensor>
-#include <tuple>
-#include <stdexcept>
 #include "opsbase.hpp"
 
 namespace EigenSinn {
-
-  enum PoolType : int {
-    max,
-    avg
-  };
 
   template <int Rank, class Dims>
   inline bool check_valid_params(const array<Index, Rank / 2>& extents, int stride, Dims& dims) {
@@ -19,7 +11,7 @@ namespace EigenSinn {
       return false;
     }
 
-    if ((Rank == 2 || Rank == 4) && Rank / 2 != extents.size()) {
+    if (Rank != 2 || Rank != 4) {
 
       return false;
     }
@@ -126,23 +118,23 @@ namespace EigenSinn {
         throw std::invalid_argument("Invalid pooling dimensions");
       }
 
-      Tensor<Tuple<Index, Scalar>, 2> local_pool(dims[0], dims[3]);
+      Tensor<Tuple<Index, Scalar>, 2> local_pool(dims[0], dims[1]);
       
-      Tensor<Scalar, 4> output(dims[0], (dims[1] - extents[0]) / stride + 1, (dims[2] - extents[1]) / stride + 1, dims[3]);
+      Tensor<Scalar, 4> output(dims[0], dims[1], (dims[2] - extents[0]) / stride + 1, (dims[3] - extents[1]) / stride + 1);
 
       Tensor<Index, 4> mask(output.dimensions());
 
       array<Index, 4> starts({ 0, 0, 0, 0 });
-      array<Index, 4> lengths({ dims[0], extents[0], extents[1], dims[3] });
-      array<Index, 2> reduce_dims({ 1, 2 });
+      array<Index, 4> lengths({ dims[0], dims[1], extents[0], extents[1]});
+      array<Index, 2> reduce_dims({ 2, 3 });
 
       array<Index, 4> output_starts({ 0, 0, 0, 0 });
 
       // get index tuples in order to use tuple reducer
       Tensor<Tuple<Index, Scalar>, 4> index_tuples(lengths);
 
-      for (starts[1] = 0, output_starts[1] = 0; starts[1] + extents[0] <= dims[1]; starts[1] += stride, output_starts[1]++) {
-        for (starts[2] = 0, output_starts[2] = 0; starts[2] + extents[1] <= dims[2]; starts[2] += stride, output_starts[2]++) {
+      for (starts[2] = 0, output_starts[2] = 0; starts[2] + extents[0] <= dims[2]; starts[2] += stride, output_starts[2]++) {
+        for (starts[3] = 0, output_starts[3] = 0; starts[3] + extents[1] <= dims[3]; starts[3] += stride, output_starts[3]++) {
 
           index_tuples = t.slice(starts, lengths).index_tuples();
 
@@ -153,8 +145,8 @@ namespace EigenSinn {
           for (int k = 0; k < local_pool.dimension(0); k++) {
             for (int j = 0; j < local_pool.dimension(1); j++) {
 
-              mask(k, output_starts[1], output_starts[2], j) = local_pool(k, j).first;
-              output(k, output_starts[1], output_starts[2], j) = local_pool(k, j).second;
+              mask(k, j, output_starts[2], output_starts[3]) = local_pool(k, j).first;
+              output(k, j, output_starts[3], output_starts[3]) = local_pool(k, j).second;
             }
           }
         }
@@ -166,7 +158,7 @@ namespace EigenSinn {
       const array<Index, 4>& original_dims, const array<Index, 2>& extents, int stride) {
 
       array<Index, 4> starts({ 0, 0, 0, 0 });
-      array<Index, 4> lengths({ original_dims[0], extents[0], extents[1], original_dims[3] });
+      array<Index, 4> lengths({ original_dims[0], original_dims[1], extents[0], extents[1]});
 
       array<Index, 4> grad_starts({ 0, 0, 0, 0 });
 
@@ -174,20 +166,21 @@ namespace EigenSinn {
 
       output.setZero();
 
-      for (starts[1] = 0, grad_starts[1] = 0; starts[1] + extents[0] <= original_dims[1]; starts[1] += stride, grad_starts[1]++) {
-        for (starts[2] = 0, grad_starts[2] = 0; starts[2] + extents[1] <= original_dims[2]; starts[2] += stride, grad_starts[2]++) {
+      for (starts[2] = 0, grad_starts[2] = 0; starts[2] + extents[0] <= original_dims[2]; starts[2] += stride, grad_starts[2]++) {
+        for (starts[3] = 0, grad_starts[3] = 0; starts[3] + extents[1] <= original_dims[3]; starts[3] += stride, grad_starts[3]++) {
           // unroll the index of the gradient being passed
           for (int k = 0; k < original_dims[0]; k++) {
-            for (int j = 0; j < original_dims[3]; j++) {
+            for (int j = 0; j < original_dims[1]; j++) {
 
               // index has been unrolled during the forward operation
               Index idx_flat = mask(k, grad_starts[1], grad_starts[2], j);
 
               // extract column-major order based on: https://en.wikipedia.org/wiki/Row-_and_column-major_order
-              Index idx_row = (idx_flat - k) / lengths[0] % lengths[1];
-              Index idx_col = ((idx_flat  - k) / lengths[0] - idx_row) / lengths[1] % lengths[2];
+              Index idx_plane = ((idx_flat - k) / lengths[0] - j) / lengths[1];
+              Index idx_row = idx_plane % lengths[2];
+              Index idx_col = (idx_plane - idx_row) / lengths[2];
 
-              output(k, starts[1] + idx_row, starts[2] + idx_col, j) += grads(k, grad_starts[1], grad_starts[2], j);
+              output(k, j, starts[2] + idx_row, starts[3] + idx_col) += grads(k, j, grad_starts[2], grad_starts[3]);
             }
           }
         }

@@ -2,7 +2,6 @@
 
 #include "opsbase.hpp"
 #include <ops/conversions.hpp>
-#include <tuple>
 
 namespace EigenSinn {
 
@@ -18,11 +17,13 @@ namespace EigenSinn {
     Eigen::array<int, Dim> broadcast_dims;
 
     for (int i = 0; i < Dim - 1; i++) {
-      reduction_dims[i] = i;
+      // channel-first tensor: NCHW, need to skip channel dimension
+      reduction_dims[i] = i == 0 ? i : i + 1;
       broadcast_dims[i] = x.dimension(i);
     }
 
-    broadcast_dims[Dim - 1] = 1;
+    // channel-first format: NCHW
+    broadcast_dims[(int)ImageDims::channel] = 1;
     return std::make_tuple(reduction_dims, broadcast_dims);
   }
 
@@ -33,7 +34,7 @@ namespace EigenSinn {
     Eigen::array<Index, Rank> reshaped_dims;
 
     reshaped_dims.fill(1);
-    reshaped_dims[Rank - 1] = t.dimension(0);
+    reshaped_dims[(int)ImageDims::channel] = t.dimension(0);
 
     Tensor<Scalar, Rank> broadcasted = t.reshape(reshaped_dims).broadcast(broadcast_dims);
     return broadcasted;

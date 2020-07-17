@@ -15,8 +15,10 @@ namespace EigenSinnTest {
     void SetUp() override {
       Tensor<float, 4> tmp(commonData.poolDims);
       commonData.init();
+      output.resize(commonData.poolDims);
+      fakeloss.resize(commonData.poolDims);
 
-      tmp.setValues({ {{{0.95949411, 0.85607505},
+      output.setValues({ {{{0.95949411, 0.85607505},
         {0.98773926, 0.62964255}},
 
         {{0.96129739, 0.72482306},
@@ -35,9 +37,7 @@ namespace EigenSinnTest {
         {{0.92674822, 0.82311010},
         {0.86051500, 0.99673647}} } });
 
-      output = tmp.shuffle(commonData.shuffleDims);
-
-      tmp.setValues({ {{{0.53762484, 0.08841801},
+      fakeloss.setValues({ {{{0.53762484, 0.08841801},
         {0.26598877, 0.08771902}},
 
         {{0.14441812, 0.17294925},
@@ -56,10 +56,9 @@ namespace EigenSinnTest {
         {{0.78922635, 0.48408800},
         {0.61365259, 0.99544948}} } });
 
-      fakeloss = tmp.shuffle(commonData.shuffleDims);
-
-      tmp.resize(commonData.dims);
-      tmp.setValues({ {{{0.00000000, 0.53762484, 0.00000000, 0.00000000},
+    
+      dinput.resize(commonData.dims);
+      dinput.setValues({ {{{0.00000000, 0.53762484, 0.00000000, 0.00000000},
         {0.00000000, 0.00000000, 0.00000000, 0.08841801},
         {0.00000000, 0.00000000, 0.00000000, 0.00000000},
         {0.00000000, 0.26598877, 0.08771902, 0.00000000}},
@@ -90,7 +89,6 @@ namespace EigenSinnTest {
         {0.00000000, 0.00000000, 0.00000000, 0.99544948},
         {0.00000000, 0.61365259, 0.00000000, 0.00000000}} } });
 
-      dinput = tmp.shuffle(commonData.shuffleDims);
     }
 
     CommonData4d commonData;
@@ -104,7 +102,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4d, Validate) {
 
-    NnTensor<4> t(1, 4, 4, 3);
+    NnTensor<4> t(1, 3, 4, 4);
     t.setConstant(1);
 
     auto dims = t.dimensions();
@@ -132,7 +130,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4d, BadStride4d) {
 
-    NnTensor<4> t(3, 10, 10, 4);
+    NnTensor<4> t(3, 4, 10, 10);
     t.setConstant(1);
 
     auto dims = t.dimensions();

@@ -19,7 +19,7 @@ output = conv(inp)
 
 output.backward(cd.convloss)
 
-print(f"output {to_cpp(output.permute(cd.nhwc))}")
-print(f"dinput {to_cpp(inp.grad.permute(cd.nhwc))}")
-print (f"weights {to_cpp(conv.weight.permute(cd.nhwc))}")
-print(f"dweights {to_cpp(conv.weight.grad.permute(cd.nhwc))}")
+print(f"output {to_cpp(output)}")
+print(f"dinput {to_cpp(inp.grad)}")
+print (f"weights {to_cpp(conv.weight)}")
+print(f"dweights {to_cpp(conv.weight.grad)}")
