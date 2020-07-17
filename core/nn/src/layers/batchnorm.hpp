@@ -7,7 +7,7 @@ using namespace  Eigen;
 
 namespace EigenSinn {
 
-  // NHWC format
+  // NCHW format
   // For Linear (fully connected) layers: (N, C)
   // N - batch size
   // C - number of channels (1 for fully connected layers)
@@ -61,7 +61,10 @@ namespace EigenSinn {
       array<int, Rank> broadcast_dims;
 
       float total_channel = 1.;
-      for (int i = 0; i < Rank - 1; i++) {
+      for (int i = 0; i < Rank; i++) {
+        if (i == (int)ImageDims::channel) {
+          continue;
+        }
         total_channel *= prev_layer.dimension(i);
       }
 

@@ -16,9 +16,11 @@ namespace EigenSinn {
     Eigen::array<int, Dim - 1> reduction_dims;
     Eigen::array<int, Dim> broadcast_dims;
 
-    for (int i = 0; i < Dim - 1; i++) {
+    for (int i = 0; i < Dim; i++) {
       // channel-first tensor: NCHW, need to skip channel dimension
-      reduction_dims[i] = i == 0 ? i : i + 1;
+      if (i != Dim - 1) {
+        reduction_dims[i] = i == 0 ? i : i + 1;
+      }
       broadcast_dims[i] = x.dimension(i);
     }
 
