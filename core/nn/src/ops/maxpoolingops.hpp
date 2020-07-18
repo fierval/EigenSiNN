@@ -145,7 +145,7 @@ namespace EigenSinn {
             for (int j = 0; j < local_pool.dimension(1); j++) {
 
               mask(k, j, output_starts[2], output_starts[3]) = local_pool(k, j).first;
-              output(k, j, output_starts[3], output_starts[3]) = local_pool(k, j).second;
+              output(k, j, output_starts[2], output_starts[3]) = local_pool(k, j).second;
             }
           }
         }
@@ -172,7 +172,7 @@ namespace EigenSinn {
             for (int j = 0; j < original_dims[1]; j++) {
 
               // index has been unrolled during the forward operation
-              Index idx_flat = mask(k, grad_starts[1], grad_starts[2], j);
+              Index idx_flat = mask(k, j, grad_starts[2], grad_starts[3]);
 
               // extract column-major order based on: https://en.wikipedia.org/wiki/Row-_and_column-major_order
               Index idx_plane = ((idx_flat - k) / lengths[0] - j) / lengths[1];
