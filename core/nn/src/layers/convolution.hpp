@@ -42,7 +42,7 @@ namespace EigenSinn {
       // dL/dX = dL/dY * dY/dX
       // dL/dX = F full_conv dL/dY (used for gradients chaining as next_layer_grad)
       // has layer output dim
-      array<bool, 4> rev_idx({ false, true, false, false });
+      array<bool, 4> rev_idx({ false, false, true, false });
       Tensor<Scalar, Rank> rev_kernel = kernel.reverse(rev_idx);
       
       derivative_by_input = convolve_full(rev_kernel, next_layer_grad);
