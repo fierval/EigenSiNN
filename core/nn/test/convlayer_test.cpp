@@ -2,6 +2,7 @@
 #include <iostream>
 #include "layers/convolution.hpp"
 #include "include/commondata4d.hpp"
+#include "ops/comparisons.hpp"
 
 using namespace EigenSinn;
 
@@ -11,22 +12,32 @@ namespace EigenSinnTest {
 
   protected:
     void SetUp() {
-
+      cd.init();
     }
 
-    Tensor<float, 4> fakeloss;
+    CommonData4d cd;
   };
 
-  TEST_F(Convolution, Backprop) {
+  TEST_F(Convolution, Forward) {
+    
+    Conv2d<float> conv2d(cd.kernelDims);
 
-    Eigen::Tensor<int, 2> a(4, 3);
+    conv2d.init(cd.convWeights);
+    conv2d.forward(cd.convInput);
 
-    a.setValues({ {1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12} });
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.output, conv2d.get_output()));
+  }
 
-    Eigen::array<bool, 2> rev_index({ true, false });
-    Eigen::Tensor<int, 2> b = a.reverse(rev_index);
+  TEST_F(Convolution, Backward) {
 
-    EXPECT_EQ(b(0, 0), 10);
+    Conv2d<float> conv2d(cd.kernelDims);
+
+    conv2d.init(cd.convWeights);
+    conv2d.forward(cd.convInput);
+    conv2d.backward(cd.convInput, cd.convLoss);
+
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.dinput, conv2d.get_loss_by_input_derivative()));
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.dweight, conv2d.get_loss_by_weights_derivative()));
   }
 
 }

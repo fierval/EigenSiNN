@@ -7,7 +7,7 @@ import torch.nn as nn
 inp = cd.inp
 out_channels = 5
 kernel_size = 3
-padding = 1
+padding = 0
 
 # Same convolution
 conv = nn.Conv2d(cd.inp.shape[1], out_channels, kernel_size,

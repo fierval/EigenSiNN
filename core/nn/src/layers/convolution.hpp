@@ -8,20 +8,20 @@ namespace EigenSinn {
   // REVIEW: Not implementing bias for now
   // Batch normalization layers can take care of bias
   template <typename Scalar, Index Rank = 4>
-  class ConvolutionalLayer : LayerBase {
+  class Conv2d : LayerBase {
 
   public:
-    ConvolutionalLayer(Index batch_size, Index kernel_width, Index kernel_height, Index in_channels, Index out_channels) 
-      : kernel(out_channels, kernel_width, kernel_height, in_channels),
-      derivative_by_filter(out_channels, kernel_width, kernel_height, in_channels)
-    {
-      
-    }
+
+    Conv2d(array<Index, Rank> kernelDims) : kernel(kernelDims) {}
 
     // TODO: this needs to be implemented for real
     // Also strides and padding should be added
     void init() override {
       kernel.setRandom<Eigen::internal::NormalRandomGenerator<float>>();
+    }
+
+    void init(const Tensor<Scalar, Rank> _weights) {
+      kernel = _weights;
     }
 
     void forward(std::any prev_layer) override {
@@ -30,7 +30,7 @@ namespace EigenSinn {
     }
 
     void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
-      
+
       Tensor<Scalar, Rank> prev_layer = std::any_cast<Tensor<Scalar, Rank>&>(prev_layer_any);
       Tensor<Scalar, Rank> next_layer_grad = std::any_cast<Tensor<Scalar, Rank>&>(next_layer_grad_any);
 
@@ -44,7 +44,7 @@ namespace EigenSinn {
       // has layer output dim
       array<bool, 4> rev_idx({ false, false, true, false });
       Tensor<Scalar, Rank> rev_kernel = kernel.reverse(rev_idx);
-      
+
       derivative_by_input = convolve_full(rev_kernel, next_layer_grad);
     }
 
