@@ -17,7 +17,7 @@ namespace EigenSinnTest {
       commonData.init();
 
       input = commonData.convInput;
-      loss = commonData.convLoss;
+      loss = commonData.batchNormLoss;
  
       gamma.resize(commonData.dims[1]);
       beta.resize(commonData.dims[1]);

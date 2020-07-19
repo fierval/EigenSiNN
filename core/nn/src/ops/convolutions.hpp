@@ -22,35 +22,23 @@ namespace EigenSinn {
 
   // output dimensions for a convolution with constant padding
   template <typename Scalar, Index Rank=4>
-  inline auto get_output_dimensions(const Tensor<Scalar, Rank>& input, const Tensor<Scalar, Rank>& kernel, const Padding2D& padding, const Index stride = 1) {
+  inline auto get_output_dimensions(const Tensor<Scalar, Rank>& input, const Tensor<Scalar, Rank>& kernel, const Padding& padding, const Index stride = 1) {
 
     assert(kernel.dimension((int)ImageDims::channel) == input.dimension((int)ImageDims::channel));
     assert(kernel.dimension((int)ImageDims::height) > 0 && kernel.dimension((int)ImageDims::width) > 0);
 
     Tensor<Scalar, Rank>::Dimensions out_dims;
+
+    // compute total padding. Normally 2xp, but we have "left" and "right" padding amount that may differ
+    Index pad_height = padding[(int)ImageDims::height].first + padding[(int)ImageDims::height].second;
+    Index pad_width = padding[(int)ImageDims::width].first + padding[(int)ImageDims::width].second;
+
     out_dims[(int)ImageDims::batch] = input.dimension((int)ImageDims::batch);
-    out_dims[(int)ImageDims::height] = (input.dimension((int)ImageDims::height) + 2 * padding.first - kernel.dimension((int)ImageDims::height)) / stride + 1;
-    out_dims[(int)ImageDims::width] = (input.dimension((int)ImageDims::width) + 2 * padding.second - kernel.dimension((int)ImageDims::width)) / stride + 1;
+    out_dims[(int)ImageDims::height] = (input.dimension((int)ImageDims::height) + pad_height - kernel.dimension((int)ImageDims::height)) / stride + 1;
+    out_dims[(int)ImageDims::width] = (input.dimension((int)ImageDims::width) + pad_width - kernel.dimension((int)ImageDims::width)) / stride + 1;
     out_dims[(int)ImageDims::channel] = kernel.dimension((int)ImageDims::batch);
 
     return out_dims;
-  }
-
-  template <typename Scalar, Index Rank = 4>
-  inline auto get_output_dimensions(const Tensor<Scalar, Rank>& input, const Tensor<Scalar, Rank>& kernel, const ConvType paddingType, const Index stride = 1) {
-
-    switch (paddingType) {
-    case ConvType::valid:
-      return get_output_dimensions(input, kernel, { 0, 0 }, stride);
-    case ConvType::same:
-      // in the case of actual convolutions we enforce same padding on "both sides" of a dimension
-      assert((kernel.dimension((int)ImageDims::height) & 0x1) != 0 && (kernel.dimension((int)ImageDims::width) & 0x1) != 0);
-      return get_output_dimensions(input, kernel, { (kernel.dimension((int)ImageDims::height) - 1) / 2, (kernel.dimension((int)ImageDims::width) - 1) / 2 }, stride);
-    case ConvType::full:
-      return get_output_dimensions(input, kernel, { kernel.dimension((int)ImageDims::height) - 1, kernel.dimension((int)ImageDims::width) - 1 }, stride);
-    default:
-      assert(false);
-    }
   }
 
   // NCHW format
@@ -67,8 +55,7 @@ namespace EigenSinn {
     Tensor<Scalar, Rank> padded = input.pad(padding);
 
     // output dimensions
-    Padding2D heightWidthPadding = IndexPair(padded.dimension((int)ImageDims::height), padded.dimension((int)ImageDims::width));
-    Tensor<Scalar, Rank>::Dimensions out_dims = get_output_dimensions(input, kernel, heightWidthPadding , stride);
+    Tensor<Scalar, Rank>::Dimensions out_dims = get_output_dimensions(input, kernel, padding, stride);
 
     // NCHW output tensor
     Tensor<Scalar, Rank> output(out_dims);
@@ -79,6 +66,15 @@ namespace EigenSinn {
     }
 
     return output;
+  }
+
+  template <typename Scalar, Index Rank = 4>
+  inline auto convolve_backwards(const Tensor<Scalar, Rank>& input, const Tensor<Scalar, Rank>& dout, const Tensor<Scalar, Rank>& filter) {
+
+    auto dout_dims = dout.dimensions();
+    auto filter_dims = filter.dimensions();
+    auto input_dims = input.dimensions();
+
   }
 
   // pad unevenly in case of k % 2 == 1:
