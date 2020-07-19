@@ -10,7 +10,7 @@ out_channels = 5
 kernel_size = 3
 padding = 0
 
-col = im2col_indices(inp.detach().numpy(), kernel_size, kernel_size, padding=0)
+col = im2col_indices(inp.detach().numpy(), kernel_size, kernel_size, padding=padding)
 
 # Same convolution
 conv = nn.Conv2d(cd.inp.shape[1], out_channels, kernel_size,

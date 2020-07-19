@@ -8,6 +8,7 @@
 #include <any>
 #include <tuple>
 #include <stdexcept>
+#include <cstring>
 
 using namespace Eigen;
 
