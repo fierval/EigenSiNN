@@ -3,7 +3,6 @@
 #include "layers/convolution.hpp"
 #include "include/commondata4d.hpp"
 #include "ops/comparisons.hpp"
-#include "ops/im2col.hpp"
 
 using namespace EigenSinn;
 
@@ -42,29 +41,25 @@ namespace EigenSinnTest {
   //}
 
 
+  //TEST_F(Convolution, prep) {
+
+  //  Tensor<float, 4> chip = cd.convInput;
+  //  array<Index, 4> starts = { 0, 0, 0, 0 };
+  //  array<Index, 4> lengths = { 2, 3, 3, 3 };
+  //  Tensor<float, 4> first_app = chip.slice(starts, lengths);
+  //  
+  //  Tensor<float, 4> shuffled = first_app.shuffle(array<int, 4>{ 3, 2, 1, 0 });
+
+  //  TensorMap<Tensor<float, 2>> first_app_flat(shuffled.data(), 27, 2);
+
+  //  std::cerr << chip << std::endl <<std::endl << "################################################" << std::endl << std::endl;
+  //  std::cerr << first_app_flat << std::endl << std::endl << "################################################" << std::endl << std::endl;
+
+  //}
+
   TEST_F(Convolution, im2col) {
 
-    Tensor<float, 4> chip = cd.convInput;
-    array<Index, 4> starts = { 0, 0, 0, 0 };
-    array<Index, 4> lengths = { 2, 3, 3, 3 };
-    Tensor<float, 4> first_app = chip.slice(starts, lengths);
-    
-    Tensor<float, 4> shuffled = first_app.shuffle(array<int, 4>{ 3, 2, 1, 0 });
-
-    TensorMap<Tensor<float, 2>> first_app_flat(shuffled.data(), 27, 2);
-
-    std::cerr << chip << std::endl <<std::endl << "################################################" << std::endl << std::endl;
-    std::cerr << first_app_flat << std::endl << std::endl << "################################################" << std::endl << std::endl;
-
-    //float* out_data = new float[cd.dims[1] * cd.kernelDims[3] * cd.kernelDims[2] 
-    //  * cd.convOutDims[2] * cd.convOutDims[3]];
-
-    //im2col(chip.data(), cd.dims[1], cd.dims[2], cd.dims[3], cd.convOutDims[2], cd.convOutDims[3], 
-    //  cd.kernelDims[2], cd.kernelDims[3], 0, 0, 1, 1, 1, 1, out_data);
-
-    //TensorMap<Tensor<float, 2>> out_tensor(out_data, cd.dims[1] * cd.kernelDims[3] * cd.kernelDims[2], cd.convOutDims[2] * cd.convOutDims[3]);
-
-    //std::cerr << out_tensor << std::endl << std::endl;
-    //delete [] out_data;
+    auto output = im2col(cd.convInput, cd.convWeights, { 0, 0 });
+    EXPECT_TRUE(is_elementwise_approx_eq(output, cd.convInputUnrolledPad0Stride1));
   }
 }

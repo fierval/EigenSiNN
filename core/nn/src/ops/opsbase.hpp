@@ -16,8 +16,8 @@ namespace EigenSinn {
   template <int Rank>
   using NnTensor = Tensor<float, Rank>;
 
-  typedef array<std::pair<int, int>, 4> Padding;
-  typedef IndexPair<int> Dim2D;
+  typedef array<std::pair<Index, Index>, 4> Padding;
+  typedef IndexPair<Index> Dim2D;
   typedef IndexPair<Index> Padding2D;
 
   enum class ConvType : short {

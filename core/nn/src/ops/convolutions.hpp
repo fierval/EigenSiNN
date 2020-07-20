@@ -33,6 +33,9 @@ namespace EigenSinn {
     Index pad_height = padding[(int)ImageDims::height].first + padding[(int)ImageDims::height].second;
     Index pad_width = padding[(int)ImageDims::width].first + padding[(int)ImageDims::width].second;
 
+    assert((input.dimension((int)ImageDims::height) + pad_height - kernel.dimension((int)ImageDims::height)) % stride == 0);
+    assert((input.dimension((int)ImageDims::width) + pad_width - kernel.dimension((int)ImageDims::width)) % stride == 0);
+
     out_dims[(int)ImageDims::batch] = input.dimension((int)ImageDims::batch);
     out_dims[(int)ImageDims::height] = (input.dimension((int)ImageDims::height) + pad_height - kernel.dimension((int)ImageDims::height)) / stride + 1;
     out_dims[(int)ImageDims::width] = (input.dimension((int)ImageDims::width) + pad_width - kernel.dimension((int)ImageDims::width)) / stride + 1;
@@ -68,13 +71,47 @@ namespace EigenSinn {
     return output;
   }
 
+  // NCHW format, col-major storage order
   template <typename Scalar, Index Rank = 4>
-  inline auto convolve_backwards(const Tensor<Scalar, Rank>& input, const Tensor<Scalar, Rank>& dout, const Tensor<Scalar, Rank>& filter) {
+  inline auto im2col(const Tensor<Scalar, Rank>& input, const Tensor<Scalar, Rank>& kernel, const Padding2D& padding, Index stride = 1) {
 
-    auto dout_dims = dout.dimensions();
-    auto filter_dims = filter.dimensions();
-    auto input_dims = input.dimensions();
+    Padding pad4 = pad2dim(padding.first, padding.second, padding.first, padding.second);
+    auto out_dims = get_output_dimensions(input, kernel, pad4, stride);
+    
+    auto col_dim = kernel.dimension(1) * kernel.dimension(2) * kernel.dimension(3);
+    array<Index, Rank> starts = { 0, 0, 0, 0 };
+    array<Index, Rank> offsets = { input.dimension(0), kernel.dimension(1), kernel.dimension(2), kernel.dimension(3) };
 
+    Tensor<Scalar, 2> output(col_dim, input.dimension(0));
+    
+    // pad the tensor before we convolve
+    Tensor<Scalar, 4> padded = input.pad(pad4);
+
+    // we want to take advantage of flattening but
+    // our tensors are stored in row-major order.
+    // we need to flatten as if it's col-major
+    array<int, 4> shuffle_dims = { 3, 2, 1, 0 };
+
+    // "move" the kernel along the batch and convert
+    Index col, row;
+    for (col = 0, starts[2] = 0; col < out_dims[2]; col++, starts[2] +=stride) {
+      for (row = 0, starts[3] = 0; row < out_dims[3]; row++, starts[3] += stride) {
+
+        Tensor<Scalar, Rank> cur_slice = padded.slice(starts, offsets).shuffle(shuffle_dims);
+        TensorMap<Tensor<Scalar, 2>> flat_slice(cur_slice.data(), col_dim, input.dimension(0));
+
+        if (col == 0 && row == 0) {
+          output = flat_slice;
+          continue;
+        }
+
+        Tensor<Scalar, 2> tmp = output;
+        tmp = output.concatenate(flat_slice, 1);
+        output = tmp;
+      }
+
+    }
+    return output;
   }
 
   // pad unevenly in case of k % 2 == 1:
