@@ -138,6 +138,22 @@ namespace EigenSinn {
     return flat_kernel;
   }
 
+  template <typename Scalar>
+  inline auto col2im(const Tensor<Scalar, 2>& col, const array<Index, 4>& kernel_dims, const array<Index, 4> orig_dims,  const Padding2D& padding, int stride = 1) {
+
+    Index channels = kernel_dims[1], width = orig_dims[3] + 2 * padding.first, height = orig_dims[2] + 2 * padding.second, batch_size = orig_dims[0];
+
+    Tensor<Scalar, 4> output(width, height, channels, batch_size);
+    TensorMap<Tensor<Scalar, 1>> output_flat(output.data(), batch_size * channels * height * width);
+
+    // loop over col's batch size at a time
+      // figure where it goes into the output
+      // memcpy with setValues
+    // shuffle dims to batch_size, channels, height, width
+    // unpad with slice
+
+  }
+
   // pad unevenly in case of k % 2 == 1:
   // more zero's goes upfront
   template <typename Scalar, Index Rank = 4>
