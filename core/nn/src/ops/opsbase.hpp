@@ -9,6 +9,7 @@
 #include <tuple>
 #include <stdexcept>
 #include <cstring>
+#include <type_traits>
 
 using namespace Eigen;
 

@@ -141,17 +141,46 @@ namespace EigenSinn {
   template <typename Scalar>
   inline auto col2im(const Tensor<Scalar, 2>& col, const array<Index, 4>& kernel_dims, const array<Index, 4> orig_dims,  const Padding2D& padding, int stride = 1) {
 
-    Index channels = kernel_dims[1], width = orig_dims[3] + 2 * padding.first, height = orig_dims[2] + 2 * padding.second, batch_size = orig_dims[0];
+    Index channels = kernel_dims[1], 
+      width = orig_dims[3] + 2 * padding.first, 
+      height = orig_dims[2] + 2 * padding.second, 
+      batch_size = orig_dims[0];
 
-    Tensor<Scalar, 4> output(width, height, channels, batch_size);
-    TensorMap<Tensor<Scalar, 1>> output_flat(output.data(), batch_size * channels * height * width);
+    array<Index, 2> col_dims = col.dimensions();
+    Index total_bytes = batch_size * channels * kernel_dims[1] * kernel_dims[2] * sizeof(Scalar);
+
+    Tensor<Scalar, 4> out(width, height, channels, batch_size);
+    
+    Index out_w = 0, out_h = 0;
+    array<Index, 2> slice_starts = { 0, 0 };
+    array<Index, 2> slice_offsets = { col.dimension(0), batch_size };
 
     // loop over col's batch size at a time
       // figure where it goes into the output
       // memcpy with setValues
     // shuffle dims to batch_size, channels, height, width
     // unpad with slice
-
+    for (Index i = 0; i < col_dims[1] / batch_size; i++, slice_starts[1] += batch_size) {
+      
+      Tensor<Scalar, 1> slice = col.chip(i, 1);
+      Index cur_index = out_w + width * out_h;
+      
+      memcpy(out.data() + cur_index, slice.data(), total_bytes);
+      
+      // move to the next slice
+      out_w += stride;
+      if (out_w + kernel_dims[3] >= width) {
+        out_w = 0;
+        out_h += stride;
+      }
+    }
+    
+    Tensor<Scalar, 4> output(batch_size, channels,  orig_dims[2], orig_dims[3]);
+    array<Index, 4> final_starts = { padding.second, padding.first, 0, 0 };
+    array<Index, 4> final_lengths = { orig_dims[3], orig_dims[2], channels, batch_size };
+    
+    output = out.slice(final_starts, final_lengths).shuffle(array<Index, 4>{ 3, 2, 1, 0 });
+    return output;
   }
 
   // pad unevenly in case of k % 2 == 1:
