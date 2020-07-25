@@ -85,13 +85,13 @@ namespace EigenSinn {
 
   // NCHW format, col-major storage order
   template <typename Scalar, Index Rank = 4>
-  inline auto im2col(const Tensor<Scalar, Rank>& input, const Tensor<Scalar, Rank>& kernel, const Padding2D& padding, Index stride = 1) {
+  inline auto im2col(const Tensor<Scalar, Rank>& input, const DSizes<Index, 4>& kernel_dims, const Padding2D& padding, Index stride = 1) {
 
-    auto out_dims = get_output_dimensions(input, kernel, padding, stride);
+    auto out_dims = get_output_dimensions(input, kernel_dims, padding, stride);
     
-    auto col_dim = kernel.dimension(1) * kernel.dimension(2) * kernel.dimension(3);
+    auto col_dim = kernel_dims[1] * kernel_dims[2] * kernel_dims[3];
     array<Index, Rank> starts = { 0, 0, 0, 0 };
-    array<Index, Rank> offsets = { input.dimension(0), kernel.dimension(1), kernel.dimension(2), kernel.dimension(3) };
+    array<Index, Rank> offsets = { input.dimension(0), kernel_dims[1], kernel_dims[2], kernel_dims[3] };
 
     Tensor<Scalar, 2> output(col_dim, input.dimension(0));
     
@@ -162,14 +162,14 @@ namespace EigenSinn {
     // unpad with slice
     for (Index i = 0; i < col_dims[1] / batch_size; i++, slice_starts[1] += batch_size) {
       
-      Tensor<Scalar, 1> slice = col.chip(i, 1);
+      Tensor<Scalar, 2> slice = col.slice(slice_starts, slice_offsets);
       Index cur_index = out_w + width * out_h;
       
       memcpy(out.data() + cur_index, slice.data(), total_bytes);
       
       // move to the next slice
       out_w += stride;
-      if (out_w + kernel_dims[3] >= width) {
+      if (out_w + kernel_dims[3] > width) {
         out_w = 0;
         out_h += stride;
       }

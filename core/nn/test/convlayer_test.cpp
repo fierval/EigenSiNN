@@ -59,14 +59,17 @@ namespace EigenSinnTest {
 
   TEST_F(Convolution, im2col) {
 
-    auto output = im2col(cd.convInput, cd.convWeights, { 0, 0 });
+    auto output = im2col(cd.convInput, cd.convWeights.dimensions(), { 0, 0 });
     EXPECT_TRUE(is_elementwise_approx_eq(output, cd.convInputUnrolledPad0Stride1));
   }
 
   TEST_F(Convolution, col2im) {
 
-    auto output = im2col(cd.convInput, cd.convWeights, { 0, 0 });
+    auto output = im2col(cd.convInput, cd.convWeights.dimensions(), { 0, 0 });
     auto input = col2im(output, cd.convWeights.dimensions(), cd.convInput.dimensions(), { 0, 0 });
+
+  std::cerr << input << std::endl <<std::endl << "################################################" << std::endl << std::endl;
+  std::cerr << cd.convInput << std::endl << std::endl << "################################################" << std::endl << std::endl;
 
     EXPECT_TRUE(is_elementwise_approx_eq(input, cd.convInput));
   }
