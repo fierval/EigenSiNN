@@ -62,4 +62,12 @@ namespace EigenSinnTest {
     auto output = im2col(cd.convInput, cd.convWeights, { 0, 0 });
     EXPECT_TRUE(is_elementwise_approx_eq(output, cd.convInputUnrolledPad0Stride1));
   }
+
+  TEST_F(Convolution, col2im) {
+
+    auto output = im2col(cd.convInput, cd.convWeights, { 0, 0 });
+    auto input = col2im(output, cd.convWeights.dimensions(), cd.convInput.dimensions(), { 0, 0 });
+
+    EXPECT_TRUE(is_elementwise_approx_eq(input, cd.convInput));
+  }
 }

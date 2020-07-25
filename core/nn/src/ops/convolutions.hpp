@@ -179,6 +179,7 @@ namespace EigenSinn {
     array<Index, 4> final_starts = { padding.second, padding.first, 0, 0 };
     array<Index, 4> final_lengths = { orig_dims[3], orig_dims[2], channels, batch_size };
     
+    //unpad and reshuffle
     output = out.slice(final_starts, final_lengths).shuffle(array<Index, 4>{ 3, 2, 1, 0 });
     return output;
   }
