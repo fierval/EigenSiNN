@@ -128,14 +128,25 @@ namespace EigenSinn {
   // return kernel representation for GEMM with 
   // im2col representation of the conv layer
   template <typename Scalar>
-  inline auto unfold_kernel(const Tensor<Scalar, 4> kernel) {
+  inline auto unfold_conv(Tensor<Scalar, 4> kernel) {
 
     auto dims = kernel.dimensions();
     Index col_channels = dims[1] * dims[2] * dims[3];
 
-    Tensor<Scalar, 4> shuffled_kernel = kernel.shuffle({ 0, 3, 2, 1 });
-    TensorMap<Tensor<Scalar, 2>> flat_kernel(kernel.data(), dims[0], col_channels);
+    Tensor<Scalar, 2> flat_kernel = kernel.shuffle(array<Index, 4>{ 0, 3, 2, 1 }).reshape(array<Index, 2>{dims[0], col_channels});
     return flat_kernel;
+  }
+
+  // reverse to the unfold_conv function
+  // returns the convolution result in its "normal" form
+  template <typename Scalar>
+  inline auto fold_conv(const Tensor<Scalar, 2>& conv_res, const DSizes<Index, 4>& expected_dims) {
+
+    assert(expected_dims[0] == conv_res.dimension(0));
+    assert(expected_dims[1] * expected_dims[2] * expected_dims[3] == conv_res.dimension(1));
+
+    Tensor<Scalar, 4> out = conv_res.reshape(array<Index, 4>{ expected_dims[0], expected_dims[3], expected_dims[2], expected_dims[1] }).shuffle(array<Index, 4>{0, 3, 2, 1});
+    return out;
   }
 
   template <typename Scalar>
@@ -149,12 +160,13 @@ namespace EigenSinn {
     array<Index, 2> col_dims = col.dimensions();
     Index total_bytes = batch_size * channels * kernel_dims[1] * kernel_dims[2] * sizeof(Scalar);
 
-    Tensor<Scalar, 4> out(width, height, channels, batch_size);
+    Tensor<Scalar, 4> out(batch_size, channels, height, width);
     
     Index out_w = 0, out_h = 0;
     array<Index, 2> slice_starts = { 0, 0 };
     array<Index, 2> slice_offsets = { col.dimension(0), batch_size };
-
+    array<Index, 4> rev_shape = { kernel_dims[3], kernel_dims[2], kernel_dims[1], batch_size};
+    
     // loop over col's batch size at a time
       // figure where it goes into the output
       // memcpy with setValues
@@ -162,11 +174,17 @@ namespace EigenSinn {
     // unpad with slice
     for (Index i = 0; i < col_dims[1] / batch_size; i++, slice_starts[1] += batch_size) {
       
-      Tensor<Scalar, 2> slice = col.slice(slice_starts, slice_offsets);
-      Index cur_index = out_w + width * out_h;
-      
-      memcpy(out.data() + cur_index, slice.data(), total_bytes);
-      
+      Tensor<Scalar, 4> slice = col.slice(slice_starts, slice_offsets).reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
+     
+      for (Index b = 0; b < batch_size; b++) {
+        for (Index c = 0; c < channels; c++) {
+          for (Index h = 0; h < kernel_dims[2]; h++) {
+            for (Index w = 0; w < kernel_dims[3]; w++) {
+              out(b, c, h + out_h, w + out_w) = slice(b, c, h, w);
+            }
+          }
+        }
+      }
       // move to the next slice
       out_w += stride;
       if (out_w + kernel_dims[3] > width) {
@@ -175,13 +193,7 @@ namespace EigenSinn {
       }
     }
     
-    Tensor<Scalar, 4> output(batch_size, channels,  orig_dims[2], orig_dims[3]);
-    array<Index, 4> final_starts = { padding.second, padding.first, 0, 0 };
-    array<Index, 4> final_lengths = { orig_dims[3], orig_dims[2], channels, batch_size };
-    
-    //unpad and reshuffle
-    output = out.slice(final_starts, final_lengths).shuffle(array<Index, 4>{ 3, 2, 1, 0 });
-    return output;
+    return out;
   }
 
   // pad unevenly in case of k % 2 == 1:
