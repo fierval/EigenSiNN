@@ -137,6 +137,19 @@ namespace EigenSinn {
     return flat_kernel;
   }
 
+  // convert back to the [b, c, h, w] kernel representation
+  template <typename Scalar>
+  inline auto fold_kernel(const Tensor<Scalar, 2>& kernel_col, const array<Index, 4>& expected_dims) {
+
+    assert(expected_dims[0] == kernel_col.dimension(0));
+    assert(expected_dims[1] * expected_dims[2] * expected_dims[3] == kernel_col.dimension(1));
+
+    Tensor<Scalar, 4> out = 
+      kernel_col.reshape(array<Index, 4>{ expected_dims[0], expected_dims[3], expected_dims[2], expected_dims[1] })
+      .shuffle(array<Index, 4>{0, 3, 2, 1});
+
+    return out;
+  }
 
   // return output layer representation for GEMM with 
   // im2col representation of the conv layer
