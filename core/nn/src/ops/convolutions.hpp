@@ -128,7 +128,7 @@ namespace EigenSinn {
   // return kernel representation for GEMM with 
   // im2col representation of the conv layer
   template <typename Scalar>
-  inline auto unfold_conv(Tensor<Scalar, 4> kernel) {
+  inline auto unfold_kernel(Tensor<Scalar, 4> kernel) {
 
     auto dims = kernel.dimensions();
     Index col_channels = dims[1] * dims[2] * dims[3];
@@ -137,15 +137,18 @@ namespace EigenSinn {
     return flat_kernel;
   }
 
-  // reverse to the unfold_conv function
+  // NOT a reverse to the unfold_kernel function
   // returns the convolution result in its "normal" form
+  // assuming we have just performed a convolution operation.
+  // e.g. t (*) k = r, t: [2, 3, 4, 4], k: [5, 3, 3, 3], r: [2, 5, 2, 2]
+  // r in im2col form will be [5, 8]
   template <typename Scalar>
-  inline auto fold_conv(const Tensor<Scalar, 2>& conv_res, const DSizes<Index, 4>& expected_dims) {
+  inline auto fold_conv_res(const Tensor<Scalar, 2>& conv_res, const array<Index, 4>& expected_dims) {
 
-    assert(expected_dims[0] == conv_res.dimension(0));
-    assert(expected_dims[1] * expected_dims[2] * expected_dims[3] == conv_res.dimension(1));
+    assert(expected_dims[1] == conv_res.dimension(0));
+    assert(expected_dims[0] * expected_dims[2] * expected_dims[3] == conv_res.dimension(1));
 
-    Tensor<Scalar, 4> out = conv_res.reshape(array<Index, 4>{ expected_dims[0], expected_dims[3], expected_dims[2], expected_dims[1] }).shuffle(array<Index, 4>{0, 3, 2, 1});
+    Tensor<Scalar, 4> out = conv_res.reshape(array<Index, 4>{ expected_dims[1], expected_dims[0], expected_dims[3], expected_dims[2] }).shuffle(array<Index, 4>{1, 0, 3, 2});
     return out;
   }
 

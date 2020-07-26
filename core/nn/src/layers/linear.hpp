@@ -3,10 +3,6 @@
 #define MAX_ELEM 1e9
 
 #include "ops/linearops.hpp"
-#include <stdexcept>
-#include <type_traits>
-#include "Random.h"
-#include <unsupported\Eigen\CXX11\src\Tensor\TensorRandom.h>
 #include "layer_base.hpp"
 
 using namespace Eigen;
@@ -19,7 +15,6 @@ _in_dim - input dimension (D)
 */
 namespace EigenSinn {
 
-  typedef array<IndexPair<int>, 1> ProductDims;
 
   template<typename Scalar>
   class Linear : LayerBase {

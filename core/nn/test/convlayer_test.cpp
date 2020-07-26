@@ -28,6 +28,25 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(cd.output, conv2d.get_output()));
   }
 
+  TEST_F(Convolution, ForwardIm2Col) {
+
+    Conv2d<float> conv2d(cd.kernelDims);
+
+    conv2d.init(cd.convWeights);
+    conv2d.forward(cd.convInput);
+    auto convolved = from_any<float, 4>(conv2d.get_output());
+
+    auto col_inputs = im2col(cd.convInput, cd.convWeights.dimensions(), { 0, 0 });
+    auto unf_kernel = unfold_kernel(cd.convWeights);
+
+    ProductDims prod_dims = { IndexPair<int>(1, 0) };
+    Tensor<float, 2> res = unf_kernel.contract(col_inputs, prod_dims);
+
+    auto conv_res = fold_conv_res(res, cd.convOutDims);
+
+    EXPECT_TRUE(is_elementwise_approx_eq(conv_res, convolved));
+  }
+
   //TEST_F(Convolution, Backward) {
 
   //  Conv2d<float> conv2d(cd.kernelDims);
@@ -71,12 +90,10 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(input, cd.convInput));
   }
 
-  TEST_F(Convolution, unfold_conv) {
+  TEST_F(Convolution, unfold_kernel) {
 
-    auto unf_kernel = unfold_conv(cd.convWeights);
-    auto kernel = fold_conv(unf_kernel, cd.convWeights.dimensions());
+    auto unf_kernel = unfold_kernel(cd.convWeights);
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.convWeightsFlat, unf_kernel));
-    EXPECT_TRUE(is_elementwise_approx_eq(cd.convWeights, kernel));
   }
 }
