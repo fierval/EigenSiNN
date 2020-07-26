@@ -7,12 +7,17 @@ namespace EigenSinn {
 
   // REVIEW: Not implementing bias for now
   // Batch normalization layers can take care of bias
-  template <typename Scalar, Index Rank = 4>
+  template <typename Scalar>
   class Conv2d : LayerBase {
 
   public:
 
-    Conv2d(array<Index, Rank> kernelDims) : kernel(kernelDims) {}
+    Conv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const Index _stride = 1) :
+      kernel(kernelDims)
+      , padding(_padding)
+      , stride(_stride)
+      {}
+
 
     // TODO: this needs to be implemented for real
     // Also strides and padding should be added
@@ -20,32 +25,32 @@ namespace EigenSinn {
       kernel.setRandom<Eigen::internal::NormalRandomGenerator<float>>();
     }
 
-    void init(const Tensor<Scalar, Rank> _weights) {
+    void init(const Tensor<Scalar, 4> _weights) {
       kernel = _weights;
     }
 
     void forward(std::any prev_layer) override {
 
-      layer_output = convolve_valid(std::any_cast<Tensor<Scalar, Rank>&>(prev_layer), kernel);
+      layer_output = convolve(std::any_cast<Tensor<Scalar, 4>&>(prev_layer), kernel, padding, stride);
     }
 
+    // during the backward pass we get next_layer_grad alreayd flattened
+    // TODO: prev_layer_output to come back flattened as well?
     void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
 
-      Tensor<Scalar, Rank> prev_layer = std::any_cast<Tensor<Scalar, Rank>&>(prev_layer_any);
-      Tensor<Scalar, Rank> next_layer_grad = std::any_cast<Tensor<Scalar, Rank>&>(next_layer_grad_any);
+      Tensor<Scalar, 4> prev_layer = std::any_cast<Tensor<Scalar, 4>&>(prev_layer_any);
+      Tensor<Scalar, 2> next_layer_grad = std::any_cast<Tensor<Scalar, 2>&>(next_layer_grad_any);
 
-      // dL/dF = dL/dY * dY/dF
-      // dL/dF = X conv dL/dY (used for gradient computation)
-      // has kernel dim
-      derivative_by_filter = convolve_valid(prev_layer, next_layer_grad);
+      // flatten weights and kernel
+      Tensor<Scalar, 2> unf_kernel = unfold_kernel(kernel);
+      Tensor<Scalar, 2> x_col = im2col(prev_layer, kernel.dimensions(), padding, stride);
 
-      // dL/dX = dL/dY * dY/dX
-      // dL/dX = F full_conv dL/dY (used for gradients chaining as next_layer_grad)
-      // has layer output dim
-      array<bool, 4> rev_idx({ false, false, true, true });
-      Tensor<Scalar, Rank> rev_kernel = kernel.reverse(rev_idx);
+      // dX: kernel.T * dout
+      ProductDims prod_dims = { IndexPair<int>(0, 1)};
+      derivative_by_input = unf_kernel.contract(next_layer_grad, prod_dims);
 
-      derivative_by_input = convolve_full(rev_kernel, next_layer_grad);
+      prod_dims = { IndexPair<int>(1, 1) };
+      derivative_by_filter = next_layer_grad.contract(x_col, prod_dims);
     }
 
     const std::any get_loss_by_input_derivative() override {
@@ -61,11 +66,14 @@ namespace EigenSinn {
       return layer_output;
     }
 
-    Tensor<Scalar, Rank>& get_weights() {
+    Tensor<Scalar, 4>& get_weights() {
       return kernel;
     }
 
   private:
-    Tensor<Scalar, Rank> kernel, derivative_by_input, derivative_by_filter, layer_output;
+    Tensor<Scalar, 4> kernel, layer_output;
+    Tensor<Scalar, 2> derivative_by_input, derivative_by_filter;
+    const Index stride;
+    const Padding2D padding;
   };
 }

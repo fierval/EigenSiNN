@@ -19,7 +19,7 @@ namespace EigenSinnTest {
   };
 
   TEST_F(Convolution, Forward) {
-    
+
     Conv2d<float> conv2d(cd.kernelDims);
 
     conv2d.init(cd.convWeights);
@@ -36,6 +36,7 @@ namespace EigenSinnTest {
     conv2d.forward(cd.convInput);
     auto convolved = from_any<float, 4>(conv2d.get_output());
 
+    // perform convolutiion with GEMM using im2col
     auto col_inputs = im2col(cd.convInput, cd.convWeights.dimensions(), { 0, 0 });
     auto unf_kernel = unfold_kernel(cd.convWeights);
 
@@ -43,8 +44,10 @@ namespace EigenSinnTest {
     Tensor<float, 2> res = unf_kernel.contract(col_inputs, prod_dims);
 
     auto conv_res = fold_conv_res(res, cd.convOutDims);
+    auto unf_res = unfold_conv_res(conv_res);
 
     EXPECT_TRUE(is_elementwise_approx_eq(conv_res, convolved));
+    EXPECT_TRUE(is_elementwise_approx_eq(unf_res, res));
   }
 
   //TEST_F(Convolution, Backward) {

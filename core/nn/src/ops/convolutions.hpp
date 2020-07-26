@@ -137,6 +137,23 @@ namespace EigenSinn {
     return flat_kernel;
   }
 
+
+  // return output layer representation for GEMM with 
+  // im2col representation of the conv layer
+  // final dimensions should be the same as those of FX in col form:
+  // F: [Bf x C * Hf * Wf], X: [C * Hf * Wf x B * Ho * Wo] -> [Bf X B * Ho * Wo], 
+  // Resulting unrolled dimensions: [B, Bf, Ho, Wo], Bf = new C
+  template <typename Scalar>
+  inline auto unfold_conv_res(Tensor<Scalar, 4> layer) {
+
+    auto dims = layer.dimensions();
+    Index col_channels = dims[0] * dims[2] * dims[3]; // B * Ho * Wo
+
+    Tensor<Scalar, 2> flat_layer = layer.shuffle(array<Index, 4>{1, 0, 3, 2}).reshape(array<Index, 2>{dims[1], col_channels});
+    return flat_layer;
+  }
+
+
   // NOT a reverse to the unfold_kernel function
   // returns the convolution result in its "normal" form
   // assuming we have just performed a convolution operation.
