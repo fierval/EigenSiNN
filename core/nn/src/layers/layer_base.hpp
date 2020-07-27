@@ -11,7 +11,7 @@ namespace EigenSinn {
   class LayerBase {
 
   public:
-    virtual void init() = 0;
+    virtual void init() {};
 
     virtual void forward(std::any prev_layer_any) = 0;
 
