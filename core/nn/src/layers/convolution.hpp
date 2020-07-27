@@ -47,10 +47,13 @@ namespace EigenSinn {
 
       // dX: kernel.T * dout
       ProductDims prod_dims = { IndexPair<int>(0, 0)};
-      dX = unf_kernel.contract(next_layer_grad, prod_dims);
+      Tensor<Scalar, 2> dX_col = unf_kernel.contract(next_layer_grad, prod_dims);
 
       prod_dims = { IndexPair<int>(1, 1) };
-      dW = next_layer_grad.contract(x_col, prod_dims);
+      Tensor<Scalar, 2> dW_col = next_layer_grad.contract(x_col, prod_dims);
+
+      dX = col2im(dX_col, kernel.dimensions(), prev_layer.dimensions(), padding, stride);
+      dW = fold_kernel(dW_col, kernel.dimensions());
     }
 
     const std::any get_loss_by_input_derivative() override {
@@ -71,8 +74,7 @@ namespace EigenSinn {
     }
 
   private:
-    Tensor<Scalar, 4> kernel, layer_output;
-    Tensor<Scalar, 2> dX, dW;
+    Tensor<Scalar, 4> kernel, layer_output, dX, dW;
     const Index stride;
     const Padding2D padding;
   };

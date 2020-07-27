@@ -63,31 +63,10 @@ namespace EigenSinnTest {
 
     conv2d.backward(cd.convInput, dout_col);
 
-    // validate that we did it right by folding back to 4D
-    Tensor<float, 2> dX_col = from_any<float, 2>(conv2d.get_loss_by_input_derivative());
-    
-    // dX folding through col2im
-    Tensor<float, 4> dinput_actual = col2im(dX_col, cd.convWeights.dimensions(), cd.convInput.dimensions(), padding);
-
-    // dW folding
-    Tensor<float, 4> dkernel_actual = fold_kernel(from_any<float, 2>(conv2d.get_loss_by_weights_derivative()), cd.kernelDims);
-
-    EXPECT_TRUE(is_elementwise_approx_eq(cd.dinput, dinput_actual));
-    EXPECT_TRUE(is_elementwise_approx_eq(cd.dweight, dkernel_actual));
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.dinput, conv2d.get_loss_by_input_derivative()));
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.dweight, conv2d.get_loss_by_weights_derivative()));
   }
 
-
-  TEST_F(Convolution, prep) {
-
-    Tensor<float, 4> chip = cd.convInput;
-    array<Index, 4> starts = { 0, 0, 0, 0 };
-    array<Index, 4> lengths = { 2, 3, 3, 3 };
-    Tensor<float, 4> first_app = chip.slice(starts, lengths);
-
-    Tensor<float, 4> shuffled = first_app.shuffle(array<int, 4>{ 3, 2, 1, 0 });
-
-    TensorMap<Tensor<float, 2>> first_app_flat(shuffled.data(), 27, 2);
-  }
 
   TEST_F(Convolution, im2col) {
 
