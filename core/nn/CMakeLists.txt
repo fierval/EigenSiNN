@@ -1,6 +1,6 @@
 set(OpenCV_DIR $ENV{OPENCV_INSTALL})
 
-find_package( OpenCV)
+find_package(OpenCV)
 
 message(STATUS "Using C++${CMAKE_CXX_STANDARD}")
 
