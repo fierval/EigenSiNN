@@ -38,10 +38,12 @@ jobs:
       
     # Runs a single command using the runners shell
     - name: Create Build Dir
-      run: mkdir build
+      run: | 
+          mkdir build
         
     - name: Build and Test
       uses: ashutoshvarma/action-cmake-build@master
       with:
         build-type: Release
+        source-dir:  ${{ github.workspace }}/..
         run-test: true
