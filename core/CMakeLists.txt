@@ -6,10 +6,15 @@ project(EgenSiNN LANGUAGES CXX CUDA)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-set(CMAKE_CUDA_STANDARD 14)
-set(CMAKE_CUDA_STANDARD_REQUIRED False)
-
 include_directories("eigen")
+
+find_package(CUDA)
+
+if (CUDA_FOUND)
+  message(STATUS "found cuda")
+  set(CMAKE_CUDA_STANDARD 14)
+  set(CMAKE_CUDA_STANDARD_REQUIRED True)
+endif()
 
 enable_testing()
 include(GoogleTest)
