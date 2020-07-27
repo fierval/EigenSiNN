@@ -1,4 +1,5 @@
-import commondata4d as cd
+
+import tstcommon.commondata4d as cd
 from utils import to_cpp
 from im2col import im2col_indices, col2im_indices
 

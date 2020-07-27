@@ -1,4 +1,4 @@
-import commondata2d as cd
+import tstcommon.commondata2d as cd
 import torch
 import torch.nn as nn
 from utils import to_cpp
