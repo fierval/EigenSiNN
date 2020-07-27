@@ -39,6 +39,6 @@ jobs:
     # Runs a single command using the runners shell
     - name: Build and Test
       uses: ashutoshvarma/action-cmake-build@master
-      build-type: Release
-      run-test: true
-      
+      with:
+        build-type: Release
+        run-test: true
