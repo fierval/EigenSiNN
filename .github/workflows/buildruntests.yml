@@ -39,11 +39,8 @@ jobs:
     # Runs a single command using the runners shell
     - name: Create Build Dir
       run: | 
-          mkdir build
+          mkdir -p core/build
+          cd core/build
+          cmake .
+          make -j $(nproc)
         
-    - name: Build and Test
-      uses: ashutoshvarma/action-cmake-build@master
-      with:
-        build-type: Release
-        source-dir:  ${{ github.workspace }}/../core
-        run-test: true
