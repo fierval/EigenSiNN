@@ -27,13 +27,13 @@ jobs:
       with:
         repository: google/googletest
         path: core/googletest
-        branch: release-1.10.0
+        ref: release-1.10.0
     
     - name: Checkout Eigen
       uses: actions/checkout@v2
       with:
         repository:  eigenteam/eigen-git-mirror
-        branch: 3.3.7
+        ref: 3.3.7
         path: core/eigen
       
     # Runs a single command using the runners shell
