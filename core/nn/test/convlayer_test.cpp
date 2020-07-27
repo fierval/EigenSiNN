@@ -63,10 +63,15 @@ namespace EigenSinnTest {
 
     conv2d.backward(cd.convInput, dout_col);
 
-    Tensor<float, 4> dinput_actual = col2im(from_any<float, 2>(conv2d.get_loss_by_input_derivative()), 
-      cd.convWeights.dimensions(), cd.convOutDims, padding);
+    // validate that we did it right by folding back to 4D
+    Tensor<float, 2> dX_col = from_any<float, 2>(conv2d.get_loss_by_input_derivative());
+    
+    // dX folding through col2im
+    Tensor<float, 4> dinput_actual = col2im(dX_col, cd.convWeights.dimensions(), cd.convInput.dimensions(), padding);
 
+    // dW folding
     Tensor<float, 4> dkernel_actual = fold_kernel(from_any<float, 2>(conv2d.get_loss_by_weights_derivative()), cd.kernelDims);
+
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dinput, dinput_actual));
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dweight, dkernel_actual));
   }
@@ -88,14 +93,6 @@ namespace EigenSinnTest {
 
     auto output = im2col(cd.convInput, cd.convWeights.dimensions(), { 0, 0 });
     EXPECT_TRUE(is_elementwise_approx_eq(output, cd.convInputUnrolledPad0Stride1));
-  }
-
-  TEST_F(Convolution, col2im) {
-
-    auto output = im2col(cd.convInput, cd.convWeights.dimensions(), { 0, 0 });
-    auto input = col2im(output, cd.convWeights.dimensions(), cd.convInput.dimensions(), { 0, 0 });
-
-    EXPECT_TRUE(is_elementwise_approx_eq(input, cd.convInput));
   }
 
   TEST_F(Convolution, unfold_kernel) {

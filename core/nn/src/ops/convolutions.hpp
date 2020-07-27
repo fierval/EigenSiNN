@@ -182,6 +182,10 @@ namespace EigenSinn {
     return out;
   }
 
+  // NOT the reverse of im2col.
+  // Used to fold the backward pass result of dX/dL. 
+  // We still slide the kernel window over the 2d representation, 
+  // Adding contributions of each folded slice to the result
   template <typename Scalar>
   inline auto col2im(const Tensor<Scalar, 2>& col, const array<Index, 4>& kernel_dims, const array<Index, 4> orig_dims,  const Padding2D& padding, int stride = 1) {
 
@@ -191,10 +195,9 @@ namespace EigenSinn {
       batch_size = orig_dims[0];
 
     array<Index, 2> col_dims = col.dimensions();
-    Index total_bytes = batch_size * channels * kernel_dims[1] * kernel_dims[2] * sizeof(Scalar);
-
     Tensor<Scalar, 4> out(batch_size, channels, height, width);
-    
+    out.setZero();
+
     Index out_w = 0, out_h = 0;
     array<Index, 2> slice_starts = { 0, 0 };
     array<Index, 2> slice_offsets = { col.dimension(0), batch_size };
@@ -213,7 +216,7 @@ namespace EigenSinn {
         for (Index c = 0; c < channels; c++) {
           for (Index h = 0; h < kernel_dims[2]; h++) {
             for (Index w = 0; w < kernel_dims[3]; w++) {
-              out(b, c, h + out_h, w + out_w) = slice(b, c, h, w);
+              out(b, c, h + out_h, w + out_w) += slice(b, c, h, w);
             }
           }
         }

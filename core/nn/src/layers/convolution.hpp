@@ -46,20 +46,20 @@ namespace EigenSinn {
       Tensor<Scalar, 2> x_col = im2col(prev_layer, kernel.dimensions(), padding, stride);
 
       // dX: kernel.T * dout
-      ProductDims prod_dims = { IndexPair<int>(0, 1)};
-      derivative_by_input = unf_kernel.contract(next_layer_grad, prod_dims);
+      ProductDims prod_dims = { IndexPair<int>(0, 0)};
+      dX = unf_kernel.contract(next_layer_grad, prod_dims);
 
       prod_dims = { IndexPair<int>(1, 1) };
-      derivative_by_filter = next_layer_grad.contract(x_col, prod_dims);
+      dW = next_layer_grad.contract(x_col, prod_dims);
     }
 
     const std::any get_loss_by_input_derivative() override {
-      return derivative_by_input;
+      return dX;
     }
 
     // feed to optimizer
     const std::any get_loss_by_weights_derivative() override {
-      return derivative_by_filter;
+      return dW;
     }
 
     const std::any get_output() {
@@ -72,7 +72,7 @@ namespace EigenSinn {
 
   private:
     Tensor<Scalar, 4> kernel, layer_output;
-    Tensor<Scalar, 2> derivative_by_input, derivative_by_filter;
+    Tensor<Scalar, 2> dX, dW;
     const Index stride;
     const Padding2D padding;
   };
