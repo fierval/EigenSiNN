@@ -45,5 +45,5 @@ jobs:
       uses: ashutoshvarma/action-cmake-build@master
       with:
         build-type: Release
-        source-dir:  ${{ github.workspace }}/..
+        source-dir:  ${{ github.workspace }}/../core
         run-test: true
