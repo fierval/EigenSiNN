@@ -37,6 +37,9 @@ jobs:
         path: core/eigen
       
     # Runs a single command using the runners shell
+    - name: Create Build Dir
+      run: mkdir build
+        
     - name: Build and Test
       uses: ashutoshvarma/action-cmake-build@master
       with:
