@@ -23,6 +23,9 @@ namespace EigenSinn {
       
       if (!is_dim_set) {
         orig_dims = actual.dimensions();
+        spread_grad.resize(orig_dims);
+        spread_grad.setConstant(1. / (orig_dims[0] * orig_dims[1]));
+        is_dim_set = true;
       }
 
       for (int i = 0; i < Rank; i++) {
@@ -36,10 +39,7 @@ namespace EigenSinn {
     };
 
     void backward() {
-
-      Tensor<Scalar, Rank> dmse(orig_dims);
-      dmse.setConstant(1. / (orig_dims[0] * orig_dims[1]));
-      dloss = 2. * dmse * predicted_actual_diff;
+      dloss = 2. * spread_grad * predicted_actual_diff;
     }
    
   private:

@@ -20,11 +20,16 @@ namespace EigenSinn {
       return loss;
     }
 
+    virtual const std::any get_loss_derivative_by_input() {
+      return dloss;
+    }
+
   protected:
     array<Index, Rank> orig_dims;
     Scalar loss;
     bool is_dim_set;
 
     Tensor<Scalar, Rank> dloss;
+    Tensor<Scalar, Rank> spread_grad;
   };
 }
