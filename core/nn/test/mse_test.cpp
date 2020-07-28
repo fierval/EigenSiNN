@@ -15,9 +15,16 @@ namespace EigenSinnTest {
     void SetUp() {
       loss = 0.50550109;
       cd.init();
+
+      doutput.resize(cd.out_dims);
+      doutput.setValues({ {-0.10515201,  0.08070742,  0.01504049,  0.08132496},
+        { 0.04065431, -0.21157818, -0.09260463, -0.06111295},
+        {-0.12644342,  0.00961572, -0.17200474,  0.19923662} });
+
     }
 
     float loss;
+    Tensor<float, 2> doutput;
     CommonData2d cd;
   };
 
