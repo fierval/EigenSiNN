@@ -13,20 +13,20 @@ namespace EigenSinnTest {
   protected:
     void SetUp() override {
 
-      Tensor<float, 4> tmp(commonData.dims);
-      commonData.init();
+      Tensor<float, 4> tmp(cd.dims);
+      cd.init();
 
-      input = commonData.convInput;
-      loss = commonData.batchNormLoss;
+      input = cd.convInput;
+      loss = cd.batchNormLoss;
  
-      gamma.resize(commonData.dims[1]);
-      beta.resize(commonData.dims[1]);
+      gamma.resize(cd.dims[1]);
+      beta.resize(cd.dims[1]);
 
       gamma.setValues({ 1., 2., 3., });
       beta = gamma * 0.1f;
 
-      dinput.resize(commonData.dims);
-      output.resize(commonData.dims);
+      dinput.resize(cd.dims);
+      output.resize(cd.dims);
 
       dinput.setValues({{{{-1.62950921, -0.69685334, -1.07382250, -1.76897717},
         {1.44790602, -1.49780560, -0.99879819, -1.40539515},
@@ -99,7 +99,7 @@ namespace EigenSinnTest {
       Tensor<float, 1> beta, gamma;
       const float eps = 1e-5, momentum = 0.9;
 
-      CommonData4d commonData;
+      CommonData4d cd;
 
       // channel first
       const float prec = 1e-5;
@@ -121,7 +121,7 @@ namespace EigenSinnTest {
       bn.forward(input);
       bn.backward(input, loss);
 
-      Tensor<float, 1> dbeta(commonData.dims[1]), dgamma(commonData.dims[1]);
+      Tensor<float, 1> dbeta(cd.dims[1]), dgamma(cd.dims[1]);
       dbeta.setValues({ 15.55493259, 17.75424004, 14.48464108 });
       dgamma.setValues({ 0.19619252, -0.61846262,  2.08176923 });
 

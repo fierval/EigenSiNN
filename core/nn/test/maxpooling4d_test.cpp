@@ -13,10 +13,10 @@ namespace EigenSinnTest {
   protected:
 
     void SetUp() override {
-      Tensor<float, 4> tmp(commonData.poolDims);
-      commonData.init();
-      output.resize(commonData.poolDims);
-      fakeloss.resize(commonData.poolDims);
+      Tensor<float, 4> tmp(cd.poolDims);
+      cd.init();
+      output.resize(cd.poolDims);
+      fakeloss.resize(cd.poolDims);
 
       output.setValues({ {{{0.95949411, 0.85607505},
         {0.98773926, 0.62964255}},
@@ -57,7 +57,7 @@ namespace EigenSinnTest {
         {0.61365259, 0.99544948}} } });
 
     
-      dinput.resize(commonData.dims);
+      dinput.resize(cd.dims);
       dinput.setValues({ {{{0.00000000, 0.53762484, 0.00000000, 0.00000000},
         {0.00000000, 0.00000000, 0.00000000, 0.08841801},
         {0.00000000, 0.00000000, 0.00000000, 0.00000000},
@@ -91,7 +91,7 @@ namespace EigenSinnTest {
 
     }
 
-    CommonData4d commonData;
+    CommonData4d cd;
     Tensor<float, 4> output, dinput, fakeloss;
     const array<Index, 2> extents2d = { 2, 2 };
     const array<Index, 2> extents1d = { 2 };
@@ -146,7 +146,7 @@ namespace EigenSinnTest {
 
     MaxPoolingLayer<float, 4> pl(extents2d, stride);
     pl.init();
-    pl.forward(commonData.convInput);
+    pl.forward(cd.convInput);
 
     EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 4>(pl.get_output()), output));
   }
@@ -155,8 +155,8 @@ namespace EigenSinnTest {
 
     MaxPoolingLayer<float, 4> pl(extents2d, stride);
     pl.init();
-    pl.forward(commonData.convInput);
-    pl.backward(commonData.convInput, fakeloss);
+    pl.forward(cd.convInput);
+    pl.backward(cd.convInput, fakeloss);
 
     EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 4>(pl.get_loss_by_input_derivative()), dinput));
   }

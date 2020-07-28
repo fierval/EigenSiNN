@@ -11,9 +11,7 @@ namespace EigenSinn {
   class LossBase {
 
   public:
-    virtual void init(const array<Index, Rank>& _orig_dims) {
-      orig_dims = _orig_dims;
-    }
+
     virtual void compute(std::any predictions_any, std::any actual_any) = 0;
 
     virtual void backward() = 0;
@@ -25,5 +23,6 @@ namespace EigenSinn {
   protected:
     array<Index, Rank> orig_dims;
     Scalar loss;
+    bool is_dim_set;
   };
 }

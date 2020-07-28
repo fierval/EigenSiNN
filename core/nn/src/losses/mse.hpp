@@ -6,9 +6,12 @@
 namespace EigenSinn {
 
   template<typename Scalar, Index Rank>
-  class MseLoss : LossBase<Scalar, Rank> {
+  class MseLoss : public LossBase<Scalar, Rank> {
   
   public:
+    MseLoss() {
+      is_dim_set = false;
+    }
 
     void compute(std::any predicted_any, std::any actual_any) override {
       
@@ -17,17 +20,23 @@ namespace EigenSinn {
 
       array<Index, Rank> predicted_dims = predicted.dimensions();
       array<Index, Rank> actual_dims = actual.dimensions();
-
-      for (int i = 0; i < Rank; i++) {
-        assert(actual_dims[i] == orig_dims[i]);
+      
+      if (!is_dim_set) {
+        orig_dims = actual.dimensions();
       }
 
-      loss = (predicted - actual).pow(2).mean();
+      for (int i = 0; i < Rank; i++) {
+        assert(predicted_dims[i] == orig_dims[i]);
+      }
+
+      Tensor<Scalar, 0> loss_t = (predicted - actual).pow(2).mean();
+      loss = *loss_t.data();
 
     };
 
     void backward() {
 
     }
+   
   };
 }

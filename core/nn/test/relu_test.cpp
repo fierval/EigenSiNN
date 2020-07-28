@@ -14,13 +14,13 @@ namespace EigenSinnTest {
 
     void SetUp() override {
 
-      output.resize(commonData.dims);
-      dinput.resize(commonData.dims);
-      dinput_leaky.resize(commonData.dims);
-      output_leaky.resize(commonData.dims);
+      output.resize(cd.dims);
+      dinput.resize(cd.dims);
+      dinput_leaky.resize(cd.dims);
+      output_leaky.resize(cd.dims);
       
 
-      commonData.init();
+      cd.init();
 
       output.setValues({ { 0.87322980, 0.00000000, 0.63184929, 0.38559973, 0.41274598,
           0.00000000, 0.10707247, 2.51629639} ,
@@ -52,7 +52,7 @@ namespace EigenSinnTest {
     }
 
 
-    CommonData2d commonData;
+    CommonData2d cd;
     Tensor<float, 2> output, output_leaky, dinput, dinput_leaky;
     float thresh = 0.01;
 
@@ -62,7 +62,7 @@ namespace EigenSinnTest {
 
     ReLU<float, 2> rl;
     rl.init();
-    rl.forward(commonData.linearInput);
+    rl.forward(cd.linearInput);
 
     EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(rl.get_output()), output));
   }
@@ -71,8 +71,8 @@ namespace EigenSinnTest {
 
     ReLU<float, 2> rl;
     rl.init();
-    rl.forward(commonData.linearInput);
-    rl.backward(commonData.linearInput, commonData.linearLoss);
+    rl.forward(cd.linearInput);
+    rl.backward(cd.linearInput, cd.linearLoss);
 
     EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(rl.get_loss_by_input_derivative()), dinput, 3e-5));
   }
@@ -81,7 +81,7 @@ namespace EigenSinnTest {
 
     LeakyReLU<float, 2> rl(thresh);
     rl.init();
-    rl.forward(commonData.linearInput);
+    rl.forward(cd.linearInput);
 
     EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(rl.get_output()), output_leaky));
   }
@@ -90,8 +90,8 @@ namespace EigenSinnTest {
 
     LeakyReLU<float, 2> rl(thresh);
     rl.init();
-    rl.forward(commonData.linearInput);
-    rl.backward(commonData.linearInput, commonData.linearLoss);
+    rl.forward(cd.linearInput);
+    rl.backward(cd.linearInput, cd.linearLoss);
 
     EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(rl.get_loss_by_input_derivative()), dinput_leaky, 3e-5));
   }

@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
+from utils import to_cpp
 
 inp = cd.inp.reshape(cd.inp.shape[1:])
 inp.requires_grad_()
@@ -35,3 +36,8 @@ loss_act = ((output - cd.target) ** 2).mean()
 dav = 1./ (batch_size * out_feat) *torch.from_numpy(np.ones((batch_size, out_feat)))
 
 dsq = 2 * dav * (output - cd.target)
+
+print(f"output: {to_cpp(output)}")
+print(f"dsq: {to_cpp(dsq)}")
+print(f"y_grad: {to_cpp(output.grad)}")
+print(f"loss: {loss}")
