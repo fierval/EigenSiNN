@@ -30,10 +30,11 @@ namespace EigenSinnTest {
 
     Tensor<float, 2> output = from_any<float, 2>(fc.get_output());
 
-    out_compare(cd.output, output);
-
     EXPECT_TRUE(is_elementwise_approx_eq(fc.get_output(), cd.output));
+
     MseLoss<float, 2> mse;
     mse.compute(cd.target, output);
+
+    EXPECT_EQ(loss, from_any_scalar<float>(mse.get_output()));
   }
 }

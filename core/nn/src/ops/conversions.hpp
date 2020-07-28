@@ -30,4 +30,9 @@ namespace EigenSinn {
   inline Tensor<Scalar, Rank> from_any(std::any t) {
     return std::any_cast<Tensor<Scalar, Rank>&>(t);
   }
+
+  template<typename Scalar>
+  inline Scalar from_any_scalar(std::any t) {
+    return std::any_cast<Scalar&>(t);
+  }
 }
