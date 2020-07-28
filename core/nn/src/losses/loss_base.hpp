@@ -12,7 +12,7 @@ namespace EigenSinn {
 
   public:
 
-    virtual void compute(std::any predictions_any, std::any actual_any) = 0;
+    virtual void forward(std::any predictions_any, std::any actual_any) = 0;
 
     virtual void backward() = 0;
 

@@ -33,7 +33,7 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(fc.get_output(), cd.output));
 
     MseLoss<float, 2> mse;
-    mse.compute(cd.target, output);
+    mse.forward(cd.target, output);
 
     EXPECT_EQ(loss, from_any_scalar<float>(mse.get_output()));
   }
