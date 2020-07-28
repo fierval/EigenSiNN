@@ -24,5 +24,7 @@ namespace EigenSinn {
     array<Index, Rank> orig_dims;
     Scalar loss;
     bool is_dim_set;
+
+    Tensor<Scalar, Rank> dloss;
   };
 }

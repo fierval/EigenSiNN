@@ -29,14 +29,21 @@ namespace EigenSinn {
         assert(predicted_dims[i] == orig_dims[i]);
       }
 
-      Tensor<Scalar, 0> loss_t = (predicted - actual).pow(2).mean();
+      predicted_actual_diff = predicted - actual;
+      Tensor<Scalar, 0> loss_t = predicted_actual_diff.pow(2).mean();
       loss = *loss_t.data();
 
     };
 
     void backward() {
 
+      Tensor<Scalar, Rank> dmse(orig_dims);
+      dmse.setConstant(1. / (orig_dims[0] * orig_dims[1]));
+      dloss = 2. * dmse * predicted_actual_diff;
     }
    
+  private:
+
+    Tensor<Scalar, Rank> predicted_actual_diff;
   };
 }
