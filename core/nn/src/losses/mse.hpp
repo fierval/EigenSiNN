@@ -1,17 +1,25 @@
 #pragma once
 
-#include "layers/layer_base.hpp"
+#include "ops/conversions.hpp"
+#include "loss_base.hpp"
 
 namespace EigenSinn {
 
   template<typename Scalar, Index Rank>
   class MseLoss : LayerBase {
+  
+  public:
 
-    void forward(std::any prev_layer_any) override {};
+    void compute(std::any predicted_any, std::any actual_any) override {
+      
+      Tensor<Scalar, Rank> predicted = from_any<Scalar, Rank>(predicted_any);
+      Tensor<Scalar, Rank> actual = from_any<Scalar, Rank>(actual_any);
 
-    void backward(std::any prev_layer, std::any next_layer_grad) override {};
 
-    const std::any get_output() override {};
+    };
 
+    void backward() {
+
+    }
   };
 }

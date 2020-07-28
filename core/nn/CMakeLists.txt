@@ -14,7 +14,7 @@ file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp")
 message(STATUS "Sources: ${TEST_SOURCES}")
 
 # build test exe
-add_executable(${TEST_EXE} ${TEST_SOURCES})
+add_executable(${TEST_EXE} ${TEST_SOURCES} "src/losses/loss_base.hpp")
 target_include_directories(${TEST_EXE} PRIVATE "src" ${EIGEN_PATH} ${OpenCV_INCLUDE_DIRS})
 target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${OpenCV_LIBS})
 
