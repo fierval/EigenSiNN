@@ -33,3 +33,5 @@ target = torch.zeros((3, 4))
 target[0, 1] = 1
 target[1, 3] = 1
 target[2, 2] = 1
+
+target_nonbinary = torch.tensor([1, 3, 2])
