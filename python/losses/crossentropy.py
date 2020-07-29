@@ -37,3 +37,21 @@ def cross_entropy(o, target):
     loss_actual.append(-o[i, target[i]] + torch.log(torch.exp(o[i, :]).sum()))
 
   return torch.tensor(loss_actual).mean()
+
+cross_entropy(output, cd.target_nonbinary)
+
+def cross_entropy_grad(o):
+  mask = cd.target
+
+  N, C = o.shape
+
+  dxi = -1. / N * mask
+  dsum = 1./N * torch.from_numpy(np.ones((N)))
+  dlog = 1. / torch.exp(o).sum(axis=1) * dsum
+  dsumexp = torch.from_numpy(np.ones((N, C))) * torch.exp(o) * dlog.reshape((N, 1))
+
+  dL = dxi + dsumexp
+  return dL
+
+cross_entropy_grad(output)
+
