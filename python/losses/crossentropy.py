@@ -32,11 +32,7 @@ optimizer.step()
 ##################################################
 
 def cross_entropy(o, target):
-  loss_actual = []
-  for i in range(o.shape[0]):
-    loss_actual.append(-o[i, target[i]] + torch.log(torch.exp(o[i, :]).sum()))
-
-  return torch.tensor(loss_actual).mean()
+  return (-o[cd.target == 1] + torch.log(torch.exp(o).sum(axis=1))).mean()
 
 cross_entropy(output, cd.target_nonbinary)
 
