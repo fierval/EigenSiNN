@@ -6,10 +6,10 @@
 namespace EigenSinn {
 
   template<typename Scalar, Index Rank>
-  class MseLoss : public LossBase<Scalar, Rank> {
+  class CrossEntropyLoss : public LossBase<Scalar, Rank> {
   
   public:
-    MseLoss() {
+    CrossEntropyLoss() {
       is_dim_set = false;
     }
 
