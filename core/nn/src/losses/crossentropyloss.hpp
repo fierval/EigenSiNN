@@ -13,7 +13,7 @@ namespace EigenSinn {
       is_dim_set = false;
     }
 
-    auto initialize_and_convert(std::any predicted_any, std::any actual_any) override {
+    Tuple<Tensor<Scalar, 2>, Tensor<Scalar, 2>> initialize_and_convert(std::any predicted_any, std::any actual_any) override {
 
       auto tensors = LossBase::initialize_and_convert(predicted_any, actual_any);
       if (!is_cache_set) {
@@ -35,26 +35,29 @@ namespace EigenSinn {
       Tensor<Scalar, 2>predicted = tensors.first;
       actual = tensors.second;
 
+      actual.resize(orig_dims);
+      predicted.resize(orig_dims);
+
       // memoize these for the backward pass
       exp_all = predicted.exp();
       exp_sum = exp_all.sum(reduction_dims);
 
-      Tensor<Scalar, 0> loss_t = -(predicted * actual).sum(redcution_dims) + exp_sum.log();
+      Tensor<Scalar, 0> loss_t = ((-predicted * actual).sum(reduction_dims) + exp_sum.log()).mean();
       loss = *loss_t.data();
     };
 
     void backward() {
       
-      Tensor<Scalar, 2> dlog = (1. / exp_sum * dsum).reshape(orig_dims[0], 1).eval().broadcast(broadcast_dims);
+      Tensor<Scalar, 2> dlog = (1. / exp_sum * dsum).reshape(array<Index, 2>{orig_dims[0], 1}).eval().broadcast(broadcast_dims);
       dloss = -1. / orig_dims[0] * actual + exp_all * dlog;
     }
    
   private:
-    Tensor<Scalar, 2> exp_all, exp_sum, actual;
+    Tensor<Scalar, 2> exp_all, actual;
     Tensor<Scalar, 1> exp_sum, dsum;
     bool is_cache_set;
     array<Index, 2> broadcast_dims = { 1, 0 };
-    array<int, 1> redcution_dims = { 1 };
+    array<Index, 1> reduction_dims = { 1 };
 
   };
 }

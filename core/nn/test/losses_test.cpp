@@ -4,13 +4,14 @@
 #include "include/commondata2d.hpp"
 #include "ops/comparisons.hpp"
 #include "losses/mse.hpp"
+#include "losses/crossentropyloss.hpp"
 #include "include/testutils.hpp"
 
 using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
-  class Mse : public ::testing::Test {
+  class Loss : public ::testing::Test {
   protected:
     void SetUp() {
       
@@ -36,7 +37,7 @@ namespace EigenSinnTest {
     Linear<float>* fc;
   };
 
-  TEST_F(Mse, Compute) {
+  TEST_F(Loss, MSE) {
     
     loss = 0.50550109;
 
@@ -46,9 +47,30 @@ namespace EigenSinnTest {
 
     Tensor<float, 2> output = from_any<float, 2>(fc->get_output());
 
-    MseLoss<float> mse;
-    mse.forward(output, cd.target);
+    MseLoss<float> loss_func;
+    loss_func.forward(output, cd.target);
+    loss_func.backward();
 
-    EXPECT_EQ(loss, from_any_scalar<float>(mse.get_output()));
+    EXPECT_EQ(loss, from_any_scalar<float>(loss_func.get_output()));
+    EXPECT_TRUE(is_elementwise_approx_eq(doutput, loss_func.get_loss_derivative_by_input()));
   }
+
+  TEST_F(Loss, CrossEntropy) {
+
+    loss = 1.03314781;
+
+    doutput.setValues({ { 0.02313359, -0.14153539,  0.04758135,  0.07082045},
+              { 0.10596204,  0.02332874,  0.04763307, -0.17692387},
+              { 0.02690827,  0.06087292, -0.27768427,  0.18990307} });
+
+    Tensor<float, 2> output = from_any<float, 2>(fc->get_output());
+
+    CrossEntropyLoss<float> loss_func;
+    loss_func.forward(output, cd.target);
+    loss_func.backward();
+
+    EXPECT_EQ(loss, from_any_scalar<float>(loss_func.get_output()));
+    EXPECT_TRUE(is_elementwise_approx_eq(doutput, loss_func.get_loss_derivative_by_input()));
+  }
+
 }
