@@ -44,7 +44,7 @@ def cross_entropy_grad(o):
   dxi = -1. / N * mask
   dsum = 1./N * torch.from_numpy(np.ones((N)))
   dlog = 1. / torch.exp(o).sum(axis=1) * dsum
-  dsumexp = torch.from_numpy(np.ones((N, C))) * torch.exp(o) * dlog.reshape((N, 1))
+  dsumexp = torch.exp(o) * dlog.reshape((N, 1))
 
   dL = dxi + dsumexp
   return dL

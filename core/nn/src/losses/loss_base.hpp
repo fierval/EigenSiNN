@@ -26,7 +26,7 @@ namespace EigenSinn {
 
   protected:
 
-    inline auto initialize_and_convert(std::any predicted_any, std::any actual_any) {
+    virtual Tuple<Tensor<Scalar, Rank>, Tensor<Scalar, Rank>> initialize_and_convert(std::any predicted_any, std::any actual_any) {
 
       Tensor<Scalar, Rank> predicted = from_any<Scalar, Rank>(predicted_any);
       Tensor<Scalar, Rank> actual = from_any<Scalar, Rank>(actual_any);
