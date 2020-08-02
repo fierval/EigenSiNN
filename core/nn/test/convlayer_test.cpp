@@ -68,6 +68,22 @@ namespace EigenSinnTest {
   }
 
 
+  TEST_F(Convolution, Initialization) {
+
+    array<Index, 4> kdims = { 1, 512, 3, 3 };
+    Conv2d<float> conv2d(kdims);
+
+
+    conv2d.init();
+    auto weights = conv2d.get_weights();
+    Tensor<float, 0> avg = weights.mean();
+    Tensor<float, 0> var = (weights - *(avg.data())).pow(2.).mean();
+    Tensor<float, 0> var_expected;
+    var_expected.setConstant(1. / (kdims[1] * kdims[2] * kdims[3]));
+
+    EXPECT_TRUE(is_elementwise_approx_eq(var_expected, var, 1e-4));
+  }
+
   TEST_F(Convolution, im2col) {
 
     auto output = im2col(cd.convInput, cd.convWeights.dimensions(), { 0, 0 });
