@@ -2,6 +2,7 @@
 
 #include "layer_base.hpp"
 #include "ops/convolutions.hpp"
+#include "ops/initializations.hpp"
 
 namespace EigenSinn {
 
@@ -22,7 +23,7 @@ namespace EigenSinn {
     // TODO: this needs to be implemented for real
     // Also strides and padding should be added
     void init() override {
-      kernel.setRandom<Eigen::internal::NormalRandomGenerator<float>>();
+      kernel = generate_xavier<Scalar, 4>(kernel.dimensions());
     }
 
     void init(const Tensor<Scalar, 4> _weights) {

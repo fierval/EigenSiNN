@@ -2,6 +2,7 @@
 #include "include/commondata2d.hpp"
 #include <iostream>
 #include "ops/comparisons.hpp"
+#include "include/testutils.hpp"
 
 #include <gtest/gtest.h>
 
@@ -48,6 +49,22 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dinput, linear.get_loss_by_input_derivative()));
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dweights, linear.get_loss_by_weights_derivative()));
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dbias, linear.get_loss_by_bias_derivative()));
+  }
+
+  TEST_F(FullyConnected, Initialize) {
+
+    int in_dim = 1024;
+    Linear<float> linear(10, in_dim, 512, true);
+
+    linear.init();
+    Tensor<float, 2> weights = linear.get_weights();
+    Tensor<float, 0> avg = weights.mean();
+    Tensor<float, 0> std = (weights - *(avg.data())).pow(2.).mean();
+
+    Tensor<float, 0> std_expected;
+    std_expected.setConstant(1. / in_dim);
+
+    EXPECT_TRUE(is_elementwise_approx_eq(std_expected, std, 1e-4));
   }
 
 }

@@ -3,6 +3,7 @@
 #define MAX_ELEM 1e9
 
 #include "ops/linearops.hpp"
+#include "ops/initializations.hpp"
 #include "layer_base.hpp"
 
 using namespace Eigen;
@@ -84,7 +85,10 @@ namespace EigenSinn {
       }
 
       //weights of dimension (D, M)
-      weights.setRandom<internal::NormalRandomGenerator<Scalar>>();
+      weights = generate_xavier<Scalar, 2>(array<Index, 2>{in_dim, out_dim});
+      if (use_bias) {
+        bias = bias.setZero();
+      }
     }
 
     // this will be fed to compute dL/dW[l-1]
