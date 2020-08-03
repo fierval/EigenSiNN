@@ -32,7 +32,7 @@
                 {
                     "name": "CMAKE_TOOLCHAIN_FILE",
                     "value": "C:/git/NN/vcpkg/scripts/buildsystems/vcpkg.cmake",
-                    "type": "STRING"
+                    "type": "FILEPATH"
                 }
             ]
         }
