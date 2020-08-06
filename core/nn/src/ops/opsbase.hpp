@@ -1,7 +1,6 @@
 #pragma once
 
 #include "unsupported/Eigen/CXX11/Tensor"
-#include "unsupported/Eigen/CXX11/Tensor"
 #include <cassert>
 #include <iostream>
 #include <utility>
