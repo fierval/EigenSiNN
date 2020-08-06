@@ -64,6 +64,7 @@ namespace EigenSinn {
 
     void init(const Tensor<Scalar, 2>& _weights) {
       weights = _weights;
+      bias.setZero();
     }
 
     void init(const Tensor<Scalar, 2>& _weights, const Tensor<Scalar, 1>& _bias) {

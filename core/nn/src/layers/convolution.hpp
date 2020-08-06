@@ -17,8 +17,9 @@ namespace EigenSinn {
       kernel(kernelDims)
       , padding(_padding)
       , stride(_stride)
-      , bias(kernelDims[1])
+      , bias(kernelDims[0])
       , bias_broadcast({ 0, 0, 0, 0 })
+      , loss_by_bias_derivative(kernelDims[0])
       {}
 
 
@@ -31,6 +32,7 @@ namespace EigenSinn {
 
     void init(const Tensor<Scalar, 4> _weights) {
       kernel = _weights;
+      bias.setZero();
     }
 
     void forward(std::any prev_layer_any) override {
@@ -47,7 +49,8 @@ namespace EigenSinn {
       }
       
       // one bias per filter
-      layer_output += bias.reshape(array<Index, 4>{ 1, kernel.dimension(0), 1, 1 }).broadcast(bias_broadcast);
+      Tensor<Scalar, 4> reshaped = bias.reshape(array<Index, 4>{ 1, kernel.dimension(0), 1, 1 });
+      layer_output += reshaped.broadcast(bias_broadcast);
 
     }
 
@@ -73,7 +76,7 @@ namespace EigenSinn {
       dW = fold_kernel(dW_col, kernel.dimensions());
 
       //bias
-      loss_by_bias_derivative = next_layer_grad.sum(array<Index, 4>{0, 2, 3});
+      loss_by_bias_derivative = next_layer_grad.sum(array<Index, 3>{0, 2, 3});
     }
 
     const std::any get_loss_by_input_derivative() override {
