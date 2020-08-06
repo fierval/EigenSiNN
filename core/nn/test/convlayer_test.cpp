@@ -75,7 +75,7 @@ namespace EigenSinnTest {
 
 
     conv2d.init();
-    auto weights = conv2d.get_weights();
+    auto weights = from_any<float, 4>(conv2d.get_weights());
     Tensor<float, 0> avg = weights.mean();
     Tensor<float, 0> var = (weights - *(avg.data())).pow(2.).mean();
     Tensor<float, 0> var_expected;

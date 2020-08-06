@@ -66,16 +66,19 @@ namespace EigenSinn {
       return dW;
     }
 
-    const std::any get_output() {
+    const std::any get_output() override {
       return layer_output;
     }
 
-    Tensor<Scalar, 4>& get_weights() {
+    const std::any get_weights() override {
       return kernel;
     }
 
+
   private:
     Tensor<Scalar, 4> kernel, layer_output, dX, dW;
+    Tensor<Scalar, 1> bias, loss_by_bias_derivative;
+
     const Index stride;
     const Padding2D padding;
   };
