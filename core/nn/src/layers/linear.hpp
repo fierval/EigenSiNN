@@ -117,6 +117,8 @@ namespace EigenSinn {
       return weights;
     }
 
+    const bool has_bias() override { return use_bias; }
+
   private:
 
     Tensor<Scalar, 2> weights;

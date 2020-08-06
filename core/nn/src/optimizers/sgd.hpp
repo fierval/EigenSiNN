@@ -4,8 +4,12 @@
 
 namespace EigenSinn {
 
-  class SGD : public OptimizerBase {
+  template <typename Scalar, Index Rank>
+  class SGD : public OptimizerBase<Scalar> {
 
+    SGD(Scalar _lr) : lr(_lr) {
+
+    }
 
   };
 }

@@ -24,5 +24,7 @@ namespace EigenSinn {
 
     virtual const std::any get_loss_by_bias_derivative() { return std::any(); }
 
+    virtual const bool has_bias() { return false; }
+
   };
 }
