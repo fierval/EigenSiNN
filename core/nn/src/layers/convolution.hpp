@@ -17,6 +17,8 @@ namespace EigenSinn {
       kernel(kernelDims)
       , padding(_padding)
       , stride(_stride)
+      , bias(kernelDims[1])
+      , bias_broadcast({ 0, 0, 0, 0 })
       {}
 
 
@@ -24,23 +26,37 @@ namespace EigenSinn {
     // Also strides and padding should be added
     void init() override {
       kernel = generate_xavier<Scalar, 4>(kernel.dimensions());
+      bias.setZero();
     }
 
     void init(const Tensor<Scalar, 4> _weights) {
       kernel = _weights;
     }
 
-    void forward(std::any prev_layer) override {
+    void forward(std::any prev_layer_any) override {
 
-      layer_output = convolve(std::any_cast<Tensor<Scalar, 4>&>(prev_layer), kernel, padding, stride);
+      Tensor<Scalar, 4> prev_layer = std::any_cast<Tensor<Scalar, 4>&>(prev_layer_any);
+      layer_output = convolve(prev_layer, kernel, padding, stride);
+
+
+      //add bias to each channel
+      if (bias_broadcast[0] == 0) {
+        auto dims = layer_output.dimensions();
+        bias_broadcast = { dims[0], 1, dims[2], dims[3] };
+
+      }
+      
+      // one bias per filter
+      layer_output += bias.reshape(array<Index, 4>{ 1, kernel.dimension(0), 1, 1 }).broadcast(bias_broadcast);
+
     }
 
-    // during the backward pass we get next_layer_grad alreayd flattened
-    // TODO: prev_layer_output to come back flattened as well?
     void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
 
       Tensor<Scalar, 4> prev_layer = std::any_cast<Tensor<Scalar, 4>&>(prev_layer_any);
-      Tensor<Scalar, 2> next_layer_grad = std::any_cast<Tensor<Scalar, 2>&>(next_layer_grad_any);
+      Tensor<Scalar, 4> next_layer_grad = std::any_cast<Tensor<Scalar, 4>&>(next_layer_grad_any);
+
+      Tensor<Scalar, 2> dout = unfold_conv_res(next_layer_grad);
 
       // flatten weights and kernel
       Tensor<Scalar, 2> unf_kernel = unfold_kernel(kernel);
@@ -48,13 +64,16 @@ namespace EigenSinn {
 
       // dX: kernel.T * dout
       ProductDims prod_dims = { IndexPair<int>(0, 0)};
-      Tensor<Scalar, 2> dX_col = unf_kernel.contract(next_layer_grad, prod_dims);
+      Tensor<Scalar, 2> dX_col = unf_kernel.contract(dout, prod_dims);
 
       prod_dims = { IndexPair<int>(1, 1) };
-      Tensor<Scalar, 2> dW_col = next_layer_grad.contract(x_col, prod_dims);
+      Tensor<Scalar, 2> dW_col = dout.contract(x_col, prod_dims);
 
       dX = col2im(dX_col, kernel.dimensions(), prev_layer.dimensions(), padding, stride);
       dW = fold_kernel(dW_col, kernel.dimensions());
+
+      //bias
+      loss_by_bias_derivative = next_layer_grad.sum(array<Index, 4>{0, 2, 3});
     }
 
     const std::any get_loss_by_input_derivative() override {
@@ -74,6 +93,10 @@ namespace EigenSinn {
       return kernel;
     }
 
+    const std::any get_loss_by_bias_derivative() override {
+      return loss_by_bias_derivative;
+    }
+
 
   private:
     Tensor<Scalar, 4> kernel, layer_output, dX, dW;
@@ -81,5 +104,6 @@ namespace EigenSinn {
 
     const Index stride;
     const Padding2D padding;
+    array<Index, 4> bias_broadcast;
   };
 }

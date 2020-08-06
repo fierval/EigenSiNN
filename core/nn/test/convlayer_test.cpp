@@ -59,9 +59,7 @@ namespace EigenSinnTest {
     conv2d.init(cd.convWeights);
     conv2d.forward(cd.convInput);
 
-    Tensor<float, 2> dout_col = unfold_conv_res(cd.convLoss);
-
-    conv2d.backward(cd.convInput, dout_col);
+    conv2d.backward(cd.convInput, cd.convLoss);
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dinput, conv2d.get_loss_by_input_derivative()));
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dweight, conv2d.get_loss_by_weights_derivative()));
