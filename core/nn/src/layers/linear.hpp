@@ -39,8 +39,7 @@ namespace EigenSinn {
       layer_output = std::any_cast<Tensor<Scalar, 2>&>(prev_layer).contract(weights, prod_dims);
 
       // bias: [1, M]
-      Tensor<Scalar, 2> broadcast_bias = bias.reshape(array<Index, 2>{ 1, bias.dimension(0) }).broadcast(broadcast_bias_dim);
-      layer_output += broadcast_bias;
+      layer_output += bias.reshape(array<Index, 2>{ 1, bias.dimension(0) }).broadcast(broadcast_bias_dim);
     }
 
     // next_layer_grad: delta[l+1] = dL/dX[l+1], dims: [N, M] (same as X[l+1])
