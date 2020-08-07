@@ -32,9 +32,8 @@ namespace EigenSinn {
 
     Tensor<Scalar, Rank>::Dimensions out_dims;
 
-    // compute total padding. Normally 2xp, but we have "left" and "right" padding amount that may differ
-    Index pad_height = padding.first;
-    Index pad_width = padding.second;
+    Index pad_height = 2 * padding.first;
+    Index pad_width = 2 * padding.second;
 
     assert((input.dimension((int)ImageDims::height) + 2 * pad_height - kernel_dims[(int)ImageDims::height]) % stride == 0);
     assert((input.dimension((int)ImageDims::width) + 2 * pad_width - kernel_dims[(int)ImageDims::width]) % stride == 0);
@@ -232,7 +231,7 @@ namespace EigenSinn {
     
     //unpad
     array<Index, 4> unpad_starts = { 0, 0, padding.first, padding.second };
-    array<Index, 4> unpad_offsets = { out.dimension(0), out.dimension(1), out.dimension(2) - padding.first, out.dimension(3) - padding.second };
+    array<Index, 4> unpad_offsets = { out.dimension(0), out.dimension(1), orig_dims[2], orig_dims[3] };
     Tensor<Scalar, 4> output = out.slice(unpad_starts, unpad_offsets);
     return output;
   }

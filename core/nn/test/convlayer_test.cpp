@@ -2,6 +2,7 @@
 #include <iostream>
 #include "layers/convolution.hpp"
 #include "include/commondata4d.hpp"
+#include "include/convdata4d.hpp"
 #include "include/testutils.hpp"
 #include "ops/comparisons.hpp"
 
@@ -14,9 +15,12 @@ namespace EigenSinnTest {
   protected:
     void SetUp() {
       cd.init();
+      cd1p.init();
     }
 
     CommonData4d cd;
+    ConvDataWith1Padding cd1p;
+
     const Padding2D padding = { 0, 0 };
   };
 
@@ -96,4 +100,29 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(cd.convWeightsFlat, unf_kernel));
     EXPECT_TRUE(is_elementwise_approx_eq(folded_kernel, cd.convWeights));
   }
+
+  TEST_F(Convolution, Forward1Padding) {
+
+    Conv2d<float> conv2d(cd.kernelDims, { 1, 1 });
+
+    conv2d.init(cd.convWeights);
+    conv2d.forward(cd.convInput);
+
+    EXPECT_TRUE(is_elementwise_approx_eq(cd1p.output, conv2d.get_output()));
+
+  }
+
+  TEST_F(Convolution, Backward1Padding) {
+
+    Conv2d<float> conv2d(cd.kernelDims, { 1, 1 });
+
+    conv2d.init(cd.convWeights);
+    conv2d.forward(cd.convInput);
+
+    conv2d.backward(cd.convInput, cd1p.convLoss);
+
+    EXPECT_TRUE(is_elementwise_approx_eq(cd1p.dinput, conv2d.get_loss_by_input_derivative()));
+    EXPECT_TRUE(is_elementwise_approx_eq(cd1p.dweight, conv2d.get_loss_by_weights_derivative()));
+  }
+
 }
