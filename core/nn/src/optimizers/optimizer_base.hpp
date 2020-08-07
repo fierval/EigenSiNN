@@ -1,7 +1,7 @@
 #pragma once
 
-#include "unsupported/Eigen/CXX11/Tensor"
-#include <any>
+#include <ops/opsbase.hpp>
+#include <ops/conversions.hpp>
 
 using namespace Eigen;
 
@@ -11,8 +11,7 @@ namespace EigenSinn {
   class OptimizerBase {
 
   public:
-    virtual void step(std::any weights) = 0;
-    virtual void step(std::any weights, std::any bias) {};
+    virtual std::tuple<std::any, std::any> step(const std::any weights_any, const std::any bias_any, const std::any dweights_any, const std::any dbias_any) = 0;
 
   protected:
     // learing rate

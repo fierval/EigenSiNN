@@ -1,7 +1,5 @@
 #pragma once
-#include <unsupported/Eigen/CXX11/Tensor>
-#include <any>
-#include <stdexcept>
+#include "opsbase.hpp"
 
 namespace EigenSinn {
   template<typename T>
@@ -55,5 +53,15 @@ namespace EigenSinn {
     }
 
     return cat;
+  }
+
+  template<typename Scalar, Index Rank>
+  inline auto weights_biases_and_derivaties_from_any(std::any weights_any, std::any bias_any, std::any dweights_any, std::any dbias_any) {
+    Tensor<Scalar, Rank> weights = from_any<Scalar, Rank>(weights_any);
+    Tensor<Scalar, Rank> dweights = from_any<Scalar, Rank>(dweights_any);
+    Tensor<Scalar, 1> bias = from_any<Scalar, 1>(bias_any);
+    Tensor<Scalar, 1> dbias = from_any<Scalar, 1>(dbias_any);
+
+    return std::make_tuple(weights, bias, dweights, dbias);
   }
 }
