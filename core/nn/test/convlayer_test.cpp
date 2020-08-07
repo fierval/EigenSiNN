@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include <iostream>
 #include "layers/convolution.hpp"
 #include "include/commondata4d.hpp"
 #include "include/convdata4d.hpp"
