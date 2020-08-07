@@ -109,7 +109,7 @@ namespace EigenSinn {
       for (row = 0, starts[3] = 0; row < out_dims[3]; row++, starts[3] += stride) {
 
         Tensor<Scalar, Rank> cur_slice = padded.slice(starts, offsets).shuffle(shuffle_dims);
-        TensorMap<Tensor<Scalar, 2>> flat_slice(cur_slice.data(), col_dim, input.dimension(0));
+        TensorMap<Tensor<Scalar, 2>> flat_slice(cur_slice.data(), col_dim, padded.dimension(0));
 
         if (col == 0 && row == 0) {
           output = flat_slice;
@@ -190,8 +190,8 @@ namespace EigenSinn {
   inline auto col2im(const Tensor<Scalar, 2>& col, const array<Index, 4>& kernel_dims, const array<Index, 4> orig_dims,  const Padding2D& padding, int stride = 1) {
 
     Index channels = kernel_dims[1], 
-      width = orig_dims[3] + 2 * padding.first, 
-      height = orig_dims[2] + 2 * padding.second, 
+      width = orig_dims[3] + 2 * padding.second, 
+      height = orig_dims[2] + 2 * padding.first, 
       batch_size = orig_dims[0];
 
     array<Index, 2> col_dims = col.dimensions();
@@ -229,7 +229,11 @@ namespace EigenSinn {
       }
     }
     
-    return out;
+    //unpad
+    array<Index, 4> unpad_starts = { 0, 0, padding.first, padding.second };
+    array<Index, 4> unpad_offsets = { out.dimension(0), out.dimension(1), out.dimension(2) - padding.first, out.dimension(3) - padding.second };
+    Tensor<Scalar, 4> output = out.slice(unpad_starts, unpad_offsets);
+    return output;
   }
 
   // pad unevenly in case of k % 2 == 1:
