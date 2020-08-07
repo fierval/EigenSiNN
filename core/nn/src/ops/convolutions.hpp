@@ -189,9 +189,10 @@ namespace EigenSinn {
   template <typename Scalar>
   inline auto col2im(const Tensor<Scalar, 2>& col, const array<Index, 4>& kernel_dims, const array<Index, 4> orig_dims,  const Padding2D& padding, int stride = 1) {
 
+    // intermediate output: original dimensions padded
     Index channels = kernel_dims[1], 
-      width = orig_dims[3] + 2 * padding.second, 
       height = orig_dims[2] + 2 * padding.first, 
+      width = orig_dims[3] + 2 * padding.second, 
       batch_size = orig_dims[0];
 
     array<Index, 2> col_dims = col.dimensions();
