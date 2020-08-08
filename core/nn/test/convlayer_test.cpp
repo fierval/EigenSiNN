@@ -124,4 +124,9 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(cd1p.dweight, conv2d.get_loss_by_weights_derivative()));
   }
 
+  TEST_F(Convolution, FoldUnfold) {
+    auto unf_fold = fold_conv_res(unfold_conv_res(cd.output), cd.output.dimensions());
+
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.output, unf_fold));
+  }
 }

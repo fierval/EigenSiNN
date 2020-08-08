@@ -166,7 +166,6 @@ namespace EigenSinn {
   }
 
 
-  // NOT a reverse to the unfold_kernel function
   // returns the convolution result in its "normal" form
   // assuming we have just performed a convolution operation.
   // e.g. t (*) k = r, t: [2, 3, 4, 4], k: [5, 3, 3, 3], r: [2, 5, 2, 2]

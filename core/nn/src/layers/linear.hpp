@@ -105,6 +105,10 @@ namespace EigenSinn {
       return weights;
     }
 
+    const std::any get_bias() {
+      return bias;
+    }
+
   private:
 
     Tensor<Scalar, 2> weights;

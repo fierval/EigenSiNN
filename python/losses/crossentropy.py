@@ -1,4 +1,9 @@
-import tstcommon.commondata2d as cd
+import sys
+import os
+
+sys.path.insert(0, os.path.abspath("../tstcommon"))
+
+import commondata2d as cd
 
 import torch
 import torch.nn as nn

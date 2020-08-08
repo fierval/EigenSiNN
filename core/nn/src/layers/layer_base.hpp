@@ -17,6 +17,8 @@ namespace EigenSinn {
     virtual void backward(std::any prev_layer, std::any next_layer_grad) = 0;
 
     virtual const std::any get_weights() { return std::any(); }
+    
+    virtual const std::any get_bias() { return std::any(); }
 
     virtual const std::any get_output() = 0;
 

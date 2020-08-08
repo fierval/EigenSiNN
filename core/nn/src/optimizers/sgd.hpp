@@ -8,12 +8,13 @@ namespace EigenSinn {
   template <typename Scalar, Index Rank>
   class SGD : public OptimizerBase<Scalar> {
 
+  public:
     SGD(Scalar _lr, Scalar _momentum = 0, bool _nesterov = false)
-      : lr(_lr)
-      , nesterov(_nesterov)
+      : nesterov(_nesterov)
       , momentum(_momentum)
       , param_set(false) {
 
+      lr = _lr;
       assert(lr > 0.0);
       assert(momentum >= 0.0);
       assert((nesterov && momentum > 0.0) || !nesterov);
@@ -24,7 +25,7 @@ namespace EigenSinn {
       Tensor<Scalar, Rank> weights, dweights;
       Tensor<Scalar, 1> bias, dbias;
 
-      std::tie(weights, bias, dweights, dbias) = weights_biases_and_derivaties_from_any(weights_any, bias_any, dweights_any, dbias_any);
+      std::tie(weights, bias, dweights, dbias) = weights_biases_and_derivaties_from_any<Scalar, Rank>(weights_any, bias_any, dweights_any, dbias_any);
       if (momentum != 0.0) {
         if (!param_set) {
           param_set = true;
@@ -33,12 +34,12 @@ namespace EigenSinn {
         }
         else {
           velocity_weights = velocity_weights * momentum + dweights;
-          velocity_biases = velocity_bias * momentum + dbias;
+          velocity_bias = velocity_bias * momentum + dbias;
         }
 
         if (nesterov) {
           dweights += momentum * velocity_weights;
-          dbias += momenum * velocity_bias;
+          dbias += momentum * velocity_bias;
         }
         else {
           dweights = velocity_weights;
@@ -48,8 +49,10 @@ namespace EigenSinn {
 
       weights -= lr * dweights;
       bias -= lr * bias;
+      return make_tuple(std::make_any<Tensor<Scalar, Rank>>(weights), std::make_any<Tensor<Scalar, 1>>(bias));
     }
 
+  private:
     const Scalar momentum;
     Tensor<Scalar, Rank> velocity_weights;
     Tensor<Scalar, 1> velocity_bias;
