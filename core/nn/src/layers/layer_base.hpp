@@ -20,6 +20,10 @@ namespace EigenSinn {
     
     virtual const std::any get_bias() { return std::any(); }
 
+    virtual void set_weights(const std::any _weights) {}
+
+    virtual void set_bias(const std::any _bias) {}
+
     virtual const std::any get_output() = 0;
 
     virtual const std::any get_loss_by_input_derivative() = 0;
@@ -29,6 +33,7 @@ namespace EigenSinn {
     virtual const std::any get_loss_by_bias_derivative() { return std::any(); }
 
     virtual const bool has_bias() { return false; }
+
 
   };
 }

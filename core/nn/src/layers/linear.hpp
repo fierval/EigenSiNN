@@ -104,8 +104,16 @@ namespace EigenSinn {
       return weights;
     }
 
-    const std::any get_bias() {
+    const std::any get_bias() override {
       return bias;
+    }
+
+    void set_weights(const std::any _weights) override {
+      weights = from_any<Scalar, 2>(_weights) ;
+    }
+
+    void set_bias(const std::any _bias) override {
+      bias = from_any<Scalar, 1>(_bias);
     }
 
   private:

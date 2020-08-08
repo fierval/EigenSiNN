@@ -29,6 +29,54 @@ namespace EigenSinnTest {
       new_weights = tmp.shuffle(array<Index, 2>{1, 0});
     }
 
+    auto PropagateGradient(int epochs, float momentum = 0.0, bool nesterov = false) {
+      // create fully connected layer
+      Linear<float> linear(cd.dims[0], cd.dims[1], cd.out_dims[1]);
+      linear.init(cd.weights);
+
+      // create loss function
+      CrossEntropyLoss<float> loss_func;
+      Tensor<float, 2> weights, dweights;
+      Tensor<float, 1> bias, dbias;
+
+      // create  optimizer
+      EigenSinn::SGD<float, 2> sgd(lr, momentum, nesterov);
+      
+      for (int i = 0; i < epochs; i++) {
+
+        // propagate forward through the model
+        linear.forward(cd.linearInput);
+
+        auto output = linear.get_output();
+
+        // compute loss
+        loss_func.forward(output, cd.target);
+
+        // start propagating back
+        // 1. compute dL/dy
+        loss_func.backward();
+
+        auto dloss = loss_func.get_loss_derivative_by_input();
+
+        // propagate back through the fc layer
+        // compute dL/dw, dL/db, dL/dx
+        linear.backward(cd.linearInput, dloss);
+
+        // collect weights and biases and perform the GD step
+        auto weights_auto = linear.get_weights(), dweights_auto = linear.get_loss_by_weights_derivative();
+        auto bias_auto = linear.get_bias(), dbias_auto = linear.get_loss_by_bias_derivative();
+
+        //std::any new_weights, new_bias;
+        std::tie(weights_auto, bias_auto) = sgd.step(weights_auto, bias_auto, dweights_auto, dbias_auto);
+
+        // set new weights and biases in the layer
+        linear.set_weights(weights_auto);
+        linear.set_bias(bias_auto);
+      }
+
+      return std::make_tuple(linear.get_weights(), linear.get_bias());
+    }
+
     Tensor<float, 2> new_weights;
     CommonData2d cd;
     float lr;
@@ -36,33 +84,8 @@ namespace EigenSinnTest {
 
   TEST_F(SGD, ZeroMomentum) {
 
-    // create and initialize an fc layer
-    Linear<float> linear(cd.dims[0], cd.dims[1], cd.out_dims[1]);
-
-    linear.init(cd.weights);
-    linear.forward(cd.linearInput);
-    
-    auto output = linear.get_output();
-
-    // create loss function
-    // propagate loss and get its gradient
-    CrossEntropyLoss<float> loss_func;
-
-    loss_func.forward(output, cd.target);
-    loss_func.backward();
-
-    auto doutput = loss_func.get_loss_derivative_by_input();
-
-    // propagate back through the fc layer
-    linear.backward(cd.linearInput, doutput);
-
-    // collect weights and biases and perform the GD step
-    auto weights = linear.get_weights(), dweights = linear.get_loss_by_weights_derivative();
-    auto bias = linear.get_bias(), dbias = linear.get_loss_by_bias_derivative();
-
-    EigenSinn::SGD<float, 2> sgd(lr);
-
-    std::tie(weights, bias) = sgd.step(weights, bias, dweights, dbias);
+    std::any weights, bias;
+    std::tie(weights, bias) = PropagateGradient(1, 0, false);
 
     EXPECT_TRUE(is_elementwise_approx_eq(new_weights, weights));
   }
