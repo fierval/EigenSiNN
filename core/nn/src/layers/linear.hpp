@@ -25,16 +25,15 @@ namespace EigenSinn {
       batch_size(_batch_size),
       in_dim(_in_dim),
       out_dim(_out_dim),
-      broadcast_bias_dim({ _batch_size, 1 }) {
+      broadcast_bias_dim({ _batch_size, 1 }),
+      bias(_out_dim)   {
 
-      bias.resize(out_dim);
     }
 
     // prev_layer_out: X[l-1], dim: [N, D]
     void forward(std::any prev_layer) override {
 
       // dims: [N, D] * [D, M] -> [N, M]
-
       ProductDims prod_dims = { IndexPair<int>(1, 0) };
       layer_output = std::any_cast<Tensor<Scalar, 2>&>(prev_layer).contract(weights, prod_dims);
 

@@ -16,8 +16,8 @@ namespace EigenSinnTest {
       cd.init();
       lr = 0.1;
 
-      new_weights.resize(cd.out_dims);
-      new_weights.setValues({ { 0.32386121,  0.16082032,  0.08126653,  0.30421251, -0.00304944,
+      Tensor<float, 2> tmp(cd.weight_dims);
+      tmp.setValues({ { 0.32386121,  0.16082032,  0.08126653,  0.30421251, -0.00304944,
            -0.08350309,  0.16417494, -0.35673440},
           { 0.20838137, -0.26138818,  0.29403499, -0.00155395, -0.17344446,
            -0.22037405, -0.27832744,  0.32912356},
@@ -25,6 +25,8 @@ namespace EigenSinnTest {
            -0.07332371, -0.33157253,  0.20261464},
           {-0.31114277, -0.11192260, -0.32931057, -0.04156353, -0.26955828,
            -0.01106431,  0.18760630,  0.28711483} });
+
+      new_weights = tmp.shuffle(array<Index, 2>{1, 0});
     }
 
     Tensor<float, 2> new_weights;
@@ -57,8 +59,6 @@ namespace EigenSinnTest {
     // collect weights and biases and perform the GD step
     auto weights = linear.get_weights(), dweights = linear.get_loss_by_weights_derivative();
     auto bias = linear.get_bias(), dbias = linear.get_loss_by_bias_derivative();
-
-    std::any new_w_any, new_b_any;
 
     EigenSinn::SGD<float, 2> sgd(lr);
 
