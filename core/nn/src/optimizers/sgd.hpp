@@ -48,7 +48,7 @@ namespace EigenSinn {
       }
 
       weights -= lr * dweights;
-      bias -= lr * bias;
+      bias -= lr * dbias;
       return make_tuple(std::make_any<Tensor<Scalar, Rank>>(weights), std::make_any<Tensor<Scalar, 1>>(bias));
     }
 

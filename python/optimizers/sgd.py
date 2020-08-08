@@ -18,6 +18,8 @@ in_feat = 8
 out_feat = 4
 batch_size = 3
 momentum = 0
+nesterov = False
+epochs = 1
 
 fc = nn.Linear(in_feat, out_feat)
 fc.weight.data = cd.weights
@@ -25,17 +27,21 @@ fc.bias.data.zero_()
 
 print(f"weights: {to_cpp(fc.weight.data)}")
 
-optimizer = optim.SGD(fc.parameters(), lr=0.1, momentum=momentum)
+optimizer = optim.SGD(fc.parameters(), lr=0.1, momentum=momentum, nesterov=nesterov)
 loss_fn = nn.CrossEntropyLoss()
 
-output = fc(inp)
-output.requires_grad_()
-output.retain_grad()
+for i in range(epochs):
 
-loss = loss_fn(output, cd.target_nonbinary)
-loss.retain_grad()
+  fc.zero_grad()
+  optimizer.zero_grad()
+  
+  output = fc(inp)
+  output.requires_grad_()
 
-loss.backward()
-optimizer.step()
+  loss = loss_fn(output, cd.target_nonbinary)
+  
+  loss.backward()
+  optimizer.step()
 
 print(f"new_weights: {to_cpp(fc.weight.data)}")
+print(f"new_bias: {to_cpp(fc.bias.data)}")
