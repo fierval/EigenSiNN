@@ -96,8 +96,20 @@ namespace EigenSinn {
       return kernel;
     }
 
+    const std::any get_bias() override {
+      return bias;
+    }
+
     const std::any get_loss_by_bias_derivative() override {
       return loss_by_bias_derivative;
+    }
+
+    void set_weights(const std::any _weights) override {
+      kernel = from_any<Scalar, 4>(_weights);
+    }
+
+    void set_bias(const std::any _bias) override {
+      bias = from_any<Scalar, 1>(_bias);
     }
 
 
