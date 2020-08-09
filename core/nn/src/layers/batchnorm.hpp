@@ -138,6 +138,23 @@ namespace EigenSinn {
       return is_training;
     }
 
+    const std::any get_weights() override {
+      return gamma;
+    }
+
+    const std::any get_bias() override {
+      return beta;
+    }
+
+    void set_weights(const std::any _weights) override {
+      gamma = from_any<Scalar, 1>(_weights);
+    }
+
+    void set_bias(const std::any _bias) override {
+      beta = from_any<Scalar, 1>(_bias);
+    }
+
+
 
   private:
     Tensor<Scalar, Rank> layer_output, layer_gradient, xhat;
