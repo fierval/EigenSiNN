@@ -10,11 +10,11 @@ namespace EigenSinn {
 
   public:
     SGD(Scalar _lr, Scalar _momentum = 0, bool _nesterov = false)
-      : nesterov(_nesterov)
+      : OptimizerBase(_lr)
+      , nesterov(_nesterov)
       , momentum(_momentum)
-      , param_set(false) {
+      {
 
-      lr = _lr;
       assert(lr > 0.0);
       assert(momentum >= 0.0);
       assert((nesterov && momentum > 0.0) || !nesterov);
@@ -57,6 +57,5 @@ namespace EigenSinn {
     Tensor<Scalar, Rank> velocity_weights;
     Tensor<Scalar, 1> velocity_bias;
     const bool nesterov;
-    bool param_set;
   };
 }
