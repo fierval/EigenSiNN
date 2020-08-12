@@ -9,7 +9,7 @@ namespace EigenSinn {
   class Adam : public OptimizerBase<Scalar> {
 
   public:
-    Adam(Scalar _lr, Scalar _beta1 = 0.9, Scalar _beta2 = 0.99, Scalar _eps = 1e-8)
+    Adam(Scalar _lr, Scalar _beta1 = 0.9, Scalar _beta2 = 0.999, Scalar _eps = 1e-8)
       : OptimizerBase(_lr)
       , beta1(_beta1)
       , beta2(_beta2)
@@ -54,17 +54,13 @@ namespace EigenSinn {
       cur_beta1 *= beta1;
       cur_beta2 *= beta2;
 
-      Tensor<Scalar, Rank> momentum_hat_weights = momentum_weights / (1 - cur_beta1);
-      Tensor<Scalar, Rank> velocity_hat_weights = velocity_weights / (1 - cur_beta2);
+      Tensor<Scalar, Rank> denom_weights = velocity_weights.sqrt() / (sqrt(1 - cur_beta2) + eps);
+      Tensor<Scalar, 1> denom_bias = velocity_bias.sqrt() / (sqrt(1 - cur_beta2) + eps);
 
-      Tensor<Scalar, 1> momentum_hat_bias = momentum_bias / (1 - cur_beta1);
-      Tensor<Scalar, 1> velocity_hat_bias = velocity_bias / (1 - cur_beta2);
+      Scalar step_size = lr / (1 - cur_beta1);
 
-      Tensor<Scalar, Rank> step_size_weights = lr * momentum_weights.inverse();
-      Tensor<Scalar, 1> step_size_bias = lr * momentum_bias.inverse();
-
-      weights -= step_size_weights * momentum_hat_weights / (velocity_hat_weights.sqrt() + eps);
-      bias  -= step_size_bias * momentum_hat_bias / (velocity_hat_bias.sqrt() + eps);
+      weights -= step_size * momentum_weights / denom_weights;
+      bias  -= step_size * momentum_bias / denom_bias;
 
       return make_tuple(std::make_any<Tensor<Scalar, Rank>>(weights), std::make_any<Tensor<Scalar, 1>>(bias));
     }

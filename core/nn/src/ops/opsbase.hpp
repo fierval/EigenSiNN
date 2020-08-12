@@ -10,6 +10,7 @@
 #include <cstring>
 #include <algorithm>
 #include <type_traits>
+#include <cmath>
 
 using namespace Eigen;
 

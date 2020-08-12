@@ -1,7 +1,7 @@
 import sys
 import os
 
-sys.path.insert(0, os.path.abspath("../tstcommon"))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../tstcommon")))
 
 import commondata2d as cd
 
@@ -17,7 +17,7 @@ inp.requires_grad_()
 in_feat = 8
 out_feat = 4
 batch_size = 3
-epochs = 1
+epochs = 2
 betas = (0.9, 0.999)
 eps = 1e-08
 
