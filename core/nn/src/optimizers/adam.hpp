@@ -34,10 +34,13 @@ namespace EigenSinn {
         velocity_weights.resize(weights.dimensions());
         momentum_weights.resize(weights.dimensions());
 
+        velocity_bias.resize(bias.dimensions());
+        momentum_bias.resize(bias.dimensions());
+
         velocity_weights.setZero();
         momentum_weights.setZero();
 
-        veloicty_bias.setZero();
+        velocity_bias.setZero();
         momentum_bias.setZero();
       }
 

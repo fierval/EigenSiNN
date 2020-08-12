@@ -17,8 +17,6 @@ inp.requires_grad_()
 in_feat = 8
 out_feat = 4
 batch_size = 3
-momentum = 0
-nesterov = False
 epochs = 1
 betas = (0.9, 0.999)
 eps = 1e-08
