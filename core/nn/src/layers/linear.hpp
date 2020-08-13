@@ -3,6 +3,7 @@
 #define MAX_ELEM 1e9
 
 #include "ops/linearops.hpp"
+#include "ops/conversions.hpp"
 #include "ops/initializations.hpp"
 #include "layer_base.hpp"
 
