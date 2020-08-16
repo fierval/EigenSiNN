@@ -16,12 +16,12 @@ struct NetworkNode {
     if (optimizer) delete optimizer;
   }
 
-  NetworkNode(const NetworkNode&& other) : NetworkNode() {
+  NetworkNode(NetworkNode&& other)  noexcept : NetworkNode(){
     layer = other.layer;
     optimizer = other.optimizer;
 
-    layer = nullptr;
-    optimizer = nullptr;
+    other.layer = nullptr;
+    other.optimizer = nullptr;
   }
 
   NetworkNode(const NetworkNode& other) : NetworkNode() {
