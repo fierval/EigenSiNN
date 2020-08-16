@@ -11,8 +11,9 @@ using LabelContainer = std::vector<uint8_t>;
 mnist::MNIST_dataset<std::vector, std::vector<float>, uint8_t> create_mnist_dataset();
 std::tuple<DataContainer, LabelContainer> next_batch(DataContainer& data, LabelContainer& labels, size_t batch_size);
 
+// convert image data read by MNIST into a 2d Eigen tensor
 template<typename Scalar>
-inline Tensor<Scalar, 2> create_2d_tensor(std::vector<std::vector<float>>& data) {
+inline Tensor<Scalar, 2> create_2d_image_tensor(std::vector<std::vector<float>>& data) {
 
   array<Index, 2> dims{ (Index)data.size(), (Index)data[0].size() };
   Tensor<Scalar, 2> data_tensor(dims);
@@ -27,10 +28,21 @@ inline Tensor<Scalar, 2> create_2d_tensor(std::vector<std::vector<float>>& data)
   return data_tensor;
 }
 
-template<typename Scalar>
-inline Tensor<Scalar, 1> create_label_tensor(std::vector<Scalar>& labels) {
+// convert loss class into categorical representation and convert to the network data type
+template<typename Loss, typename Scalar>
+inline Tensor<Scalar, 2> create_2d_label_tensor(std::vector<Loss>& labels, Index n_categories) {
 
-  Tensor<Scalar, 1> labels_tensor = TensorMap<Tensor<Scalar, 1>>(labels.data(), (Index)labels.size());
-  return labels_tensor;
+  array<Index, 2> dims{(Index)labels.size(), n_categories};
+
+  Tensor<Scalar, 2> out(dims);
+  out.setZero();
+
+  Index i = 0;
+  for(const auto& label: labels) {
+    out(i, label) = 1;
+    i++;
+  }
+  
+  return out;
 
 }
