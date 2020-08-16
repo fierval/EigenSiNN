@@ -1,12 +1,12 @@
 #include "dataset.h"
 
 // Code from: https://github.com/wichtounet/mnist
-mnist::MNIST_dataset<std::vector, std::vector<uint8_t>, uint8_t> create_mnist_dataset()
+mnist::MNIST_dataset<std::vector, std::vector<float>, uint8_t> create_mnist_dataset()
 {
 
   //MNIST_DATA_LOCATION set by MNIST in cmake
-  mnist::MNIST_dataset<std::vector, std::vector<uint8_t>, uint8_t> dataset =
-      mnist::read_dataset<std::vector, std::vector, uint8_t, uint8_t>(MNIST_DATA_LOCATION);
+  mnist::MNIST_dataset<std::vector, std::vector<float>, uint8_t> dataset =
+      mnist::read_dataset<std::vector, std::vector, float, uint8_t>(MNIST_DATA_LOCATION);
 
   std::cout << "Nbr of training images = " << dataset.training_images.size() << std::endl;
   std::cout << "Nbr of training labels = " << dataset.training_labels.size() << std::endl;
