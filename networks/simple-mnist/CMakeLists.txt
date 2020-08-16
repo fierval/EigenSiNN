@@ -9,6 +9,8 @@ find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 # MNIST reader package
+# Clone https://github.com/wichtounet/mnist
+# and point cmake to the repo root
 find_package(MNIST REQUIRED PATHS ../../../mnist)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -20,7 +22,7 @@ message(STATUS "Using C++${CMAKE_CXX_STANDARD}")
 message(STATUS "Eigen path: ${EIGEN3_INCLUDE_DIRS}")
 message(STATUS "EigenSiNN path: ${EIGENSINN_INCLUDE_DIR}")
 message(STATUS "OpenCV path: ${OpenCV_INCLUDE_DIRS}")
-message(STATUS "MNIST data reader: ${MNIST_INCLUDE_DIR}")
+message(STATUS "MNIST data dir: ${MNIST_DATA_DIR}")
 
 set(APP_EXE simple_mnist)
 
