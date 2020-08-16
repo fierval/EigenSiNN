@@ -19,7 +19,7 @@ namespace EigenSinn {
 
 
   template<typename Scalar>
-  class Linear : LayerBase {
+  class Linear : public LayerBase {
 
   public:
     Linear(int _batch_size, int _in_dim, int _out_dim) :

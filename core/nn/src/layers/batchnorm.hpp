@@ -12,7 +12,7 @@ namespace EigenSinn {
   // N - batch size
   // C - number of channels (1 for fully connected layers)
   template <typename Scalar, Index Rank>
-  class BatchNormalizationLayer : LayerBase {
+  class BatchNormalizationLayer : public LayerBase {
   public:
 
     BatchNormalizationLayer(Index num_features, float _eps = 1e-5, float _momentum = 0.9, bool _is_training = true)

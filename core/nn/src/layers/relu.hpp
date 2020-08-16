@@ -8,7 +8,7 @@ using namespace  Eigen;
 namespace EigenSinn {
 
   template <typename Scalar, Index Rank>
-  class LeakyReLU : LayerBase {
+  class LeakyReLU : public LayerBase {
   public:
     // leaky relu if necessary
     LeakyReLU(float _thresh = 0.01) : thresh(_thresh) {
