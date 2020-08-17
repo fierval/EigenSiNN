@@ -13,7 +13,7 @@ namespace EigenSinn {
   // N - batch size
   // C - number of channels (1 for fully connected layers)
   template <typename Scalar, Index Rank>
-  class MaxPoolingLayer : LayerBase {
+  class MaxPoolingLayer : public LayerBase {
   public:
 
     MaxPoolingLayer(const array<Index, Rank / 2>& _extents, Index _stride)
