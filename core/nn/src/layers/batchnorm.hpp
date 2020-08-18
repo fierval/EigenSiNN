@@ -118,15 +118,15 @@ namespace EigenSinn {
       return layer_output;
     }
 
-    const std::any get_loss_by_input_derivative() {
+    std::any get_loss_by_input_derivative() {
       return layer_gradient;
     }
 
-    const std::any get_loss_by_weights_derivative() override {
+    std::any get_loss_by_weights_derivative() override {
       return dgamma;
     }
 
-    const std::any get_loss_by_bias_derivative() override {
+    std::any get_loss_by_bias_derivative() override {
       return dbeta;
     }
 
@@ -138,11 +138,11 @@ namespace EigenSinn {
       return is_training;
     }
 
-    const std::any get_weights() override {
+    std::any get_weights() override {
       return gamma;
     }
 
-    const std::any get_bias() override {
+    std::any get_bias() override {
       return beta;
     }
 

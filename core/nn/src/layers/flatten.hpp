@@ -24,11 +24,11 @@ namespace EigenSinn {
       folded = fold_conv_res(unf_dout, original_dimensions);
     }
 
-    virtual const std::any get_output() {
+    virtual std::any get_output() {
       return unfolded;
     }
 
-    virtual const std::any get_loss_by_input_derivative() {
+    virtual std::any get_loss_by_input_derivative() {
       return folded;
     }
 

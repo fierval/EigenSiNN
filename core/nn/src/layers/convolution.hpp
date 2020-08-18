@@ -79,28 +79,28 @@ namespace EigenSinn {
       loss_by_bias_derivative = next_layer_grad.sum(array<Index, 3>{0, 2, 3});
     }
 
-    const std::any get_loss_by_input_derivative() override {
+    std::any get_loss_by_input_derivative() override {
       return dX;
     }
 
     // feed to optimizer
-    const std::any get_loss_by_weights_derivative() override {
+    std::any get_loss_by_weights_derivative() override {
       return dW;
     }
 
-    const std::any get_output() override {
+    std::any get_output() override {
       return layer_output;
     }
 
-    const std::any get_weights() override {
+    std::any get_weights() override {
       return kernel;
     }
 
-    const std::any get_bias() override {
+    std::any get_bias() override {
       return bias;
     }
 
-    const std::any get_loss_by_bias_derivative() override {
+    std::any get_loss_by_bias_derivative() override {
       return loss_by_bias_derivative;
     }
 

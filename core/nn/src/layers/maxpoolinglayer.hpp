@@ -43,11 +43,11 @@ namespace EigenSinn {
       layer_gradient = max_pooler.do_max_pool_backward(from_any<Scalar, Rank>(next_layer_grad_any), mask, original_dimensions, extents, stride);
     }
 
-    const std::any get_output() override {
+    std::any get_output() override {
       return layer_output;
     }
 
-    const std::any get_loss_by_input_derivative() {
+    std::any get_loss_by_input_derivative() {
       return layer_gradient;
     }
 

@@ -32,7 +32,7 @@ namespace EigenSinn {
       
       auto tensors = initialize_and_convert(predicted_any, actual_any);
 
-      Tensor<Scalar, 2>predicted = tensors.first;
+      Tensor<Scalar, 2> predicted = tensors.first;
       actual = tensors.second;
 
       actual.resize(orig_dims);

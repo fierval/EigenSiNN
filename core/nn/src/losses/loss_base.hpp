@@ -16,11 +16,11 @@ namespace EigenSinn {
 
     virtual void backward() = 0;
 
-    virtual const std::any get_output() {
+    virtual std::any get_output() {
       return loss;
     }
 
-    virtual const std::any get_loss_derivative_by_input() {
+    virtual std::any get_loss_derivative_by_input() {
       return dloss;
     }
 

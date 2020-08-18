@@ -84,28 +84,28 @@ namespace EigenSinn {
 
     // this will be fed to compute dL/dW[l-1]
     // it is dL/dX[l]
-    const std::any get_loss_by_input_derivative() {
+     std::any get_loss_by_input_derivative() {
       return layer_grad_loss_by_input;
     }
 
     // feed to optimizer
-    const std::any get_loss_by_weights_derivative() override {
+     std::any get_loss_by_weights_derivative() override {
       return layer_grad_loss_by_weight;
     }
 
-    const std::any get_loss_by_bias_derivative() override {
+     std::any get_loss_by_bias_derivative() override {
       return loss_by_bias_derivative;
     }
 
-    const std::any get_output() override {
+     std::any get_output() override {
       return layer_output;
     }
 
-    const std::any get_weights() override {
+     std::any get_weights() override {
       return weights;
     }
 
-    const std::any get_bias() override {
+     std::any get_bias() override {
       return bias;
     }
 

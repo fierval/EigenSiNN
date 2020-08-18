@@ -27,11 +27,11 @@ namespace EigenSinn {
       layer_grad = leaky_relu_back(from_any<Scalar, Rank>(next_layer_grad_any), mask);
     }
 
-    const std::any get_output() override {
+    std::any get_output() override {
       return layer_output;
     };
 
-    const std::any get_loss_by_input_derivative() override {
+    std::any get_loss_by_input_derivative() override {
       return layer_grad;
     };
 

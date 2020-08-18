@@ -31,6 +31,9 @@ int main(int argc, char* argv[]) {
   Tensor<float, 2> label_tensor;
 
   auto network = create_network(batch_size, input_size, hidden_size, num_classes, learning_rate);
+  CrossEntropyLoss<float> loss;
+
+  std::vector<std::any> prev_outputs;
 
   do {
 
@@ -46,6 +49,37 @@ int main(int argc, char* argv[]) {
     data_tensor = create_2d_image_tensor<float>(next_data);
     label_tensor = create_2d_label_tensor<uint8_t, float>(next_labels, num_classes);
 
+    // forward
+    std::any tensor(data_tensor);
+
+    for (auto it = network.begin(); it != network.end(); it++) {
+
+      prev_outputs.push_back(tensor);
+      it->layer->forward(tensor);
+      tensor = it->layer->get_output();
+    }
+
+    // compute loss
+    loss.forward(tensor, label_tensor);
+
+    //backprop
+    // loss gradient
+    loss.backward();
+    auto& back_grad = loss.get_loss_derivative_by_input();
+
+    auto prev_out_iter = prev_outputs.rbegin();
+
+    for (auto rit = network.rbegin(); rit != network.rend(); rit++, prev_out_iter++) {
+      rit->layer->backward(*prev_out_iter, back_grad);
+      back_grad = rit->layer->get_loss_by_input_derivative();
+    }
+
+    // TODO: optimizer
+    prev_out_iter = prev_outputs.rbegin();
+    for (auto optit = network.rbegin(); optit != network.rend(); optit++) {
+
+    }
+    
   } while(next_data.size() > 0);
 
   return 0;
