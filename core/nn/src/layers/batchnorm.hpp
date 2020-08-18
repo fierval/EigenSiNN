@@ -113,7 +113,7 @@ namespace EigenSinn {
       layer_gradient = dx1 + dx2;
     }
 
-    const std::any get_output() {
+    std::any get_output() {
 
       return layer_output;
     }

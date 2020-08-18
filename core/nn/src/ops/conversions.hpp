@@ -59,8 +59,22 @@ namespace EigenSinn {
   inline auto weights_biases_and_derivaties_from_any(std::any weights_any, std::any bias_any, std::any dweights_any, std::any dbias_any) {
     Tensor<Scalar, Rank> weights = from_any<Scalar, Rank>(weights_any);
     Tensor<Scalar, Rank> dweights = from_any<Scalar, Rank>(dweights_any);
-    Tensor<Scalar, 1> bias = from_any<Scalar, 1>(bias_any);
-    Tensor<Scalar, 1> dbias = from_any<Scalar, 1>(dbias_any);
+
+    Tensor<Scalar, 1> bias;
+    Tensor<Scalar, 1> dbias;
+
+    // return 0-bias for layers without bias
+    if (bias_any.has_value()) {
+      bias = from_any<Scalar, 1>(bias_any);
+      dbias = from_any<Scalar, 1>(dbias_any);
+    }
+    else {
+      bias.resize(dweights.dimension(1));
+      dbias.resize(dweights.dimension(1));
+
+      bias.setZero();
+      dbias.setZero();
+    }
 
     return std::make_tuple(weights, bias, dweights, dbias);
   }
