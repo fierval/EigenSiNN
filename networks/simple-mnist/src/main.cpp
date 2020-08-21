@@ -76,10 +76,18 @@ int main(int argc, char* argv[]) {
       back_grad = rit->layer->get_loss_by_input_derivative();
     }
 
-    // TODO: optimizer
+    // optimizer
     prev_out_iter = prev_outputs.rbegin();
     for (auto optit = network.rbegin(); optit != network.rend(); optit++) {
+      if (optit->optimizer == nullptr) {
+        continue;
+      }
+      auto layer = optit->layer;
+      std::any weights, bias;
 
+      std::tie(weights, bias) = optit->optimizer->step(layer->get_weights(), layer->get_bias(), layer->get_loss_by_weights_derivative(), layer->get_loss_by_bias_derivative());
+      layer->set_weights(weights);
+      layer->set_bias(bias);
     }
     
   } while(next_data.size() > 0);
