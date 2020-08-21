@@ -31,6 +31,8 @@ int main(int argc, char* argv[]) {
   Tensor<float, 2> label_tensor;
 
   auto network = create_network(batch_size, input_size, hidden_size, num_classes, learning_rate);
+  init_network(network);
+
   CrossEntropyLoss<float> loss;
 
   std::vector<std::any> prev_outputs;

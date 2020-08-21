@@ -55,3 +55,10 @@ inline auto create_network(int batch_size, int input_size, int hidden_size, int 
 
   return network;
 }
+
+inline auto init_network(std::vector<NetworkNode>& network) {
+
+  for (auto& node : network) {
+    node.layer->init();
+  }
+}
