@@ -5,6 +5,7 @@
 #include <layers/relu.hpp>
 #include <losses/crossentropyloss.hpp>
 #include <optimizers/adam.hpp>
+#include <chrono>
 
 #include "network.h"
 
@@ -38,10 +39,17 @@ int main(int argc, char* argv[]) {
   std::vector<std::any> prev_outputs;
   bool restart = true;
 
+  auto start = std::chrono::high_resolution_clock::now();
+  auto start_step = std::chrono::high_resolution_clock::now();
+  auto stop = std::chrono::high_resolution_clock::now();
+
   for (int i = 0; i < num_epochs; i++) {
     restart = true;
+    start = std::chrono::high_resolution_clock::now();
+    int step = 0;
 
     do {
+      start_step = std::chrono::high_resolution_clock::now();
 
       // get the data
       std::tie(next_data, next_labels) =
@@ -95,7 +103,16 @@ int main(int argc, char* argv[]) {
         layer->set_bias(bias);
       }
 
+      step++;
+      stop = std::chrono::high_resolution_clock::now();
+      std::cout << "Epoch: " << i << ". Step: " << step << ". Loss: " << std::any_cast<float>(loss.get_output()) << ". Time: " << std::chrono::duration_cast<std::chrono::seconds>(stop - start_step).count() << "." <<  std::endl;
+
     } while (next_data.size() > 0);
+
+    stop = std::chrono::high_resolution_clock::now();
+    double elapsed = std::chrono::duration_cast<std::chrono::seconds>(stop - start).count();
+
+    std::cout << "Epoch: " << i << ". Time: " << elapsed << " sec." << std::endl;
   }
 
   return 0;
