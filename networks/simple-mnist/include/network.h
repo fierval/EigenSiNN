@@ -33,9 +33,9 @@ inline auto create_network(int batch_size, int input_size, int hidden_size, int 
   std::vector<NetworkNode> network;
 
   // push back rvalues so we don't have to invoke the copy constructor
-  network.push_back(NetworkNode(new Linear<float>(batch_size, input_size, hidden_size), new Adam<float, 2>(learning_rate)));
-  network.push_back(NetworkNode(new ReLU<float, 2>(), nullptr));
-  network.push_back(NetworkNode(new Linear<float>(batch_size, hidden_size, num_classes), new Adam<float, 2>(learning_rate)));
+  network.emplace_back(NetworkNode(new Linear<float>(batch_size, input_size, hidden_size), new Adam<float, 2>(learning_rate)));
+  network.emplace_back(NetworkNode(new ReLU<float, 2>(), nullptr));
+  network.emplace_back(NetworkNode(new Linear<float>(batch_size, hidden_size, num_classes), new Adam<float, 2>(learning_rate)));
 
   return network;
 }
