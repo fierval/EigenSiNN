@@ -24,12 +24,7 @@ struct NetworkNode {
     other.optimizer = nullptr;
   }
 
-  NetworkNode(const NetworkNode& other) : NetworkNode() {
-    layer = other.layer;
-    optimizer = other.optimizer;
-
-  }
-
+  NetworkNode(LayerBase* _layer, OptimizerBase<float> * _optimizer) : layer(_layer), optimizer(_optimizer) {}
 };
 
 
@@ -37,21 +32,10 @@ inline auto create_network(int batch_size, int input_size, int hidden_size, int 
 
   std::vector<NetworkNode> network;
 
-  // create the network
-  NetworkNode l1, relu1, l2;
-
-  // layers
-  l1.layer = new Linear<float>(batch_size, input_size, hidden_size);
-  relu1.layer = new ReLU<float, 2>();
-  l2.layer = new Linear<float>(batch_size, hidden_size, num_classes);
-
-  // optimizers
-  l1.optimizer = new Adam<float, 2>(learning_rate);
-  l2.optimizer = new Adam<float, 2>(learning_rate);
-  
-  network.push_back(l1);
-  network.push_back(relu1);
-  network.push_back(l2);
+  // push back rvalues so we don't have to invoke the copy constructor
+  network.push_back(NetworkNode(new Linear<float>(batch_size, input_size, hidden_size), new Adam<float, 2>(learning_rate)));
+  network.push_back(NetworkNode(new ReLU<float, 2>(), nullptr));
+  network.push_back(NetworkNode(new Linear<float>(batch_size, hidden_size, num_classes), new Adam<float, 2>(learning_rate)));
 
   return network;
 }
