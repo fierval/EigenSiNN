@@ -36,61 +36,67 @@ int main(int argc, char* argv[]) {
   CrossEntropyLoss<float> loss;
 
   std::vector<std::any> prev_outputs;
+  bool restart = true;
 
-  do {
+  for (int i = 0; i < num_epochs; i++) {
+    restart = true;
 
-    // get the data
-    std::tie(next_data, next_labels) = 
-      next_batch(mnist_dataset.training_images, mnist_dataset.training_labels, batch_size);
+    do {
 
-    if (next_data.size() == 0) {
-      break;
-    }
+      // get the data
+      std::tie(next_data, next_labels) =
+        next_batch(mnist_dataset.training_images, mnist_dataset.training_labels, batch_size, restart);
+      restart = false;
 
-    // convert to Eigen tensors
-    data_tensor = create_2d_image_tensor<float>(next_data);
-    label_tensor = create_2d_label_tensor<uint8_t, float>(next_labels, num_classes);
-
-    // forward
-    std::any tensor(data_tensor);
-
-    for (auto it = network.begin(); it != network.end(); it++) {
-
-      prev_outputs.push_back(tensor);
-      it->layer->forward(tensor);
-      tensor = it->layer->get_output();
-    }
-
-    // compute loss
-    loss.forward(tensor, label_tensor);
-
-    //backprop
-    // loss gradient
-    loss.backward();
-    auto& back_grad = loss.get_loss_derivative_by_input();
-
-    auto prev_out_iter = prev_outputs.rbegin();
-
-    for (auto rit = network.rbegin(); rit != network.rend(); rit++, prev_out_iter++) {
-      rit->layer->backward(*prev_out_iter, back_grad);
-      back_grad = rit->layer->get_loss_by_input_derivative();
-    }
-
-    // optimizer
-    prev_out_iter = prev_outputs.rbegin();
-    for (auto optit = network.rbegin(); optit != network.rend(); optit++) {
-      if (optit->optimizer == nullptr) {
-        continue;
+      if (next_data.size() == 0) {
+        break;
       }
-      auto layer = optit->layer;
-      std::any weights, bias;
 
-      std::tie(weights, bias) = optit->optimizer->step(layer->get_weights(), layer->get_bias(), layer->get_loss_by_weights_derivative(), layer->get_loss_by_bias_derivative());
-      layer->set_weights(weights);
-      layer->set_bias(bias);
-    }
-    
-  } while(next_data.size() > 0);
+      // convert to Eigen tensors
+      data_tensor = create_2d_image_tensor<float>(next_data);
+      label_tensor = create_2d_label_tensor<uint8_t, float>(next_labels, num_classes);
+
+      // forward
+      std::any tensor(data_tensor);
+
+      for (auto it = network.begin(); it != network.end(); it++) {
+
+        prev_outputs.push_back(tensor);
+        it->layer->forward(tensor);
+        tensor = it->layer->get_output();
+      }
+
+      // compute loss
+      loss.forward(tensor, label_tensor);
+
+      //backprop
+      // loss gradient
+      loss.backward();
+      auto& back_grad = loss.get_loss_derivative_by_input();
+
+      auto prev_out_iter = prev_outputs.rbegin();
+
+      for (auto rit = network.rbegin(); rit != network.rend(); rit++, prev_out_iter++) {
+        rit->layer->backward(*prev_out_iter, back_grad);
+        back_grad = rit->layer->get_loss_by_input_derivative();
+      }
+
+      // optimizer
+      prev_out_iter = prev_outputs.rbegin();
+      for (auto optit = network.rbegin(); optit != network.rend(); optit++) {
+        if (optit->optimizer == nullptr) {
+          continue;
+        }
+        auto layer = optit->layer;
+        std::any weights, bias;
+
+        std::tie(weights, bias) = optit->optimizer->step(layer->get_weights(), layer->get_bias(), layer->get_loss_by_weights_derivative(), layer->get_loss_by_bias_derivative());
+        layer->set_weights(weights);
+        layer->set_bias(bias);
+      }
+
+    } while (next_data.size() > 0);
+  }
 
   return 0;
 }

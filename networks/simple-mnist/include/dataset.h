@@ -9,7 +9,7 @@ using DataContainer = std::vector<std::vector<float>>;
 using LabelContainer = std::vector<uint8_t>;
 
 mnist::MNIST_dataset<std::vector, std::vector<float>, uint8_t> create_mnist_dataset();
-std::tuple<DataContainer, LabelContainer> next_batch(DataContainer& data, LabelContainer& labels, size_t batch_size);
+std::tuple<DataContainer, LabelContainer> next_batch(DataContainer& data, LabelContainer& labels, size_t batch_size, bool restart);
 
 // convert image data read by MNIST into a 2d Eigen tensor
 template<typename Scalar>

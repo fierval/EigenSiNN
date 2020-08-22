@@ -16,12 +16,17 @@ mnist::MNIST_dataset<std::vector, std::vector<float>, uint8_t> create_mnist_data
   return dataset;
 }
 
-std::tuple<DataContainer, LabelContainer> next_batch(DataContainer &data, LabelContainer &labels, size_t batch_size)
+std::tuple<DataContainer, LabelContainer> next_batch(DataContainer &data, LabelContainer &labels, size_t batch_size, bool restart)
 {
 
   static bool fst_batch(true);
   static DataContainer::iterator it_cur;
   static LabelContainer::iterator it_label;
+
+  // restart at the start of each new epoch
+  if (restart) {
+    fst_batch = true;
+  }
 
   if (fst_batch) {
   
