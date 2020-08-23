@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
 
   // convert to tensors
   data_tensor = create_2d_image_tensor<float>(next_data);
-  label_tensor = create_2d_label_tensor<uint8_t, float>(next_labels, num_classes);
+  Tensor<uint8_t, 1> test_label_tensor = create_1d_label_tensor<uint8_t>(next_labels);
 
   // forward
   std::any tensor(data_tensor);
@@ -149,7 +149,7 @@ int main(int argc, char* argv[]) {
     predictions(i) = (pred_res(i).first - i) / pred_res.dimension(0) % num_classes;
   }
 
-  Tensor<bool, 1> matches = predictions == label_tensor;
+  Tensor<bool, 1> matches = predictions == test_label_tensor;
   Tensor<float, 1> falses(matches.dimensions());
   Tensor<float, 1> trues(matches.dimensions());
 

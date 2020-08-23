@@ -47,3 +47,12 @@ inline Tensor<Scalar, 2> create_2d_label_tensor(std::vector<Loss>& labels, Index
   return out;
 
 }
+
+template<typename Loss>
+inline Tensor<Loss, 1> create_1d_label_tensor(std::vector<Loss>& labels) {
+
+  Tensor<Loss, 1> out = TensorMap<Tensor<Loss, 1>>(labels.data(), labels.size());
+
+  return out;
+
+}
