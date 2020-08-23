@@ -35,8 +35,8 @@ std::tuple<DataContainer, LabelContainer> next_batch(DataContainer &data, LabelC
     it_label = labels.begin();
   }
 
-  DataContainer next_data_batch(batch_size);
-  LabelContainer next_label_batch(batch_size);
+  DataContainer next_data_batch;
+  LabelContainer next_label_batch;
 
   if (it_cur < data.end()) {
   

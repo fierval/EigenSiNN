@@ -43,13 +43,14 @@ int main(int argc, char* argv[]) {
   auto start_step = std::chrono::high_resolution_clock::now();
   auto stop = std::chrono::high_resolution_clock::now();
 
+  // Train
   for (int i = 0; i < num_epochs; i++) {
     restart = true;
     start = std::chrono::high_resolution_clock::now();
+    start_step = std::chrono::high_resolution_clock::now();
     int step = 0;
 
     do {
-      start_step = std::chrono::high_resolution_clock::now();
 
       // get the data
       std::tie(next_data, next_labels) =
@@ -103,16 +104,21 @@ int main(int argc, char* argv[]) {
       }
 
       step++;
-      stop = std::chrono::high_resolution_clock::now();
-      std::cout << "Epoch: " << i << ". Step: " << step << ". Loss: " << std::any_cast<float>(loss.get_output()) << ". Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start_step).count() / 1000. << "." <<  std::endl;
+      if (step % 100 == 0) {
+        stop = std::chrono::high_resolution_clock::now();
+        std::cout << "Epoch: " << i + 1 << ". Step: " << step << ". Loss: " << std::any_cast<float>(loss.get_output()) << ". Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start_step).count() / 1000. << "." << std::endl;
+        start_step = std::chrono::high_resolution_clock::now();
+      }
 
     } while (next_data.size() > 0);
 
     stop = std::chrono::high_resolution_clock::now();
-    double elapsed = std::chrono::duration_cast<std::chrono::seconds>(stop - start).count();
+    double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() / 1000.;
 
     std::cout << "Epoch: " << i << ". Time: " << elapsed << " sec." << std::endl;
   }
+
+  // TODO: Add testing
 
   return 0;
 }
