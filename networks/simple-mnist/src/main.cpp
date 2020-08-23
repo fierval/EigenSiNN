@@ -121,6 +121,28 @@ int main(int argc, char* argv[]) {
   }
 
   // TODO: Add testing
+  size_t test_size = mnist_dataset.test_images.size();
+
+  // get data
+  std::tie(next_data, next_labels) =
+    next_batch(mnist_dataset.test_images, mnist_dataset.test_labels, test_size, true);
+
+  // convert to tensors
+  data_tensor = create_2d_image_tensor<float>(next_data);
+  label_tensor = create_2d_label_tensor<uint8_t, float>(next_labels, num_classes);
+
+  // forward
+  std::any tensor(data_tensor);
+
+  for (auto it = network.begin(); it != network.end(); it++) {
+
+    it->layer->forward(tensor);
+    tensor = it->layer->get_output();
+  }
+
+  Tensor<float, 2> test_output = from_any<float, 2>(tensor);
+  Tensor<Tuple<Index, float>, 2> test_index_tuples = test_output.index_tuples();
+  Tensor<Tuple<Index, float>, 1> pred_res = test_index_tuples.reduce(array<Index, 1> {0}, internal::ArgMaxTupleReducer<Tuple<Index, float>>());
 
   return 0;
 }
