@@ -96,11 +96,13 @@ int main(int argc, char* argv[]) {
         if (optit->optimizer == nullptr) {
           continue;
         }
-        std::any weights, bias;
 
-        std::tie(weights, bias) = optit->optimizer->step(optit->layer->get_weights(), optit->layer->get_bias(), optit->layer->get_loss_by_weights_derivative(), optit->layer->get_loss_by_bias_derivative());
-        optit->layer->set_weights(weights);
-        optit->layer->set_bias(bias);
+        std::any weights, bias;
+        auto layer = optit->layer;
+
+        std::tie(weights, bias) = optit->optimizer->step(layer->get_weights(), layer->get_bias(), layer->get_loss_by_weights_derivative(), layer->get_loss_by_bias_derivative());
+        layer->set_weights(weights);
+        layer->set_bias(bias);
       }
 
       step++;
