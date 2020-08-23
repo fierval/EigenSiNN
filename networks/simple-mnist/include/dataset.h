@@ -21,7 +21,8 @@ inline Tensor<Scalar, 2> create_2d_image_tensor(std::vector<std::vector<float>>&
   Index i = 0;
   for (auto& v : data) {
     
-    data_tensor.chip(i, 0) = TensorMap<Tensor<Scalar, 1>>(v.data(), dims[1]);
+    Tensor<Scalar, 1> t = TensorMap<Tensor<Scalar, 1>>(v.data(), dims[1]);
+    data_tensor.chip(i, 0) = (1./255.) * t ;
     i++;
   }
 

@@ -54,8 +54,8 @@ namespace EigenSinn {
       cur_beta1 *= beta1;
       cur_beta2 *= beta2;
 
-      Tensor<Scalar, Rank> denom_weights = velocity_weights.sqrt() / (sqrt(1 - cur_beta2) + eps);
-      Tensor<Scalar, 1> denom_bias = velocity_bias.sqrt() / (sqrt(1 - cur_beta2) + eps);
+      Tensor<Scalar, Rank> denom_weights = velocity_weights.sqrt() / sqrt(1 - cur_beta2) + eps;
+      Tensor<Scalar, 1> denom_bias = velocity_bias.sqrt() / sqrt(1 - cur_beta2) + eps;
 
       Scalar step_size = lr / (1 - cur_beta1);
 

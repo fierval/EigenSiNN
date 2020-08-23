@@ -63,6 +63,7 @@ int main(int argc, char* argv[]) {
       // convert to Eigen tensors
       data_tensor = create_2d_image_tensor<float>(next_data);
       label_tensor = create_2d_label_tensor<uint8_t, float>(next_labels, num_classes);
+      prev_outputs.clear();
 
       // forward
       std::any tensor(data_tensor);
@@ -90,22 +91,20 @@ int main(int argc, char* argv[]) {
       }
 
       // optimizer
-      prev_out_iter = prev_outputs.rbegin();
       for (auto optit = network.rbegin(); optit != network.rend(); optit++) {
         if (optit->optimizer == nullptr) {
           continue;
         }
-        auto layer = optit->layer;
         std::any weights, bias;
 
-        std::tie(weights, bias) = optit->optimizer->step(layer->get_weights(), layer->get_bias(), layer->get_loss_by_weights_derivative(), layer->get_loss_by_bias_derivative());
-        layer->set_weights(weights);
-        layer->set_bias(bias);
+        std::tie(weights, bias) = optit->optimizer->step(optit->layer->get_weights(), optit->layer->get_bias(), optit->layer->get_loss_by_weights_derivative(), optit->layer->get_loss_by_bias_derivative());
+        optit->layer->set_weights(weights);
+        optit->layer->set_bias(bias);
       }
 
       step++;
       stop = std::chrono::high_resolution_clock::now();
-      std::cout << "Epoch: " << i << ". Step: " << step << ". Loss: " << std::any_cast<float>(loss.get_output()) << ". Time: " << std::chrono::duration_cast<std::chrono::seconds>(stop - start_step).count() << "." <<  std::endl;
+      std::cout << "Epoch: " << i << ". Step: " << step << ". Loss: " << std::any_cast<float>(loss.get_output()) << ". Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start_step).count() / 1000. << "." <<  std::endl;
 
     } while (next_data.size() > 0);
 

@@ -36,7 +36,8 @@ namespace EigenSinn {
 
       // dims: [N, D] * [D, M] -> [N, M]
       ProductDims prod_dims = { IndexPair<int>(1, 0) };
-      layer_output = std::any_cast<Tensor<Scalar, 2>&>(prev_layer).contract(weights, prod_dims);
+      auto prev_layer_tensor = std::any_cast<Tensor<Scalar, 2>&>(prev_layer);
+      layer_output = prev_layer_tensor.contract(weights, prod_dims);
 
       // bias: [1, M]
       layer_output += bias.reshape(array<Index, 2>{ 1, bias.dimension(0) }).broadcast(broadcast_bias_dim);
