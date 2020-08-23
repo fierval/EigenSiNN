@@ -142,7 +142,22 @@ int main(int argc, char* argv[]) {
 
   Tensor<float, 2> test_output = from_any<float, 2>(tensor);
   Tensor<Tuple<Index, float>, 2> test_index_tuples = test_output.index_tuples();
-  Tensor<Tuple<Index, float>, 1> pred_res = test_index_tuples.reduce(array<Index, 1> {0}, internal::ArgMaxTupleReducer<Tuple<Index, float>>());
+  Tensor<Tuple<Index, float>, 1> pred_res = test_index_tuples.reduce(array<Index, 1> {1}, internal::ArgMaxTupleReducer<Tuple<Index, float>>());
+  Tensor<Index, 1> predictions(pred_res.dimension(0));
 
+  for (Index i = 0; i < pred_res.dimension(0); i++) {
+    predictions(i) = (pred_res(i).first - i) / pred_res.dimension(0) % num_classes;
+  }
+
+  Tensor<bool, 1> matches = predictions == label_tensor;
+  Tensor<float, 1> falses(matches.dimensions());
+  Tensor<float, 1> trues(matches.dimensions());
+
+  falses.setZero();
+  trues.setConstant(1.);
+
+  Tensor<float, 0> accurates = matches.select(trues, falses).sum();
+
+  std::cout << "Accuracy: " << accurates(0) / test_output.dimension(0) << std::endl;
   return 0;
 }
