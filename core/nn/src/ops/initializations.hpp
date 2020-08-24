@@ -32,7 +32,7 @@ namespace EigenSinn {
   template <typename Scalar, Index Rank>
   inline Tensor<Scalar, Rank> generate_xavier(array<Index, Rank> layer_dims) {
 
-    assert(Rank == 2 || Rank == 4 || Rank == 1);
+    assert(Rank == 2 || Rank == 4);
     Scalar std;
 
     switch (Rank) {
