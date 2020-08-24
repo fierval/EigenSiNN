@@ -149,15 +149,8 @@ int main(int argc, char* argv[]) {
     predictions(i) = (pred_res(i).first - i) / pred_res.dimension(0) % num_classes;
   }
 
-  Tensor<bool, 1> matches = predictions == test_label_tensor;
-  Tensor<float, 1> falses(matches.dimensions());
-  Tensor<float, 1> trues(matches.dimensions());
+  Tensor<float, 0> matches = (predictions == test_label_tensor).cast<float>().sum();
 
-  falses.setZero();
-  trues.setConstant(1.);
-
-  Tensor<float, 0> accurates = matches.select(trues, falses).sum();
-
-  std::cout << "Accuracy: " << accurates(0) / test_output.dimension(0) << std::endl;
+  std::cout << "Accuracy: " << matches(0) / test_output.dimension(0) << std::endl;
   return 0;
 }
