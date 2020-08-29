@@ -258,7 +258,7 @@ void read_test_categorical(const std::string& folder, std::size_t limit, Images&
  */
 template <typename Images, typename Labels>
 void read_training_categorical(std::size_t limit, Images& images, Labels& labels) {
-    read_training_categorical("cifar-10/cifar-10-batches-bin", limit, images, labels);
+    read_training_categorical(CIFAR_DATA_LOCATION, limit, images, labels);
 }
 
 /*!
@@ -271,7 +271,7 @@ void read_training_categorical(std::size_t limit, Images& images, Labels& labels
  */
 template <typename Images, typename Labels>
 void read_test_categorical(std::size_t limit, Images& images, Labels& labels) {
-    read_test_categorical("cifar-10/cifar-10-batches-bin", limit, images, labels);
+    read_test_categorical(CIFAR_DATA_LOCATION, limit, images, labels);
 }
 
 /*!
