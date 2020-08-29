@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
+project(cifar LANGUAGES CXX)
 
 #set( CMAKE_TOOLCHAIN_FILE "C:/git/NN/vcpkg/scripts/buildsystems/vcpkg.cmake" )
 
