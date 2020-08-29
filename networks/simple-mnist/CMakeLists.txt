@@ -1,6 +1,9 @@
 project(simple-mnist)
 cmake_minimum_required(VERSION 3.17)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
 # MNIST reader package
 # Clone https://github.com/wichtounet/mnist
 # and point cmake to the repo root
