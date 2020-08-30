@@ -38,34 +38,6 @@ namespace cifar {
     Container<Image> test_images;     ///< The test images
     Container<Label> training_labels; ///< The training labels
     Container<Label> test_labels;     ///< The test labels
-
-    /*!
-     * \brief Resize the training set to new_size
-     *
-     * If new_size is less than the current size, this function has no effect.
-     *
-     * \param new_size The size to resize the training sets to.
-     */
-    void resize_training(std::size_t new_size) {
-      if (training_images.size() > new_size) {
-        training_images.resize(new_size);
-        training_labels.resize(new_size);
-      }
-    }
-
-    /*!
-     * \brief Resize the test set to new_size
-     *
-     * If new_size is less than the current size, this function has no effect.
-     *
-     * \param new_size The size to resize the test sets to.
-     */
-    void resize_test(std::size_t new_size) {
-      if (test_images.size() > new_size) {
-        test_images.resize(new_size);
-        test_labels.resize(new_size);
-      }
-    }
   };
 
   /*!
