@@ -1,26 +1,14 @@
 #include "dataset.h"
+#include "..\include\dataset.h"
 
-// Code from: https://github.com/wichtounet/mnist
-mnist::MNIST_dataset<std::vector, std::vector<float>, uint8_t> create_mnist_dataset()
-{
+// Code from: https://github.com/wichtounet/cifar-10
 
-  //MNIST_DATA_LOCATION set by MNIST in cmake
-  mnist::MNIST_dataset<std::vector, std::vector<float>, uint8_t> dataset =
-      mnist::read_dataset<std::vector, std::vector, float, uint8_t>(MNIST_DATA_LOCATION);
 
-  std::cout << "Nbr of training images = " << dataset.training_images.size() << std::endl;
-  std::cout << "Nbr of training labels = " << dataset.training_labels.size() << std::endl;
-  std::cout << "Nbr of test images = " << dataset.test_images.size() << std::endl;
-  std::cout << "Nbr of test labels = " << dataset.test_labels.size() << std::endl;
-
-  return dataset;
-}
-
-std::tuple<DataContainer, LabelContainer> next_batch(DataContainer &data, LabelContainer &labels, size_t batch_size, bool restart)
+std::tuple<ImageContainer, LabelContainer> next_batch(ImageContainer &data, LabelContainer &labels, size_t batch_size, bool restart)
 {
 
   static bool fst_batch(true);
-  static DataContainer::iterator it_cur;
+  static ImageContainer::iterator it_cur;
   static LabelContainer::iterator it_label;
 
   // restart at the start of each new epoch
@@ -35,12 +23,12 @@ std::tuple<DataContainer, LabelContainer> next_batch(DataContainer &data, LabelC
     it_label = labels.begin();
   }
 
-  DataContainer next_data_batch;
+  ImageContainer next_data_batch;
   LabelContainer next_label_batch;
 
   if (it_cur < data.end()) {
   
-    DataContainer::iterator data_end = it_cur + batch_size;
+    ImageContainer::iterator data_end = it_cur + batch_size;
     LabelContainer::iterator label_end = it_label + batch_size;
 
     if (label_end > labels.end()) {
@@ -56,4 +44,10 @@ std::tuple<DataContainer, LabelContainer> next_batch(DataContainer &data, LabelC
   }
 
   return std::make_tuple(next_data_batch, next_label_batch);
+}
+
+cifar::CIFAR10_dataset<std::vector, Tensor<float, 3>, uint8_t> read_cifar_dataset() {
+
+  auto dataset = cifar::read_dataset_3d<std::vector, Tensor<float, 3>, uint8_t>();
+  return dataset;
 }
