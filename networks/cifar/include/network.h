@@ -61,16 +61,16 @@ inline auto create_network(int batch_size, int num_classes, float learning_rate)
   // push back rvalues so we don't have to invoke the copy constructor
   network.push_back(NetworkNode(new Conv2d<float>(array<Index, 4>{6, 3, 5, 5}), new Adam<float, 4>(learning_rate)));
   network.push_back(NetworkNode(new ReLU<float, 4>()));
-  network.push_back(NetworkNode(new MaxPoolingLayer<float, 4>(array<Index, 2>{2, 2}, 2)));
+  network.push_back(NetworkNode(new MaxPooling<float, 4>(array<Index, 2>{2, 2}, 2)));
 
   network.push_back(NetworkNode(new Conv2d<float>(array<Index, 4>{16, 6, 5, 5}), new Adam<float, 4>(learning_rate)));
   network.push_back(NetworkNode(new ReLU<float, 4>())); 
-  network.push_back(NetworkNode(new MaxPoolingLayer<float, 4>(array<Index, 2>{2, 2}, 2)));
-
-  // get flat dimension by pushing a zero tensor through the network so far
-  int flat_dim = NetworkNode::get_flat_dimension(network, array<Index, 4>{1, 3, 32, 32});
+  network.push_back(NetworkNode(new MaxPooling<float, 4>(array<Index, 2>{2, 2}, 2)));
 
   network.push_back(NetworkNode(new Flatten<float>()));
+
+  // get flat dimension by pushing a zero tensor through the network defined so far
+  int flat_dim = NetworkNode::get_flat_dimension(network, array<Index, 4>{1, 3, 32, 32});
 
   network.push_back(NetworkNode(new Linear<float>(batch_size, flat_dim, 120)));
   network.push_back(NetworkNode(new ReLU<float, 2>()));

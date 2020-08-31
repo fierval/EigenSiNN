@@ -61,7 +61,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool2d, Forward) {
 
-    MaxPoolingLayer<float, 2> pl(extents1d, stride);
+    MaxPooling<float, 2> pl(extents1d, stride);
     pl.init();
     pl.forward(cd.linearInput);
 
@@ -70,7 +70,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool2d, Backward) {
 
-    MaxPoolingLayer<float, 2> pl(extents1d, stride);
+    MaxPooling<float, 2> pl(extents1d, stride);
     pl.init();
     pl.forward(cd.linearInput);
     pl.backward(cd.linearInput, fakeloss);
