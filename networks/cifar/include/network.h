@@ -55,6 +55,43 @@ inline int get_flat_dimension(const Network& network, const array<Index, 4>& inp
   return from_any<float, 2>(tensor).dimension(1);
 }
 
+inline void init(const Network& network) {
+  for (const auto& n : network) {
+    n.layer->init();
+  }
+}
+
+inline Tensor<float, 2> forward(const Network& network, const Tensor<float, 4>& input) {
+
+  std::any tensor(input);
+
+  Tensor<float, 2> output;
+
+  for (const auto& n : network) {
+    n.layer->forward(tensor);
+    tensor = n.layer->get_output();
+  }
+
+  output = from_any<float, 4>(tensor);
+  return output;
+}
+
+inline void backward(const Network& network, const Tensor<float, 2>& loss_derivative, const Tensor<float, 4>& input) {
+
+  std::any next_level_grad(loss_derivative);
+
+  // point at the "previous" layer
+  auto reverse_input_it = network.rbegin() + 1;
+  for (const auto& n : network) {
+    // get previous layer output = input to this layer
+    auto prev_layer = reverse_input_it != network.rend() ? reverse_input_it->layer->get_output() : std::any(input);
+
+    n.layer->backward(prev_layer, next_level_grad);
+    next_level_grad = n.layer->get_loss_by_input_derivative();
+  }
+}
+
+
 inline auto create_network(int batch_size, int num_classes, float learning_rate) {
 
   Network network;
