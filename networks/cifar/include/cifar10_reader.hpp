@@ -13,6 +13,7 @@
 #ifndef CIFAR10_READER_HPP
 #define CIFAR10_READER_HPP
 
+#include <unsupported/Eigen/CXX11/Tensor>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -23,6 +24,7 @@
 #include <algorithm>
 #include <numeric>
 
+using namespace Eigen;
 
 namespace cifar {
 
@@ -40,7 +42,26 @@ namespace cifar {
     Container<Label> test_labels;     ///< The test labels
   };
 
-  /*!
+  template<typename Scalar>
+  inline Tensor<Scalar, 3> normalize(Tensor<Scalar, 3>& raw) {
+    static bool inited(false);
+    static Tensor<Scalar, 1> mean(3), std(3);
+    static Tensor<Scalar, 3> broad_mean, broad_std;
+
+    if (!inited) {
+      inited = true;
+      mean.setValues({ 0.4914, 0.4822, 0.4465 });
+      std.setValues({ 0.247, 0.243, 0.261 });
+
+      broad_mean = mean.reshape(array<Index, 3>{ 3,1,1 }).broadcast(array<Index, 3>{1, 32, 32});
+      broad_std = std.reshape(array<Index, 3>{ 3,1,1 }).broadcast(array<Index, 3>{1, 32, 32});
+    }
+
+    Tensor<Scalar, 3> res = (raw - broad_mean) / broad_std;
+    return res;
+  }
+
+    /*!
    * \brief Read a CIFAR 10 data file inside the given containers
    * \param images The container to fill with the labels
    * \param path The path to the label file
@@ -90,14 +111,27 @@ namespace cifar {
     images.resize(images.size() + size);
     labels.resize(labels.size() + size);
 
+
+    Tensor<float, 3> naught(3, 32, 32);
+    naught.setZero();
+
+    // so we simply initialize normalization
+    // and not run into race conditions during parallel
+    // foreach
+    normalize(naught);
+
     std::for_each(std::execution::par, cifar_single_entry_range.begin(), cifar_single_entry_range.end(), [&](int i) {
       labels[start + i] = buffer[i * 3073];
 
       TensorMap<Tensor<char, 3>> im_value(&buffer[i * 3073 + 1], 32, 32, 3);
 
       // tensors are column-major and the image we get is row-major.
-      Tensor<float, 3> col_major = im_value.shuffle(array<Index, 3>{2, 1, 0}).cast<float>();
-      images[i] = col_major;
+      // normalize them while at it.
+      Tensor<float, 3> col_major = 1./255 * im_value.shuffle(array<Index, 3>{2, 1, 0}).cast<byte>().cast<float>();
+      Tensor<float, 3> normalized = normalize(col_major);
+
+      images[i] = normalized;
+
       });
   }
 
@@ -166,7 +200,6 @@ namespace cifar {
 
     return dataset;
   }
-
 } //end of namespace cifar
 
 #endif

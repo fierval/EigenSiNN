@@ -27,5 +27,5 @@ int main(int argc, char* argv[]) {
   auto dataset = read_cifar_dataset();
 
   // get CIFAR data
- return 0;
+  return 0;
 }
