@@ -72,7 +72,7 @@ inline Tensor<float, 2> forward(const Network& network, const Tensor<float, 4>& 
     tensor = n.layer->get_output();
   }
 
-  output = from_any<float, 4>(tensor);
+  output = from_any<float, 2>(tensor);
   return output;
 }
 
