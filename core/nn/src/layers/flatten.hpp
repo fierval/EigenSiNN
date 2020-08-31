@@ -18,13 +18,13 @@ namespace EigenSinn {
       Tensor<Scalar, 4> orig = from_any<Scalar, 4>(prev_layer_any);
       original_dimensions = orig.dimensions();
 
-      unfolded = unfold_conv_res<Scalar>(orig);
+      unfolded = unfold_kernel<Scalar>(orig);
     }
 
     void backward(std::any prev_layer, std::any next_layer_grad) {
       Tensor<Scalar, 2> unf_dout = from_any<Scalar, 2>(next_layer_grad);
 
-      folded = fold_conv_res<Scalar>(unf_dout, original_dimensions);
+      folded = fold_kernel<Scalar>(unf_dout, original_dimensions);
     }
 
     virtual std::any get_output() {

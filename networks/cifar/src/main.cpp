@@ -22,6 +22,7 @@ int main(int argc, char* argv[]) {
   std::vector<std::string> classes = { "plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck" };
 
   auto dataset = read_cifar_dataset();
+  auto network = create_network(batch_size, num_classes, learning_rate);
 
   // get CIFAR data
   return 0;

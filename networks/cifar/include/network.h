@@ -44,10 +44,12 @@ inline int get_flat_dimension(const Network& network, const array<Index, 4>& inp
   input.setZero();
 
   std::any tensor(input);
+  Tensor<float, 4>  output;
 
   for (const auto& n : network) {
     n.layer->forward(tensor);
     tensor = n.layer->get_output();
+    output = from_any<float, 4>(tensor);
   }
 
   return from_any<float, 2>(tensor).dimension(1);
