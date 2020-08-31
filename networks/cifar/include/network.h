@@ -46,8 +46,7 @@ struct NetworkNode {
       tensor = n.layer->get_output();
     }
 
-    Tensor<float, 2> output = from_any<float, 2>(tensor);
-    return output.dimension(1);
+    return from_any<float, 2>(tensor).dimension(1);
   }
 };
 
