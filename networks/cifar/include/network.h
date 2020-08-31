@@ -33,25 +33,25 @@ struct NetworkNode {
 
   NetworkNode(LayerBase * _layer, OptimizerBase<float>* _optimizer) : layer(_layer), optimizer(_optimizer) {}
   NetworkNode(LayerBase * _layer) : layer(_layer), optimizer(nullptr) {}
-
-  // assuming that the last layer of the network is Flatten, we can get the flattened dimension
-  static int get_flat_dimension(const std::vector<NetworkNode>& network, const array<Index, 4>& input_dims) {
-    Tensor<float, 4> input(input_dims);
-    input.setZero();
-
-    std::any tensor(input);
-
-    for (const auto& n : network) {
-      n.layer->forward(tensor);
-      tensor = n.layer->get_output();
-    }
-
-    return from_any<float, 2>(tensor).dimension(1);
-  }
 };
 
 
 typedef std::vector<NetworkNode> Network;
+
+// assuming that the last layer of the network is Flatten, we can get the flattened dimension
+inline int get_flat_dimension(const Network& network, const array<Index, 4>& input_dims) {
+  Tensor<float, 4> input(input_dims);
+  input.setZero();
+
+  std::any tensor(input);
+
+  for (const auto& n : network) {
+    n.layer->forward(tensor);
+    tensor = n.layer->get_output();
+  }
+
+  return from_any<float, 2>(tensor).dimension(1);
+}
 
 inline auto create_network(int batch_size, int num_classes, float learning_rate) {
 
@@ -69,7 +69,7 @@ inline auto create_network(int batch_size, int num_classes, float learning_rate)
   network.push_back(NetworkNode(new Flatten<float>()));
 
   // get flat dimension by pushing a zero tensor through the network defined so far
-  int flat_dim = NetworkNode::get_flat_dimension(network, array<Index, 4>{1, 3, 32, 32});
+  int flat_dim = get_flat_dimension(network, array<Index, 4>{1, 3, 32, 32});
 
   network.push_back(NetworkNode(new Linear<float>(batch_size, flat_dim, 120)));
   network.push_back(NetworkNode(new ReLU<float, 2>()));
