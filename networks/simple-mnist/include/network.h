@@ -2,6 +2,8 @@
 
 #include <layers/layer_base.hpp>
 #include <optimizers/optimizer_base.hpp>
+#include <layers/linear.hpp>
+#include <layers/relu.hpp>
 
 using namespace Eigen;
 using namespace EigenSinn;

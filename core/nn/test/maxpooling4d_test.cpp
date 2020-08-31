@@ -1,6 +1,6 @@
 #include <iostream>
 #include <gtest/gtest.h>
-#include <layers/maxpoolinglayer.hpp>
+#include <layers/maxpooling.hpp>
 #include "include/commondata4d.hpp"
 #include "ops/comparisons.hpp"
 

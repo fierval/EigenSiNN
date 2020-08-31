@@ -1,25 +1,22 @@
 #include "dataset.h"
 
-#include <layers/linear.hpp>
-#include <layers/relu.hpp>
-#include <layers/convolution.hpp>
-#include <layers/maxpoolinglayer.hpp>
 #include <losses/crossentropyloss.hpp>
 #include <optimizers/adam.hpp>
 #include <chrono>
 #include <vector>
 #include <string>
+#include "network.h"
+
 using namespace EigenSinn;
+using namespace Eigen;
 
 int main(int argc, char* argv[]) {
 
-  size_t batch_size = 100;
+  size_t batch_size = 4;
   int num_classes = 10;
-  int input_size = 28 * 28;
-  int num_epochs = 2;
+  int num_epochs = 4;
   float learning_rate = 0.001;
-  int hidden_size = 500;
-
+  
   CrossEntropyLoss<float> loss;
 
   std::vector<std::string> classes = { "plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck" };
