@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
     start = std::chrono::high_resolution_clock::now();
     start_step = std::chrono::high_resolution_clock::now();
 
-    for (int step = 1; step <= dataset.training_images.size(); step++) {
+    for (int step = 1; step <= dataset.training_images.size() / batch_size; step++) {
 
       std::any batch_tensor = std::any(create_batch_tensor(dataset.training_images, step - 1, batch_size));
       Tensor<float, 2> label_tensor = create_2d_label_tensor<uint8_t, float>(dataset.training_labels, step - 1, batch_size, num_classes);
