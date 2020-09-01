@@ -52,7 +52,9 @@ inline int get_flat_dimension(const Network& network, const array<Index, 4>& inp
     output = from_any<float, 4>(tensor);
   }
 
-  return from_any<float, 2>(tensor).dimension(1);
+  auto dims = from_any<float, 4>(tensor).dimensions();
+
+  return dims[1] * dims[2] * dims[3];
 }
 
 inline void init(const Network& network) {
@@ -122,10 +124,11 @@ inline auto create_network(int batch_size, int num_classes, float learning_rate)
   network.push_back(NetworkNode(new ReLU<float, 4>())); 
   network.push_back(NetworkNode(new MaxPooling<float, 4>(array<Index, 2>{2, 2}, 2)));
 
-  network.push_back(NetworkNode(new Flatten<float>()));
-
   // get flat dimension by pushing a zero tensor through the network defined so far
   int flat_dim = get_flat_dimension(network, array<Index, 4>{1, 3, 32, 32});
+
+  network.push_back(NetworkNode(new Flatten<float>()));
+
 
   network.push_back(NetworkNode(new Linear<float>(batch_size, flat_dim, 120)));
   network.push_back(NetworkNode(new ReLU<float, 2>()));

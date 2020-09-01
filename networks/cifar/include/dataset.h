@@ -16,12 +16,12 @@ std::tuple<ImageContainer, LabelContainer> next_batch(ImageContainer& data, Labe
 cifar::CIFAR10_dataset<std::vector, Tensor<float, 3>, uint8_t> read_cifar_dataset();
 
 // convert loss class into categorical representation and convert to the network data type
-template<typename Loss>
-inline Tensor<Loss, 2> create_2d_label_tensor(std::vector<Loss>& labels, Index n_categories) {
+template<typename Loss, typename Scalar>
+inline Tensor<Scalar, 2> create_2d_label_tensor(std::vector<Loss>& labels, Index n_categories) {
 
   array<Index, 2> dims{ (Index)labels.size(), n_categories };
 
-  Tensor<Loss, 2> out(dims);
+  Tensor<Scalar, 2> out(dims);
   out.setZero();
 
   Index i = 0;
@@ -54,7 +54,7 @@ inline Tensor<Scalar, Rank + 1> create_batch_tensor(std::vector<Tensor<Scalar, R
   out_dims[0] = images.size();
 
   Tensor<Scalar, Rank + 1> output(out_dims);
-  for (Index i = 1; i < images.size(); i++) {
+  for (Index i = 0; i < images.size(); i++) {
     output.chip(i, 0) = images[i];
   }
 

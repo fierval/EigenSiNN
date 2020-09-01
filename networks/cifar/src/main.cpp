@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
       }
 
       Tensor<float, 4> batch_tensor = create_batch_tensor(next_images);
-      Tensor<uint8_t, 2> label_tensor = create_2d_label_tensor(next_labels, num_classes);
+      Tensor<float, 2> label_tensor = create_2d_label_tensor<uint8_t, float>(next_labels, num_classes);
 
       // forward
       auto tensor = forward(network, batch_tensor);

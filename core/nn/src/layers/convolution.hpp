@@ -42,11 +42,8 @@ namespace EigenSinn {
 
 
       //add bias to each channel
-      if (bias_broadcast[0] == 0) {
-        auto dims = layer_output.dimensions();
-        bias_broadcast = { dims[0], 1, dims[2], dims[3] };
-
-      }
+      auto dims = layer_output.dimensions();
+      bias_broadcast = { dims[0], 1, dims[2], dims[3] };
       
       // one bias per filter
       Tensor<Scalar, 4> reshaped = bias.reshape(array<Index, 4>{ 1, kernel.dimension(0), 1, 1 });
