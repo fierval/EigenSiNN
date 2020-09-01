@@ -72,13 +72,13 @@ int main(int argc, char* argv[]) {
     stop = std::chrono::high_resolution_clock::now();
     double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() / 1000.;
 
-    std::cout << "Epoch: " << i << ". Time: " << elapsed << " sec." << std::endl;
+    std::cout << "Epoch: " << i + 1 << ". Time: " << elapsed << " sec." << std::endl;
   } 
   
   // Test
   std::cout << "Starting test..." << std::endl;
   std::any batch_tensor = std::any(create_batch_tensor(dataset.test_images, 0, dataset.test_images.size()));
-  auto label_tensor = create_1d_label_tensor(dataset.training_labels);
+  auto label_tensor = create_1d_label_tensor(dataset.test_labels);
 
   auto tensor = forward(network, batch_tensor);
 
