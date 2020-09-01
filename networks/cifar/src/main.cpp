@@ -74,6 +74,6 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Epoch: " << i << ". Time: " << elapsed << " sec." << std::endl;
   } 
-  // get CIFAR data
+  
   return 0;
 }
