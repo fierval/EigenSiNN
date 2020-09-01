@@ -92,8 +92,6 @@ namespace EigenSinn {
     array<Index, Rank> starts = { 0, 0, 0, 0 };
     array<Index, Rank> offsets = { input.dimension(0), kernel_dims[1], kernel_dims[2], kernel_dims[3] };
 
-    Tensor<Scalar, 2> output(col_dim, input.dimension(0));
-    
     // pad the tensor before we convolve
     Tensor<Scalar, 4> padded = input.pad(pad2dim(padding));
 
@@ -102,14 +100,22 @@ namespace EigenSinn {
     // we need to flatten as if it's col-major
     array<int, 4> shuffle_dims = { 3, 2, 1, 0 };
 
+    // output second dimension is 
+    // batch_size (input dim[0]) * how_many_convolution_locations there are
+    int conv_locations = out_dims[3] * out_dims[2] / (stride * stride);
+
+    Tensor<Scalar, 2> output(col_dim, input.dimension(0) * conv_locations);
+
     // "move" the kernel along the batch and convert
-    Index col, row;
-    for (col = 0, starts[2] = 0; col < out_dims[2]; col++, starts[2] +=stride) {
-      for (row = 0, starts[3] = 0; row < out_dims[3]; row++, starts[3] += stride) {
+    Index col, row, batch = 0;
+    for (row = 0, starts[2] = 0; row < out_dims[2]; row += stride, starts[2] +=stride) {
+      for (col = 0, starts[3] = 0; col < out_dims[3]; col += stride, batch++, starts[3] += stride) {
 
         Tensor<Scalar, Rank> cur_slice = padded.slice(starts, offsets).shuffle(shuffle_dims);
         TensorMap<Tensor<Scalar, 2>> flat_slice(cur_slice.data(), col_dim, padded.dimension(0));
 
+// concatenate takes 98% of time
+#ifdef _LOWPERF
         if (col == 0 && row == 0) {
           output = flat_slice;
           continue;
@@ -118,6 +124,11 @@ namespace EigenSinn {
         Tensor<Scalar, 2> tmp = output;
         tmp = output.concatenate(flat_slice, 1);
         output = tmp;
+#endif
+        int shift = batch * flat_slice.dimension(1);
+        for (Index i = 0; i < flat_slice.dimension(1); i++) {
+          output.chip(shift + i, 1) = flat_slice.chip(i, 1);
+        }
       }
 
     }
