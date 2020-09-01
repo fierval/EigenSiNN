@@ -29,8 +29,6 @@ int main(int argc, char* argv[]) {
   auto network = create_network(batch_size, num_classes, learning_rate);
   init(network);
 
-  bool restart = true;
-
   auto start = std::chrono::high_resolution_clock::now();
   auto start_step = std::chrono::high_resolution_clock::now();
   auto stop = std::chrono::high_resolution_clock::now();
@@ -38,21 +36,13 @@ int main(int argc, char* argv[]) {
   // Train
   for (int i = 0; i < num_epochs; i++) {
 
-    restart = true;
     start = std::chrono::high_resolution_clock::now();
     start_step = std::chrono::high_resolution_clock::now();
-    int step = 0;
 
-    do {
-      std::tie(next_images, next_labels) = next_batch(dataset.training_images, dataset.training_labels, batch_size, restart);
-      restart = false;
+    for (int step = 1; step <= dataset.test_images.size(); step++) {
 
-      if (next_images.size() == 0) {
-        break;
-      }
-
-      Tensor<float, 4> batch_tensor = create_batch_tensor(next_images);
-      Tensor<float, 2> label_tensor = create_2d_label_tensor<uint8_t, float>(next_labels, num_classes);
+      std::any batch_tensor = std::any(create_batch_tensor(dataset.training_images, step, batch_size));
+      Tensor<float, 2> label_tensor = create_2d_label_tensor<uint8_t, float>(dataset.training_labels, step, batch_size, num_classes);
 
       // forward
       auto tensor = forward(network, batch_tensor);
@@ -62,12 +52,11 @@ int main(int argc, char* argv[]) {
       loss.backward();
 
       // backward
-      backward(network, loss.get_loss_derivative_by_input(), std::any(batch_tensor));
+      backward(network, loss.get_loss_derivative_by_input(), batch_tensor);
 
       // optimizer
       optimizer(network);
 
-      step++;
       if (step % 100 == 0) {
         stop = std::chrono::high_resolution_clock::now();
         std::cout << "Epoch: " << i + 1 
@@ -79,7 +68,7 @@ int main(int argc, char* argv[]) {
         start_step = std::chrono::high_resolution_clock::now();
       }
 
-    } while (next_images.size() > 0);
+    } 
 
     stop = std::chrono::high_resolution_clock::now();
     double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() / 1000.;

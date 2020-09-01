@@ -63,9 +63,9 @@ inline void init(const Network& network) {
   }
 }
 
-inline Tensor<float, 2> forward(const Network& network, const Tensor<float, 4>& input) {
+inline Tensor<float, 2> forward(const Network& network, std::any& input) {
 
-  std::any tensor(input);
+  std::any tensor = input;
 
   Tensor<float, 2> output;
 

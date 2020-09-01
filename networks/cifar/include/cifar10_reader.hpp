@@ -70,16 +70,8 @@ namespace cifar {
   template <typename Images, typename Labels>
   void read_cifar10_file(Images& images, Labels& labels, const std::string& path, std::size_t limit) {
 
-    static bool range_inited(false);
-    static std::vector<int> cifar_single_entry_range(3073);
-
     if (limit && limit <= images.size()) {
       return;
-    }
-
-    if (!range_inited) {
-      range_inited = true;
-      std::iota(cifar_single_entry_range.begin(), cifar_single_entry_range.end(), 0);
     }
 
     std::ifstream file;
@@ -106,6 +98,9 @@ namespace cifar {
     if (capacity > 0 && capacity < size) {
       size = capacity;
     }
+    
+    std::vector<int> cifar_single_entry_range(size);
+    std::iota(cifar_single_entry_range.begin(), cifar_single_entry_range.end(), 0);
 
     // Prepare the size for the new
     images.resize(images.size() + size);
@@ -130,7 +125,7 @@ namespace cifar {
       Tensor<float, 3> col_major = 1./255 * im_value.shuffle(array<Index, 3>{2, 1, 0}).cast<byte>().cast<float>();
       Tensor<float, 3> normalized = normalize(col_major);
 
-      images[i] = normalized;
+      images[start + i] = normalized;
 
       });
   }
