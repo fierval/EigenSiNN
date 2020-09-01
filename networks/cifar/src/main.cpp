@@ -75,5 +75,41 @@ int main(int argc, char* argv[]) {
     std::cout << "Epoch: " << i << ". Time: " << elapsed << " sec." << std::endl;
   } 
   
+  // Test
+  std::cout << "Starting test..." << std::endl;
+  std::any batch_tensor = std::any(create_batch_tensor(dataset.test_images, 0, dataset.test_images.size()));
+  auto label_tensor = create_1d_label_tensor(dataset.training_labels);
+
+  auto tensor = forward(network, batch_tensor);
+
+  Tensor<float, 2> test_output = from_any<float, 2>(tensor);
+  Tensor<Tuple<Index, float>, 2> test_index_tuples = test_output.index_tuples();
+  Tensor<Tuple<Index, float>, 1> pred_res = test_index_tuples.reduce(array<Index, 1> {1}, internal::ArgMaxTupleReducer<Tuple<Index, float>>());
+  Tensor<Index, 1> predictions(pred_res.dimension(0));
+
+  // overall accuracy
+  Tensor<float, 0> matches = (predictions == label_tensor).cast<float>().sum();
+  std::cout << "Accuracy: " << matches(0) / label_tensor.dimension(0) << std::endl;
+
+  Tensor<float, 1> n_correct(num_classes), n_samples(num_classes), accuracy(num_classes);
+  n_correct.setZero();
+  n_samples.setZero();
+
+  // recover actual index value by unrolling the col-major stored index
+  for (Index i = 0; i < pred_res.dimension(0); i++) {
+    predictions(i) = (pred_res(i).first - i) / pred_res.dimension(0) % num_classes;
+    int label = (int)label_tensor(i);
+    if (predictions(i) == label) {
+      n_correct(label)++;
+    }
+    n_samples(label)++;
+  }
+  
+  accuracy = n_correct / n_samples;
+
+  for (int j = 0; j < num_classes; j++) {
+    std::cout << "Class: " << classes[j] << " Accuracy: " << accuracy(j) << std::endl;
+  }
+
   return 0;
 }
