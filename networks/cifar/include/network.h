@@ -92,7 +92,10 @@ inline void backward(const Network& network, std::any& loss_derivative, std::any
     // backward pass through the current layer
     it->layer->backward(prev_layer, next_level_grad);
     next_level_grad = it->layer->get_loss_by_input_derivative();
-    reverse_input_it++;
+    
+    if (reverse_input_it != network.rend()) {
+      reverse_input_it++;
+    }
   }
 }
 
