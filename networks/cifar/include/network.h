@@ -84,12 +84,14 @@ inline void backward(const Network& network, std::any& loss_derivative, std::any
 
   // point at the "previous" layer
   auto reverse_input_it = network.rbegin() + 1;
-  for (const auto& n : network) {
+  for (auto it = network.rbegin(); it != network.rend(); it++) {
+
     // get previous layer output = input to this layer
     auto prev_layer = reverse_input_it != network.rend() ? reverse_input_it->layer->get_output() : input;
 
-    n.layer->backward(prev_layer, next_level_grad);
-    next_level_grad = n.layer->get_loss_by_input_derivative();
+    // backward pass through the current layer
+    it->layer->backward(prev_layer, next_level_grad);
+    next_level_grad = it->layer->get_loss_by_input_derivative();
     reverse_input_it++;
   }
 }
