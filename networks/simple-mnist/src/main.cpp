@@ -120,7 +120,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Epoch: " << i << ". Time: " << elapsed << " sec." << std::endl;
   }
 
-  // TODO: Add testing
+  // Test
   size_t test_size = mnist_dataset.test_images.size();
 
   // get data

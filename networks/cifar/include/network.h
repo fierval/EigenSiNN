@@ -76,19 +76,36 @@ inline Tensor<float, 2> forward(const Network& network, const Tensor<float, 4>& 
   return output;
 }
 
-inline void backward(const Network& network, const Tensor<float, 2>& loss_derivative, const Tensor<float, 4>& input) {
+inline void backward(const Network& network, std::any& loss_derivative, std::any& input) {
 
-  std::any next_level_grad(loss_derivative);
+  std::any next_level_grad = loss_derivative;
 
   // point at the "previous" layer
   auto reverse_input_it = network.rbegin() + 1;
   for (const auto& n : network) {
     // get previous layer output = input to this layer
-    auto prev_layer = reverse_input_it != network.rend() ? reverse_input_it->layer->get_output() : std::any(input);
+    auto prev_layer = reverse_input_it != network.rend() ? reverse_input_it->layer->get_output() : input;
 
     n.layer->backward(prev_layer, next_level_grad);
     next_level_grad = n.layer->get_loss_by_input_derivative();
   }
+}
+
+inline void optimizer(const Network& network) {
+
+  for (auto optit = network.rbegin(); optit != network.rend(); optit++) {
+    if (optit->optimizer == nullptr) {
+      continue;
+    }
+
+    std::any weights, bias;
+    auto layer = optit->layer;
+
+    std::tie(weights, bias) = optit->optimizer->step(layer->get_weights(), layer->get_bias(), layer->get_loss_by_weights_derivative(), layer->get_loss_by_bias_derivative());
+    layer->set_weights(weights);
+    layer->set_bias(bias);
+  }
+
 }
 
 
