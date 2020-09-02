@@ -12,8 +12,8 @@ using namespace Eigen;
 
 int main(int argc, char* argv[]) {
 
-  size_t batch_size = 4;
-  int num_epochs = 4;
+  size_t batch_size = 10;
+  int num_epochs = 5;
   float learning_rate = 0.001;
   
   CrossEntropyLoss<float> loss;
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
       // optimizer
       optimizer(network);
 
-      if (step % 2000 == 0) {
+      if (step % 1000 == 0) {
         stop = std::chrono::high_resolution_clock::now();
         std::cout << "Epoch: " << i + 1 
           << ". Step: " << step 
