@@ -50,10 +50,8 @@ namespace cifar {
 
     if (!inited) {
       inited = true;
-      mean.setValues({ 0.5, 0.5, 0.5 });
-      std.setValues({ 0.5, 0.5, 0.5 });
-      //mean.setValues({ 0.4914, 0.4822, 0.4465 });
-      //std.setValues({ 0.247, 0.243, 0.261 });
+      mean.setValues({ 0.4914, 0.4822, 0.4465 });
+      std.setValues({ 0.247, 0.243, 0.261 });
 
       broad_mean = mean.reshape(array<Index, 3>{ 3,1,1 }).broadcast(array<Index, 3>{1, 32, 32});
       broad_std = std.reshape(array<Index, 3>{ 3,1,1 }).broadcast(array<Index, 3>{1, 32, 32});

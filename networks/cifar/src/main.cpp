@@ -16,7 +16,7 @@ using namespace Eigen;
 int main(int argc, char* argv[]) {
 
   size_t batch_size = 10;
-  int num_epochs = 5;
+  int num_epochs = 4;
   float learning_rate = 0.001;
   
   CrossEntropyLoss<float> loss;
@@ -31,13 +31,21 @@ int main(int argc, char* argv[]) {
 
   // show image
   cv::Mat mat, resized, clr;
-  Tensor<float, 3> mean(32, 32, 3);
-  mean.setConstant(0.5);
+  static Tensor<float, 1> mean(3), std(3);
+  static Tensor<float, 3> broad_mean, broad_std;
+
+  mean.setValues({ 0.4914, 0.4822, 0.4465 });
+  std.setValues({ 0.247, 0.243, 0.261 });
+
+  broad_mean = mean.reshape(array<Index, 3>{ 3, 1, 1 }).broadcast(array<Index, 3>{1, 32, 32});
+  broad_std = std.reshape(array<Index, 3>{ 3, 1, 1 }).broadcast(array<Index, 3>{1, 32, 32});
 
   // explore the dataset
   for (int i = 0; i < dataset.training_images.size(); i++) {
 
-    Tensor<float, 3> im = 255. * (0.5 * dataset.training_images[i].shuffle(array<Index, 3>{1, 2, 0}) + mean);
+    Tensor<float, 3> im = 255. * 
+       (broad_std * dataset.training_images[i] + broad_mean).shuffle(array<Index, 3>{1, 2, 0});
+
     Tensor<uint8_t, 3> im8 = im.cast<uint8_t>();
 
     // TODO: This came from 4.4.0

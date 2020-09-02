@@ -3,7 +3,7 @@
 #pragma once
 
 #include <layers/layer_base.hpp>
-#include <optimizers/optimizer_base.hpp>
+#include <optimizers/sgd.hpp>
 #include <layers/convolution.hpp>
 #include <layers/flatten.hpp>
 #include <layers/maxpooling.hpp>
@@ -122,11 +122,11 @@ inline auto create_network(int batch_size, int num_classes, float learning_rate)
   Network network;
 
   // push back rvalues so we don't have to invoke the copy constructor
-  network.push_back(NetworkNode(new Conv2d<float>(array<Index, 4>{6, 3, 5, 5}), new Adam<float, 4>(learning_rate)));
+  network.push_back(NetworkNode(new Conv2d<float>(array<Index, 4>{6, 3, 5, 5}), new SGD<float, 4>(learning_rate)));
   network.push_back(NetworkNode(new ReLU<float, 4>()));
   network.push_back(NetworkNode(new MaxPooling<float, 4>(array<Index, 2>{2, 2}, 2)));
 
-  network.push_back(NetworkNode(new Conv2d<float>(array<Index, 4>{16, 6, 5, 5}), new Adam<float, 4>(learning_rate)));
+  network.push_back(NetworkNode(new Conv2d<float>(array<Index, 4>{16, 6, 5, 5}), new SGD<float, 4>(learning_rate)));
   network.push_back(NetworkNode(new ReLU<float, 4>())); 
   network.push_back(NetworkNode(new MaxPooling<float, 4>(array<Index, 2>{2, 2}, 2)));
 
@@ -136,23 +136,16 @@ inline auto create_network(int batch_size, int num_classes, float learning_rate)
   network.push_back(NetworkNode(new Flatten<float>()));
 
 
-  network.push_back(NetworkNode(new Linear<float>(batch_size, flat_dim, 120), new Adam<float, 2>(learning_rate)));
+  network.push_back(NetworkNode(new Linear<float>(batch_size, flat_dim, 120), new SGD<float, 2>(learning_rate)));
   network.push_back(NetworkNode(new ReLU<float, 2>()));
 
-  network.push_back(NetworkNode(new Linear<float>(batch_size, 120, 84), new Adam<float, 2>(learning_rate)));
+  network.push_back(NetworkNode(new Linear<float>(batch_size, 120, 84), new SGD<float, 2>(learning_rate)));
   network.push_back(NetworkNode(new ReLU<float, 2>()));
 
   // cross-entropy loss includes the softmax non-linearity
-  network.push_back(NetworkNode(new Linear<float>(batch_size, 84, num_classes), new Adam<float, 2>(learning_rate)));
+  network.push_back(NetworkNode(new Linear<float>(batch_size, 84, num_classes), new SGD<float, 2>(learning_rate)));
 
   return network;
-}
-
-inline auto init_network(std::vector<NetworkNode>& network) {
-
-  for (auto& node : network) {
-    node.layer->init();
-  }
 }
 
 #include <opencv2/opencv.hpp>
