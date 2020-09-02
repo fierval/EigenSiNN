@@ -74,13 +74,20 @@ inline void shuffle(ImageContainer& images, LabelContainer& labels) {
     inited = true;
     rand_gen = std::default_random_engine(seed);
   }
-  std::vector<int> idxs(images.size());
+  std::vector<int> idxs(images.size()), range(images.size());
   std::iota(idxs.begin(), idxs.end(), 0);
+  std::iota(range.begin(), range.end(), 0);
 
   std::shuffle(idxs.begin(), idxs.end(), rand_gen);
+  std::vector<Tensor<float, 3>> tmp_ims(images.size());
+  std::vector<uint8_t> tmp_labs(labels.size());
 
-  for (Index i = 0; i < idxs.size(); i++) {
-    std::iter_swap(images.begin() + i, images.begin() + idxs[i]);
-    std::iter_swap(labels.begin() + i, labels.begin() + idxs[i]);
-  }
+  std::copy(std::execution::par, images.begin(), images.end(), tmp_ims.begin());
+  std::copy(std::execution::par, labels.begin(), labels.end(), tmp_labs.begin());
+
+  std::for_each(std::execution::par, range.begin(), range.end(), [&](int n) {
+    images[idxs[n]] = tmp_ims[n];
+    labels[idxs[n]] = tmp_labs[n];
+    });
+
 }
