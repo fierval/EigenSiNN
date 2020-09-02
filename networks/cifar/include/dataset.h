@@ -4,6 +4,8 @@
 #include "cifar10_reader.hpp"
 #include <vector>
 #include <tuple>
+#include <algorithm>
+#include <chrono>
 
 using namespace Eigen;
 
@@ -60,4 +62,25 @@ inline Tensor<Scalar, Rank + 1> create_batch_tensor(std::vector<Tensor<Scalar, R
   }
 
   return output;
+}
+
+template <typename Scalar, typename Loss>
+inline void shuffle(ImageContainer& images, LabelContainer& labels) {
+  static bool inited(false);
+  static unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  static std::default_random_engine rand_gen;
+
+  if (!inited) {
+    inited = true;
+    rand_gen = std::default_random_engine(seed);
+  }
+  std::vector<int> idxs(images.size());
+  std::iota(idxs.begin(), idxs.end(), 0);
+
+  std::shuffle(idxs.begin(), idxs.end(), rand_gen);
+
+  for (Index i = 0; i < idxs.size(); i++) {
+    std::iter_swap(images.begin() + i, images.begin() + idxs[i]);
+    std::iter_swap(labels.begin() + i, labels.begin() + idxs[i]);
+  }
 }

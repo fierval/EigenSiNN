@@ -38,6 +38,9 @@ int main(int argc, char* argv[]) {
 
     start = std::chrono::high_resolution_clock::now();
     start_step = std::chrono::high_resolution_clock::now();
+    
+    // random shuffle before each step
+    shuffle<float, uint8_t>(dataset.training_images, dataset.training_labels);
 
     for (int step = 1; step <= dataset.training_images.size() / batch_size; step++) {
 
