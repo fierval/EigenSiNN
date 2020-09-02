@@ -154,3 +154,22 @@ inline auto init_network(std::vector<NetworkNode>& network) {
     node.layer->init();
   }
 }
+
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/eigen.hpp>
+
+// copy-paste from OpenCV 4.4.0. vcpkg has 4.3.0
+namespace cv {
+  template <typename _Tp, int _layout> static inline
+    void eigen2cv(const Eigen::Tensor<_Tp, 3, _layout>& src, OutputArray dst) {
+    if (!(_layout & Eigen::RowMajorBit)) {
+      const std::array<int, 3> shuffle{ 2, 1, 0 };
+      Eigen::Tensor<_Tp, 3, !_layout> row_major_tensor = src.swap_layout().shuffle(shuffle);
+      Mat _src(src.dimension(0), src.dimension(1), CV_MAKETYPE(DataType<_Tp>::type, src.dimension(2)), row_major_tensor.data());
+      _src.copyTo(dst);
+    } else {
+      Mat _src(src.dimension(0), src.dimension(1), CV_MAKETYPE(DataType<_Tp>::type, src.dimension(2)), (void*)src.data());
+      _src.copyTo(dst);
+    }
+  }
+}

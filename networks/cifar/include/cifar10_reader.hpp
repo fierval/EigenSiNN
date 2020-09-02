@@ -50,8 +50,10 @@ namespace cifar {
 
     if (!inited) {
       inited = true;
-      mean.setValues({ 0.4914, 0.4822, 0.4465 });
-      std.setValues({ 0.247, 0.243, 0.261 });
+      mean.setValues({ 0.5, 0.5, 0.5 });
+      std.setValues({ 0.5, 0.5, 0.5 });
+      //mean.setValues({ 0.4914, 0.4822, 0.4465 });
+      //std.setValues({ 0.247, 0.243, 0.261 });
 
       broad_mean = mean.reshape(array<Index, 3>{ 3,1,1 }).broadcast(array<Index, 3>{1, 32, 32});
       broad_std = std.reshape(array<Index, 3>{ 3,1,1 }).broadcast(array<Index, 3>{1, 32, 32});
@@ -118,13 +120,13 @@ namespace cifar {
     std::for_each(std::execution::par, cifar_single_entry_range.begin(), cifar_single_entry_range.end(), [&](int i) {
       labels[start + i] = buffer[i * 3073];
 
-      TensorMap<Tensor<char, 3>> im_value(&buffer[i * 3073 + 1], 32, 32, 3);
+      TensorMap<Tensor<char, 3, RowMajor>> im_value(&buffer[i * 3073 + 1], 3, 32, 32);
 
       // tensors are column-major and the image we get is row-major.
       // normalize them while at it.
-      Tensor<float, 3> col_major = 1./255 * im_value.shuffle(array<Index, 3>{2, 1, 0}).cast<byte>().cast<float>();
+      Tensor<float, 3> col_major = 1. / 255 * im_value.swap_layout().cast<byte>().cast<float>().shuffle(array<Index, 3>{2, 1, 0});
       Tensor<float, 3> normalized = normalize(col_major);
-
+      
       images[start + i] = normalized;
 
       });

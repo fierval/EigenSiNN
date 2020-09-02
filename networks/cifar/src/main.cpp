@@ -7,6 +7,9 @@
 #include <string>
 #include "network.h"
 
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/eigen.hpp>
+
 using namespace EigenSinn;
 using namespace Eigen;
 
@@ -23,6 +26,35 @@ int main(int argc, char* argv[]) {
 
   auto dataset = read_cifar_dataset();
 
+  // shuffle just for fun
+  shuffle<float, uint8_t>(dataset.training_images, dataset.training_labels);
+
+  // show image
+  cv::Mat mat, resized, clr;
+  Tensor<float, 3> mean(32, 32, 3);
+  mean.setConstant(0.5);
+
+  // explore the dataset
+  for (int i = 0; i < dataset.training_images.size(); i++) {
+
+    Tensor<float, 3> im = 255. * (0.5 * dataset.training_images[i].shuffle(array<Index, 3>{1, 2, 0}) + mean);
+    Tensor<uint8_t, 3> im8 = im.cast<uint8_t>();
+
+    // TODO: This came from 4.4.0
+    cv::eigen2cv(im8, mat);
+
+    cv::cvtColor(mat, clr, cv::COLOR_BGR2RGB);
+    cv::resize(clr, resized, cv::Size(120, 120));
+
+    cv::imshow("Sample", resized);
+    std::cout << "Class: " << classes[dataset.training_labels[i]] << std::endl;
+
+    if (cv::waitKey() == 27) {
+      cv::destroyAllWindows();
+      break;
+    }
+  }
+  
   ImageContainer next_images;
   LabelContainer next_labels;
 
@@ -39,7 +71,6 @@ int main(int argc, char* argv[]) {
     start = std::chrono::high_resolution_clock::now();
     start_step = std::chrono::high_resolution_clock::now();
     
-    // random shuffle before each step
     shuffle<float, uint8_t>(dataset.training_images, dataset.training_labels);
 
     for (int step = 1; step <= dataset.training_images.size() / batch_size; step++) {
@@ -114,6 +145,6 @@ int main(int argc, char* argv[]) {
   for (int j = 0; j < num_classes; j++) {
     std::cout << "Class: " << classes[j] << " Accuracy: " << accuracy(j) << std::endl;
   }
-
+  
   return 0;
 }
