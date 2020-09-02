@@ -136,14 +136,14 @@ inline auto create_network(int batch_size, int num_classes, float learning_rate)
   network.push_back(NetworkNode(new Flatten<float>()));
 
 
-  network.push_back(NetworkNode(new Linear<float>(batch_size, flat_dim, 120)));
+  network.push_back(NetworkNode(new Linear<float>(batch_size, flat_dim, 120), new Adam<float, 2>(learning_rate)));
   network.push_back(NetworkNode(new ReLU<float, 2>()));
 
-  network.push_back(NetworkNode(new Linear<float>(batch_size, 120, 84)));
+  network.push_back(NetworkNode(new Linear<float>(batch_size, 120, 84), new Adam<float, 2>(learning_rate)));
   network.push_back(NetworkNode(new ReLU<float, 2>()));
 
   // cross-entropy loss includes the softmax non-linearity
-  network.push_back(NetworkNode(new Linear<float>(batch_size, 84, num_classes)));
+  network.push_back(NetworkNode(new Linear<float>(batch_size, 84, num_classes), new Adam<float, 2>(learning_rate)));
 
   return network;
 }
