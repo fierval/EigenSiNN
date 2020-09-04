@@ -10,6 +10,8 @@
 #include <layers/linear.hpp>
 #include <layers/relu.hpp>
 
+#include "helpers.h"
+
 using namespace Eigen;
 using namespace EigenSinn;
 
@@ -57,9 +59,26 @@ inline int get_flat_dimension(const Network& network, const array<Index, 4>& inp
   return dims[1] * dims[2] * dims[3];
 }
 
-inline void init(const Network& network) {
-  for (const auto& n : network) {
-    n.layer->init();
+inline void init(const Network& network, bool debug = false) {
+
+  const std::string base_path = "C:\\git\\NN\\pytorchTutorial\\level_";
+  int j = 0;
+  for (int i = 0; i < network.size(); i++) {
+
+    if (debug && (i == 0 || i == 3 || i == 7 || i == 9 || i == 11)) {
+      std::string full_path = base_path + std::to_string(j);
+      j++;
+
+      if (i < 7) {
+        Tensor<float, 4> init_tensor = read_tensor_csv<float, 4>(full_path);
+        dynamic_cast<Conv2d<float>*>(network[i].layer)->init();
+      }
+      else {
+        Tensor<float, 2> init_tensor = read_tensor_csv<float, 2>(full_path);
+        dynamic_cast<Linear<float>*>(network[i].layer)->init();
+      }
+    }
+    network[i].layer->init();
   }
 }
 
