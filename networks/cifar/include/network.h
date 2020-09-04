@@ -71,12 +71,14 @@ inline void init(const Network& network, bool debug = false) {
 
       if (i < 7) {
         Tensor<float, 4> init_tensor = read_tensor_csv<float, 4>(full_path);
-        dynamic_cast<Conv2d<float>*>(network[i].layer)->init();
+        dynamic_cast<Conv2d<float>*>(network[i].layer)->init(init_tensor);
       }
       else {
         Tensor<float, 2> init_tensor = read_tensor_csv<float, 2>(full_path);
-        dynamic_cast<Linear<float>*>(network[i].layer)->init();
+        dynamic_cast<Linear<float>*>(network[i].layer)->init(init_tensor);
       }
+
+      continue;
     }
     network[i].layer->init();
   }
