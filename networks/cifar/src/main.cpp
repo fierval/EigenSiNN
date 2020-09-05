@@ -10,9 +10,9 @@
 using namespace EigenSinn;
 using namespace Eigen;
 
-bool should_shuffle = false;
+bool should_shuffle = true;
 bool explore_dataset = false;
-bool debug_init = true;
+bool debug_init = false;
 
 int main(int argc, char* argv[]) {
 
