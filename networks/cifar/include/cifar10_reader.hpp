@@ -42,8 +42,9 @@ namespace cifar {
     Container<Label> test_labels;     ///< The test labels
   };
 
+  // normalize_denormalize = true - normalize. Otherwise denormalize
   template<typename Scalar>
-  inline Tensor<Scalar, 3> normalize(Tensor<Scalar, 3>& raw) {
+  inline Tensor<Scalar, 3> normalize(Tensor<Scalar, 3>& raw, bool normalize_denormalize = true) {
     static bool inited(false);
     static Tensor<Scalar, 1> mean(3), std(3);
     static Tensor<Scalar, 3> broad_mean, broad_std;
@@ -57,7 +58,14 @@ namespace cifar {
       broad_std = std.reshape(array<Index, 3>{ 3,1,1 }).broadcast(array<Index, 3>{1, 32, 32});
     }
 
-    Tensor<Scalar, 3> res = (raw - broad_mean) / broad_std;
+    Tensor<Scalar, 3> res;
+    if (normalize_denormalize) {
+      res = (raw - broad_mean) / broad_std;
+    }
+    else {
+      res = raw * broad_std + broad_mean;
+    }
+
     return res;
   }
 

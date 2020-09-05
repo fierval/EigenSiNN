@@ -7,6 +7,25 @@
 #include <algorithm>
 #include <chrono>
 
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/eigen.hpp>
+
+// copy-paste from OpenCV 4.4.0. vcpkg has 4.3.0
+namespace cv {
+  template <typename _Tp, int _layout> static inline
+    void eigen2cv(const Eigen::Tensor<_Tp, 3, _layout>& src, OutputArray dst) {
+    if (!(_layout & Eigen::RowMajorBit)) {
+      const std::array<int, 3> shuffle{ 2, 1, 0 };
+      Eigen::Tensor<_Tp, 3, !_layout> row_major_tensor = src.swap_layout().shuffle(shuffle);
+      Mat _src(src.dimension(0), src.dimension(1), CV_MAKETYPE(DataType<_Tp>::type, src.dimension(2)), row_major_tensor.data());
+      _src.copyTo(dst);
+    } else {
+      Mat _src(src.dimension(0), src.dimension(1), CV_MAKETYPE(DataType<_Tp>::type, src.dimension(2)), (void*)src.data());
+      _src.copyTo(dst);
+    }
+  }
+}
+
 using namespace Eigen;
 
 typedef std::vector<Tensor<float, 3>> ImageContainer;
@@ -22,14 +41,14 @@ inline cifar::CIFAR10_dataset<std::vector, Tensor<float, 3>, uint8_t> read_cifar
 template<typename Loss, typename Scalar>
 inline Tensor<Scalar, 2> create_2d_label_tensor(std::vector<Loss>& labels, int start, int batch_size, Index n_categories) {
 
-  array<Index, 2> dims{ (Index) batch_size, n_categories };
+  array<Index, 2> dims{ (Index)batch_size, n_categories };
 
   Tensor<Scalar, 2> out(dims);
   out.setZero();
 
   Index i = batch_size * start;
   for (int j = 0; j < batch_size; j++) {
-    out(j, labels[i+j]) = 1;
+    out(j, labels[i + j]) = 1;
     j++;
   }
 
@@ -46,7 +65,7 @@ inline Tensor<Loss, 1> create_1d_label_tensor(std::vector<Loss>& labels) {
 
 }
 
-template<typename Scalar, Index Rank> 
+template<typename Scalar, Index Rank>
 inline Tensor<Scalar, Rank + 1> create_batch_tensor(std::vector<Tensor<Scalar, Rank>>& images, int start, int batch_size) {
 
   array<Index, Rank + 1> out_dims;
@@ -89,5 +108,37 @@ inline void shuffle(ImageContainer& images, LabelContainer& labels) {
     images[idxs[n]] = tmp_ims[n];
     labels[idxs[n]] = tmp_labs[n];
     });
+
+}
+
+// explore the dataset
+inline void explore(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3>, uint8_t>& dataset, bool skip = true) {
+
+  // show image
+  cv::Mat mat, resized, clr;
+  static bool init(false);
+  static std::vector<std::string> classes = { "plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck" };
+
+  
+  for (int i = 0; i < dataset.training_images.size(); i++) {
+
+    Tensor<float, 3> im = 255. * cifar::normalize<float>(dataset.training_images[i], false).shuffle(array<Index, 3>{1, 2, 0});
+
+    Tensor<uint8_t, 3> im8 = im.cast<uint8_t>();
+
+    // TODO: This came from 4.4.0
+    cv::eigen2cv(im8, mat);
+
+    cv::cvtColor(mat, clr, cv::COLOR_BGR2RGB);
+    cv::resize(clr, resized, cv::Size(120, 120));
+
+    cv::imshow("Sample", resized);
+    std::cout << "Class: " << classes[dataset.training_labels[i]] << std::endl;
+
+    if (cv::waitKey() == 27) {
+      cv::destroyAllWindows();
+      break;
+    }
+  }
 
 }

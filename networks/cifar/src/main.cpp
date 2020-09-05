@@ -7,9 +7,6 @@
 #include <string>
 #include "network.h"
 
-#include <opencv2/opencv.hpp>
-#include <opencv2/core/eigen.hpp>
-
 using namespace EigenSinn;
 using namespace Eigen;
 
@@ -29,45 +26,13 @@ int main(int argc, char* argv[]) {
   // shuffle just for fun
   shuffle<float, uint8_t>(dataset.training_images, dataset.training_labels);
 
-  // show image
-  cv::Mat mat, resized, clr;
-  static Tensor<float, 1> mean(3), std(3);
-  static Tensor<float, 3> broad_mean, broad_std;
+  explore(dataset, true);
 
-  mean.setValues({ 0.4914, 0.4822, 0.4465 });
-  std.setValues({ 0.247, 0.243, 0.261 });
-
-  broad_mean = mean.reshape(array<Index, 3>{ 3, 1, 1 }).broadcast(array<Index, 3>{1, 32, 32});
-  broad_std = std.reshape(array<Index, 3>{ 3, 1, 1 }).broadcast(array<Index, 3>{1, 32, 32});
-
-  // explore the dataset
-  for (int i = 0; i < dataset.training_images.size(); i++) {
-
-    Tensor<float, 3> im = 255. * 
-       (broad_std * dataset.training_images[i] + broad_mean).shuffle(array<Index, 3>{1, 2, 0});
-
-    Tensor<uint8_t, 3> im8 = im.cast<uint8_t>();
-
-    // TODO: This came from 4.4.0
-    cv::eigen2cv(im8, mat);
-
-    cv::cvtColor(mat, clr, cv::COLOR_BGR2RGB);
-    cv::resize(clr, resized, cv::Size(120, 120));
-
-    cv::imshow("Sample", resized);
-    std::cout << "Class: " << classes[dataset.training_labels[i]] << std::endl;
-
-    if (cv::waitKey() == 27) {
-      cv::destroyAllWindows();
-      break;
-    }
-  }
-  
   ImageContainer next_images;
   LabelContainer next_labels;
 
   auto network = create_network(batch_size, num_classes, learning_rate);
-  init(network);
+  init(network, true);
 
   auto start = std::chrono::high_resolution_clock::now();
   auto start_step = std::chrono::high_resolution_clock::now();

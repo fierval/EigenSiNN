@@ -57,7 +57,9 @@ inline Tensor<Scalar, Rank> read_tensor_csv(const std::string& file_path, const 
   }
 
   // reverse dimensions for future shuffling
-  std::reverse(vdims.begin(), vdims.end());
+  std::vector<int> rev_dims(vdims.size());
+  std::iota(rev_dims.begin(), rev_dims.end(), 0);
+  std::reverse(rev_dims.begin(), rev_dims.end());
   
   // tensor
   std::vector<float> tensor_vec;
@@ -68,6 +70,6 @@ inline Tensor<Scalar, Rank> read_tensor_csv(const std::string& file_path, const 
 
   // convert tensor to col_major format
   TensorMap<Tensor<Scalar, Rank, RowMajor>> out_rows(tensor_vec.data(), dims);
-  Tensor<Scalar, Rank> col_major = out_rows.swap_layout().shuffle(vdims);
+  Tensor<Scalar, Rank> col_major = out_rows.swap_layout().shuffle(rev_dims);
   return col_major;
 }
