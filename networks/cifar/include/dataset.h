@@ -49,7 +49,6 @@ inline Tensor<Scalar, 2> create_2d_label_tensor(std::vector<Loss>& labels, int s
   Index i = batch_size * start;
   for (int j = 0; j < batch_size; j++) {
     out(j, labels[i + j]) = 1;
-    j++;
   }
 
   return out;
@@ -84,7 +83,10 @@ inline Tensor<Scalar, Rank + 1> create_batch_tensor(std::vector<Tensor<Scalar, R
 }
 
 template <typename Scalar, typename Loss>
-inline void shuffle(ImageContainer& images, LabelContainer& labels) {
+inline void shuffle(ImageContainer& images, LabelContainer& labels, bool should_shuffle = true) {
+
+  if (!should_shuffle) { return; }
+
   static bool inited(false);
   static unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   static std::default_random_engine rand_gen;
@@ -112,9 +114,9 @@ inline void shuffle(ImageContainer& images, LabelContainer& labels) {
 }
 
 // explore the dataset
-inline void explore(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3>, uint8_t>& dataset, bool skip = true) {
+inline void explore(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3>, uint8_t>& dataset, bool should_explore = false) {
 
-  if (skip) {
+  if (!should_explore) {
     return;
   };
 

@@ -10,6 +10,10 @@
 using namespace EigenSinn;
 using namespace Eigen;
 
+bool should_shuffle = false;
+bool explore_dataset = false;
+bool debug_init = true;
+
 int main(int argc, char* argv[]) {
 
   size_t batch_size = 10;
@@ -23,16 +27,13 @@ int main(int argc, char* argv[]) {
 
   auto dataset = read_cifar_dataset();
 
-  // shuffle just for fun
-  shuffle<float, uint8_t>(dataset.training_images, dataset.training_labels);
-
-  explore(dataset, true);
+  explore(dataset, explore_dataset);
 
   ImageContainer next_images;
   LabelContainer next_labels;
 
   auto network = create_network(batch_size, num_classes, learning_rate);
-  init(network, true);
+  init(network, debug_init);
 
   auto start = std::chrono::high_resolution_clock::now();
   auto start_step = std::chrono::high_resolution_clock::now();
@@ -44,7 +45,7 @@ int main(int argc, char* argv[]) {
     start = std::chrono::high_resolution_clock::now();
     start_step = std::chrono::high_resolution_clock::now();
     
-    shuffle<float, uint8_t>(dataset.training_images, dataset.training_labels);
+    shuffle<float, uint8_t>(dataset.training_images, dataset.training_labels, should_shuffle);
 
     for (int step = 1; step <= dataset.training_images.size() / batch_size; step++) {
 
@@ -57,6 +58,8 @@ int main(int argc, char* argv[]) {
       // loss
       loss.forward(tensor, label_tensor);
       loss.backward();
+
+      // std::cout << "Step: " << step << ". Loss: " << std::any_cast<float>(loss.get_output()) << std::endl;
 
       // backward
       backward(network, loss.get_loss_derivative_by_input(), batch_tensor);

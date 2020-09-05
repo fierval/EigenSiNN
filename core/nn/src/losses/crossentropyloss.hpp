@@ -43,7 +43,7 @@ namespace EigenSinn {
       exp_sum = exp_all.sum(reduction_dims);
 
       Tensor<Scalar, 0> loss_t = ((-predicted * actual).sum(reduction_dims) + exp_sum.log()).mean();
-      loss = *loss_t.data();
+      loss = loss_t(0);
     };
 
     void backward() {
