@@ -114,12 +114,14 @@ inline void shuffle(ImageContainer& images, LabelContainer& labels) {
 // explore the dataset
 inline void explore(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3>, uint8_t>& dataset, bool skip = true) {
 
+  if (skip) {
+    return;
+  };
+
   // show image
   cv::Mat mat, resized, clr;
-  static bool init(false);
   static std::vector<std::string> classes = { "plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck" };
 
-  
   for (int i = 0; i < dataset.training_images.size(); i++) {
 
     Tensor<float, 3> im = 255. * cifar::normalize<float>(dataset.training_images[i], false).shuffle(array<Index, 3>{1, 2, 0});

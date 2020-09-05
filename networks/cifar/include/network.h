@@ -75,7 +75,10 @@ inline void init(const Network& network, bool debug = false) {
       }
       else {
         Tensor<float, 2> init_tensor = read_tensor_csv<float, 2>(full_path);
-        dynamic_cast<Linear<float>*>(network[i].layer)->init(init_tensor);
+        // pytorch returns a transposed weight matrix
+        Tensor<float, 2> transposed = init_tensor.shuffle(array<Index, 2>{1, 0});
+
+        dynamic_cast<Linear<float>*>(network[i].layer)->init(transposed);
       }
 
       continue;
