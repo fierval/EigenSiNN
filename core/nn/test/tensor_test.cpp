@@ -1,3 +1,5 @@
+#ifdef EIGEN_USE_THREADS
+
 #include <tensor/nntensor.hpp>
 #include <gtest/gtest.h>
 #include <ops/comparisons.hpp>
@@ -41,5 +43,5 @@ namespace EigenTest {
     std::cout << "Took on a single cpu: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() / 1000. << std::endl;
 
   }
-
 }
+#endif

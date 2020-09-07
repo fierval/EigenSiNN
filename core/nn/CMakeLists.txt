@@ -1,13 +1,6 @@
 set(OpenCV_DIR $ENV{OPENCV_INSTALL})
 
-find_package(OpenCV)
-
-# boost graph 
-find_package(Boost)
-if(Boost_FOUND)
-    set(BOOST_INCLUDE ${Boost_INCLUDE_DIRS})
-    set(BOOST_LIBS ${Boost_LIBRARIES})
-endif()
+find_package(OpenCV CONFIG REQUIRED)
 
 message(STATUS "Using C++${CMAKE_CXX_STANDARD}")
 
@@ -17,14 +10,37 @@ message(STATUS "Eigen path: ${EIGEN_PATH}")
 set(TEST_EXE eigentest)
 
 # discover test sources
-file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp")
+file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "test/*.cu")
 message(STATUS "Sources: ${TEST_SOURCES}")
 
+#[[
+if(MSVC)
+  string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+  string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
+  string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
+else(MSVC)
+  set(Boost_USE_STATIC_LIBS ON)
+  set(Boost_USE_STATIC_RUNTIME ON)
+endif(MSVC)
+]]
+
+
+find_package(CUDA)
+find_package(Boost REQUIRED COMPONENTS graph)
+
+if (CUDA_FOUND)
+  message(STATUS "Found CUDA")
+  set(CMAKE_CUDA_STANDARD 11)
+  set(CMAKE_CUDA_STANDARD_REQUIRED True)
+endif()
+
+set(CUDA_SEPARABLE_COMPILATION ON)
+
 # build test exe
-add_executable(${TEST_EXE} ${TEST_SOURCES} "src/losses/loss_base.hpp")
-target_compile_definitions(${TEST_EXE} PRIVATE EIGEN_USE_THREADS)
-target_include_directories(${TEST_EXE} PRIVATE "src" ${EIGEN_PATH} ${OpenCV_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
-target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${OpenCV_LIBS} ${Boost_LIBRARIES})
+add_executable(${TEST_EXE} ${TEST_SOURCES})
+target_compile_definitions(${TEST_EXE} PRIVATE EIGEN_USE_GPU)
+target_include_directories(${TEST_EXE} PRIVATE "src" ${EIGEN_PATH} ${OpenCV_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
+target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${OpenCV_LIBS} ${Boost_LIBRARIES} ${CUDA_LIBRARIES})
 
 # gtest specific
 set(gtest_force_shared_crt ON)
