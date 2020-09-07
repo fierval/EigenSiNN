@@ -47,7 +47,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool2d, Validate) {
 
-    NnTensor<2> t(4, 4);
+    Tensor<float, 2> t(4, 4);
     t.setConstant(1);
 
     auto dims = t.dimensions();

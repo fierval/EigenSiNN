@@ -102,7 +102,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4d, Validate) {
 
-    NnTensor<4> t(1, 3, 4, 4);
+    Tensor<float, 4> t(1, 3, 4, 4);
     t.setConstant(1);
 
     auto dims = t.dimensions();
@@ -116,7 +116,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4d, BadExtent) {
 
-    NnTensor<2> t(4, 4);
+    Tensor<float, 2> t(4, 4);
     t.setConstant(1);
 
     auto dims = t.dimensions();
@@ -130,7 +130,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4d, BadStride4d) {
 
-    NnTensor<4> t(3, 4, 10, 10);
+    Tensor<float, 4> t(3, 4, 10, 10);
     t.setConstant(1);
 
     auto dims = t.dimensions();

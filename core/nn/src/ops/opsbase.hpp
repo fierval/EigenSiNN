@@ -15,8 +15,6 @@
 using namespace Eigen;
 
 namespace EigenSinn {
-  template <int Rank>
-  using NnTensor = Tensor<float, Rank>;
 
   typedef array<std::pair<Index, Index>, 4> Padding;
   typedef IndexPair<Index> Dim2D;
