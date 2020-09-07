@@ -2,29 +2,44 @@
 #include <gtest/gtest.h>
 #include <ops/comparisons.hpp>
 #include <iostream>
+#include <chrono>
 
 using namespace EigenSinn;
 using namespace Eigen;
 
 namespace EigenTest {
-  TEST(NnTensorTest, Init) {
+  TEST(NnTensorTest, InitCpu) {
     
-    Tensor<float, 2> a(3, 3);
-    Tensor<float, 2> b(3, 3);
+    auto start = std::chrono::high_resolution_clock::now();
+
+    NnTensor<float, 2> b(3000, 3000);
+    Tensor<float, 2> c(3000, 3000);
+
+    c.setConstant(2);
     b.setConstant(2);
     
-    a = b.sqrt();
-    b = b.sqrt();
-    
-    std::cout << a << std::endl;
-    std::cout << b << std::endl;
+    b = c.sqrt();
+    auto stop = std::chrono::high_resolution_clock::now();
 
-    Tensor<float, 2> c(3, 3);
+    std::cout << "Took on a single cpu: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() / 1000. << std::endl;
+
+  }
+
+  TEST(NnTensorTest, InitThread) {
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    NnTensor<float, 2, threadpool> b(3000, 3000);
+    Tensor<float, 2> c(3000, 3000);
+
     c.setConstant(2);
-    c = c.sqrt();
-    std::cout << c << std::endl;
+    b.setConstant(2);
 
-    EXPECT_TRUE(is_elementwise_approx_eq(a, b));
+    b = c.sqrt();
+    auto stop = std::chrono::high_resolution_clock::now();
+
+    std::cout << "Took on a single cpu: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() / 1000. << std::endl;
+
   }
 
 }
