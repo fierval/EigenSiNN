@@ -22,6 +22,7 @@ message(STATUS "Sources: ${TEST_SOURCES}")
 
 # build test exe
 add_executable(${TEST_EXE} ${TEST_SOURCES} "src/losses/loss_base.hpp")
+target_compile_definitions(${TEST_EXE} PRIVATE EIGEN_USE_THREADS)
 target_include_directories(${TEST_EXE} PRIVATE "src" ${EIGEN_PATH} ${OpenCV_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
