@@ -13,19 +13,6 @@ set(TEST_EXE eigentest)
 file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "test/*.cu")
 message(STATUS "Sources: ${TEST_SOURCES}")
 
-#[[
-if(MSVC)
-  string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-  string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
-  string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
-else(MSVC)
-  set(Boost_USE_STATIC_LIBS ON)
-  set(Boost_USE_STATIC_RUNTIME ON)
-endif(MSVC)
-]]
-
-
-find_package(CUDA)
 find_package(Boost REQUIRED COMPONENTS graph)
 
 if (CUDA_FOUND)
@@ -38,7 +25,7 @@ set(CUDA_SEPARABLE_COMPILATION ON)
 
 # build test exe
 add_executable(${TEST_EXE} ${TEST_SOURCES})
-target_compile_definitions(${TEST_EXE} PRIVATE EIGEN_USE_GPU)
+target_compile_definitions(${TEST_EXE} PRIVATE EIGEN_USE_THREADS)
 target_include_directories(${TEST_EXE} PRIVATE "src" ${EIGEN_PATH} ${OpenCV_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
 target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${OpenCV_LIBS} ${Boost_LIBRARIES} ${CUDA_LIBRARIES})
 
