@@ -15,17 +15,12 @@ message(STATUS "Sources: ${TEST_SOURCES}")
 
 find_package(Boost REQUIRED COMPONENTS graph)
 
-if (CUDA_FOUND)
-  message(STATUS "Found CUDA")
-  set(CMAKE_CUDA_STANDARD 11)
-  set(CMAKE_CUDA_STANDARD_REQUIRED True)
-endif()
-
-set(CUDA_SEPARABLE_COMPILATION ON)
-
 # build test exe
 add_executable(${TEST_EXE} ${TEST_SOURCES})
+
+# allow threadpool device
 target_compile_definitions(${TEST_EXE} PRIVATE EIGEN_USE_THREADS)
+
 target_include_directories(${TEST_EXE} PRIVATE "src" ${EIGEN_PATH} ${OpenCV_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
 target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${OpenCV_LIBS} ${Boost_LIBRARIES} ${CUDA_LIBRARIES})
 
