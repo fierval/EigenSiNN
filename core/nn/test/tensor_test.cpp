@@ -21,13 +21,15 @@ namespace EigenTest {
 
     ThreadPoolDeviceWrapper dev_wrapper;
     ThreadPoolDevice& threading_device = dev_wrapper.get_device();
+    DefaultDevice def_device;
 
     auto start = std::chrono::high_resolution_clock::now();
 
     Tensor<float, 2> c(3000, 3000);
 
     c.setConstant(2);
-    Tensor<float, 2> d = c.sqrt();
+    Tensor<float, 2> d(3000, 3000);
+    d.device(def_device) = c.sqrt();
 
     auto stop = std::chrono::high_resolution_clock::now();
     std::cout << "Took on a single cpu: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() / 1000. << std::endl;

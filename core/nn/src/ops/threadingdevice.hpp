@@ -26,4 +26,11 @@ namespace EigenSinn {
     ThreadPoolDevice thread_pool_device ;
 
   };
+
+  enum DeviceType {
+    cpu = 1,
+    threadpool
+  };
+
+
 }
