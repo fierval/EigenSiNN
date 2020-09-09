@@ -19,7 +19,7 @@ namespace EigenTest {
       n_devices = 2;
     }
 
-    ThreadPoolDeviceWrapper dev_wrapper;
+    Dispatcher<ThreadPoolDevice> dev_wrapper;
     ThreadPoolDevice& threading_device = dev_wrapper.get_device();
     DefaultDevice def_device;
 

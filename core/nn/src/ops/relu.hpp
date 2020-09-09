@@ -2,7 +2,6 @@
 
 #include "opsbase.hpp"
 #include <ops/conversions.hpp>
-#include <tuple>
 
 namespace EigenSinn {
 
@@ -31,7 +30,10 @@ namespace EigenSinn {
     TensorMap<Tensor<Scalar, 1>> flat_output(output.data(), flat_dim);
     TensorMap<Tensor<Scalar, 1>> flat_mask(mask.data(), flat_dim);
 
-    for (Index i = 0; i < flat_dim; i++) {
+    std::vector<Index> range(flat_dim);
+    std::iota(range.begin(), range.end(), 0);
+
+    std::for_each(std::execution::par, range.begin(), range.end(), [&](Index i) {
       if (flat_output(i) < 0) {
         flat_output(i) *= threshold;
         flat_mask(i) = threshold;
@@ -39,7 +41,7 @@ namespace EigenSinn {
       else {
         flat_mask(i) = 1.;
       }
-    }
+      });
 
     return Tuple(mask, output);
   }
@@ -47,10 +49,12 @@ namespace EigenSinn {
   template<typename Scalar, Index Rank>
   inline auto leaky_relu_back(Tensor<Scalar, Rank>& next_layer_grad, const Tensor<Scalar, Rank>& mask) {
 
-    Tensor<Scalar, Rank> output;
-    
-    output = next_layer_grad * mask;
+    Tensor<Scalar, Rank> output(next_layer_grad.dimensions());
+
+    // TODO: replace with dispatcher class
+    DefaultDevice device;
+    output.device(device) = next_layer_grad * mask;
     return output;
   }
-  
+
 }

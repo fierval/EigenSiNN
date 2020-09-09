@@ -5,10 +5,14 @@
 
 namespace EigenSinn {
 
-  class ThreadPoolDeviceWrapper {
+  template <typename Device_>
+  class Dispatcher {};
+
+  template <>
+  class Dispatcher<ThreadPoolDevice> {
   public:
 
-    ThreadPoolDeviceWrapper() : 
+    Dispatcher() : 
       n_devices(std::thread::hardware_concurrency())
       ,_tp(n_devices > 0 ? n_devices : 2)
       , thread_pool_device(&_tp, n_devices)
@@ -32,5 +36,16 @@ namespace EigenSinn {
     threadpool
   };
 
+  template <>
+  class Dispatcher<DefaultDevice> {
+  public:
+    Dispatcher() = default;
+    
+    DefaultDevice& get_device() {
+      return cpu_device;
+    }
 
+  private:
+    DefaultDevice cpu_device;
+  };
 }
