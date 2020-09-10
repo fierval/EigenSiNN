@@ -7,11 +7,11 @@
 namespace EigenSinn {
 
   // flatten convolution layer
-  template<typename Scalar>
-  class Flatten : public LayerBase {
+  template<typename Scalar, typename Device_= DefaultDevice>
+  class Flatten : public LayerBase<Device_> {
 
   public:
-    Flatten() {}
+    Flatten(const Device_& _device) : LayerBase(_device){}
 
     void forward(std::any prev_layer_any) {
       

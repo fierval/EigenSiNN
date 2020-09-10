@@ -8,13 +8,14 @@ namespace EigenSinn {
 
   // REVIEW: Not implementing bias for now
   // Batch normalization layers can take care of bias
-  template <typename Scalar>
-  class Conv2d : public LayerBase {
+  template <typename Scalar, typename Device_ = DefaultDevice>
+  class Conv2d : public LayerBase<Device_> {
 
   public:
 
-    Conv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const Index _stride = 1) :
-      kernel(kernelDims)
+    Conv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const Index _stride = 1, const Device_& _device = DefaultDevice()) :
+      LayerBase(_device)
+      ,kernel(kernelDims)
       , padding(_padding)
       , stride(_stride)
       , bias(kernelDims[0])

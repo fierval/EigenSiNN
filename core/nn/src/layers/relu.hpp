@@ -7,11 +7,13 @@ using namespace  Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank>
-  class LeakyReLU : public LayerBase {
+  template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
+  class LeakyReLU : public LayerBase<Device_> {
   public:
     // leaky relu if necessary
-    LeakyReLU(float _thresh = 0.01) : thresh(_thresh) {
+    LeakyReLU(float _thresh = 0.01, const Device_ & _device = DefaultDevice()) : 
+      LayerBase(_device)
+      ,thresh(_thresh) {
 
     }
     void init() override {};

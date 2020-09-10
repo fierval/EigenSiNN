@@ -18,11 +18,12 @@ _in_dim - input dimension (D)
 namespace EigenSinn {
 
 
-  template<typename Scalar>
-  class Linear : public LayerBase {
+  template<typename Scalar, typename Device_ = DefaultDevice>
+  class Linear : public LayerBase<Device_> {
 
   public:
-    Linear(int _batch_size, int _in_dim, int _out_dim) :
+    Linear(int _batch_size, int _in_dim, int _out_dim, const Device_& _device = DefaultDevice()) :
+      LayerBase(_device),
       batch_size(_batch_size),
       in_dim(_in_dim),
       out_dim(_out_dim),

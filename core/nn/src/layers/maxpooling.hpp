@@ -12,12 +12,13 @@ namespace EigenSinn {
   // For Linear (fully connected) layers: (N, C)
   // N - batch size
   // C - number of channels (1 for fully connected layers)
-  template <typename Scalar, Index Rank>
-  class MaxPooling : public LayerBase {
+  template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
+  class MaxPooling : public LayerBase<Device_> {
   public:
 
-    MaxPooling(const array<Index, Rank / 2>& _extents, Index _stride)
+    MaxPooling(const array<Index, Rank / 2>& _extents, Index _stride, const Device_& _device = DefaultDevice())
       : extents(_extents)
+      , LayerBase(_device)
       , stride(_stride)
       , original_dimensions({0})
     , max_pooler() {

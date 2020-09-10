@@ -11,12 +11,13 @@ namespace EigenSinn {
   // For Linear (fully connected) layers: (N, C)
   // N - batch size
   // C - number of channels (1 for fully connected layers)
-  template <typename Scalar, Index Rank>
-  class BatchNormalizationLayer : public LayerBase {
+  template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
+  class BatchNormalizationLayer : public LayerBase<Device_> {
   public:
 
-    BatchNormalizationLayer(Index num_features, float _eps = 1e-5, float _momentum = 0.9, bool _is_training = true)
-      : beta(num_features)
+    BatchNormalizationLayer(Index num_features, float _eps = 1e-5, float _momentum = 0.9, bool _is_training = true, const Device_& _device = DefaultDevice())
+      : LayerBase(_device)
+      , beta(num_features)
       , gamma(num_features)
       , dbeta(num_features)
       , dgamma(num_features)
@@ -47,7 +48,7 @@ namespace EigenSinn {
       Tensor<Scalar, Rank> prev_layer = from_any<Scalar, Rank>(prev_layer_any);
 
       std::tie(layer_output, xhat, running_mean, running_variance, mu, var) =
-        batch_norm(prev_layer, gamma, beta, eps, momentum, running_mean, running_variance, is_training);
+        batch_norm(prev_layer, gamma, beta, eps, momentum, running_mean, running_variance, is_training, device);
     }
 
     // see https://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html
@@ -57,8 +58,8 @@ namespace EigenSinn {
       Tensor<Scalar, Rank> prev_layer = from_any<Scalar, Rank>(prev_layer_any);
       Tensor<Scalar, Rank> dout = from_any<Scalar, Rank>(next_layer_grad_any);
 
-      array<int, Rank - 1> reduction_dims;
-      array<int, Rank> broadcast_dims;
+      array<Index, Rank - 1> reduction_dims;
+      array<Index, Rank> broadcast_dims;
 
       float total_channel = 1.;
       for (int i = 0; i < Rank; i++) {
@@ -71,8 +72,8 @@ namespace EigenSinn {
       std::tie(reduction_dims, broadcast_dims) = get_broadcast_and_reduction_dims(dout);
 
       //broadcast values
-      Tensor<Scalar, Rank> broadcast_mean = broadcast_as_last_dim(mu, broadcast_dims);
-      Tensor<Scalar, Rank> broadcast_var = broadcast_as_last_dim(var, broadcast_dims);
+      Tensor<Scalar, Rank> broadcast_mean = broadcast_as_last_dim(mu, broadcast_dims, device);
+      Tensor<Scalar, Rank> broadcast_var = broadcast_as_last_dim(var, broadcast_dims, device);
       Tensor<Scalar, Rank> xmu = (prev_layer - broadcast_mean);
 
       // Step 9
@@ -81,9 +82,11 @@ namespace EigenSinn {
 
       // Step 8
       // dgamma = sum (dout * y, reduced by all dims except channel)
-      Tensor<Scalar, Rank> gamma_broad = broadcast_as_last_dim(gamma, broadcast_dims);
-      Tensor<Scalar, Rank> dxhat = dout * gamma_broad;
-      dgamma = (dout * xhat).sum(reduction_dims);
+      Tensor<Scalar, Rank> gamma_broad = broadcast_as_last_dim(gamma, broadcast_dims, device);
+      Tensor<Scalar, Rank> dxhat(dout.dimensions());
+      
+      dxhat.device(device) = dout * gamma_broad;
+      dgamma.device(device) = (dout * xhat).sum(reduction_dims);
 
       // Step 7
       // d_inv_std
@@ -97,7 +100,7 @@ namespace EigenSinn {
       Tensor<Scalar, 1> d_var = -0.5 * (dxhat * xmu).sum(reduction_dims) / (var + eps).pow(3. / 2.);
 
       // Step 4
-      Tensor<Scalar, Rank> d_sq = 1. / total_channel * broadcast_as_last_dim<Scalar, Rank>(d_var, broadcast_dims);
+      Tensor<Scalar, Rank> d_sq = 1. / total_channel * broadcast_as_last_dim<Scalar, Rank>(d_var, broadcast_dims, device);
 
       // Step 3
       Tensor<Scalar, Rank> dxmu2 = 2 * xmu * d_sq;
@@ -107,7 +110,7 @@ namespace EigenSinn {
       Tensor<Scalar, 1> dmu = -dx1.sum(reduction_dims);
 
       // step 1
-      Tensor<Scalar, Rank> dx2 = 1./ total_channel * broadcast_as_last_dim<Scalar, Rank>(dmu, broadcast_dims);
+      Tensor<Scalar, Rank> dx2 = 1./ total_channel * broadcast_as_last_dim<Scalar, Rank>(dmu, broadcast_dims, device);
 
       // step 0
       layer_gradient = dx1 + dx2;

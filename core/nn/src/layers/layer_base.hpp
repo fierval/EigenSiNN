@@ -7,6 +7,7 @@ using namespace Eigen;
 
 namespace EigenSinn {
 
+  template <typename Device_ = DefaultDevice>
   class LayerBase {
 
   public:
@@ -34,6 +35,10 @@ namespace EigenSinn {
 
     virtual  bool has_bias() { return false; }
 
+  protected:
+    const Device_& device;
+
+    LayerBase(const Device_& _device) : device(_device) {}
 
   };
 }
