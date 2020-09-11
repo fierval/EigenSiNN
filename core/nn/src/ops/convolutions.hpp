@@ -91,8 +91,8 @@ namespace EigenSinn {
   }
 
   // NCHW format, col-major storage order
-  template <typename Scalar, Index Rank = 4>
-  inline auto im2col(const Tensor<Scalar, Rank>& input, const DSizes<Index, 4>& kernel_dims, const Padding2D& padding, Index stride = 1) {
+  template <typename Scalar, Index Rank = 4, typename Device_= DefaultDevice>
+  inline auto im2col(const Tensor<Scalar, Rank>& input, const DSizes<Index, 4>& kernel_dims, const Padding2D& padding, Index stride = 1, const Device_& device = DefaultDevice()) {
 
     auto out_dims = get_output_dimensions(input, kernel_dims, padding, stride);
     
@@ -119,7 +119,9 @@ namespace EigenSinn {
     for (row = 0, starts[2] = 0; row < out_dims[2]; row += stride, starts[2] +=stride) {
       for (col = 0, starts[3] = 0; col < out_dims[3]; col += stride, batch++, starts[3] += stride) {
 
-        Tensor<Scalar, Rank> cur_slice = padded.slice(starts, offsets).shuffle(shuffle_dims);
+        Tensor<Scalar, Rank> cur_slice(offsets);
+        cur_slice.device(device) = padded.slice(starts, offsets).shuffle(shuffle_dims);
+
         TensorMap<Tensor<Scalar, 2>> flat_slice(cur_slice.data(), col_dim, padded.dimension(0));
 
 // concatenate takes 98% of time
@@ -135,7 +137,7 @@ namespace EigenSinn {
 #endif
         int shift = batch * flat_slice.dimension(1);
         for (Index i = 0; i < flat_slice.dimension(1); i++) {
-          output.chip(shift + i, 1) = flat_slice.chip(i, 1);
+          output.chip(shift + i, 1).device(device) = flat_slice.chip(i, 1);
         }
       }
 
