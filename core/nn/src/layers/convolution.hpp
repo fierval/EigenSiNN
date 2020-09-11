@@ -39,7 +39,7 @@ namespace EigenSinn {
     void forward(std::any prev_layer_any) override {
 
       Tensor<Scalar, 4> prev_layer = std::any_cast<Tensor<Scalar, 4>&>(prev_layer_any);
-      layer_output = convolve(prev_layer, kernel, padding, stride);
+      layer_output = convolve(prev_layer, kernel, padding, stride, device);
 
 
       //add bias to each channel
@@ -48,7 +48,7 @@ namespace EigenSinn {
       
       // one bias per filter
       Tensor<Scalar, 4> reshaped = bias.reshape(array<Index, 4>{ 1, kernel.dimension(0), 1, 1 });
-      layer_output += reshaped.broadcast(bias_broadcast);
+      layer_output.device(device) += reshaped.broadcast(bias_broadcast);
 
     }
 

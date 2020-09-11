@@ -20,6 +20,12 @@ namespace EigenSinn {
     return paddings;
   }
 
+  template <typename Scalar, Index Rank>
+  inline array<Index, Rank> get_padded_input_dims(const Tensor<Scalar, Rank>& t, const Padding2D& pad2d) {
+    array<Index, Rank> out({ t.dimension(0), t.dimension(1), t.dimension(2) + 2 * pad2d.first, t.dimension(3) + 2 * pad2d.second });
+    return out;
+  }
+
   inline Padding pad2dim(const Padding2D& pad2d) {
     return pad2dim(pad2d.first, pad2d.second, pad2d.first, pad2d.second);
   }
@@ -57,8 +63,8 @@ namespace EigenSinn {
 
   // NCHW format
   //TODO: support stride
-  template <typename Scalar, Index Rank = 4>
-  inline Tensor<Scalar, Rank> convolve(Tensor<Scalar, Rank>& input, Tensor<Scalar, Rank>& kernel, const Padding2D& padding, Index stride = 1) {
+  template <typename Scalar, Index Rank = 4, typename Device_ = DefaultDevice>
+  inline Tensor<Scalar, Rank> convolve(Tensor<Scalar, Rank>& input, Tensor<Scalar, Rank>& kernel, const Padding2D& padding, Index stride = 1, const Device_& device = DefaultDevice()) {
 
     //dimensions involved in the convolution. Channel dimension is also involved.
     array<Index, 3> dims({ (int)ImageDims::channel, (int)ImageDims::height, (int)ImageDims::width });
@@ -66,7 +72,9 @@ namespace EigenSinn {
     assert(input.dimension((int)ImageDims::channel) == kernel.dimension((int)ImageDims::channel));
 
     // Pad if apropriate
-    Tensor<Scalar, Rank> padded = input.pad(pad2dim(padding));
+    auto padded_dims = get_padded_input_dims(input, padding);
+    Tensor<Scalar, Rank> padded(padded_dims);
+    padded.device(device) = input.pad(pad2dim(padding));
 
     // output dimensions
     Tensor<Scalar, Rank>::Dimensions out_dims = get_output_dimensions(input, kernel, padding, stride);
@@ -76,7 +84,7 @@ namespace EigenSinn {
 
     for (int i = 0; i < kernel.dimension((int)ImageDims::batch); i++) {
       // convolve on 3 dimensions and set the channel dimension of the entire batch
-      output.chip(i, (int)ImageDims::channel) = padded.convolve(kernel.chip(i, (int)ImageDims::batch), dims).chip(0, (int)ImageDims::channel);
+      output.chip(i, (int)ImageDims::channel).device(device) = padded.convolve(kernel.chip(i, (int)ImageDims::batch), dims).chip(0, (int)ImageDims::channel);
     }
 
     return output;
