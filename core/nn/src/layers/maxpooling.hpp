@@ -60,7 +60,7 @@ namespace EigenSinn {
     Index stride;
     array<Index, Rank / 2> extents;
     array<Index, Rank> original_dimensions;
-    MaxPooler<Scalar, Rank> max_pooler;
+    MaxPooler<Scalar, Rank, Device_> max_pooler;
   };
 
 }

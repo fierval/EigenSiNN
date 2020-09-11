@@ -33,13 +33,13 @@ namespace EigenSinn {
     return true;
   }
 
-  template <typename T, int Rank>
+  template <typename T, int Rank, typename Device_>
   struct MaxPooler {};
 
 
-  template <typename Scalar>
-  struct MaxPooler<Scalar, 2> {
-    inline auto do_max_pool(Tensor<Scalar, 2>& t, const array<Index, 1>& extents, int stride) {
+  template <typename Scalar, typename Device_>
+  struct MaxPooler<Scalar, 2, Device_> {
+    inline auto do_max_pool(Tensor<Scalar, 2>& t, const array<Index, 1>& extents, int stride, const Device_& device = DefaultDevice()) {
       auto dims = t.dimensions();
 
       if (!check_valid_params<2>(extents, stride, dims)) {
@@ -62,10 +62,10 @@ namespace EigenSinn {
 
       for (starts[1] = 0, output_starts[1] = 0; starts[1] + extents[0] <= dims[1]; starts[1] += stride, output_starts[1]++) {
 
-        index_tuples = t.slice(starts, lengths).index_tuples();
+        index_tuples.device(device) = t.slice(starts, lengths).index_tuples();
 
         // get the maximums and their indices
-        local_pool = index_tuples.reduce(reduce_dims, internal::ArgMaxTupleReducer<Tuple<Index, Scalar>>());
+        local_pool.device(device) = index_tuples.reduce(reduce_dims, internal::ArgMaxTupleReducer<Tuple<Index, Scalar>>());
         // split the tuple into its arrays: value and index of the input where
         // gradient will be propagated relative to the current slice
         for (int k = 0; k < local_pool.dimension(0); k++) {
@@ -107,9 +107,9 @@ namespace EigenSinn {
 
   };
 
-  template <typename Scalar>
-  struct MaxPooler<Scalar, 4> {
-    inline auto do_max_pool(Tensor<Scalar, 4>& t, const array<Index, 2>& extents, int stride) {
+  template <typename Scalar, typename Device_>
+  struct MaxPooler<Scalar, 4, Device_> {
+    inline auto do_max_pool(Tensor<Scalar, 4>& t, const array<Index, 2>& extents, int stride, const Device_& device = DefaultDevice()) {
       auto dims = t.dimensions();
 
       if (!check_valid_params<4>(extents, stride, dims)) {
@@ -135,10 +135,10 @@ namespace EigenSinn {
       for (starts[2] = 0, output_starts[2] = 0; starts[2] + extents[0] <= dims[2]; starts[2] += stride, output_starts[2]++) {
         for (starts[3] = 0, output_starts[3] = 0; starts[3] + extents[1] <= dims[3]; starts[3] += stride, output_starts[3]++) {
 
-          index_tuples = t.slice(starts, lengths).index_tuples();
+          index_tuples.device(device) = t.slice(starts, lengths).index_tuples();
 
           // get pooling results
-          local_pool = index_tuples.reduce(reduce_dims, internal::ArgMaxTupleReducer<Tuple<Index, Scalar>>());
+          local_pool.device(device) = index_tuples.reduce(reduce_dims, internal::ArgMaxTupleReducer<Tuple<Index, Scalar>>());
 
           // unchain indices. TODO: unwinding them in the backward pass will be harder than 2 dims
           for (int k = 0; k < local_pool.dimension(0); k++) {

@@ -27,7 +27,7 @@ namespace EigenSinn {
     // TODO: this needs to be implemented for real
     // Also strides and padding should be added
     void init() override {
-      kernel = generate_xavier<Scalar, 4>(kernel.dimensions());
+      kernel = generate_xavier<Scalar, 4>(kernel.dimensions(), device);
       bias.setZero();
     }
 

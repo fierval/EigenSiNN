@@ -26,7 +26,7 @@ namespace EigenSinn {
     }
 
     void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
-      layer_grad = leaky_relu_back(from_any<Scalar, Rank>(next_layer_grad_any), mask);
+      layer_grad = leaky_relu_back(from_any<Scalar, Rank>(next_layer_grad_any), mask, device);
     }
 
     std::any get_output() override {

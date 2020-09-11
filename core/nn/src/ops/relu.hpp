@@ -46,13 +46,11 @@ namespace EigenSinn {
     return Tuple(mask, output);
   }
 
-  template<typename Scalar, Index Rank>
-  inline auto leaky_relu_back(Tensor<Scalar, Rank>& next_layer_grad, const Tensor<Scalar, Rank>& mask) {
+  template<typename Scalar, Index Rank, typename Device_ = DefaultDevice>
+  inline auto leaky_relu_back(Tensor<Scalar, Rank>& next_layer_grad, const Tensor<Scalar, Rank>& mask, const Device_& device = DefaultDevice()) {
 
     Tensor<Scalar, Rank> output(next_layer_grad.dimensions());
 
-    // TODO: replace with dispatcher class
-    DefaultDevice device;
     output.device(device) = next_layer_grad * mask;
     return output;
   }

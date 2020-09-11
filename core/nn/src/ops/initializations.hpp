@@ -29,8 +29,8 @@ namespace EigenSinn {
 
   }
 
-  template <typename Scalar, Index Rank>
-  inline Tensor<Scalar, Rank> generate_xavier(array<Index, Rank> layer_dims) {
+  template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
+  inline Tensor<Scalar, Rank> generate_xavier(array<Index, Rank> layer_dims, const Device_& device = DefaultDevice()) {
 
     assert(Rank == 2 || Rank == 4);
     Scalar std;
@@ -48,9 +48,7 @@ namespace EigenSinn {
 
     Tensor<Scalar, Rank> weights(layer_dims);
     weights.setRandom<internal::NormalRandomGenerator<Scalar>>();
-    weights = std * weights;
+    weights.device(device) = std * weights;
     return weights;
-
-    
   }
 }
