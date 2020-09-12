@@ -2,6 +2,7 @@
 
 #include <losses/crossentropyloss.hpp>
 #include <optimizers/adam.hpp>
+#include <ops/threadingdevice.hpp>
 #include <chrono>
 #include <vector>
 #include <string>
@@ -32,7 +33,9 @@ int main(int argc, char* argv[]) {
   ImageContainer next_images;
   LabelContainer next_labels;
 
-  auto network = create_network(batch_size, num_classes, learning_rate);
+  Dispatcher<ThreadPoolDevice> dispatcher;
+
+  auto network = create_network(batch_size, num_classes, learning_rate, dispatcher.get_device());
   init(network, debug_init);
 
   auto start = std::chrono::high_resolution_clock::now();

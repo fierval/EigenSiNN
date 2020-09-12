@@ -45,7 +45,7 @@ namespace EigenSinn {
   };
 
   template<typename Scalar, Index Rank, typename Device_ = DefaultDevice>
-  class ReLU : public LeakyReLU<Scalar, Rank> {
+  class ReLU : public LeakyReLU<Scalar, Rank, Device_> {
   public:
     ReLU(const Device_& _device = DefaultDevice()) : LeakyReLU(0, _device) {}
   };

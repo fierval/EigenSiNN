@@ -31,7 +31,7 @@ namespace EigenSinn {
 
     void forward(std::any prev_layer) override {
       Tensor<Scalar, Rank> x = from_any<Scalar, Rank>(prev_layer);
-      auto res = max_pooler.do_max_pool(x, extents, stride);
+      auto res = max_pooler.do_max_pool(x, extents, stride, device);
 
       original_dimensions = x.dimensions();
       layer_output = res.first;

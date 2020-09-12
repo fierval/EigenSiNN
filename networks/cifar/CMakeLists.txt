@@ -39,5 +39,5 @@ message(STATUS "Sources: ${APP_SOURCES}")
 add_executable(${APP_EXE} ${APP_SOURCES})
 
 target_include_directories(${APP_EXE} PRIVATE ${OpenCV_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS} ${EIGENSINN_INCLUDE_DIR} ${CUR_INCLUDE_DIR})
-target_compile_definitions(${APP_EXE} PRIVATE CIFAR_DATA_LOCATION="${CIFAR_DATA_DIR}")
+target_compile_definitions(${APP_EXE} PRIVATE CIFAR_DATA_LOCATION="${CIFAR_DATA_DIR}" EIGEN_USE_THREADS)
 target_link_libraries(${APP_EXE} PUBLIC ${OpenCV_LIBS})

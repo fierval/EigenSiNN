@@ -17,9 +17,9 @@ using namespace EigenSinn;
 
 template <typename Device_= DefaultDevice>
 struct NetworkNode {
-  LayerBase* layer;
+  LayerBase<Device_> * layer;
   OptimizerBase<float>* optimizer;
-  NetworkNode(Device_ device_) : layer(nullptr), optimizer(nullptr) {}
+  NetworkNode() : layer(nullptr), optimizer(nullptr) {}
 
   ~NetworkNode() {
     if (layer) delete layer;
@@ -34,8 +34,8 @@ struct NetworkNode {
     other.optimizer = nullptr;
   }
 
-  NetworkNode(LayerBase * _layer, OptimizerBase<float>* _optimizer) : layer(_layer), optimizer(_optimizer) {}
-  NetworkNode(LayerBase * _layer) : layer(_layer), optimizer(nullptr) {}
+  NetworkNode(LayerBase<Device_>* _layer, OptimizerBase<float>* _optimizer) : layer(_layer), optimizer(_optimizer) {}
+  NetworkNode(LayerBase<Device_>* _layer) : layer(_layer), optimizer(nullptr) {}
 };
 
 
@@ -146,28 +146,28 @@ inline auto create_network(int batch_size, int num_classes, float learning_rate,
   Network network;
 
   // push back rvalues so we don't have to invoke the copy constructor
-  network.push_back(NetworkNode(new Conv2d<float>(array<Index, 4>{6, 3, 5, 5}, { 0, 0 }, 1, device), new SGD<float, 4>(learning_rate)));
-  network.push_back(NetworkNode(new ReLU<float, 4>()));
-  network.push_back(NetworkNode(new MaxPooling<float, 4>(array<Index, 2>{2, 2}, 2)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new Conv2d<float, ThreadPoolDevice>(array<Index, 4>{6, 3, 5, 5}, Padding2D{ 0, 0 }, 1, device), new SGD<float, 4>(learning_rate)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new ReLU<float, 4, ThreadPoolDevice>(device)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new MaxPooling<float, 4, ThreadPoolDevice>(array<Index, 2>{2, 2}, 2, device)));
 
-  network.push_back(NetworkNode(new Conv2d<float>(array<Index, 4>{16, 6, 5, 5}, { 0, 0 }, 1, device), new SGD<float, 4>(learning_rate)));
-  network.push_back(NetworkNode(new ReLU<float, 4>())); 
-  network.push_back(NetworkNode(new MaxPooling<float, 4>(array<Index, 2>{2, 2}, 2)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new Conv2d<float, ThreadPoolDevice>(array<Index, 4>{16, 6, 5, 5}, Padding2D{ 0, 0 }, 1, device), new SGD<float, 4>(learning_rate)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new ReLU<float, 4, ThreadPoolDevice>(device)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new MaxPooling<float, 4, ThreadPoolDevice>(array<Index, 2>{2, 2}, 2, device)));
 
   // get flat dimension by pushing a zero tensor through the network defined so far
   int flat_dim = get_flat_dimension(network, array<Index, 4>{1, 3, 32, 32});
 
-  network.push_back(NetworkNode(new Flatten<float>()));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new Flatten<float, ThreadPoolDevice>(device)));
 
 
-  network.push_back(NetworkNode(new Linear<float>(batch_size, flat_dim, 120), new SGD<float, 2>(learning_rate)));
-  network.push_back(NetworkNode(new ReLU<float, 2>()));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new Linear<float, ThreadPoolDevice>(batch_size, flat_dim, 120, device), new SGD<float, 2>(learning_rate)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new ReLU<float, 2, ThreadPoolDevice>(device)));
 
-  network.push_back(NetworkNode(new Linear<float>(batch_size, 120, 84), new SGD<float, 2>(learning_rate)));
-  network.push_back(NetworkNode(new ReLU<float, 2>()));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new Linear<float, ThreadPoolDevice>(batch_size, 120, 84, device), new SGD<float, 2>(learning_rate)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new ReLU<float, 2, ThreadPoolDevice>(device)));
 
   // cross-entropy loss includes the softmax non-linearity
-  network.push_back(NetworkNode(new Linear<float>(batch_size, 84, num_classes), new SGD<float, 2>(learning_rate)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new Linear<float, ThreadPoolDevice>(batch_size, 84, num_classes, device), new SGD<float, 2>(learning_rate)));
 
   return network;
 }
