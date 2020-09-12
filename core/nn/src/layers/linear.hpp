@@ -43,6 +43,14 @@ namespace EigenSinn {
       ProductDims prod_dims = { IndexPair<int>(1, 0) };
       auto prev_layer_tensor = std::any_cast<Tensor<Scalar, 2>&>(prev_layer);
 
+      // we may be using the same layer for train and test.
+      // then batch size will change.
+      if (prev_layer_tensor.dimension(0) != batch_size) {
+        batch_size = prev_layer_tensor.dimension(0);
+        broadcast_bias_dim[0] = batch_size;
+        layer_output.resize(batch_size, layer_output.dimension(1));
+      }
+
       layer_output.device(device) = prev_layer_tensor.contract(weights, prod_dims);
 
       // bias: [1, M]
@@ -130,8 +138,9 @@ namespace EigenSinn {
     Tensor<Scalar, 2> layer_output, layer_grad_loss_by_weight, layer_grad_loss_by_input;
     Tensor<Scalar, 1> bias, loss_by_bias_derivative;
 
-    const int in_dim, out_dim, batch_size;
-    const array<int, 2> broadcast_bias_dim;
+    const int in_dim, out_dim;
+    int batch_size;
+    array<int, 2> broadcast_bias_dim;
     const array<int, 1> reduce_bias_dim = { 0 };
   };
 }

@@ -95,10 +95,12 @@ namespace EigenSinn {
   inline auto im2col(const Tensor<Scalar, Rank>& input, const DSizes<Index, 4>& kernel_dims, const Padding2D& padding, Index stride = 1, const Device_& device = DefaultDevice()) {
 
     auto out_dims = get_output_dimensions(input, kernel_dims, padding, stride);
-    
+
     auto col_dim = kernel_dims[1] * kernel_dims[2] * kernel_dims[3];
     array<Index, Rank> starts = { 0, 0, 0, 0 };
     array<Index, Rank> offsets = { input.dimension(0), kernel_dims[1], kernel_dims[2], kernel_dims[3] };
+
+    array<Index, Rank> slice_dims = {kernel_dims[3], kernel_dims[2], kernel_dims[1], input.dimension(0) };
 
     // pad the tensor before we convolve
     Tensor<Scalar, 4> padded = input.pad(pad2dim(padding));
@@ -119,7 +121,7 @@ namespace EigenSinn {
     for (row = 0, starts[2] = 0; row < out_dims[2]; row += stride, starts[2] +=stride) {
       for (col = 0, starts[3] = 0; col < out_dims[3]; col += stride, batch++, starts[3] += stride) {
 
-        Tensor<Scalar, Rank> cur_slice(offsets);
+        Tensor<Scalar, Rank> cur_slice(slice_dims);
         cur_slice.device(device) = padded.slice(starts, offsets).shuffle(shuffle_dims);
 
         TensorMap<Tensor<Scalar, 2>> flat_slice(cur_slice.data(), col_dim, padded.dimension(0));
