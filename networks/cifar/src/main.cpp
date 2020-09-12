@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
     
     shuffle<float, uint8_t>(dataset.training_images, dataset.training_labels, should_shuffle);
 
-    for (int step = 1; step <= 2 /* dataset.training_images.size() / batch_size */; step++) {
+    for (int step = 1; step <= dataset.training_images.size() / batch_size; step++) {
 
       std::any batch_tensor = std::any(create_batch_tensor(dataset.training_images, step - 1, batch_size));
       Tensor<float, 2> label_tensor = create_2d_label_tensor<uint8_t, float>(dataset.training_labels, step - 1, batch_size, num_classes);
