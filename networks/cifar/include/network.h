@@ -15,10 +15,11 @@
 using namespace Eigen;
 using namespace EigenSinn;
 
+template <typename Device_= DefaultDevice>
 struct NetworkNode {
   LayerBase* layer;
   OptimizerBase<float>* optimizer;
-  NetworkNode() : layer(nullptr), optimizer(nullptr) {}
+  NetworkNode(Device_ device_) : layer(nullptr), optimizer(nullptr) {}
 
   ~NetworkNode() {
     if (layer) delete layer;
@@ -38,7 +39,7 @@ struct NetworkNode {
 };
 
 
-typedef std::vector<NetworkNode> Network;
+typedef std::vector<NetworkNode<ThreadPoolDevice>> Network;
 
 // assuming that the last layer of the network is Flatten, we can get the flattened dimension
 inline int get_flat_dimension(const Network& network, const array<Index, 4>& input_dims) {
@@ -140,17 +141,16 @@ inline void optimizer(const Network& network) {
 
 }
 
-
-inline auto create_network(int batch_size, int num_classes, float learning_rate) {
+inline auto create_network(int batch_size, int num_classes, float learning_rate, const ThreadPoolDevice& device) {
 
   Network network;
 
   // push back rvalues so we don't have to invoke the copy constructor
-  network.push_back(NetworkNode(new Conv2d<float>(array<Index, 4>{6, 3, 5, 5}), new SGD<float, 4>(learning_rate)));
+  network.push_back(NetworkNode(new Conv2d<float>(array<Index, 4>{6, 3, 5, 5}, { 0, 0 }, 1, device), new SGD<float, 4>(learning_rate)));
   network.push_back(NetworkNode(new ReLU<float, 4>()));
   network.push_back(NetworkNode(new MaxPooling<float, 4>(array<Index, 2>{2, 2}, 2)));
 
-  network.push_back(NetworkNode(new Conv2d<float>(array<Index, 4>{16, 6, 5, 5}), new SGD<float, 4>(learning_rate)));
+  network.push_back(NetworkNode(new Conv2d<float>(array<Index, 4>{16, 6, 5, 5}, { 0, 0 }, 1, device), new SGD<float, 4>(learning_rate)));
   network.push_back(NetworkNode(new ReLU<float, 4>())); 
   network.push_back(NetworkNode(new MaxPooling<float, 4>(array<Index, 2>{2, 2}, 2)));
 

@@ -44,10 +44,10 @@ namespace EigenSinn {
     Tensor<Scalar, Rank> layer_output, layer_grad;
   };
 
-  template<typename Scalar, Index Rank>
+  template<typename Scalar, Index Rank, typename Device_ = DefaultDevice>
   class ReLU : public LeakyReLU<Scalar, Rank> {
   public:
-    ReLU() : LeakyReLU(0) {}
+    ReLU(const Device_& _device = DefaultDevice()) : LeakyReLU(0, _device) {}
   };
 
 }
