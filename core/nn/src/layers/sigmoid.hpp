@@ -48,15 +48,11 @@ namespace EigenSinn {
   private:
     void init_cached(Eigen::Tensor<Scalar, Rank>& prev_layer)
     {
-      Tensor<Scalar, 1> one_flat(prev_layer.dimension(0));
       ones.resize(prev_layer.dimensions());
-      one_flat.setConstant(1);
-
-      array<Index, Rank> broadcast_dims(prev_layer.dimensions());
-      broadcast_dims[0] = 1;
-      ones.device(device) = one_flat.broadcast(broadcast_dims);
+      ones.setConstant(1);
 
       layer_output.resize(prev_layer.dimensions());
+      layer_grad.resize(prev_layer.dimensions());
     }
 
     bool inited;
