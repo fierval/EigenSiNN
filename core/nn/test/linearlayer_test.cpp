@@ -22,7 +22,7 @@ namespace EigenSinnTest {
 
   TEST_F(FullyConnected, BackpropNoBias) {
 
-    Linear<float> linear(cd.dims[0], cd.dims[1], cd.out_dims[1]);
+    Linear<float> linear(cd.dims[1], cd.out_dims[1]);
 
     linear.init(cd.weights);
     linear.forward(cd.linearInput);
@@ -35,7 +35,7 @@ namespace EigenSinnTest {
 
   TEST_F(FullyConnected, BackpropBias) {
 
-    Linear<float> linear(cd.dims[0], cd.dims[1], cd.out_dims[1]);
+    Linear<float> linear(cd.dims[1], cd.out_dims[1]);
 
     linear.init(cd.weights, cd.bias);
     linear.forward(cd.linearInput);
@@ -54,7 +54,7 @@ namespace EigenSinnTest {
   TEST_F(FullyConnected, Initialize) {
 
     int in_dim = 1024;
-    Linear<float> linear(10, in_dim, 512);
+    Linear<float> linear(in_dim, 512);
 
     linear.init();
     Tensor<float, 2> weights = from_any<float, 2>(linear.get_weights());

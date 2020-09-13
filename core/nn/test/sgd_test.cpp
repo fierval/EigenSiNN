@@ -20,7 +20,7 @@ namespace EigenSinnTest {
 
     auto PropagateGradient(int epochs, float momentum = 0.0, bool nesterov = false) {
       // create fully connected layer
-      Linear<float> linear(cd.dims[0], cd.dims[1], cd.out_dims[1]);
+      Linear<float> linear(cd.dims[1], cd.out_dims[1]);
       linear.init(cd.weights);
 
       // create loss function

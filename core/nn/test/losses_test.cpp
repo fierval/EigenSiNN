@@ -18,7 +18,7 @@ namespace EigenSinnTest {
       cd.init();
       dloss.resize(cd.out_dims);
 
-      fc = new Linear<float>(cd.dims[0], cd.dims[1], cd.out_dims[1]);
+      fc = new Linear<float>(cd.dims[1], cd.out_dims[1]);
 
       fc->init(cd.weights);
       fc->forward(cd.linearInput);

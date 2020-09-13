@@ -11,7 +11,6 @@ using namespace Eigen;
 
 /*
 Fully connected layer X[l]
-_batch_size - size of the incoming minibatch (N)
 _in_dim - input dimension (D)
 -out_dim - output dimension (M)
 */
@@ -22,16 +21,15 @@ namespace EigenSinn {
   class Linear : public LayerBase<Device_> {
 
   public:
-    Linear(int _batch_size, int _in_dim, int _out_dim, const Device_& _device = DefaultDevice()) :
+    Linear(int _in_dim, int _out_dim, const Device_& _device = DefaultDevice()) :
       LayerBase(_device),
-      batch_size(_batch_size),
-      layer_output(_batch_size, _out_dim),
+      layer_output(1, _out_dim),
+      layer_grad_loss_by_input(1, _in_dim),
       layer_grad_loss_by_weight(_in_dim, _out_dim),
-      layer_grad_loss_by_input(_batch_size, _in_dim),
       loss_by_bias_derivative(_out_dim),
       in_dim(_in_dim),
       out_dim(_out_dim),
-      broadcast_bias_dim({ _batch_size, 1 }),
+      broadcast_bias_dim({ 1, 1 }),
       bias(_out_dim)   {
 
     }
@@ -45,10 +43,10 @@ namespace EigenSinn {
 
       // we may be using the same layer for train and test.
       // then batch size will change.
-      if (prev_layer_tensor.dimension(0) != batch_size) {
-        batch_size = prev_layer_tensor.dimension(0);
-        broadcast_bias_dim[0] = batch_size;
+      if (prev_layer_tensor.dimension(0) != layer_output.dimension(0)) {
+        int batch_size = broadcast_bias_dim[0] = prev_layer_tensor.dimension(0);
         layer_output.resize(batch_size, layer_output.dimension(1));
+        layer_grad_loss_by_input.resize(batch_size, layer_grad_loss_by_input.dimension(1));
       }
 
       layer_output.device(device) = prev_layer_tensor.contract(weights, prod_dims);
@@ -139,7 +137,6 @@ namespace EigenSinn {
     Tensor<Scalar, 1> bias, loss_by_bias_derivative;
 
     const int in_dim, out_dim;
-    int batch_size;
     array<int, 2> broadcast_bias_dim;
     const array<int, 1> reduce_bias_dim = { 0 };
   };
