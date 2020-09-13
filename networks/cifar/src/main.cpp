@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
 
   Dispatcher<ThreadPoolDevice> dispatcher;
 
-  auto network = create_network(batch_size, num_classes, learning_rate, dispatcher.get_device());
+  auto network = create_network(num_classes, learning_rate, dispatcher.get_device());
   init(network, debug_init);
 
   auto start = std::chrono::high_resolution_clock::now();

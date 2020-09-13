@@ -141,7 +141,7 @@ inline void optimizer(const Network& network) {
 
 }
 
-inline auto create_network(int batch_size, int num_classes, float learning_rate, const ThreadPoolDevice& device) {
+inline auto create_network(int num_classes, float learning_rate, const ThreadPoolDevice& device) {
 
   Network network;
 
@@ -160,14 +160,14 @@ inline auto create_network(int batch_size, int num_classes, float learning_rate,
   network.push_back(NetworkNode<ThreadPoolDevice>(new Flatten<float, ThreadPoolDevice>(device)));
 
 
-  network.push_back(NetworkNode<ThreadPoolDevice>(new Linear<float, ThreadPoolDevice>(batch_size, flat_dim, 120, device), new SGD<float, 2>(learning_rate)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new Linear<float, ThreadPoolDevice>(flat_dim, 120, device), new SGD<float, 2>(learning_rate)));
   network.push_back(NetworkNode<ThreadPoolDevice>(new ReLU<float, 2, ThreadPoolDevice>(device)));
 
-  network.push_back(NetworkNode<ThreadPoolDevice>(new Linear<float, ThreadPoolDevice>(batch_size, 120, 84, device), new SGD<float, 2>(learning_rate)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new Linear<float, ThreadPoolDevice>(120, 84, device), new SGD<float, 2>(learning_rate)));
   network.push_back(NetworkNode<ThreadPoolDevice>(new ReLU<float, 2, ThreadPoolDevice>(device)));
 
   // cross-entropy loss includes the softmax non-linearity
-  network.push_back(NetworkNode<ThreadPoolDevice>(new Linear<float, ThreadPoolDevice>(batch_size, 84, num_classes, device), new SGD<float, 2>(learning_rate)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new Linear<float, ThreadPoolDevice>(84, num_classes, device), new SGD<float, 2>(learning_rate)));
 
   return network;
 }
