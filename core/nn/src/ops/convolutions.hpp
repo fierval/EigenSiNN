@@ -122,7 +122,7 @@ namespace EigenSinn {
       for (col = 0, starts[3] = 0; col < out_dims[3]; col += stride, batch++, starts[3] += stride) {
 
         Tensor<Scalar, Rank> cur_slice(slice_dims);
-        cur_slice.device(device) = padded.slice(starts, offsets).shuffle(shuffle_dims);
+        cur_slice.device(device) = padded.slice(starts, offsets).eval().shuffle(shuffle_dims);
 
         TensorMap<Tensor<Scalar, 2>> flat_slice(cur_slice.data(), col_dim, padded.dimension(0));
 
@@ -207,8 +207,12 @@ namespace EigenSinn {
   // Used to fold the backward pass result of dX/dL. 
   // We still slide the kernel window over the 2d representation, 
   // Adding contributions of each folded slice to the result
-  template <typename Scalar>
-  inline auto col2im(const Tensor<Scalar, 2>& col, const array<Index, 4>& kernel_dims, const array<Index, 4> orig_dims,  const Padding2D& padding, int stride = 1) {
+  template <typename Scalar, typename Device_ = DefaultDevice>
+  inline auto col2im(const Tensor<Scalar, 2>& col, 
+    const array<Index, 4>& kernel_dims, 
+    const array<Index, 4> orig_dims,  
+    const Padding2D& padding, 
+    int stride = 1, const Device_& device = DefaultDevice()) {
 
     // intermediate output: original dimensions padded
     Index channels = kernel_dims[1], 
@@ -224,7 +228,8 @@ namespace EigenSinn {
     array<Index, 2> slice_starts = { 0, 0 };
     array<Index, 2> slice_offsets = { col.dimension(0), batch_size };
     array<Index, 4> rev_shape = { kernel_dims[3], kernel_dims[2], kernel_dims[1], batch_size};
-    
+    Tensor<Scalar, 4> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[2]);
+
     // loop over col's batch size at a time
       // figure where it goes into the output
       // memcpy with setValues
@@ -232,7 +237,8 @@ namespace EigenSinn {
     // unpad with slice
     for (Index i = 0; i < col_dims[1] / batch_size; i++, slice_starts[1] += batch_size) {
       
-      Tensor<Scalar, 4> slice = col.slice(slice_starts, slice_offsets).reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
+      slice.device(device) = col.slice(slice_starts, slice_offsets)
+        .eval().reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
      
       for (Index b = 0; b < batch_size; b++) {
         for (Index c = 0; c < channels; c++) {
