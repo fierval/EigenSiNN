@@ -16,7 +16,6 @@ namespace EigenSinn {
       ,thresh(_thresh) {
 
     }
-    void init() override {};
 
     void forward(std::any prev_layer_any) override {
       auto res = leaky_relu(from_any<Scalar, Rank>(prev_layer_any), thresh);
