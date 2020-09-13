@@ -14,7 +14,7 @@ import torch.nn as nn
 inp = cd.inp
 fakeloss = cd.fakeloss
 
-sg = nn.Sigmoid()
+sg = nn.Tanh()
 output = sg(inp)
 output.backward(fakeloss.reshape_as(output))
 
