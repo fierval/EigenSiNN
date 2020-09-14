@@ -15,7 +15,7 @@ namespace EigenSinn {
       , inited(false)
     {
       for (Index i = 0; i < Rank - 1; i++) {
-          reduction_axis[i] = i + 1;
+          reduction_axes[i] = i + 1;
           reshape_dims[i] = 1;
       }
 
@@ -32,6 +32,7 @@ namespace EigenSinn {
         init_cached(prev_layer);
       }
 
+      // reliable softmax
       Tensor<Scalar, 0> layer_max;
       layer_max.device(device) = prev_layer.maximum();
 
@@ -40,7 +41,7 @@ namespace EigenSinn {
 
       exp_all.device(device) = (prev_layer - layer_max_broadcast).exp();
 
-      exp_sum.device(device) = exp_all.sum(reduction_axis);
+      exp_sum.device(device) = exp_all.sum(reduction_axes);
       exp_sum_broadcast.device(device) = exp_sum.reshape(reshape_dims).broadcast(broadcast_dims);
 
       layer_output.device(device) = exp_all / exp_sum_broadcast;
@@ -76,7 +77,7 @@ namespace EigenSinn {
     bool inited;
     Tensor<Scalar, Rank> layer_output, layer_grad, exp_all, exp_sum_broadcast;
     Tensor<Scalar, 1> exp_sum;
-    array<Index, Rank - 1> reduction_axis;
+    array<Index, Rank - 1> reduction_axes;
     array<Index, Rank> broadcast_dims, reshape_dims;
   };
 
