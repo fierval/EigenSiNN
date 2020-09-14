@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 #include <layers/relu.hpp>
 #include "include/commondata2d.hpp"
+#include "include/testutils.hpp"
 #include "ops/comparisons.hpp"
 
 using namespace EigenSinn;
@@ -64,7 +65,7 @@ namespace EigenSinnTest {
     rl.init();
     rl.forward(cd.linearInput);
 
-    EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(rl.get_output()), output));
+    EXPECT_TRUE(is_elementwise_approx_eq(rl.get_output(), output));
   }
 
   TEST_F(ReLU2d, Backward) {
@@ -74,7 +75,7 @@ namespace EigenSinnTest {
     rl.forward(cd.linearInput);
     rl.backward(cd.linearInput, cd.linearLoss);
 
-    EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(rl.get_loss_by_input_derivative()), dinput, 3e-5));
+    EXPECT_TRUE(is_elementwise_approx_eq(rl.get_loss_by_input_derivative(), dinput, 3e-5));
   }
 
   TEST_F(ReLU2d, LeakyForward) {
@@ -83,7 +84,7 @@ namespace EigenSinnTest {
     rl.init();
     rl.forward(cd.linearInput);
 
-    EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(rl.get_output()), output_leaky));
+    EXPECT_TRUE(is_elementwise_approx_eq(rl.get_output(), output_leaky));
   }
 
   TEST_F(ReLU2d, LeakyBackward) {
@@ -93,7 +94,7 @@ namespace EigenSinnTest {
     rl.forward(cd.linearInput);
     rl.backward(cd.linearInput, cd.linearLoss);
 
-    EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(rl.get_loss_by_input_derivative()), dinput_leaky, 3e-5));
+    EXPECT_TRUE(is_elementwise_approx_eq(rl.get_loss_by_input_derivative(), dinput_leaky));
   }
 
 

@@ -54,7 +54,7 @@ namespace EigenSinnTest {
     tanh.forward(cd.linearInput);
     tanh.backward(cd.linearInput, cd.linearLoss);
 
-    EXPECT_TRUE(is_elementwise_approx_eq(tanh.get_loss_by_input_derivative(), dinput, 3e-5));
+    EXPECT_TRUE(is_elementwise_approx_eq(tanh.get_loss_by_input_derivative(), dinput));
   }
 
 

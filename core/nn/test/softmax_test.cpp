@@ -45,19 +45,18 @@ namespace EigenSinnTest {
     softmax.init();
     softmax.forward(cd.linearInput);
 
-    out_compare(output, from_any<float, 2>(softmax.get_output()));
     EXPECT_TRUE(is_elementwise_approx_eq(softmax.get_output(), output));
   }
 
-  //TEST_F(Softmax, Backward) {
+  TEST_F(Softmax, Backward) {
 
-  //  EigenSinn::Softmax<float, 2> softmax;
-  //  softmax.init();
-  //  softmax.forward(cd.linearInput);
-  //  softmax.backward(cd.linearInput, cd.linearLoss);
+    EigenSinn::Softmax<float, 2> softmax;
+    softmax.init();
+    softmax.forward(cd.linearInput);
+    softmax.backward(cd.linearInput, cd.linearLoss);
 
-  //  EXPECT_TRUE(is_elementwise_approx_eq(softmax.get_loss_by_input_derivative(), dinput, 3e-5));
-  //}
+    EXPECT_TRUE(is_elementwise_approx_eq(softmax.get_loss_by_input_derivative(), dinput));
+  }
 
 
 }

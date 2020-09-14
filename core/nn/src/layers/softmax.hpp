@@ -50,6 +50,22 @@ namespace EigenSinn {
     void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
       auto dout = from_any<Scalar, Rank>(next_layer_grad_any);
 
+      Tensor<Scalar, Rank> d_mul_exp(dims);
+      d_mul_exp.device(device) = dout / exp_sum_broadcast;
+
+      Tensor<Scalar, 1> d_mul_inv_x(dims[0]);
+      d_mul_inv_x.device(device) = (exp_all * dout).sum(reduction_axes);
+
+      Tensor<Scalar, 1> d_inv(dims[0]);
+      d_inv.device(device) = -1. / exp_sum.pow(2) * d_mul_inv_x;
+
+      Tensor<Scalar, Rank> d_sum_exp(dims);
+      d_sum_exp.device(device) = d_inv.reshape(reshape_dims).broadcast(broadcast_dims);
+
+      Tensor<Scalar, Rank> d_exp(dims);
+      d_exp.device(device) = d_mul_exp + d_sum_exp;
+
+      layer_grad.device(device) = exp_all * d_exp;
     }
 
     std::any get_output() override {
@@ -74,13 +90,14 @@ namespace EigenSinn {
       broadcast_dims[0] = 1;
 
       reshape_dims[0] = prev_layer.dimension(0);
+      dims = prev_layer.dimensions();
     }
 
     bool inited;
     Tensor<Scalar, Rank> layer_output, layer_grad, exp_all, exp_sum_broadcast;
     Tensor<Scalar, 1> exp_sum;
     array<Index, Rank - 1> reduction_axes;
-    array<Index, Rank> broadcast_dims, reshape_dims;
+    array<Index, Rank> broadcast_dims, reshape_dims, dims;
   };
 
 

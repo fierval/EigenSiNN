@@ -54,7 +54,7 @@ namespace EigenSinnTest {
     sg.forward(cd.linearInput);
     sg.backward(cd.linearInput, cd.linearLoss);
 
-    EXPECT_TRUE(is_elementwise_approx_eq(sg.get_loss_by_input_derivative(), dinput, 3e-5));
+    EXPECT_TRUE(is_elementwise_approx_eq(sg.get_loss_by_input_derivative(), dinput));
   }
 
 
