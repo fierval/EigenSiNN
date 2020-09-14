@@ -7,16 +7,23 @@ using namespace  Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, typename Device_ = DefaultDevice>
+  template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
   class Softmax : public LayerBase<Device_> {
   public:
     Softmax(const Device_& _device = DefaultDevice()) :
       LayerBase(_device)
       , inited(false)
-    {}
+    {
+      for (Index i = 0; i < Rank - 1; i++) {
+          reduction_axis[i] = i + 1;
+          reshape_dims[i] = 1;
+      }
+
+      reshape_dims[Rank - 1] = 1;
+    }
 
     void forward(std::any prev_layer_any) override {
-      Tensor<Scalar, 2> prev_layer = from_any<Scalar, 2>(prev_layer_any);
+      Tensor<Scalar, Rank> prev_layer = from_any<Scalar, Rank>(prev_layer_any);
       
       // we have never initialized or switched from train to test
       // initialize the "1" tensor used for sigmoid backprop
@@ -28,19 +35,20 @@ namespace EigenSinn {
       Tensor<Scalar, 0> layer_max;
       layer_max.device(device) = prev_layer.maximum();
 
-      Tensor<Scalar, 2> layer_max_broadcast(prev_layer.dimensions());
+      Tensor<Scalar, Rank> layer_max_broadcast(prev_layer.dimensions());
       layer_max_broadcast.setConstant(layer_max(0));
 
       exp_all.device(device) = (prev_layer - layer_max_broadcast).exp();
 
-      Tensor<Scalar, 0> exp_sum = exp_all.sum();
-      layer_output.device(device) = exp_all / exp_sum(0);
+      exp_sum.device(device) = exp_all.sum(reduction_axis);
+      exp_sum_broadcast.device(device) = exp_sum.reshape(reshape_dims).broadcast(broadcast_dims);
+
+      layer_output.device(device) = exp_all / exp_sum_broadcast;
     }
 
     void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
-      auto dout = from_any<Scalar, 2>(next_layer_grad_any);
+      auto dout = from_any<Scalar, Rank>(next_layer_grad_any);
 
-      layer_grad.device(device) = next_layer_grad * layer_output * (cronecker_delta - layer_output);
     }
 
     std::any get_output() override {
@@ -52,15 +60,24 @@ namespace EigenSinn {
     };
 
   private:
-    void init_cached(Eigen::Tensor<Scalar, 2>& prev_layer)
+    void init_cached(Eigen::Tensor<Scalar, Rank>& prev_layer)
     {
       layer_output.resize(prev_layer.dimensions());
       layer_grad.resize(prev_layer.dimensions());
       exp_all.resize(prev_layer.dimensions());
+      exp_sum.resize(prev_layer.dimension(0));
+
+      // broadcast the exp sum for future ops
+      broadcast_dims = prev_layer.dimensions();
+      broadcast_dims[0] = 1;
+      reshape_dims[0] = prev_layer.dimension(0);
     }
 
     bool inited;
-    Tensor<Scalar, 2> layer_output, layer_grad, exp_all;
+    Tensor<Scalar, Rank> layer_output, layer_grad, exp_all, exp_sum_broadcast;
+    Tensor<Scalar, 1> exp_sum;
+    array<Index, Rank - 1> reduction_axis;
+    array<Index, Rank> broadcast_dims, reshape_dims;
   };
 
 
