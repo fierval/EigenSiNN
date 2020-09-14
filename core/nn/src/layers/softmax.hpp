@@ -67,10 +67,12 @@ namespace EigenSinn {
       layer_grad.resize(prev_layer.dimensions());
       exp_all.resize(prev_layer.dimensions());
       exp_sum.resize(prev_layer.dimension(0));
+      exp_sum_broadcast.resize(prev_layer.dimensions());
 
       // broadcast the exp sum for future ops
       broadcast_dims = prev_layer.dimensions();
       broadcast_dims[0] = 1;
+
       reshape_dims[0] = prev_layer.dimension(0);
     }
 
