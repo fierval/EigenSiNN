@@ -12,16 +12,13 @@ using namespace  Eigen;
 
 namespace EigenSinn {
 
-  // NHWC format
-  // For Linear (fully connected) layers: (N, C)
-  // N - batch size
-  // C - number of channels (1 for fully connected layers)
   template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
   class Dropout : public LayerBase<Device_> {
   public:
 
-    Dropout(const Device_& _device = DefaultDevice())
+    Dropout(float _prob = 0.5, const Device_& _device = DefaultDevice())
       : LayerBase(_device)
+      , prob(_prob)
       , is_training(false)
       , inited(false) {
     }
@@ -35,6 +32,7 @@ namespace EigenSinn {
       layer_output.resize(x.dimensions());
       mask.resize(x.dimensions());
 
+      // to move things along faster, flatten the mask
       flat_dim = std::accumulate(begin(mask.dimensions()), end(mask.dimensions()), 1, std::multiplies<Index>());
       range.resize(flat_dim);
       std::iota(begin(range), end(range), 0);
@@ -50,11 +48,19 @@ namespace EigenSinn {
       
       if (!is_training) { return; }
 
+      /*
       TensorMap<Tensor<byte, 1>> flat_mask(mask.data(), flat_dim);
+      std::random_device rd;
+      std::mt19937_64 gen(rd());
+      std::uniform_real_distribution<> dis(0.0, 1.0);
 
-      std::for_each(std::execution::par, begin(range), end(range), [&](Index i) {
-        flat_mask[i] = std::rand() & 0x1;
+      std::for_each(begin(range), end(range), [&](Index i) {
+        flat_mask[i] = dis(gen) >= prob ? 1 : 0;
         });
+      */
+
+      mask.device(device) = mask.random<Eigen::internal::UniformRandomGenerator<float>>() / std::numeric_limits<float>::max;
+      mask.device(device) = (mask >= prob).cast<byte>();
 
       layer_output.device(device) = mask * x;
     }
@@ -91,6 +97,7 @@ namespace EigenSinn {
     bool is_training, inited;
     Index flat_dim;
     std::vector<Index> range;
+    const float prob;
   };
 
 }
