@@ -20,7 +20,7 @@ namespace EigenSinn {
     Dropout(float _prob = 0.5, const Device_& _device = DefaultDevice())
       : LayerBase(_device)
       , prob(_prob)
-      , is_training(false)
+      , is_training(true)
       , inited(false) {
     }
 
@@ -32,40 +32,38 @@ namespace EigenSinn {
       layer_gradient.resize(x.dimensions());
       layer_output.resize(x.dimensions());
       mask.resize(x.dimensions());
-
-      // to move things along faster, flatten the mask
-      flat_dim = std::accumulate(begin(mask.dimensions()), end(mask.dimensions()), 1, std::multiplies<Index>());
-      range.resize(flat_dim);
-      std::iota(begin(range), end(range), 0);
       rands.resize(x.dimensions());
+
+      if_tensor.resize(x.dimensions());
+      
+      then_tensor.resize(x.dimensions());
+      then_tensor.setConstant(1. / (1. - prob));
+
+      else_tensor.resize(x.dimensions());
+      else_tensor.setZero();
+
+      prob_tensor.resize(x.dimensions());
+      prob_tensor.setConstant(prob);
     }
 
     void forward(std::any prev_layer) override {
-      Tensor<Scalar, Rank> x = from_any<Scalar, Rank>(prev_layer);
       
-      if (!inited || x.dimension(0) != layer_output.dimension(0)) {
+      if (!is_training) { return; }
+      
+      Tensor<Scalar, Rank> x = from_any<Scalar, Rank>(prev_layer);
+
+      if (!inited) {
         inited = true;
         init(x);
       }
-      
-      if (!is_training) { return; }
 
-      /*
-      TensorMap<Tensor<byte, 1>> flat_mask(mask.data(), flat_dim);
-      std::random_device rd;
-      std::mt19937_64 gen(rd());
-      std::uniform_real_distribution<> dis(0.0, 1.0);
-
-      std::for_each(begin(range), end(range), [&](Index i) {
-        flat_mask[i] = dis(gen) >= prob ? 1 : 0;
-        });
-      */
-
-      
+      // generate random uniform values
       rands.setRandom<internal::UniformRandomGenerator<float>>();
-      rands.device(device) = rands / FLT_MAX;
+            
+      // create condition
+      if_tensor.device(device) = rands >= prob_tensor;
+      mask.device(device) = if_tensor.select(then_tensor, else_tensor);
 
-      mask.device(device) = (rands > prob).cast<int>().cast<Scalar>();
       layer_output.device(device) = mask * x;
     }
 
@@ -98,10 +96,9 @@ namespace EigenSinn {
   private:
     Tensor<Scalar, Rank> mask;
     Tensor<Scalar, Rank> layer_output, layer_gradient;
-    Tensor<float, Rank> rands;
+    Tensor<bool, Rank> if_tensor;
+    Tensor<float, Rank> rands, then_tensor, else_tensor, prob_tensor;
     bool is_training, inited;
-    Index flat_dim;
-    std::vector<Index> range;
     const float prob;
   };
 
