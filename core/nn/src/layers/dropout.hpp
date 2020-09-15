@@ -7,6 +7,7 @@
 #include <execution>
 #include <numeric>
 #include <vector>
+#include <limits>
 
 using namespace  Eigen;
 
@@ -36,6 +37,7 @@ namespace EigenSinn {
       flat_dim = std::accumulate(begin(mask.dimensions()), end(mask.dimensions()), 1, std::multiplies<Index>());
       range.resize(flat_dim);
       std::iota(begin(range), end(range), 0);
+      rands.resize(x.dimensions());
     }
 
     void forward(std::any prev_layer) override {
@@ -59,9 +61,11 @@ namespace EigenSinn {
         });
       */
 
-      mask.device(device) = mask.random<Eigen::internal::UniformRandomGenerator<float>>() / std::numeric_limits<float>::max;
-      mask.device(device) = (mask >= prob).cast<byte>();
+      
+      rands.setRandom<internal::UniformRandomGenerator<float>>();
+      rands.device(device) = rands / FLT_MAX;
 
+      mask.device(device) = (rands > prob).cast<int>().cast<Scalar>();
       layer_output.device(device) = mask * x;
     }
 
@@ -92,8 +96,9 @@ namespace EigenSinn {
     }
 
   private:
-    Tensor<byte, Rank> mask;
+    Tensor<Scalar, Rank> mask;
     Tensor<Scalar, Rank> layer_output, layer_gradient;
+    Tensor<float, Rank> rands;
     bool is_training, inited;
     Index flat_dim;
     std::vector<Index> range;
