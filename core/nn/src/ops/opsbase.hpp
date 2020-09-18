@@ -13,6 +13,7 @@
 #include <cmath>
 #include <numeric>
 #include <execution>
+#include <type_traits>
 
 using namespace Eigen;
 
