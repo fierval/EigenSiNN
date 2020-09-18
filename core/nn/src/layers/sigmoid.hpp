@@ -11,7 +11,7 @@ namespace EigenSinn {
   class Sigmoid : public LayerBase<Device_> {
   public:
     // leaky relu if necessary
-    Sigmoid(const Device_& _device = DefaultDevice()) :
+    Sigmoid(Dispatcher<Device_>& _device =  LayerBase::default_dispatcher) :
       LayerBase(_device)
       , inited(false)
     {}
@@ -26,14 +26,14 @@ namespace EigenSinn {
         init_cached(prev_layer);
       }
 
-      layer_output.device(device) = prev_layer.sigmoid();
+      layer_output.device(dispatcher.get_device()) = prev_layer.sigmoid();
     }
 
 
     void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
       auto next_layer_grad = from_any<Scalar, Rank>(next_layer_grad_any);
 
-      layer_grad.device(device) = next_layer_grad * layer_output * (ones - layer_output);
+      layer_grad.device(dispatcher.get_device()) = next_layer_grad * layer_output * (ones - layer_output);
     }
 
     std::any get_output() override {

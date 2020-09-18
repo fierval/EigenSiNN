@@ -11,7 +11,7 @@ namespace EigenSinn {
   class Flatten : public LayerBase<Device_> {
 
   public:
-    Flatten(const Device_& _device) : LayerBase(_device){}
+    Flatten(Dispatcher<Device_>& _device =  LayerBase::default_dispatcher) : LayerBase(_device){}
 
     void forward(std::any prev_layer_any) {
       

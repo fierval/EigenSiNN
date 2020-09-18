@@ -21,7 +21,7 @@ namespace EigenSinn {
   class Linear : public LayerBase<Device_> {
 
   public:
-    Linear(int _in_dim, int _out_dim, const Device_& _device = DefaultDevice()) :
+    Linear(int _in_dim, int _out_dim, Dispatcher<Device_>& _device =  LayerBase::default_dispatcher) :
       LayerBase(_device),
       layer_output(1, _out_dim),
       layer_grad_loss_by_input(1, _in_dim),
@@ -49,10 +49,10 @@ namespace EigenSinn {
         layer_grad_loss_by_input.resize(batch_size, layer_grad_loss_by_input.dimension(1));
       }
 
-      layer_output.device(device) = prev_layer_tensor.contract(weights, prod_dims);
+      layer_output.device(dispatcher.get_device()) = prev_layer_tensor.contract(weights, prod_dims);
 
       // bias: [1, M]
-      layer_output.device(device) += bias.reshape(array<Index, 2>{ 1, bias.dimension(0) }).broadcast(broadcast_bias_dim);
+      layer_output.device(dispatcher.get_device()) += bias.reshape(array<Index, 2>{ 1, bias.dimension(0) }).broadcast(broadcast_bias_dim);
     }
 
     // next_layer_grad: delta[l+1] = dL/dX[l+1], dims: [N, M] (same as X[l+1])
@@ -64,14 +64,14 @@ namespace EigenSinn {
       // this will be fed to the previous backprop layer as the delta parameter
       // dL/dX = dim delta[l+1] * w.T: [N, M] * [M, D] -> [N, D] (same as X[l-1])
       ProductDims prod_dims = { IndexPair<int>(1, 1) };
-      layer_grad_loss_by_input.device(device) = next_layer_grad.contract(weights, prod_dims);
+      layer_grad_loss_by_input.device(dispatcher.get_device()) = next_layer_grad.contract(weights, prod_dims);
 
       //dl/dW = dim X[l].T * delta[l+1]: [D, N] * [N, M] -> [D, M], same as W
       prod_dims = { IndexPair<int>(0, 0) };
-      layer_grad_loss_by_weight.device(device) = prev_layer.contract(next_layer_grad, prod_dims);
+      layer_grad_loss_by_weight.device(dispatcher.get_device()) = prev_layer.contract(next_layer_grad, prod_dims);
 
       //db: dL/dY * dY/db = sum_j(dL/dY_j) dim: [1, M], same as bias
-      loss_by_bias_derivative.device(device) = next_layer_grad.sum(reduce_bias_dim);
+      loss_by_bias_derivative.device(dispatcher.get_device()) = next_layer_grad.sum(reduce_bias_dim);
     }
 
     void init(const Tensor<Scalar, 2>& _weights) {
@@ -91,7 +91,7 @@ namespace EigenSinn {
       }
 
       //weights of dimension (D, M)
-      weights = generate_xavier<Scalar, 2>(array<Index, 2>{in_dim, out_dim}, device);
+      weights = generate_xavier<Scalar, 2>(array<Index, 2>{in_dim, out_dim}, dispatcher.get_device());
       bias = bias.setZero();
     }
 

@@ -17,7 +17,7 @@ namespace EigenSinn {
   class Dropout : public LayerBase<Device_> {
   public:
 
-    Dropout(float _prob = 0.5, const Device_& _device = DefaultDevice())
+    Dropout(float _prob = 0.5, Dispatcher<Device_>& _device =  LayerBase::default_dispatcher)
       : LayerBase(_device)
       , prob(_prob)
       , is_training(true)
@@ -61,10 +61,10 @@ namespace EigenSinn {
       rands.setRandom<internal::UniformRandomGenerator<float>>();
             
       // create condition
-      if_tensor.device(device) = rands >= prob_tensor;
-      mask.device(device) = if_tensor.select(then_tensor, else_tensor);
+      if_tensor.device(dispatcher.get_device()) = rands >= prob_tensor;
+      mask.device(dispatcher.get_device()) = if_tensor.select(then_tensor, else_tensor);
 
-      layer_output.device(device) = mask * x;
+      layer_output.device(dispatcher.get_device()) = mask * x;
     }
 
     // for derivations
@@ -74,7 +74,7 @@ namespace EigenSinn {
 
       if (!is_training) { return; }
 
-      layer_gradient.device(device) = mask * next_layer_grad;
+      layer_gradient.device(dispatcher.get_device()) = mask * next_layer_grad;
     }
 
     std::any get_output() override {

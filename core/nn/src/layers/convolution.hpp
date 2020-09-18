@@ -13,7 +13,8 @@ namespace EigenSinn {
 
   public:
 
-    Conv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const Index _stride = 1, const Device_& _device = DefaultDevice()) :
+    Conv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const Index _stride = 1,
+      Dispatcher<Device_>& _device = LayerBase::default_dispatcher) :
       LayerBase(_device)
       , kernel(kernelDims)
       , padding(_padding)
@@ -27,7 +28,7 @@ namespace EigenSinn {
     // TODO: this needs to be implemented for real
     // Also strides and padding should be added
     void init() override {
-      kernel = generate_xavier<Scalar, 4>(kernel.dimensions(), device);
+      kernel = generate_xavier<Scalar, 4>(kernel.dimensions(), dispatcher.get_device());
       bias.setZero();
     }
 
@@ -39,7 +40,7 @@ namespace EigenSinn {
     void forward(std::any prev_layer_any) override {
 
       Tensor<Scalar, 4> prev_layer = std::any_cast<Tensor<Scalar, 4>&>(prev_layer_any);
-      layer_output = convolve(prev_layer, kernel, padding, stride, device);
+      layer_output = convolve(prev_layer, kernel, padding, stride, dispatcher.get_device());
 
 
       //add bias to each channel
@@ -48,7 +49,7 @@ namespace EigenSinn {
 
       // one bias per filter
       Tensor<Scalar, 4> reshaped = bias.reshape(array<Index, 4>{ 1, kernel.dimension(0), 1, 1 });
-      layer_output.device(device) += reshaped.broadcast(bias_broadcast);
+      layer_output.device(dispatcher.get_device()) += reshaped.broadcast(bias_broadcast);
 
     }
 
@@ -61,7 +62,7 @@ namespace EigenSinn {
 
       // flatten weights and kernel
       Tensor<Scalar, 2> unf_kernel = unfold_kernel(kernel);
-      Tensor<Scalar, 2> x_col = im2col(prev_layer, kernel.dimensions(), padding, stride, device);
+      Tensor<Scalar, 2> x_col = im2col(prev_layer, kernel.dimensions(), padding, stride, dispatcher.get_device());
 
       // dX: kernel.T * dout
       ProductDims prod_dims = { IndexPair<int>(0, 0) };
@@ -77,7 +78,7 @@ namespace EigenSinn {
 
       //bias
       loss_by_bias_derivative.resize(next_layer_grad.dimension(1));
-      loss_by_bias_derivative.device(device) = next_layer_grad.sum(array<Index, 3>{0, 2, 3});
+      loss_by_bias_derivative.device(dispatcher.get_device()) = next_layer_grad.sum(array<Index, 3>{0, 2, 3});
     }
 
     std::any get_loss_by_input_derivative() override {

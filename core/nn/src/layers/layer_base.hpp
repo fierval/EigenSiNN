@@ -1,13 +1,14 @@
 #pragma once
 
 #include <unsupported/Eigen/CXX11/Tensor>
-#include <any>
+#include <ops/opsbase.hpp>
+#include <ops/threadingdevice.hpp>
 
 using namespace Eigen;
 
 namespace EigenSinn {
 
-  template <typename Device_ = DefaultDevice>
+  template <typename Device_ = Dispatcher<DefaultDevice>>
   class LayerBase {
 
   public:
@@ -18,7 +19,7 @@ namespace EigenSinn {
     virtual void backward(std::any prev_layer, std::any next_layer_grad) = 0;
 
     virtual  std::any get_weights() { return std::any(); }
-    
+
     virtual  std::any get_bias() { return std::any(); }
 
     virtual void set_weights(const std::any _weights) {}
@@ -35,10 +36,16 @@ namespace EigenSinn {
 
     virtual  bool has_bias() { return false; }
 
-  protected:
-    const Device_& device;
+    bool is_gpu() { return device.is_gpu(); }
 
-    LayerBase(const Device_& _device) : device(_device) {}
+    inline static Dispatcher<DefaultDevice> default_dispatcher = Dispatcher<DefaultDevice>();
+
+  protected:
+    Dispatcher<Device_>& dispatcher;
+
+    LayerBase(Dispatcher<Device_>& _dispatcher) : dispatcher(_dispatcher) { 
+    }
 
   };
+
 }

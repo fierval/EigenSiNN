@@ -11,7 +11,7 @@ namespace EigenSinn {
   class Tanh : public LayerBase<Device_> {
   public:
     // leaky relu if necessary
-    Tanh(const Device_& _device = DefaultDevice()) :
+    Tanh(Dispatcher<Device_>& _device =  LayerBase::default_dispatcher) :
       LayerBase(_device)
       , inited(false)
     {}
@@ -26,14 +26,14 @@ namespace EigenSinn {
         init_cached(prev_layer);
       }
 
-      layer_output.device(device) = prev_layer.tanh();
+      layer_output.device(dispatcher.get_device()) = prev_layer.tanh();
     }
 
 
     void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
       auto next_layer_grad = from_any<Scalar, Rank>(next_layer_grad_any);
 
-      layer_grad.device(device) = next_layer_grad * (ones - layer_output.pow(2.));
+      layer_grad.device(dispatcher.get_device()) = next_layer_grad * (ones - layer_output.pow(2.));
     }
 
     std::any get_output() override {

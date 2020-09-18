@@ -15,7 +15,8 @@ namespace EigenSinn {
   class BatchNormalizationLayer : public LayerBase<Device_> {
   public:
 
-    BatchNormalizationLayer(Index num_features, float _eps = 1e-5, float _momentum = 0.9, bool _is_training = true, const Device_& _device = DefaultDevice())
+    BatchNormalizationLayer(Index num_features, float _eps = 1e-5, float _momentum = 0.9, bool _is_training = true, 
+      Dispatcher<Device_>& _device = LayerBase::default_dispatcher)
       : LayerBase(_device)
       , beta(num_features)
       , gamma(num_features)
@@ -48,7 +49,7 @@ namespace EigenSinn {
       Tensor<Scalar, Rank> prev_layer = from_any<Scalar, Rank>(prev_layer_any);
 
       std::tie(layer_output, xhat, running_mean, running_variance, mu, var) =
-        batch_norm(prev_layer, gamma, beta, eps, momentum, running_mean, running_variance, is_training, device);
+        batch_norm(prev_layer, gamma, beta, eps, momentum, running_mean, running_variance, is_training, dispatcher.get_device());
     }
 
     // see https://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html
@@ -72,8 +73,8 @@ namespace EigenSinn {
       std::tie(reduction_dims, broadcast_dims) = get_broadcast_and_reduction_dims(dout);
 
       //broadcast values
-      Tensor<Scalar, Rank> broadcast_mean = broadcast_as_last_dim(mu, broadcast_dims, device);
-      Tensor<Scalar, Rank> broadcast_var = broadcast_as_last_dim(var, broadcast_dims, device);
+      Tensor<Scalar, Rank> broadcast_mean = broadcast_as_last_dim(mu, broadcast_dims, dispatcher.get_device());
+      Tensor<Scalar, Rank> broadcast_var = broadcast_as_last_dim(var, broadcast_dims, dispatcher.get_device());
       Tensor<Scalar, Rank> xmu = (prev_layer - broadcast_mean);
 
       // Step 9
@@ -82,47 +83,47 @@ namespace EigenSinn {
 
       // Step 8
       // dgamma = sum (dout * y, reduced by all dims except channel)
-      Tensor<Scalar, Rank> gamma_broad = broadcast_as_last_dim(gamma, broadcast_dims, device);
+      Tensor<Scalar, Rank> gamma_broad = broadcast_as_last_dim(gamma, broadcast_dims, dispatcher.get_device());
       Tensor<Scalar, Rank> dxhat(dout.dimensions());
 
-      dxhat.device(device) = dout * gamma_broad;
-      dgamma.device(device) = (dout * xhat).sum(reduction_dims);
+      dxhat.device(dispatcher.get_device()) = dout * gamma_broad;
+      dgamma.device(dispatcher.get_device()) = (dout * xhat).sum(reduction_dims);
 
       // Step 7
       // d_inv_std
       //TensorSingleDim d_inv_std = (dxhat * xmu).sum(reduction_dims);
       Tensor<Scalar, Rank> dxmu1(dxhat.dimensions());
-      dxmu1.device(device) = dxhat * (1. / (broadcast_var + eps).sqrt());
+      dxmu1.device(dispatcher.get_device()) = dxhat * (1. / (broadcast_var + eps).sqrt());
 
       // Step 6
       // TensorSingleDim d_std = -d_inv_std / (running_var + eps);
 
       // Step 5
       Tensor<Scalar, 1> d_var(var.dimensions());
-      d_var.device(device) = -0.5 * (dxhat * xmu).sum(reduction_dims) / (var + eps).pow(3. / 2.);
+      d_var.device(dispatcher.get_device()) = -0.5 * (dxhat * xmu).sum(reduction_dims) / (var + eps).pow(3. / 2.);
 
       // Step 4
       Tensor<Scalar, Rank> d_sq(dout.dimensions());
-      d_sq.device(device) = 1. / total_channel * broadcast_as_last_dim<Scalar, Rank>(d_var, broadcast_dims, device);
+      d_sq.device(dispatcher.get_device()) = 1. / total_channel * broadcast_as_last_dim<Scalar, Rank>(d_var, broadcast_dims, dispatcher.get_device());
 
       // Step 3
       Tensor<Scalar, Rank> dxmu2(d_sq.dimensions());
-      dxmu2.device(device) = 2 * xmu * d_sq;
+      dxmu2.device(dispatcher.get_device()) = 2 * xmu * d_sq;
 
       // step 2
       Tensor<Scalar, Rank> dx1(dxmu1.dimensions());
-      dx1.device(device) = dxmu1 + dxmu2;
+      dx1.device(dispatcher.get_device()) = dxmu1 + dxmu2;
       Tensor<Scalar, 1> dmu(dout.dimension(1));
 
-      dmu.device(device) = -dx1.sum(reduction_dims);
+      dmu.device(dispatcher.get_device()) = -dx1.sum(reduction_dims);
 
       // step 1
       Tensor<Scalar, Rank> dx2(dout.dimensions());
-      dx2.device(device) = 1. / total_channel * broadcast_as_last_dim<Scalar, Rank>(dmu, broadcast_dims, device);
+      dx2.device(dispatcher.get_device()) = 1. / total_channel * broadcast_as_last_dim<Scalar, Rank>(dmu, broadcast_dims, dispatcher.get_device());
 
       // step 0
       layer_gradient.resize(dout.dimensions());
-      layer_gradient.device(device) = dx1 + dx2;
+      layer_gradient.device(dispatcher.get_device()) = dx1 + dx2;
     }
 
     std::any get_output() {

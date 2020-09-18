@@ -11,7 +11,7 @@ namespace EigenSinn {
   class LeakyReLU : public LayerBase<Device_> {
   public:
     // leaky relu if necessary
-    LeakyReLU(float _thresh = 0.01, const Device_ & _device = DefaultDevice()) : 
+    LeakyReLU(float _thresh = 0.01, Dispatcher<Device_>& _device =  LayerBase::default_dispatcher) :
       LayerBase(_device)
       ,thresh(_thresh) {
 
@@ -25,7 +25,7 @@ namespace EigenSinn {
     }
 
     void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
-      layer_grad = leaky_relu_back(from_any<Scalar, Rank>(next_layer_grad_any), mask, device);
+      layer_grad = leaky_relu_back(from_any<Scalar, Rank>(next_layer_grad_any), mask, dispatcher.get_device());
     }
 
     std::any get_output() override {
@@ -46,7 +46,7 @@ namespace EigenSinn {
   template<typename Scalar, Index Rank, typename Device_ = DefaultDevice>
   class ReLU : public LeakyReLU<Scalar, Rank, Device_> {
   public:
-    ReLU(const Device_& _device = DefaultDevice()) : LeakyReLU(0, _device) {}
+    ReLU(Dispatcher<Device_>& _device = LayerBase::default_dispatcher) : LeakyReLU(0, _device) {}
   };
 
 }

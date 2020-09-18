@@ -16,7 +16,8 @@ namespace EigenSinn {
   class MaxPooling : public LayerBase<Device_> {
   public:
 
-    MaxPooling(const array<Index, Rank / 2>& _extents, Index _stride, const Device_& _device = DefaultDevice())
+    MaxPooling(const array<Index, Rank / 2>& _extents, Index _stride, 
+      Dispatcher<Device_>& _device =  LayerBase::default_dispatcher)
       : extents(_extents)
       , LayerBase(_device)
       , stride(_stride)
@@ -31,7 +32,7 @@ namespace EigenSinn {
 
     void forward(std::any prev_layer) override {
       Tensor<Scalar, Rank> x = from_any<Scalar, Rank>(prev_layer);
-      auto res = max_pooler.do_max_pool(x, extents, stride, device);
+      auto res = max_pooler.do_max_pool(x, extents, stride, dispatcher.get_device());
 
       original_dimensions = x.dimensions();
       layer_output = res.first;

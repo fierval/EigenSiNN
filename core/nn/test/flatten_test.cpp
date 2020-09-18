@@ -25,8 +25,7 @@ namespace EigenSinnTest {
 
   TEST_F(FlatLayer, Flat) {
 
-    DefaultDevice device;
-    Flatten<float> conv2d(device);
+    Flatten<float> conv2d;
 
     conv2d.forward(cd.convInput);
 

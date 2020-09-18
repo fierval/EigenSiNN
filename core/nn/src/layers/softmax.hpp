@@ -10,7 +10,7 @@ namespace EigenSinn {
   template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
   class Softmax : public LayerBase<Device_> {
   public:
-    Softmax(const Device_& _device = DefaultDevice()) :
+    Softmax(Dispatcher<Device_>& _device =  LayerBase::default_dispatcher) :
       LayerBase(_device)
       , inited(false)
     {
@@ -34,38 +34,38 @@ namespace EigenSinn {
 
       // reliable softmax
       Tensor<Scalar, 0> layer_max;
-      layer_max.device(device) = prev_layer.maximum();
+      layer_max.device(dispatcher.get_device()) = prev_layer.maximum();
 
       Tensor<Scalar, Rank> layer_max_broadcast(prev_layer.dimensions());
       layer_max_broadcast.setConstant(layer_max(0));
 
-      exp_all.device(device) = (prev_layer - layer_max_broadcast).exp();
+      exp_all.device(dispatcher.get_device()) = (prev_layer - layer_max_broadcast).exp();
 
-      exp_sum.device(device) = exp_all.sum(reduction_axes);
-      exp_sum_broadcast.device(device) = exp_sum.reshape(reshape_dims).broadcast(broadcast_dims);
+      exp_sum.device(dispatcher.get_device()) = exp_all.sum(reduction_axes);
+      exp_sum_broadcast.device(dispatcher.get_device()) = exp_sum.reshape(reshape_dims).broadcast(broadcast_dims);
 
-      layer_output.device(device) = exp_all / exp_sum_broadcast;
+      layer_output.device(dispatcher.get_device()) = exp_all / exp_sum_broadcast;
     }
 
     void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
       auto dout = from_any<Scalar, Rank>(next_layer_grad_any);
 
       Tensor<Scalar, Rank> d_mul_exp(dims);
-      d_mul_exp.device(device) = dout / exp_sum_broadcast;
+      d_mul_exp.device(dispatcher.get_device()) = dout / exp_sum_broadcast;
 
       Tensor<Scalar, 1> d_mul_inv_x(dims[0]);
-      d_mul_inv_x.device(device) = (exp_all * dout).sum(reduction_axes);
+      d_mul_inv_x.device(dispatcher.get_device()) = (exp_all * dout).sum(reduction_axes);
 
       Tensor<Scalar, 1> d_inv(dims[0]);
-      d_inv.device(device) = -1. / exp_sum.pow(2) * d_mul_inv_x;
+      d_inv.device(dispatcher.get_device()) = -1. / exp_sum.pow(2) * d_mul_inv_x;
 
       Tensor<Scalar, Rank> d_sum_exp(dims);
-      d_sum_exp.device(device) = d_inv.reshape(reshape_dims).broadcast(broadcast_dims);
+      d_sum_exp.device(dispatcher.get_device()) = d_inv.reshape(reshape_dims).broadcast(broadcast_dims);
 
       Tensor<Scalar, Rank> d_exp(dims);
-      d_exp.device(device) = d_mul_exp + d_sum_exp;
+      d_exp.device(dispatcher.get_device()) = d_mul_exp + d_sum_exp;
 
-      layer_grad.device(device) = exp_all * d_exp;
+      layer_grad.device(dispatcher.get_device()) = exp_all * d_exp;
     }
 
     std::any get_output() override {
