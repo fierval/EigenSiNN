@@ -141,7 +141,7 @@ inline void optimizer(const Network& network) {
 
 }
 
-inline auto create_network(int num_classes, float learning_rate, const ThreadPoolDevice& device) {
+inline auto create_network(int num_classes, float learning_rate, Dispatcher<ThreadPoolDevice>& device) {
 
   Network network;
 
