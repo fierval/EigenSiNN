@@ -5,8 +5,6 @@
 #include <cuda_runtime.h>
 #include <cudnn.h>
 
-#define EIGEN_DEFAULT_DENSE_INDEX_TYPE int;
-
 using namespace Eigen;
 
 #define cudaCheckError() {                                          \

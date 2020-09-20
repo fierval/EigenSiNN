@@ -11,6 +11,11 @@ inline auto is_elementwise_approx_eq(Tensor<Scalar, Dim> a, Tensor<Scalar, Dim> 
   return res(0) <= prec;
 }
 
+#ifdef EIGEN_DEFAULT_DENSE_INDEX_TYPE
+#undef EIGEN_DEFAULT_DENSE_INDEX_TYPE
+#endif
+#define EIGEN_DEFAULT_DENSE_INDEX_TYPE int;
+
 namespace EigenSinnTest {
 
   class CudaTest : public ::testing::Test {
