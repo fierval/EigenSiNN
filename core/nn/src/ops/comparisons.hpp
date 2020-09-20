@@ -3,6 +3,8 @@
 #include "opsbase.hpp"
 #include "conversions.hpp"
 
+using namespace Eigen;
+
 namespace EigenSinn {
 
   template <typename Scalar, Index Dim>

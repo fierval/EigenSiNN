@@ -1,6 +1,8 @@
 #pragma once
 #include "opsbase.hpp"
 
+using namespace Eigen;
+
 namespace EigenSinn {
   template<typename T>
   using  MatrixType = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
