@@ -6,7 +6,7 @@ project(EgenSiNN LANGUAGES CXX CUDA)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-set(CUDA_STANDARD 14)
+set(CUDA_STANDARD 17)
 
 include_directories("eigen")
 

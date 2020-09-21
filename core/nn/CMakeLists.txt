@@ -1,7 +1,3 @@
-set(OpenCV_DIR $ENV{OPENCV_INSTALL})
-
-find_package(OpenCV CONFIG REQUIRED)
-
 message(STATUS "Using C++${CMAKE_CXX_STANDARD}")
 
 get_filename_component(EIGEN_PATH "../eigen" ABSOLUTE)
@@ -25,8 +21,8 @@ set_property(TARGET ${TEST_EXE}
 # allow threadpool device
 target_compile_definitions(${TEST_EXE} PRIVATE EIGEN_USE_THREADS)
 
-target_include_directories(${TEST_EXE} PRIVATE "src" ${EIGEN_PATH} ${OpenCV_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
-target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${OpenCV_LIBS} )
+target_include_directories(${TEST_EXE} PRIVATE "src" ${EIGEN_PATH} ${Boost_INCLUDE_DIRS} ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+target_link_libraries(${TEST_EXE} PUBLIC gtest_main )
 
 # gtest specific
 set(gtest_force_shared_crt ON)
