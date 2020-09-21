@@ -2,7 +2,6 @@
 
 #include <unsupported/Eigen/CXX11/Tensor>
 
-#include <cuda_runtime.h>
 #include <cudnn.h>
 
 using namespace Eigen;
@@ -45,24 +44,22 @@ namespace EigenSinn {
     cudaMemcpy(dtensor_data, tensor_data, sizeof(Scalar) * t.size(), cudaMemcpyHostToDevice);
     cudaCheckError();
 
-    TensorMap<Tensor<Scalar, Dims, Outlayout>> gpu_tensor(dtensor_data, dims);
-    return gpu_tensor;
+    return dtensor_data;
   }
 
-  template<typename Scalar, int Dims, int Layout>
-  inline Tensor<Scalar, Dims, Layout> from_gpu(const Tensor<Scalar, Dims, Layout>& dt) {
-    
-    Scalar* data = (Scalar *)std::malloc(sizeof(Scalar) * dt.size());
-    cudaMemcpy((void*)data, dt.data(), sizeof(Scalar) * dt.size(), cudaMemcpyDeviceToHost);
+  template<typename Scalar>
+  inline Scalar * from_gpu(Scalar * dt, size_t size) {
+
+    Scalar* data = (Scalar*)std::malloc(sizeof(Scalar) * size);
+    cudaMemcpy((void*)data, dt, sizeof(Scalar) * size, cudaMemcpyDeviceToHost);
     cudaCheckError();
 
-    TensorMap<Tensor<Scalar, Dims, Layout>> out(data, dt.dimensions());
-    return out;
+    return data;
   }
 
-  template<typename Scalar, int Dims, int Layout>
-  inline void free_gpu(Tensor<Scalar, Dims, Layout>& t) {
+  template<typename Scalar>
+  inline void free_gpu(Scalar * d_data) {
 
-    cudaFree(t.data());
+    cudaFree(d_data);
   }
 }
