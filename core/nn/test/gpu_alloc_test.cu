@@ -1,15 +1,10 @@
 
 #include <gtest/gtest.h>
 #include "include/commondata2d.hpp"
+#include <ops/comparisons.hpp>
 #include <gpu/tensor.hpp>
 
 template <typename Scalar, int Dim>
-inline auto is_elementwise_approx_eq(Tensor<Scalar, Dim>& a, Tensor<Scalar, Dim>& b, float prec = 1e-5) {
-
-  Tensor<Scalar, Dim> diff = a - b;
-  Tensor<Scalar, 0> res = diff.abs().maximum();
-  return res(0) <= prec;
-}
 
 #ifdef EIGEN_DEFAULT_DENSE_INDEX_TYPE
 #undef EIGEN_DEFAULT_DENSE_INDEX_TYPE

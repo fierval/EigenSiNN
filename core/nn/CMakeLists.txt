@@ -14,7 +14,12 @@ find_package(Boost REQUIRED COMPONENTS graph)
 # build test exe
 add_executable(${TEST_EXE} ${TEST_SOURCES})
 
-set_property(TARGET ${TEST_EXE} PROPERTY CUDA_STANDARD 14)
+message(STATUS "CUDA Flags: ${CMAKE_CUDA_FLAGS}")
+
+# hack for cuda before cmake 3.18.3
+#if(${CMAKE_VERSION} VERSION_LESS "3.18.3")
+target_compile_options(${TEST_EXE} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--std=c++17>)
+#endif()
 
 set_property(TARGET ${TEST_EXE} 
              PROPERTY CUDA_SEPARABLE_COMPILATION ON)
