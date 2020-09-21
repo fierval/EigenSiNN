@@ -47,7 +47,7 @@ namespace EigenSinn {
     }
 
     Tensor<Scalar, Rank> weights(layer_dims);
-    weights.setRandom<internal::NormalRandomGenerator<Scalar>>();
+    weights.template setRandom<::internal::NormalRandomGenerator<Scalar>>();
     weights.device(device) = std * weights;
     return weights;
   }

@@ -36,8 +36,6 @@ namespace EigenSinn {
 
     virtual  bool has_bias() { return false; }
 
-    bool is_gpu() { return device.is_gpu(); }
-
     inline static Dispatcher<DefaultDevice> default_dispatcher = Dispatcher<DefaultDevice>();
 
   protected:

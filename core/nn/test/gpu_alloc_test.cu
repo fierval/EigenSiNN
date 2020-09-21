@@ -2,14 +2,7 @@
 #include <gtest/gtest.h>
 #include "include/commondata2d.hpp"
 #include <ops/comparisons.hpp>
-#include <gpu/tensor.hpp>
-
-template <typename Scalar, int Dim>
-
-#ifdef EIGEN_DEFAULT_DENSE_INDEX_TYPE
-#undef EIGEN_DEFAULT_DENSE_INDEX_TYPE
-#endif
-#define EIGEN_DEFAULT_DENSE_INDEX_TYPE int;
+#include <gpu/gpu_tensor.hpp>
 
 namespace EigenSinnTest {
 

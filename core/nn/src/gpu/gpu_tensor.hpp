@@ -3,6 +3,13 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 
 #include <cudnn.h>
+#include <vector>
+#include <algorithm>
+
+#ifdef EIGEN_DEFAULT_DENSE_INDEX_TYPE
+#undef EIGEN_DEFAULT_DENSE_INDEX_TYPE
+#endif
+#define EIGEN_DEFAULT_DENSE_INDEX_TYPE int
 
 using namespace Eigen;
 
@@ -34,6 +41,7 @@ namespace EigenSinn {
         rev[rev.size() - i - 1] = dims[i];
       }
       dims = rev;
+
       t_row = t. swap_layout().shuffle(dims);
       tensor_data = t.data();
     }
