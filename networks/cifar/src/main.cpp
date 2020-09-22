@@ -12,7 +12,7 @@ using namespace EigenSinn;
 using namespace Eigen;
 
 bool should_shuffle = true;
-bool explore_dataset = false;
+bool explore_dataset = true;
 bool debug_init = false;
 
 int main(int argc, char* argv[]) {
