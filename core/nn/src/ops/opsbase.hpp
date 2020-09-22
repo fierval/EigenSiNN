@@ -43,6 +43,16 @@ namespace EigenSinn {
     avg
   };
 
+  template<int Rank>
+  inline array<Index, Rank> reverse_dims(const array<Index, Rank>& dims) {
+    array<Index, Rank> rev;
+
+    for (Index i = rev.size() - 1; i > 0; i--) {
+      rev[rev.size() - i - 1] = i;
+    }
+
+    return rev;
+  }
 }
 
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <unsupported/Eigen/CXX11/Tensor>
-
+#include "ops/opsbase.hpp"
 #include <cudnn.h>
 #include <vector>
 #include <algorithm>
@@ -36,13 +36,9 @@ namespace EigenSinn {
       Tensor<Scalar, Dims, Eigen::RowMajor> t_row(t.dimensions());
 
       // reverse the dimensions
-      array<Index, Dims> rev = t.dimensions();
-      for (Index i = rev.size() - 1; i > 0; i--) {
-        rev[rev.size() - i - 1] = dims[i];
-      }
-      dims = rev;
+      array<Index, Dims> rev = reverse_dims(t.dimensions());
 
-      t_row = t. swap_layout().shuffle(dims);
+      t_row = t.swap_layout().shuffle(rev);
       tensor_data = t.data();
     }
 
@@ -55,14 +51,23 @@ namespace EigenSinn {
     return dtensor_data;
   }
 
-  template<typename Scalar>
-  inline Scalar * from_gpu(Scalar * dt, size_t size) {
+  template<typename Scalar, int Dims>
+  inline Tensor<Scalar, Dims> from_gpu(Scalar * dt, array<Index, Dims> dims) {
+
+    size_t size = 1;
+    for (Index i = 0; i < Dims; i++) { size *= dims[i]; }
 
     Scalar* data = (Scalar*)std::malloc(sizeof(Scalar) * size);
     cudaMemcpy((void*)data, dt, sizeof(Scalar) * size, cudaMemcpyDeviceToHost);
     cudaCheckError();
 
-    return data;
+    cudaFree(dt);
+    TensorMap<Tensor<Scalar, Dims, RowMajor>> out_map(data, dims);
+    Tensor<Scalar, Dims> out(dims);
+
+    array<Index, Dims> rev_dims = reverse_dims(dims);
+    out = out_map.swap_layout().shuffle(rev_dims);
+    return out;
   }
 
   template<typename Scalar>

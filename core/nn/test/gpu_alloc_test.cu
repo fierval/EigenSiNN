@@ -21,9 +21,6 @@ namespace EigenSinnTest {
 
     float * d_input = EigenSinn::to_gpu(cd.linearInput);
     TensorMap<Tensor<float, 2>> gpu_input(d_input, cd.linearInput.dimensions());
-    float* input = EigenSinn::from_gpu(gpu_input.data(), gpu_input.size());
-
-    EigenSinn::free_gpu(d_input);
-
+    Tensor<float, 2> input = EigenSinn::from_gpu(gpu_input.data(), gpu_input.dimensions());
   }
 }
