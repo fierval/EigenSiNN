@@ -24,7 +24,7 @@ using namespace Eigen;
 namespace EigenSinn {
 
   template<typename Scalar, int Dims, int Layout, int Outlayout = Layout>
-  inline auto to_gpu(Tensor<Scalar, Dims, Layout>& t) {
+  inline auto to_device(Tensor<Scalar, Dims, Layout>& t) {
 
     Scalar* tensor_data = t.data();
     Scalar* dtensor_data;
@@ -52,7 +52,7 @@ namespace EigenSinn {
   }
 
   template<typename Scalar, int Dims>
-  inline Tensor<Scalar, Dims> from_gpu(Scalar * dt, array<Index, Dims> dims) {
+  inline Tensor<Scalar, Dims> from_device(Scalar * dt, array<Index, Dims> dims) {
 
     size_t size = 1;
     for (Index i = 0; i < Dims; i++) { size *= dims[i]; }
