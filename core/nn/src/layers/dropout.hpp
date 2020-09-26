@@ -46,11 +46,15 @@ namespace EigenSinn {
       prob_tensor.setConstant(prob);
     }
 
-    void forward(std::any prev_layer) override {
+    void forward(LayerBase<Scalar, Device_>& prev_layer) override {
       
       if (!is_training) { return; }
+
+      if (are_dims_unset(prev_layer.get_out_dims())) {
+        set_dims(prev_layer.get_out_dims(), prev_layer.get_out_dims());
+      }
       
-      Tensor<Scalar, Rank> x = from_any<Scalar, Rank>(prev_layer);
+      TensorMap<Tensor<Scalar, Rank>> x(prev_layer.get_output(), vector2array<int, Rank>(in_dims));
 
       if (!inited) {
         inited = true;
@@ -68,21 +72,21 @@ namespace EigenSinn {
     }
 
     // for derivations
-    void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
+    void backward(LayerBase<Scalar, Device_>& prev_layer_any, LayerBase<Scalar, Device_>& next_layer_grad_any) override {
 
-      Tensor<Scalar, Rank> next_layer_grad = from_any<Scalar, Rank>(next_layer_grad_any);
+      TensorMap<Tensor<Scalar, Rank>> next_layer_grad(next_layer_grad_any.get_output(), vector2array<int, Rank>(out_dims));
 
       if (!is_training) { return; }
 
       layer_gradient.device(dispatcher.get_device()) = mask * next_layer_grad;
     }
 
-    std::any get_output() override {
-      return layer_output;
+    Scalar * get_output() override {
+      return layer_output.data();
     }
 
-    std::any get_loss_by_input_derivative() {
-      return layer_gradient;
+    Scalar * get_loss_by_input_derivative() {
+      return layer_gradient.data();
     }
 
     void set_training(bool _is_training) { 

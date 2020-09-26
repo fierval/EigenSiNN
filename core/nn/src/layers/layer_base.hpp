@@ -52,7 +52,8 @@ namespace EigenSinn {
     Dispatcher<Device_>& dispatcher;
     std::vector<int> in_dims, out_dims;
 
-    bool are_dims_unset() { return in_dims.size() == 0; }
+    bool are_dims_unset(const vector<int>& dims) { return in_dims.size() == 0 || dims[0] != in_dims[0]; }
+  
     LayerBase(Dispatcher<Device_>& _dispatcher) : dispatcher(_dispatcher) {
     }
 

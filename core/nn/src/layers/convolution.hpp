@@ -41,7 +41,7 @@ namespace EigenSinn {
 
       TensorMap<Tensor<Scalar, 4>> prev_layer(prev_layer_any.get_output(), vector2array<int, 4>(prev_layer_any.get_out_dims()));
 
-      if (are_dims_unset())
+      if (are_dims_unset(prev_layer_any.get_out_dims()))
       {
         set_in_dims(prev_layer_any.get_out_dims());
         auto _out_dims = get_output_dimensions(prev_layer, kernel, padding, stride);
@@ -89,37 +89,42 @@ namespace EigenSinn {
       loss_by_bias_derivative.device(dispatcher.get_device()) = next_layer_grad.sum(array<Index, 3>{0, 2, 3});
     }
 
-    std::any get_loss_by_input_derivative() override {
-      return dX;
+    Scalar * get_loss_by_input_derivative() override {
+      return dX.data();
     }
 
     // feed to optimizer
-    std::any get_loss_by_weights_derivative() override {
-      return dW;
+    Scalar * get_loss_by_weights_derivative() override {
+      return dW.data();
     }
 
-    std::any get_output() override {
-      return layer_output;
+    Scalar * get_output() override {
+      return layer_output.data();
     }
 
-    std::any get_weights() override {
-      return kernel;
+    Scalar * get_weights() override {
+      return kernel.data();
     }
 
-    std::any get_bias() override {
-      return bias;
+    Scalar * get_bias() override {
+      return bias.data();
     }
 
-    std::any get_loss_by_bias_derivative() override {
-      return loss_by_bias_derivative;
+    Scalar * get_loss_by_bias_derivative() override {
+      return loss_by_bias_derivative.data();
     }
 
-    void set_weights(const std::any _weights) override {
-      kernel = from_any<Scalar, 4>(_weights);
+    void set_weights(const Scalar * _weights) override {
+
+      // TODO: Will be different for CUDA
+      TensorMap <Tensor<Scalar, Rank>> out(_weights, kernel.dimensions());
+      kernel = out;
     }
 
-    void set_bias(const std::any _bias) override {
-      bias = from_any<Scalar, 1>(_bias);
+    void set_bias(const Scalar * _bias) override {
+
+      TensorMap <Tensor<Scalar, Rank>> out(_bias, kernel.dimensions());
+      bias = out;
     }
 
 

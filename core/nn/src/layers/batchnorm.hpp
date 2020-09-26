@@ -47,7 +47,7 @@ namespace EigenSinn {
 
     void forward(LayerBase<Scalar, Device_>& prev_layer_base) override {
 
-      if (are_dims_unset())
+      if (are_dims_unset(prev_layer_base.get_out_dims()))
       {
         set_dims(prev_layer_base.get_out_dims(), prev_layer_base.get_out_dims());
       }
@@ -166,13 +166,13 @@ namespace EigenSinn {
     }
 
     void set_weights(const Scalar * _weights) override {
-      
+      // TODO: Will be different for CUDA
       TensorMap <Tensor<Scalar, Rank>> out(_weights, gamma.dimensions());
       gamma = out;
     }
 
     void set_bias(const Scalar * _bias) override {
-
+      // TODO: Will be different for CUDA
       TensorMap <Tensor<Scalar, Rank>> out(_bias, beta.dimensions());
       beta = out;
     }
