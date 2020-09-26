@@ -45,7 +45,7 @@ namespace EigenSinn {
       gamma = _gamma;
     }
 
-    void forward(Scalar * prev_layer_base) override {
+    void forward(LayerBase<Scalar, Device_>& prev_layer_base) override {
 
       if (are_dims_unset())
       {
@@ -60,10 +60,10 @@ namespace EigenSinn {
 
     // see https://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html
     // for derivations
-    void backward(Scalar * prev_layer_any, Scalar * next_layer_grad_any) override {
+    void backward(LayerBase<Scalar, Device_>& prev_layer_any, LayerBase<Scalar, Device_>& next_layer_grad_any) override {
 
-      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_any, vector2array(in_dims));
-      TensorMap<Tensor<Scalar, Rank>> dout(next_layer_grad_any, vector2array(out_dims));
+      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_any.get_output(), vector2array(in_dims));
+      TensorMap<Tensor<Scalar, Rank>> dout(next_layer_grad_any.get_output(), vector2array(out_dims));
 
       array<Index, Rank - 1> reduction_dims;
       array<Index, Rank> broadcast_dims;

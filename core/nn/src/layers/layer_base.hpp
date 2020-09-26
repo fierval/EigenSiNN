@@ -15,9 +15,9 @@ namespace EigenSinn {
   public:
     virtual void init() {};
 
-    virtual void forward(Scalar * prev_layer_base) = 0;
+    virtual void forward(LayerBase<Scalar, Device_>& prev_layer_base) = 0;
 
-    virtual void backward(Scalar * prev_layer, Scalar * next_layer_grad) = 0;
+    virtual void backward(LayerBase<Scalar, Device_>& prev_layer, LayerBase<Scalar, Device_>& next_layer_grad) = 0;
 
     virtual  Scalar* get_weights() { return nullptr; }
 

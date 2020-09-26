@@ -39,6 +39,11 @@ namespace EigenSinn {
 
     void forward(std::any prev_layer_any) override {
 
+      if (are_dims_unset())
+      {
+        set_in_dims(prev_layer.ge)
+      }
+
       Tensor<Scalar, 4> prev_layer = std::any_cast<Tensor<Scalar, 4>&>(prev_layer_any);
       layer_output = convolve(prev_layer, kernel, padding, stride, dispatcher.get_device());
 
