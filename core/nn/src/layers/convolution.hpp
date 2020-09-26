@@ -37,14 +37,17 @@ namespace EigenSinn {
       bias.setZero();
     }
 
-    void forward(std::any prev_layer_any) override {
+    void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
+
+      TensorMap<Tensor<Scalar, 4>> prev_layer(prev_layer_any.get_output(), vector2array<int, 4>(prev_layer_any.get_out_dims()));
 
       if (are_dims_unset())
       {
-        set_in_dims(prev_layer.ge)
+        set_in_dims(prev_layer_any.get_out_dims());
+        auto _out_dims = get_output_dimensions(prev_layer, kernel, padding, stride);
+        set_out_dims(_out_dims);
       }
 
-      Tensor<Scalar, 4> prev_layer = std::any_cast<Tensor<Scalar, 4>&>(prev_layer_any);
       layer_output = convolve(prev_layer, kernel, padding, stride, dispatcher.get_device());
 
 
@@ -58,10 +61,10 @@ namespace EigenSinn {
 
     }
 
-    void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
+    void backward(LayerBase<Scalar, Device_>& prev_layer_any, LayerBase<Scalar, Device_>& next_layer_grad_any) override {
 
-      Tensor<Scalar, 4> prev_layer = std::any_cast<Tensor<Scalar, 4>&>(prev_layer_any);
-      Tensor<Scalar, 4> next_layer_grad = std::any_cast<Tensor<Scalar, 4>&>(next_layer_grad_any);
+      TensorMap<Tensor<Scalar, 4>> prev_layer(prev_layer_any.get_output(), vector2array<int, 4>(in_dims));
+      TensorMap<Tensor<Scalar, 4>> next_layer_grad(next_layer_grad_any, vector2array<int, 4>(out_dims));
 
       Tensor<Scalar, 2> dout = unfold_conv_res(next_layer_grad);
 
