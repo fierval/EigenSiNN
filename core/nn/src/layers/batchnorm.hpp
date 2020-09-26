@@ -12,7 +12,7 @@ namespace EigenSinn {
   // N - batch size
   // C - number of channels (1 for fully connected layers)
   template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
-  class BatchNormalizationLayer : public LayerBase<Device_> {
+  class BatchNormalizationLayer : public LayerBase<Scalar, Device_> {
   public:
 
     BatchNormalizationLayer(Index num_features, float _eps = 1e-5, float _momentum = 0.9, bool _is_training = true, 
@@ -44,9 +44,15 @@ namespace EigenSinn {
       beta = _beta;
       gamma = _gamma;
     }
-    void forward(std::any prev_layer_any) override {
 
-      Tensor<Scalar, Rank> prev_layer = from_any<Scalar, Rank>(prev_layer_any);
+    void forward(Scalar * prev_layer_base) override {
+
+      if (are_dims_unset())
+      {
+        set_dims(prev_layer_base.out_dims, prev_layer_base.out_dims);
+      }
+
+      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_base.get_output(), vector2array(in_dims));
 
       std::tie(layer_output, xhat, running_mean, running_variance, mu, var) =
         batch_norm(prev_layer, gamma, beta, eps, momentum, running_mean, running_variance, is_training, dispatcher.get_device());
@@ -54,10 +60,10 @@ namespace EigenSinn {
 
     // see https://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html
     // for derivations
-    void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
+    void backward(Scalar * prev_layer_any, Scalar * next_layer_grad_any) override {
 
-      Tensor<Scalar, Rank> prev_layer = from_any<Scalar, Rank>(prev_layer_any);
-      Tensor<Scalar, Rank> dout = from_any<Scalar, Rank>(next_layer_grad_any);
+      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_any, vector2array(in_dims));
+      TensorMap<Tensor<Scalar, Rank>> dout(next_layer_grad_any, vector2array(out_dims));
 
       array<Index, Rank - 1> reduction_dims;
       array<Index, Rank> broadcast_dims;
@@ -126,21 +132,21 @@ namespace EigenSinn {
       layer_gradient.device(dispatcher.get_device()) = dx1 + dx2;
     }
 
-    std::any get_output() {
+    Scalar * get_output() {
 
-      return layer_output;
+      return layer_output.data();
     }
 
-    std::any get_loss_by_input_derivative() {
-      return layer_gradient;
+    Scalar * get_loss_by_input_derivative() {
+      return layer_gradient.data();
     }
 
-    std::any get_loss_by_weights_derivative() override {
-      return dgamma;
+    Scalar * get_loss_by_weights_derivative() override {
+      return dgamma.data();
     }
 
-    std::any get_loss_by_bias_derivative() override {
-      return dbeta;
+    Scalar * get_loss_by_bias_derivative() override {
+      return dbeta.data();
     }
 
     inline void SetTraining(bool training) {
@@ -151,20 +157,24 @@ namespace EigenSinn {
       return is_training;
     }
 
-    std::any get_weights() override {
-      return gamma;
+    Scalar * get_weights() override {
+      return gamma.data();
     }
 
-    std::any get_bias() override {
-      return beta;
+    Scalar * get_bias() override {
+      return beta.data();
     }
 
-    void set_weights(const std::any _weights) override {
-      gamma = from_any<Scalar, 1>(_weights);
+    void set_weights(const Scalar * _weights) override {
+      
+      TensorMap <Tensor<Scalar, Rank>> out(_weights, gamma.dimensions());
+      gamma = out;
     }
 
-    void set_bias(const std::any _bias) override {
-      beta = from_any<Scalar, 1>(_bias);
+    void set_bias(const Scalar * _bias) override {
+
+      TensorMap <Tensor<Scalar, Rank>> out(_bias, beta.dimensions());
+      beta = out;
     }
 
 

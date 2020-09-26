@@ -80,4 +80,12 @@ namespace EigenSinn {
 
     return std::make_tuple(weights, bias, dweights, dbias);
   }
+
+  template<typename Scalar, Index Rank>
+  inline array<Index, Rank> vector2array(std::vector<Scalar>& v) {
+
+    array<Index, Rank> out;
+    std::copy_n(v.begin(), Rank, out.begin());
+    return out;
+  }
 }
