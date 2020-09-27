@@ -88,4 +88,13 @@ namespace EigenSinn {
     std::copy_n(v.begin(), Rank, out.begin());
     return out;
   }
+
+  template<typename Scalar, Index Rank>
+  inline std::vector<Scalar> array2vector(array<Index, Rank>& a) {
+
+    std::vector<Scalar> out;
+    std::copy_n(a.begin(), Rank, out.begin());
+    return out;
+  }
+
 }
