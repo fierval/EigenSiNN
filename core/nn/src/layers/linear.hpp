@@ -46,7 +46,7 @@ namespace EigenSinn {
 
       // dims: [N, D] * [D, M] -> [N, M]
       ProductDims prod_dims = { IndexPair<int>(1, 0) };
-      TensorMap<Tensor<Scalar, 2>> prev_layer_tensor(prev_layer, in_dims);
+      TensorMap<Tensor<Scalar, 2>> prev_layer_tensor(prev_layer, vector2array<int, 2>(in_dims));
 
       // we may be using the same layer for train and test.
       // then batch size will change.
