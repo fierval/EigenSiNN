@@ -35,11 +35,18 @@ namespace EigenSinn {
     }
 
     // prev_layer_out: X[l-1], dim: [N, D]
-    void forward(std::any prev_layer) override {
+    void forward(LayerBase<Scalar, Device_>& prev_layer) override {
+
+      if (are_dims_unset(prev_layer.get_out_dims())) {
+        int batch_size = prev_layer.get_out_dims()[0];
+        int vector<int> _out_dims{ batch_size, out_dim };
+
+        set_dims(prev_layer.get_out_dims(), _out_dims);
+      }
 
       // dims: [N, D] * [D, M] -> [N, M]
       ProductDims prod_dims = { IndexPair<int>(1, 0) };
-      auto prev_layer_tensor = std::any_cast<Tensor<Scalar, 2>&>(prev_layer);
+      TensorMap<Tensor<Scalar, 2>> prev_layer_tensor(prev_layer, in_dims);
 
       // we may be using the same layer for train and test.
       // then batch size will change.
@@ -56,10 +63,10 @@ namespace EigenSinn {
     }
 
     // next_layer_grad: delta[l+1] = dL/dX[l+1], dims: [N, M] (same as X[l+1])
-    void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
+    void backward(LayerBase<Scalar, Device_>& prev_layer_any, LayerBase<Scalar, Device_>& next_layer_grad_any) override {
 
-      Tensor<Scalar, 2> prev_layer = std::any_cast<Tensor<Scalar, 2>&>(prev_layer_any);
-      Tensor<Scalar, 2> next_layer_grad = std::any_cast<Tensor<Scalar, 2>&>(next_layer_grad_any);
+      TensorMap<Tensor<Scalar, 2>> prev_layer(prev_layer_any, vector2array<int, 2>(in_dims));
+      TensorMap<Tensor<Scalar, 2>> next_layer_grad(next_layer_grad_any, vector2array<int, 2>(out_dims));
 
       // this will be fed to the previous backprop layer as the delta parameter
       // dL/dX = dim delta[l+1] * w.T: [N, M] * [M, D] -> [N, D] (same as X[l-1])
@@ -97,37 +104,42 @@ namespace EigenSinn {
 
     // this will be fed to compute dL/dW[l-1]
     // it is dL/dX[l]
-     std::any get_loss_by_input_derivative() {
-      return layer_grad_loss_by_input;
+     Scalar * get_loss_by_input_derivative() {
+      return layer_grad_loss_by_input.data();
     }
 
     // feed to optimizer
-     std::any get_loss_by_weights_derivative() override {
-      return layer_grad_loss_by_weight;
+     Scalar * get_loss_by_weights_derivative() override {
+      return layer_grad_loss_by_weight.data();
     }
 
-     std::any get_loss_by_bias_derivative() override {
-      return loss_by_bias_derivative;
+     Scalar * get_loss_by_bias_derivative() override {
+      return loss_by_bias_derivative.data();
     }
 
-     std::any get_output() override {
-      return layer_output;
+     Scalar * get_output() override {
+      return layer_output.data();
     }
 
-     std::any get_weights() override {
-      return weights;
+     Scalar * get_weights() override {
+      return weights.data();
     }
 
-     std::any get_bias() override {
-      return bias;
+     Scalar * get_bias() override {
+      return bias.data();
     }
 
-    void set_weights(const std::any _weights) override {
-      weights = from_any<Scalar, 2>(_weights) ;
+    void set_weights(const Scalar * _weights) override {
+
+      // TODO: Will be different for CUDA
+      TensorMap <Tensor<Scalar, Rank>> out(_weights, weights.dimensions());
+      weights = out;
     }
 
-    void set_bias(const std::any _bias) override {
-      bias = from_any<Scalar, 1>(_bias);
+    void set_bias(const Scalar * _bias) override {
+
+      TensorMap <Tensor<Scalar, Rank>> out(_bias, bias.dimensions());
+      bias = out;
     }
 
   private:

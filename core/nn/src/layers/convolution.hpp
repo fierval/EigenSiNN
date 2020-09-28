@@ -123,7 +123,7 @@ namespace EigenSinn {
 
     void set_bias(const Scalar * _bias) override {
 
-      TensorMap <Tensor<Scalar, Rank>> out(_bias, kernel.dimensions());
+      TensorMap <Tensor<Scalar, Rank>> out(_bias, bias.dimensions());
       bias = out;
     }
 
