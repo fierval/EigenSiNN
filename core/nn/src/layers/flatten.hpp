@@ -15,7 +15,7 @@ namespace EigenSinn {
 
     void forward(LayerBase<Scalar, Device_>& prev_layer_any) {
       
-      TensorMap<Tensor<Scalar, 4>> orig(prev_layer_any, vector2array<int, 4>(prev_layer_any.get_out_dims()));
+      TensorMap<Tensor<Scalar, 4>> orig(prev_layer_any.get_output(), vector2array<int, 4>(prev_layer_any.get_out_dims()));
 
       original_dimensions = orig.dimensions();
 
@@ -29,7 +29,7 @@ namespace EigenSinn {
 
     void backward(LayerBase<Scalar, Device_>& prev_layer, LayerBase<Scalar, Device_>& next_layer_grad) {
 
-      TensorMap<Tensor<Scalar, 2>> unf_dout(next_layer_grad, original_dimensions);
+      TensorMap<Tensor<Scalar, 2>> unf_dout(next_layer_grad.get_output(), original_dimensions);
 
       folded = fold_kernel<Scalar>(unf_dout, original_dimensions);
     }

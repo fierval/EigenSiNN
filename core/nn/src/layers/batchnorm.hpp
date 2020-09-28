@@ -15,7 +15,7 @@ namespace EigenSinn {
   class BatchNormalizationLayer : public LayerBase<Scalar, Device_> {
   public:
 
-    BatchNormalizationLayer(Index num_features, float _eps = 1e-5, float _momentum = 0.9, bool _is_training = true, 
+    BatchNormalizationLayer(Index num_features, float _eps = 1e-5, float _momentum = 0.9, bool _is_training = true,
       Dispatcher<Device_>& _device = LayerBase::default_dispatcher)
       : LayerBase(_device)
       , beta(num_features)
@@ -47,8 +47,8 @@ namespace EigenSinn {
 
     void forward(LayerBase<Scalar, Device_>& prev_layer_base) override {
 
-      if (are_dims_unset(prev_layer_base.get_out_dims()))
-      {
+      if (are_dims_unset(prev_layer_base.get_out_dims())) {
+
         set_dims(prev_layer_base.get_out_dims(), prev_layer_base.get_out_dims());
       }
 
@@ -132,20 +132,20 @@ namespace EigenSinn {
       layer_gradient.device(dispatcher.get_device()) = dx1 + dx2;
     }
 
-    Scalar * get_output() {
+    Scalar* get_output() {
 
       return layer_output.data();
     }
 
-    Scalar * get_loss_by_input_derivative() {
+    Scalar* get_loss_by_input_derivative() {
       return layer_gradient.data();
     }
 
-    Scalar * get_loss_by_weights_derivative() override {
+    Scalar* get_loss_by_weights_derivative() override {
       return dgamma.data();
     }
 
-    Scalar * get_loss_by_bias_derivative() override {
+    Scalar* get_loss_by_bias_derivative() override {
       return dbeta.data();
     }
 
@@ -157,21 +157,21 @@ namespace EigenSinn {
       return is_training;
     }
 
-    Scalar * get_weights() override {
+    Scalar* get_weights() override {
       return gamma.data();
     }
 
-    Scalar * get_bias() override {
+    Scalar* get_bias() override {
       return beta.data();
     }
 
-    void set_weights(const Scalar * _weights) override {
+    void set_weights(const Scalar* _weights) override {
       // TODO: Will be different for CUDA
       TensorMap <Tensor<Scalar, Rank>> out(_weights, gamma.dimensions());
       gamma = out;
     }
 
-    void set_bias(const Scalar * _bias) override {
+    void set_bias(const Scalar* _bias) override {
       // TODO: Will be different for CUDA
       TensorMap <Tensor<Scalar, Rank>> out(_bias, beta.dimensions());
       beta = out;
