@@ -16,8 +16,10 @@ namespace EigenSinn {
       , inited(false)
     {}
 
-    void forward(std::any prev_layer_any) override {
-      Tensor<Scalar, Rank> prev_layer = from_any<Scalar, Rank>(prev_layer_any);
+    void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
+
+      set_dims(prev_layer_any);
+      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_any.get_output(), vector2array<int, Rank>(in_dims));
       
       // we have never initialized or switched from train to test
       // initialize the "1" tensor used for sigmoid backprop
@@ -30,18 +32,18 @@ namespace EigenSinn {
     }
 
 
-    void backward(std::any prev_layer_any, std::any next_layer_grad_any) override {
-      auto next_layer_grad = from_any<Scalar, Rank>(next_layer_grad_any);
+    void backward(LayerBase<Scalar, Device_>& prev_layer_any, LayerBase<Scalar, Device_>& next_layer_grad_any) override {
+      TensorMap<Tensor<Scalar, Rank>> next_layer_grad(next_layer_grad_any.get_output(), vector2array<int, Rank>(out_dims));
 
       layer_grad.device(dispatcher.get_device()) = next_layer_grad * layer_output * (ones - layer_output);
     }
 
-    std::any get_output() override {
-      return layer_output;
+    Scalar * get_output() override {
+      return layer_output.data();
     };
 
-    std::any get_loss_by_input_derivative() override {
-      return layer_grad;
+    Scalar * get_loss_by_input_derivative() override {
+      return layer_grad.data();
     };
 
 

@@ -48,6 +48,12 @@ namespace EigenSinn {
       set_out_dims(_out_dims);
     }
 
+    void set_dims(const LayerBase<Scalar, Device_>& layer) {
+      if (are_dims_unset(layer.get_out_dims())) {
+        set_dims(layer.get_out_dims(), layer.get_out_dims());
+      }
+    }
+
   protected:
     Dispatcher<Device_>& dispatcher;
     std::vector<int> in_dims, out_dims;
