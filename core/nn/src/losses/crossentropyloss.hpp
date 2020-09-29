@@ -13,9 +13,9 @@ namespace EigenSinn {
       is_dim_set = false;
     }
 
-    Tuple<Tensor<Scalar, 2>, Tensor<Scalar, 2>> initialize_and_convert(std::any predicted_any, std::any actual_any) override {
+    void initialize_and_convert(const Tensor<Scalar, Rank>& predicted_any, const Tensor<Scalar, Rank>& actual_any) override {
 
-      auto tensors = LossBase::initialize_and_convert(predicted_any, actual_any);
+      LossBase::initialize(predicted_any, actual_any);
       if (!is_cache_set) {
 
         dsum.resize(orig_dims[0]);
@@ -25,15 +25,11 @@ namespace EigenSinn {
         broadcast_dims[1] = orig_dims[1];
         is_cache_set = true;
       }
-      return tensors;
     }
 
-    void forward(std::any predicted_any, std::any actual_any) override {
+    void forward(const Tensor<Scalar, Rank>& predicted, const Tensor<Scalar, Rank>& actual) override {
 
-      auto tensors = initialize_and_convert(predicted_any, actual_any);
-
-      Tensor<Scalar, 2> predicted = tensors.first;
-      actual = tensors.second;
+      initialize(predicted, actual);
 
       actual.resize(orig_dims);
       predicted.resize(orig_dims);

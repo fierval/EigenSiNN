@@ -12,24 +12,21 @@ namespace EigenSinn {
 
   public:
 
-    virtual void forward(std::any predictions_any, std::any actual_any) = 0;
+    virtual void forward(const Tensor<Scalar, Rank>& predictions_any, const Tensor<Scalar, Rank>& actual_any) = 0;
 
     virtual void backward() = 0;
 
-    virtual std::any get_output() {
+    virtual Scalar get_output() {
       return loss;
     }
 
-    virtual std::any get_loss_derivative_by_input() {
-      return dloss;
+    virtual Scalar * get_loss_derivative_by_input() {
+      return dloss.data();
     }
 
   protected:
 
-    virtual Tuple<Tensor<Scalar, Rank>, Tensor<Scalar, Rank>> initialize_and_convert(std::any predicted_any, std::any actual_any) {
-
-      Tensor<Scalar, Rank> predicted = from_any<Scalar, Rank>(predicted_any);
-      Tensor<Scalar, Rank> actual = from_any<Scalar, Rank>(actual_any);
+    inline void initialize(const Tensor<Scalar, Rank>& predicted, const Tensor<Scalar, Rank>& actual) {
 
       array<Index, Rank> predicted_dims = predicted.dimensions();
       array<Index, Rank> actual_dims = actual.dimensions();
@@ -44,8 +41,6 @@ namespace EigenSinn {
       for (int i = 0; i < Rank; i++) {
         assert(predicted_dims[i] == orig_dims[i]);
       }
-
-      return Tuple(predicted, actual);
     }
 
     array<Index, Rank> orig_dims;

@@ -13,12 +13,9 @@ namespace EigenSinn {
       is_dim_set = false;
     }
 
-    void forward(std::any predicted_any, std::any actual_any) override {
+    void forward(const Tensor<Scalar, Rank>& predicted_any, const Tensor<Scalar, Rank>& actual_any) override {
       
-      auto tensors = initialize_and_convert(predicted_any, actual_any);
-
-      Tensor<Scalar, 2> predicted = tensors.first;
-      Tensor<Scalar, 2> actual = tensors.second;
+      initialize(predicted, actual);
 
       predicted_actual_diff = predicted - actual;
       Tensor<Scalar, 0> loss_t = predicted_actual_diff.pow(2).mean();
