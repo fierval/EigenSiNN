@@ -24,7 +24,6 @@ namespace EigenSinn {
     // Computation: https://towardsdatascience.com/adam-latest-trends-in-deep-learning-optimization-6be9a291375c
     std::tuple<Scalar *, Scalar *> step(LayerBase<Scalar>& layer) override {
 
-      Scalar* weights_any, * dweights_any, * bias_any, *dbias_any;
       array<Index, Rank> dims = vector2array<int, Rank>(layer.get_weight_dims());
       array<Index, 1> dims_bias = vector2array<int, 1>(layer.get_bias_dims());
 

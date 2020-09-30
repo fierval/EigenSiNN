@@ -5,12 +5,12 @@
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank>
+  template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
   class SGD : public OptimizerBase<Scalar> {
 
   public:
-    SGD(Scalar _lr, Scalar _momentum = 0, bool _nesterov = false)
-      : OptimizerBase(_lr)
+    SGD(Scalar _lr, Dispatcher<Device_>& _device = OptimizerBase::default_dispatcher, Scalar _momentum = 0, bool _nesterov = false)
+      : OptimizerBase(_lr, _device)
       , nesterov(_nesterov)
       , momentum(_momentum)
       {
@@ -21,11 +21,14 @@ namespace EigenSinn {
     }
 
     // PyTorch computation of SGD: https://pytorch.org/docs/stable/_modules/torch/optim/sgd.html#SGD
-    std::tuple<std::any, std::any> step(const std::any weights_any, const std::any bias_any, const std::any dweights_any, const std::any dbias_any) override {
-      Tensor<Scalar, Rank> weights, dweights;
-      Tensor<Scalar, 1> bias, dbias;
+    std::tuple<Scalar*, Scalar*> step(LayerBase<Scalar, Device_>& layer) override {
+      
+      array<Index, Rank> dims = vector2array<int, Rank>(layer.get_weight_dims());
+      array<Index, 1> dims_bias = vector2array<int, 1>(layer.get_bias_dims());
 
-      std::tie(weights, bias, dweights, dbias) = weights_biases_and_derivaties_from_any<Scalar, Rank>(weights_any, bias_any, dweights_any, dbias_any);
+      TensorMap<Tensor<Scalar, Rank>> weights(layer.get_output(), dims), dweights(layer.get_loss_by_weights_derivative(), dims);
+      TensorMap<Tensor<Scalar, 1>> bias(layer.get_bias(), dims_bias), dbias(layer.get_loss_by_bias_derivative(), dims_bias);
+
       if (momentum != 0.0) {
         if (!param_set) {
           param_set = true;
@@ -49,7 +52,7 @@ namespace EigenSinn {
 
       weights -= lr * dweights;
       bias -= lr * dbias;
-      return make_tuple(std::make_any<Tensor<Scalar, Rank>>(weights), std::make_any<Tensor<Scalar, 1>>(bias));
+      return make_tuple(weights.data(), bias.data());
     }
 
   private:
