@@ -43,6 +43,7 @@ namespace EigenSinn {
         int vector<int> _out_dims{ batch_size, out_dim };
         set_dims(prev_layer.get_out_dims(), _out_dims);
         set_bias_dims(std::vector<int> {out_dim});
+        set_weight_dims(std::vector<int>{in_dim, out_dim});
 
         layer_output.resize(batch_size, layer_output.dimension(1));
         layer_grad_loss_by_input.resize(batch_size, layer_grad_loss_by_input.dimension(1));
@@ -94,7 +95,7 @@ namespace EigenSinn {
       }
 
       //weights of dimension (D, M)
-      weights = generate_xavier<Scalar, 2>(array<Index, 2>{in_dim, out_dim}, dispatcher.get_device());
+      weights = generate_xavier<Scalar, 2>(vector2array<int, 2>(weight_dims), dispatcher.get_device());
       bias = bias.setZero();
     }
 

@@ -9,7 +9,7 @@ namespace EigenSinn {
   class Adam : public OptimizerBase<Scalar, Device_> {
 
   public:
-    Adam(Scalar _lr, Scalar _beta1 = 0.9, Scalar _beta2 = 0.999, Scalar _eps = 1e-8, Dispatcher<Device_>& _device = OptimizerBase::default_dispatcher)
+    Adam(Scalar _lr, Dispatcher<Device_>& _device = OptimizerBase::default_dispatcher, float _beta1 = 0.9, float _beta2 = 0.999, float _eps = 1e-8 )
       : OptimizerBase(_lr, _device)
       , beta1(_beta1)
       , beta2(_beta2)
@@ -24,10 +24,11 @@ namespace EigenSinn {
     // Computation: https://towardsdatascience.com/adam-latest-trends-in-deep-learning-optimization-6be9a291375c
     std::tuple<Scalar *, Scalar *> step(LayerBase<Scalar>& layer) override {
 
+      Scalar* weights_any, * dweights_any, * bias_any, *dbias_any;
+      array<Index, Rank> dims = layer
+
       Tensor<Scalar, Rank> weights, dweights;
       Tensor<Scalar, 1> bias, dbias;
-
-      std::tie(weights, bias, dweights, dbias) = weights_biases_and_derivaties_from_any<Scalar, Rank>(weights_any, bias_any, dweights_any, dbias_any);
 
       if (!param_set) {
         param_set = true;
