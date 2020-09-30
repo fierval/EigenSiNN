@@ -46,6 +46,7 @@ namespace EigenSinn {
         set_in_dims(prev_layer_any.get_out_dims());
         auto _out_dims = get_output_dimensions(prev_layer, kernel, padding, stride);
         set_out_dims(_out_dims);
+        set_bias_dims(std::vector<int>(kernel.dimension(0)));
       }
 
       layer_output = convolve(prev_layer, kernel, padding, stride, dispatcher.get_device());

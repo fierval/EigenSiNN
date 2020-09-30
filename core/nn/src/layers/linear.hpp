@@ -37,24 +37,20 @@ namespace EigenSinn {
     // prev_layer_out: X[l-1], dim: [N, D]
     void forward(LayerBase<Scalar, Device_>& prev_layer) override {
 
-      if (are_dims_unset(prev_layer.get_out_dims())) {
-        int batch_size = prev_layer.get_out_dims()[0];
-        int vector<int> _out_dims{ batch_size, out_dim };
+      int batch_size = broadcast_bias_dim[0] = prev_layer.get_out_dims()[0];
 
+      if (are_dims_unset(prev_layer.get_out_dims())) {
+        int vector<int> _out_dims{ batch_size, out_dim };
         set_dims(prev_layer.get_out_dims(), _out_dims);
+        set_bias_dims(std::vector<int> {out_dim});
+
+        layer_output.resize(batch_size, layer_output.dimension(1));
+        layer_grad_loss_by_input.resize(batch_size, layer_grad_loss_by_input.dimension(1));
       }
 
       // dims: [N, D] * [D, M] -> [N, M]
       ProductDims prod_dims = { IndexPair<int>(1, 0) };
       TensorMap<Tensor<Scalar, 2>> prev_layer_tensor(prev_layer.get_output(), vector2array<int, 2>(in_dims));
-
-      // we may be using the same layer for train and test.
-      // then batch size will change.
-      if (prev_layer_tensor.dimension(0) != layer_output.dimension(0)) {
-        int batch_size = broadcast_bias_dim[0] = prev_layer_tensor.dimension(0);
-        layer_output.resize(batch_size, layer_output.dimension(1));
-        layer_grad_loss_by_input.resize(batch_size, layer_grad_loss_by_input.dimension(1));
-      }
 
       layer_output.device(dispatcher.get_device()) = prev_layer_tensor.contract(weights, prod_dims);
 

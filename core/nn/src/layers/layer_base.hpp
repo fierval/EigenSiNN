@@ -40,10 +40,13 @@ namespace EigenSinn {
     const std::vector<int>& get_in_dims() { return in_dims; }
     const std::vector<int>& get_out_dims() { return out_dims; }
 
-    void set_in_dims(const std::vector<int>& _in_dims) { in_dims = _in_dims; }
-    void set_out_dims(const std::vector<int>& _out_dims) { out_dims = _out_dims; }
+    // REVIEW: Do we need bias_dims?
+    const std::vector<int>& get_bias_dims() { return bias_dims; }
+
+    void set_in_dims(std::vector<int>& _in_dims) { in_dims = _in_dims; }
+    void set_out_dims(std::vector<int>& _out_dims) { out_dims = _out_dims; }
     
-    void set_dims(const std::vector<int>& _in_dims, const std::vector<int>& _out_dims) {
+    void set_dims(std::vector<int>& _in_dims, std::vector<int>& _out_dims) {
       set_in_dims(_in_dims);
       set_out_dims(_out_dims);
     }
@@ -54,11 +57,13 @@ namespace EigenSinn {
       }
     }
 
+    void set_bias_dims(std::vector<int>& _bias_dims) { bias_dims = _bias_dims; }
+
   protected:
     Dispatcher<Device_>& dispatcher;
-    std::vector<int> in_dims, out_dims;
+    std::vector<int> in_dims, out_dims, bias_dims;
 
-    bool are_dims_unset(const vector<int>& dims) { return in_dims.size() == 0 || dims[0] != in_dims[0]; }
+    bool are_dims_unset(const std::vector<int>& dims) { return in_dims.size() == 0 || dims[0] != in_dims[0]; }
   
     LayerBase(Dispatcher<Device_>& _dispatcher) : dispatcher(_dispatcher) {
     }
