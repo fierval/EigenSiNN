@@ -5,7 +5,7 @@
 
 namespace EigenSinn {
 
-  template<typename Scalar>
+  template<typename Scalar, typename Actual>
   class CrossEntropyLoss : public LossBase<Scalar, 2> {
 
   public:
@@ -13,7 +13,7 @@ namespace EigenSinn {
       is_dim_set = false;
     }
 
-    void initialize_and_convert(const Tensor<Scalar, Rank>& predicted_any, const Tensor<Scalar, Rank>& actual_any) override {
+    void initialize_and_convert(const Tensor<Scalar, Rank>& predicted_any, const Tensor<Actual, Rank>& actual_any) override {
 
       LossBase::initialize(predicted_any, actual_any);
       if (!is_cache_set) {
@@ -27,7 +27,7 @@ namespace EigenSinn {
       }
     }
 
-    void forward(const Tensor<Scalar, Rank>& predicted, const Tensor<Scalar, Rank>& actual) override {
+    void forward(const Tensor<Scalar, Rank>& predicted, const Tensor<Actual, Rank>& actual) override {
 
       initialize(predicted, actual);
 

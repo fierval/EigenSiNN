@@ -7,12 +7,12 @@ using namespace Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank>
+  template <typename Scalar, typename Actual, Index Rank>
   class LossBase {
 
   public:
 
-    virtual void forward(const Tensor<Scalar, Rank>& predictions_any, const Tensor<Scalar, Rank>& actual_any) = 0;
+    virtual void forward(const Tensor<Scalar, Rank>& predictions_any, const Tensor<Actual, Rank>& actual_any) = 0;
 
     virtual void backward() = 0;
 
@@ -26,7 +26,7 @@ namespace EigenSinn {
 
   protected:
 
-    inline void initialize(const Tensor<Scalar, Rank>& predicted, const Tensor<Scalar, Rank>& actual) {
+    inline void initialize(const Tensor<Scalar, Rank>& predicted, const Tensor<Actual, Rank>& actual) {
 
       array<Index, Rank> predicted_dims = predicted.dimensions();
       array<Index, Rank> actual_dims = actual.dimensions();
