@@ -25,10 +25,11 @@ namespace EigenSinn {
     std::tuple<Scalar *, Scalar *> step(LayerBase<Scalar>& layer) override {
 
       Scalar* weights_any, * dweights_any, * bias_any, *dbias_any;
-      array<Index, Rank> dims = layer
+      array<Index, Rank> dims = vector2array<int, Rank>(layer.get_weight_dims());
+      array<Index, 1> dims_bias = vector2array<int, 1>(layer.get_bias_dims());
 
-      Tensor<Scalar, Rank> weights, dweights;
-      Tensor<Scalar, 1> bias, dbias;
+      TensorMap<Tensor<Scalar, Rank>> weights(layer.get_output(), dims), dweights(layer.get_loss_by_weights_derivative(), dims);
+      TensorMap<Tensor<Scalar, 1>> bias(layer.get_bias(), dims_bias), dbias(layer.get_loss_by_bias_derivative(), dims_bias);
 
       if (!param_set) {
         param_set = true;
@@ -47,24 +48,27 @@ namespace EigenSinn {
       }
 
       // compute Mt and Vt
-      momentum_weights = beta1 * momentum_weights + (1 - beta1) * dweights;
-      velocity_weights = beta2 * velocity_weights + (1 - beta2) * dweights.pow(2.);
+      momentum_weights.device(dispatcher.get_device()) = beta1 * momentum_weights + (1 - beta1) * dweights;
+      velocity_weights.device(dispatcher.get_device()) = beta2 * velocity_weights + (1 - beta2) * dweights.pow(2.);
 
-      momentum_bias = beta1 * momentum_bias + (1 - beta1) * dbias;
-      velocity_bias = beta2 * velocity_bias + (1 - beta2) * dbias.pow(2.);
+      momentum_bias.device(dispatcher.get_device()) = beta1 * momentum_bias + (1 - beta1) * dbias;
+      velocity_bias.device(dispatcher.get_device()) = beta2 * velocity_bias + (1 - beta2) * dbias.pow(2.);
 
-      cur_beta1 *= beta1;
-      cur_beta2 *= beta2;
+      cur_beta1.device(dispatcher.get_device()) *= beta1;
+      cur_beta2.device(dispatcher.get_device()) *= beta2;
 
-      Tensor<Scalar, Rank> denom_weights = velocity_weights.sqrt() / sqrt(1 - cur_beta2) + eps;
-      Tensor<Scalar, 1> denom_bias = velocity_bias.sqrt() / sqrt(1 - cur_beta2) + eps;
+      Tensor<Scalar, Rank> denom_weights(velocity_weights.dimensions());
+      denom_weights.device(dispatcher.get_device()) = velocity_weights.sqrt() / sqrt(1 - cur_beta2) + eps;
+
+      Tensor<Scalar, 1> denom_bias(velocity_bias.dimensions());
+      denom_bias.device(dispatcher.get_device()) = velocity_bias.sqrt() / sqrt(1 - cur_beta2) + eps;
 
       Scalar step_size = lr / (1 - cur_beta1);
 
-      weights -= step_size * momentum_weights / denom_weights;
-      bias  -= step_size * momentum_bias / denom_bias;
+      weights.device(dispatcher.get_device()) -= step_size * momentum_weights / denom_weights;
+      bias.device(dispatcher.get_device()) -= step_size * momentum_bias / denom_bias;
 
-      return make_tuple(std::make_any<Tensor<Scalar, Rank>>(weights), std::make_any<Tensor<Scalar, 1>>(bias));
+      return make_tuple(weights.data(), bias.data());
     }
 
   private:

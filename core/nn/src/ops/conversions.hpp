@@ -57,7 +57,6 @@ namespace EigenSinn {
     return cat;
   }
 
-
   template<typename Scalar, Index Rank>
   inline array<Index, Rank> vector2array(std::vector<Scalar>& v) {
 
