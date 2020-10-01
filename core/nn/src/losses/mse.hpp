@@ -13,7 +13,7 @@ namespace EigenSinn {
       is_dim_set = false;
     }
 
-    void forward(const Tensor<Scalar, Rank>& predicted_any, const Tensor<Actual, Rank>& actual_any) override {
+    void forward(const Tensor<Scalar, Rank>& predicted, const Tensor<Actual, Rank>& actual) override {
       
       initialize(predicted, actual);
 

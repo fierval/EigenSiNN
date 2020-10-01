@@ -31,9 +31,6 @@ namespace EigenSinn {
 
       initialize(predicted, actual);
 
-      actual.resize(orig_dims);
-      predicted.resize(orig_dims);
-
       // memoize these for the backward pass
       exp_all = predicted.exp();
       exp_sum = exp_all.sum(reduction_dims);
