@@ -9,7 +9,7 @@ namespace EigenSinn {
   // REVIEW: Not implementing bias for now
   // Batch normalization layers can take care of bias
   template <typename Scalar, typename Device_ = DefaultDevice>
-  class Conv2d : public LayerBase<Device_> {
+  class Conv2d : public LayerBase<Scalar, Device_> {
 
   public:
 

@@ -8,7 +8,7 @@ using namespace  Eigen;
 namespace EigenSinn {
 
   template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
-  class Sigmoid : public LayerBase<Device_> {
+  class Sigmoid : public LayerBase<Scalar, Device_> {
   public:
     // leaky relu if necessary
     Sigmoid(Dispatcher<Device_>& _device =  LayerBase::default_dispatcher) :

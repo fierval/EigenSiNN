@@ -24,7 +24,7 @@ namespace EigenSinnTest {
       linear.init(cd.weights);
 
       // create loss function
-      CrossEntropyLoss<float> loss_func;
+      CrossEntropyLoss<float, float> loss_func;
 
       // create  optimizer
       EigenSinn::Adam<float, 2> adam(lr);

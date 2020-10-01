@@ -18,7 +18,7 @@ namespace EigenSinn {
 
 
   template<typename Scalar, typename Device_ = DefaultDevice>
-  class Linear : public LayerBase<Device_> {
+  class Linear : public LayerBase<Scalar, Device_> {
 
   public:
     Linear(int _in_dim, int _out_dim, Dispatcher<Device_>& _device =  LayerBase::default_dispatcher) :

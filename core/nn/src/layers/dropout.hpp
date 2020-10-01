@@ -14,7 +14,7 @@ using namespace  Eigen;
 namespace EigenSinn {
 
   template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
-  class Dropout : public LayerBase<Device_> {
+  class Dropout : public LayerBase<Scalar, Device_> {
   public:
 
     Dropout(float _prob = 0.5, Dispatcher<Device_>& _device =  LayerBase::default_dispatcher)

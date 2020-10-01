@@ -8,7 +8,7 @@ using namespace  Eigen;
 namespace EigenSinn {
 
   template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
-  class Tanh : public LayerBase<Device_> {
+  class Tanh : public LayerBase<Scalar, Device_> {
   public:
     // leaky relu if necessary
     Tanh(Dispatcher<Device_>& _device =  LayerBase::default_dispatcher) :

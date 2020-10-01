@@ -8,7 +8,7 @@ namespace EigenSinn {
 
   // flatten convolution layer
   template<typename Scalar, typename Device_= DefaultDevice>
-  class Flatten : public LayerBase<Device_> {
+  class Flatten : public LayerBase<Scalar, Device_> {
 
   public:
     Flatten(Dispatcher<Device_>& _device =  LayerBase::default_dispatcher) : LayerBase(_device){}

@@ -8,7 +8,7 @@ using namespace  Eigen;
 namespace EigenSinn {
 
   template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
-  class Softmax : public LayerBase<Device_> {
+  class Softmax : public LayerBase<Scalar, Device_> {
   public:
     Softmax(Dispatcher<Device_>& _device =  LayerBase::default_dispatcher) :
       LayerBase(_device)
