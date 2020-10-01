@@ -1,7 +1,6 @@
 #pragma once
 
 #include "layer_base.hpp"
-#include "ops/convolutions.hpp"
 #include <ops/conversions.hpp>
 
 namespace EigenSinn {
@@ -12,7 +11,8 @@ namespace EigenSinn {
     public Input(array<Index, Rank> dims, Dispatcher<Device_>& _device = LayerBase<Scalar, Device_>::default_dispatcher) :
       LayerBase(_device) {
 
-      set_dims(array2vector<int, Rank>(dims), array2vector<int, Rank>(dims));
+      std::vector<int> v_dims = array2vector<int, Rank>(dims);
+      set_dims(v_dims, v_dims);
     }
 
     void forward(LayerBase<Scalar, Device_>& prev_layer_base) {};
