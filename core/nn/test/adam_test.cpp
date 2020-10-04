@@ -50,18 +50,16 @@ namespace EigenSinnTest {
         // 1. compute dL/dy
         loss_func.backward();
 
-        TensorMap<Tensor<float, 2>> dloss(loss_func.get_loss_derivative_by_input(), loss_func.get_dims());
-
         // propagate back through the fc layer
         // compute dL/dw, dL/db, dL/dx
-        linear.backward(cd.linearInput, dloss);
+        linear.backward(linear, loss_func.get_loss_derivative_by_input());
 
         // collect weights and biases and perform the GD step
-        auto weights_auto = linear.get_weights(), dweights_auto = linear.get_loss_by_weights_derivative();
-        auto bias_auto = linear.get_bias(), dbias_auto = linear.get_loss_by_bias_derivative();
+        float * weights_auto;
+        float * bias_auto;
 
         //std::any new_weights, new_bias;
-        std::tie(weights_auto, bias_auto) = adam.step(weights_auto, bias_auto, dweights_auto, dbias_auto);
+        std::tie(weights_auto, bias_auto) = adam.step(linear);
 
         // set new weights and biases in the layer
         linear.set_weights(weights_auto);

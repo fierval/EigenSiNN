@@ -13,7 +13,7 @@ namespace EigenSinn {
       is_dim_set = false;
     }
 
-    void initialize_and_convert(const Tensor<Scalar, Rank>& predicted_any, const Tensor<Actual, Rank>& actual_any) override {
+    void initialize_and_convert(const Tensor<Scalar, Rank>& predicted_any, const Tensor<Actual, Rank>& actual_any) {
 
       LossBase::initialize(predicted_any, actual_any);
       if (!is_cache_set) {
