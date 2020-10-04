@@ -3,8 +3,10 @@
 #include "include/commondata2d.hpp"
 #include "include/testutils.hpp"
 #include "ops/comparisons.hpp"
+#include "ops/conversions.hpp"
 #include "optimizers/adam.hpp"
 #include <losses\crossentropyloss.hpp>
+#include "layers/input.hpp"
 
 using namespace EigenSinn;
 
@@ -19,12 +21,17 @@ namespace EigenSinnTest {
     }
 
     auto PropagateGradient(int epochs) {
+
+      // input layer
+      Input<float, 2> input(cd.dims);
+      input.set_weights(cd.linearInput.data());
+
       // create fully connected layer
       Linear<float> linear(cd.dims[1], cd.out_dims[1]);
       linear.init(cd.weights);
 
       // create loss function
-      CrossEntropyLoss<float, float> loss_func;
+      CrossEntropyLoss<float, float, 2> loss_func;
 
       // create  optimizer
       EigenSinn::Adam<float, 2> adam(lr);
@@ -32,9 +39,9 @@ namespace EigenSinnTest {
       for (int i = 0; i < epochs; i++) {
 
         // propagate forward through the model
-        linear.forward(cd.linearInput);
+        linear.forward(input);
 
-        auto output = linear.get_output();
+        TensorMap<Tensor<float, 2>> output(linear.get_output(), vector2array<int, 2>(linear.get_out_dims()));
 
         // compute loss
         loss_func.forward(output, cd.target);
@@ -43,7 +50,7 @@ namespace EigenSinnTest {
         // 1. compute dL/dy
         loss_func.backward();
 
-        auto dloss = loss_func.get_loss_derivative_by_input();
+        TensorMap<Tensor<float, 2>> dloss(loss_func.get_loss_derivative_by_input(), loss_func.get_dims());
 
         // propagate back through the fc layer
         // compute dL/dw, dL/db, dL/dx

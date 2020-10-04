@@ -58,7 +58,7 @@ namespace EigenSinn {
   }
 
   template<typename Scalar, Index Rank>
-  inline array<Index, Rank> vector2array(std::vector<Scalar>& v) {
+  inline array<Index, Rank> vector2array(const std::vector<Scalar>& v) {
 
     array<Index, Rank> out;
     std::copy_n(v.begin(), Rank, out.begin());
@@ -66,7 +66,7 @@ namespace EigenSinn {
   }
 
   template<typename Scalar, Index Rank>
-  inline std::vector<Scalar> array2vector(array<Index, Rank>& a) {
+  inline std::vector<Scalar> array2vector(const array<Index, Rank>& a) {
 
     std::vector<Scalar> out;
     std::copy_n(a.begin(), Rank, out.begin());

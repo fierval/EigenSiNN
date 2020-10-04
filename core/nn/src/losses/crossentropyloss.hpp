@@ -5,8 +5,8 @@
 
 namespace EigenSinn {
 
-  template<typename Scalar, typename Actual>
-  class CrossEntropyLoss : public LossBase<Scalar, 2> {
+  template<typename Scalar, typename Actual, Index Rank>
+  class CrossEntropyLoss : public LossBase<Scalar, Actual, 2> {
 
   public:
     CrossEntropyLoss() : is_cache_set(false) {

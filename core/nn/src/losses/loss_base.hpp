@@ -24,6 +24,8 @@ namespace EigenSinn {
       return dloss.data();
     }
 
+    const array<Index, Rank>& get_dims() { return orig_dims; }
+
   protected:
 
     inline void initialize(const Tensor<Scalar, Rank>& predicted, const Tensor<Actual, Rank>& actual) {
