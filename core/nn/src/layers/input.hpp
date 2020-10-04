@@ -17,7 +17,7 @@ namespace EigenSinn {
 
     void forward(LayerBase<Scalar, Device_>& prev_layer_base) {};
 
-    void backward(LayerBase<Scalar, Device_>& prev_layer, LayerBase<Scalar, Device_>& next_layer_grad) {};
+    void backward(LayerBase<Scalar, Device_>& prev_layer, Scalar * next_layer_grad) {};
 
     Scalar* get_output() { 
       return input.data();

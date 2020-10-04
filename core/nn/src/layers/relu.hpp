@@ -30,9 +30,9 @@ namespace EigenSinn {
       mask = res.first;
     }
 
-    void backward(LayerBase<Scalar, Device_>& prev_layer, LayerBase<Scalar, Device_>& next_layer_grad) override {
+    void backward(LayerBase<Scalar, Device_>& prev_layer, Scalar * next_layer_grad) override {
 
-      TensorMap<Tensor<Scalar, Rank>> x(next_layer_grad.get_output(), vector2array<int, Rank>(out_dims));
+      TensorMap<Tensor<Scalar, Rank>> x(next_layer_grad, vector2array<int, Rank>(out_dims));
 
       layer_grad = leaky_relu_back(x, mask, dispatcher.get_device());
     }

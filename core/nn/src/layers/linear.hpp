@@ -60,10 +60,11 @@ namespace EigenSinn {
     }
 
     // next_layer_grad: delta[l+1] = dL/dX[l+1], dims: [N, M] (same as X[l+1])
-    void backward(LayerBase<Scalar, Device_>& prev_layer_any, LayerBase<Scalar, Device_>& next_layer_grad_any) override {
+    // when we are feeding backward from the loss function
+    void backward(LayerBase<Scalar, Device_>& prev_layer_any, Scalar * next_layer_grad_any) override {
 
       TensorMap<Tensor<Scalar, 2>> prev_layer(prev_layer_any.get_output(), vector2array<int, 2>(in_dims));
-      TensorMap<Tensor<Scalar, 2>> next_layer_grad(next_layer_grad_any.get_output(), vector2array<int, 2>(out_dims));
+      TensorMap<Tensor<Scalar, 2>> next_layer_grad(next_layer_grad_any, vector2array<int, 2>(out_dims));
 
       // this will be fed to the previous backprop layer as the delta parameter
       // dL/dX = dim delta[l+1] * w.T: [N, M] * [M, D] -> [N, D] (same as X[l-1])

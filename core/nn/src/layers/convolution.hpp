@@ -63,10 +63,10 @@ namespace EigenSinn {
 
     }
 
-    void backward(LayerBase<Scalar, Device_>& prev_layer_any, LayerBase<Scalar, Device_>& next_layer_grad_any) override {
+    void backward(LayerBase<Scalar, Device_>& prev_layer_any, Scalar * next_layer_grad_any) override {
 
       TensorMap<Tensor<Scalar, 4>> prev_layer(prev_layer_any.get_output(), vector2array<int, 4>(in_dims));
-      TensorMap<Tensor<Scalar, 4>> next_layer_grad(next_layer_grad_any.get_output(), vector2array<int, 4>(out_dims));
+      TensorMap<Tensor<Scalar, 4>> next_layer_grad(next_layer_grad_any, vector2array<int, 4>(out_dims));
 
       Tensor<Scalar, 2> dout = unfold_conv_res(next_layer_grad);
 

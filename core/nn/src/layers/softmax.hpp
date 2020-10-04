@@ -49,9 +49,9 @@ namespace EigenSinn {
       layer_output.device(dispatcher.get_device()) = exp_all / exp_sum_broadcast;
     }
 
-    void backward(LayerBase<Scalar, Device_>& prev_layer_any, LayerBase<Scalar, Device_>& next_layer_grad_any) override {
+    void backward(LayerBase<Scalar, Device_>& prev_layer_any, Scalar * next_layer_grad_any) override {
       
-      TensorMap<Tensor<Scalar, Rank>> dout(next_layer_grad_any.get_output(), vector2array<int, Rank>(out_dims));
+      TensorMap<Tensor<Scalar, Rank>> dout(next_layer_grad_any, vector2array<int, Rank>(out_dims));
 
       Tensor<Scalar, Rank> d_mul_exp(dims);
       d_mul_exp.device(dispatcher.get_device()) = dout / exp_sum_broadcast;

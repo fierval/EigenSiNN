@@ -60,10 +60,10 @@ namespace EigenSinn {
 
     // see https://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html
     // for derivations
-    void backward(LayerBase<Scalar, Device_>& prev_layer_any, LayerBase<Scalar, Device_>& next_layer_grad_any) override {
+    void backward(LayerBase<Scalar, Device_>& prev_layer_any, Scalar * next_layer_grad_any) override {
 
       TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_any.get_output(), vector2array<int, Rank>(in_dims));
-      TensorMap<Tensor<Scalar, Rank>> dout(next_layer_grad_any.get_output(), vector2array<int, Rank>(out_dims));
+      TensorMap<Tensor<Scalar, Rank>> dout(next_layer_grad_any, vector2array<int, Rank>(out_dims));
 
       array<Index, Rank - 1> reduction_dims;
       array<Index, Rank> broadcast_dims;

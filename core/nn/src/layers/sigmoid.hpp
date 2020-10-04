@@ -32,8 +32,8 @@ namespace EigenSinn {
     }
 
 
-    void backward(LayerBase<Scalar, Device_>& prev_layer_any, LayerBase<Scalar, Device_>& next_layer_grad_any) override {
-      TensorMap<Tensor<Scalar, Rank>> next_layer_grad(next_layer_grad_any.get_output(), vector2array<int, Rank>(out_dims));
+    void backward(LayerBase<Scalar, Device_>& prev_layer_any, Scalar * next_layer_grad_any) override {
+      TensorMap<Tensor<Scalar, Rank>> next_layer_grad(next_layer_grad_any, vector2array<int, Rank>(out_dims));
 
       layer_grad.device(dispatcher.get_device()) = next_layer_grad * layer_output * (ones - layer_output);
     }
