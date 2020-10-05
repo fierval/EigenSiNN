@@ -24,7 +24,7 @@ namespace EigenSinnTest {
 
       // input layer
       Input<float, 2> input(cd.dims);
-      input.set_weights(cd.linearInput.data());
+      input.set_input(cd.linearInput.data());
 
       // create fully connected layer
       Linear<float> linear(cd.dims[1], cd.out_dims[1]);
@@ -41,14 +41,10 @@ namespace EigenSinnTest {
         // propagate forward through the model
         linear.forward(input);
 
-        TensorMap<Tensor<float, 2>> output(linear.get_output(), vector2array<int, 2>(linear.get_out_dims()));
+        TensorMap<Tensor<float, 2>> output(linear.get_output(), vector2array<2>(linear.get_out_dims()));
 
         // compute loss
-        loss_func.forward(output, cd.target);
-
-        // start propagating back
-        // 1. compute dL/dy
-        loss_func.backward();
+        loss_func.step(output, cd.target);
 
         // propagate back through the fc layer
         // compute dL/dw, dL/db, dL/dx
@@ -66,11 +62,11 @@ namespace EigenSinnTest {
         linear.set_bias(bias_auto);
       }
 
-      return std::make_tuple(linear.get_weights(), linear.get_bias());
+      return std::make_tuple<float*, float*>(linear.get_weights(), linear.get_bias());
     }
 
     void RunPropTest(int epochs) {
-      std::any weights, bias;
+      float * weights, * bias;
       std::tie(weights, bias) = PropagateGradient(epochs);
 
       EXPECT_TRUE(is_elementwise_approx_eq(new_weights, weights));

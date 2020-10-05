@@ -54,7 +54,7 @@ namespace EigenSinn {
         set_dims(prev_layer.get_out_dims(), prev_layer.get_out_dims());
       }
       
-      TensorMap<Tensor<Scalar, Rank>> x(prev_layer.get_output(), vector2array<int, Rank>(in_dims));
+      TensorMap<Tensor<Scalar, Rank>> x(prev_layer.get_output(), vector2array< Rank>(in_dims));
 
       if (!inited) {
         inited = true;
@@ -74,7 +74,7 @@ namespace EigenSinn {
     // for derivations
     void backward(LayerBase<Scalar, Device_>& prev_layer_any, Scalar * next_layer_grad_any) override {
 
-      TensorMap<Tensor<Scalar, Rank>> next_layer_grad(next_layer_grad_any, vector2array<int, Rank>(out_dims));
+      TensorMap<Tensor<Scalar, Rank>> next_layer_grad(next_layer_grad_any, vector2array< Rank>(out_dims));
 
       if (!is_training) { return; }
 

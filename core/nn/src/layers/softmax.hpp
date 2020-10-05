@@ -25,7 +25,7 @@ namespace EigenSinn {
     void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
 
       set_dims(prev_layer_any);
-      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_any, vector2array<int, Rank>(in_dims));
+      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_any, vector2array< Rank>(in_dims));
       
       // we have never initialized or switched from train to test
       // initialize the "1" tensor used for sigmoid backprop
@@ -51,7 +51,7 @@ namespace EigenSinn {
 
     void backward(LayerBase<Scalar, Device_>& prev_layer_any, Scalar * next_layer_grad_any) override {
       
-      TensorMap<Tensor<Scalar, Rank>> dout(next_layer_grad_any, vector2array<int, Rank>(out_dims));
+      TensorMap<Tensor<Scalar, Rank>> dout(next_layer_grad_any, vector2array< Rank>(out_dims));
 
       Tensor<Scalar, Rank> d_mul_exp(dims);
       d_mul_exp.device(dispatcher.get_device()) = dout / exp_sum_broadcast;

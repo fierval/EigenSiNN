@@ -52,7 +52,7 @@ namespace EigenSinn {
         set_dims(prev_layer_base.get_out_dims(), prev_layer_base.get_out_dims());
       }
 
-      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_base.get_output(), vector2array<int, Rank>(in_dims));
+      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_base.get_output(), vector2array< Rank>(in_dims));
 
       std::tie(layer_output, xhat, running_mean, running_variance, mu, var) =
         batch_norm(prev_layer, gamma, beta, eps, momentum, running_mean, running_variance, is_training, dispatcher.get_device());
@@ -62,8 +62,8 @@ namespace EigenSinn {
     // for derivations
     void backward(LayerBase<Scalar, Device_>& prev_layer_any, Scalar * next_layer_grad_any) override {
 
-      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_any.get_output(), vector2array<int, Rank>(in_dims));
-      TensorMap<Tensor<Scalar, Rank>> dout(next_layer_grad_any, vector2array<int, Rank>(out_dims));
+      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_any.get_output(), vector2array< Rank>(in_dims));
+      TensorMap<Tensor<Scalar, Rank>> dout(next_layer_grad_any, vector2array< Rank>(out_dims));
 
       array<Index, Rank - 1> reduction_dims;
       array<Index, Rank> broadcast_dims;

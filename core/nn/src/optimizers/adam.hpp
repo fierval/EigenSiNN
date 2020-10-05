@@ -24,8 +24,8 @@ namespace EigenSinn {
     // Computation: https://towardsdatascience.com/adam-latest-trends-in-deep-learning-optimization-6be9a291375c
     std::tuple<Scalar *, Scalar *> step(LayerBase<Scalar, Device_>& layer) override {
 
-      array<Index, Rank> dims = vector2array<int, Rank>(layer.get_weight_dims());
-      array<Index, 1> dims_bias = vector2array<int, 1>(layer.get_bias_dims());
+      array<Index, Rank> dims = vector2array< Rank>(layer.get_weight_dims());
+      array<Index, 1> dims_bias = vector2array< 1>(layer.get_bias_dims());
 
       TensorMap<Tensor<Scalar, Rank>> weights(layer.get_output(), dims), dweights(layer.get_loss_by_weights_derivative(), dims);
       TensorMap<Tensor<Scalar, 1>> bias(layer.get_bias(), dims_bias), dbias(layer.get_loss_by_bias_derivative(), dims_bias);
@@ -53,8 +53,8 @@ namespace EigenSinn {
       momentum_bias.device(dispatcher.get_device()) = beta1 * momentum_bias + (1 - beta1) * dbias;
       velocity_bias.device(dispatcher.get_device()) = beta2 * velocity_bias + (1 - beta2) * dbias.pow(2.);
 
-      cur_beta1.device(dispatcher.get_device()) *= beta1;
-      cur_beta2.device(dispatcher.get_device()) *= beta2;
+      cur_beta1 *= beta1;
+      cur_beta2 *= beta2;
 
       Tensor<Scalar, Rank> denom_weights(velocity_weights.dimensions());
       denom_weights.device(dispatcher.get_device()) = velocity_weights.sqrt() / sqrt(1 - cur_beta2) + eps;
@@ -67,7 +67,7 @@ namespace EigenSinn {
       weights.device(dispatcher.get_device()) -= step_size * momentum_weights / denom_weights;
       bias.device(dispatcher.get_device()) -= step_size * momentum_bias / denom_bias;
 
-      return make_tuple(weights.data(), bias.data());
+      return std::make_tuple(weights.data(), bias.data());
     }
 
   private:

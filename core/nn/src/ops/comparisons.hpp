@@ -16,14 +16,16 @@ namespace EigenSinn {
   }
 
   template <typename Scalar, Index Dim>
-  inline auto is_elementwise_approx_eq(std::any a, Tensor<Scalar, Dim> b, float prec = 1e-5) {
+  inline auto is_elementwise_approx_eq(Scalar * a, Tensor<Scalar, Dim> b, float prec = 1e-5) {
 
-    return is_elementwise_approx_eq(from_any<Scalar, Dim>(a), b, prec);
+    TensorMap<Tensor<Scalar, Dim>> out(a, b.dimensions());
+    return is_elementwise_approx_eq(out, b, prec);
   }
 
   template <typename Scalar, Index Dim>
-  inline auto is_elementwise_approx_eq(Tensor<Scalar, Dim> a, std::any b, float prec = 1e-5) {
+  inline auto is_elementwise_approx_eq(Tensor<Scalar, Dim> a, Scalar * b, float prec = 1e-5) {
 
-    return is_elementwise_approx_eq(a, from_any<Scalar, Dim>(b), prec);
+    TensorMap<Tensor<Scalar, Dim>> out(b, a.dimensions());
+    return is_elementwise_approx_eq<Scalar, Dim>(a, out, prec);
   }
 }

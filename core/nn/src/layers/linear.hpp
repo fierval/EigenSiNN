@@ -40,10 +40,10 @@ namespace EigenSinn {
       int batch_size = broadcast_bias_dim[0] = prev_layer.get_out_dims()[0];
 
       if (are_dims_unset(prev_layer.get_out_dims())) {
-        int vector<int> _out_dims{ batch_size, out_dim };
+        std::vector<Index> _out_dims{ batch_size, out_dim };
         set_dims(prev_layer.get_out_dims(), _out_dims);
-        set_bias_dims(std::vector<int> {out_dim});
-        set_weight_dims(std::vector<int>{in_dim, out_dim});
+        set_bias_dims(std::vector<Index> {out_dim});
+        set_weight_dims(std::vector<Index>{in_dim, out_dim});
 
         layer_output.resize(batch_size, layer_output.dimension(1));
         layer_grad_loss_by_input.resize(batch_size, layer_grad_loss_by_input.dimension(1));
@@ -51,7 +51,7 @@ namespace EigenSinn {
 
       // dims: [N, D] * [D, M] -> [N, M]
       ProductDims prod_dims = { IndexPair<int>(1, 0) };
-      TensorMap<Tensor<Scalar, 2>> prev_layer_tensor(prev_layer.get_output(), vector2array<int, 2>(in_dims));
+      TensorMap<Tensor<Scalar, 2>> prev_layer_tensor(prev_layer.get_output(), vector2array<2>(in_dims));
 
       layer_output.device(dispatcher.get_device()) = prev_layer_tensor.contract(weights, prod_dims);
 
@@ -63,8 +63,8 @@ namespace EigenSinn {
     // when we are feeding backward from the loss function
     void backward(LayerBase<Scalar, Device_>& prev_layer_any, Scalar * next_layer_grad_any) override {
 
-      TensorMap<Tensor<Scalar, 2>> prev_layer(prev_layer_any.get_output(), vector2array<int, 2>(in_dims));
-      TensorMap<Tensor<Scalar, 2>> next_layer_grad(next_layer_grad_any, vector2array<int, 2>(out_dims));
+      TensorMap<Tensor<Scalar, 2>> prev_layer(prev_layer_any.get_output(), vector2array< 2>(in_dims));
+      TensorMap<Tensor<Scalar, 2>> next_layer_grad(next_layer_grad_any, vector2array< 2>(out_dims));
 
       // this will be fed to the previous backprop layer as the delta parameter
       // dL/dX = dim delta[l+1] * w.T: [N, M] * [M, D] -> [N, D] (same as X[l-1])
@@ -96,7 +96,7 @@ namespace EigenSinn {
       }
 
       //weights of dimension (D, M)
-      weights = generate_xavier<Scalar, 2>(vector2array<int, 2>(weight_dims), dispatcher.get_device());
+      weights = generate_xavier<Scalar, 2>(vector2array< 2>(weight_dims), dispatcher.get_device());
       bias = bias.setZero();
     }
 
@@ -127,16 +127,16 @@ namespace EigenSinn {
       return bias.data();
     }
 
-    void set_weights(const Scalar * _weights) override {
+    void set_weights(Scalar * _weights) override {
 
       // TODO: Will be different for CUDA
-      TensorMap <Tensor<Scalar, Rank>> out(_weights, weights.dimensions());
+      TensorMap <Tensor<Scalar, 2>> out(_weights, weights.dimensions());
       weights = out;
     }
 
-    void set_bias(const Scalar * _bias) override {
+    void set_bias(Scalar * _bias) override {
 
-      TensorMap <Tensor<Scalar, Rank>> out(_bias, bias.dimensions());
+      TensorMap <Tensor<Scalar, 1>> out(_bias, bias.dimensions());
       bias = out;
     }
 

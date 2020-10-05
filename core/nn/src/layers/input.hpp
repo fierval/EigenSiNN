@@ -8,10 +8,12 @@ namespace EigenSinn {
   template<typename Scalar, Index Rank, typename Device_ = DefaultDevice>
   class Input : public LayerBase<Scalar, Device_> {
 
-    public Input(array<Index, Rank> dims, Dispatcher<Device_>& _device = LayerBase<Scalar, Device_>::default_dispatcher) :
+  public:
+    
+    Input(array<Index, Rank> dims, Dispatcher<Device_>& _device = LayerBase<Scalar, Device_>::default_dispatcher) :
       LayerBase(_device) {
 
-      std::vector<int> v_dims = array2vector<int, Rank>(dims);
+      std::vector<Index> v_dims = array2vector(dims);
       set_dims(v_dims, v_dims);
     }
 
@@ -25,9 +27,9 @@ namespace EigenSinn {
 
     void set_input(Scalar* _input) {
       
-      input.resize(vector2array<int, Rank>(out_dims));
+      input.resize(vector2array<Rank>(out_dims));
 
-      TensorMap<Tensor<Scalar, Rank>> inp(_input, out_dims);
+      TensorMap<Tensor<Scalar, Rank>> inp(_input, input.dimensions());
       input.device(dispatcher.get_device()) = inp;
     }
 

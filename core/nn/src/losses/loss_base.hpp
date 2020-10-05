@@ -12,9 +12,7 @@ namespace EigenSinn {
 
   public:
 
-    virtual void forward(const Tensor<Scalar, Rank>& predictions_any, const Tensor<Actual, Rank>& actual_any) = 0;
-
-    virtual void backward() = 0;
+    virtual void step(const Tensor<Scalar, Rank>& predictions_any, const Tensor<Actual, Rank>& actual_any) = 0;
 
     virtual Scalar get_output() {
       return loss;
@@ -28,7 +26,7 @@ namespace EigenSinn {
 
   protected:
 
-    inline void initialize(const Tensor<Scalar, Rank>& predicted, const Tensor<Actual, Rank>& actual) {
+    inline void initialize(const Tensor<Scalar, Rank>& predicted, const Tensor<Actual, Rank> actual) {
 
       array<Index, Rank> predicted_dims = predicted.dimensions();
       array<Index, Rank> actual_dims = actual.dimensions();

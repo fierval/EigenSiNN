@@ -26,9 +26,9 @@ namespace EigenSinn {
 
     virtual  Scalar* get_bias() { return nullptr; }
 
-    virtual void set_weights(const Scalar* _weights) {}
+    virtual void set_weights(Scalar* _weights) {}
 
-    virtual void set_bias(const Scalar* _bias) {}
+    virtual void set_bias(Scalar* _bias) {}
 
     virtual  Scalar* get_output() = 0;
 
@@ -40,34 +40,34 @@ namespace EigenSinn {
 
     inline static Dispatcher<DefaultDevice> default_dispatcher = Dispatcher<DefaultDevice>();
 
-    const std::vector<int>& get_in_dims() { return in_dims; }
-    const std::vector<int>& get_out_dims() { return out_dims; }
+    std::vector<Index>& get_in_dims() { return in_dims; }
+    std::vector<Index>& get_out_dims() { return out_dims; }
 
-    const std::vector<int>& get_bias_dims() { return bias_dims; }
-    const std::vector<int>& get_weight_dims() { return weight_dims; }
+    std::vector<Index>& get_bias_dims() { return bias_dims; }
+    std::vector<Index>& get_weight_dims() { return weight_dims; }
 
-    void set_in_dims(std::vector<int>& _in_dims) { in_dims = _in_dims; }
-    void set_out_dims(std::vector<int>& _out_dims) { out_dims = _out_dims; }
+    void set_in_dims(std::vector<Index>& _in_dims) { in_dims = _in_dims; }
+    void set_out_dims(std::vector<Index>& _out_dims) { out_dims = _out_dims; }
 
-    void set_dims(std::vector<int>& _in_dims, std::vector<int>& _out_dims) {
+    void set_dims(std::vector<Index>& _in_dims, std::vector<Index>& _out_dims) {
       set_in_dims(_in_dims);
       set_out_dims(_out_dims);
     }
 
-    void set_dims(const LayerBase<Scalar, Device_>& layer) {
+    void set_dims(LayerBase<Scalar, Device_>& layer) {
       if (are_dims_unset(layer.get_out_dims())) {
         set_dims(layer.get_out_dims(), layer.get_out_dims());
       }
     }
 
-    void set_bias_dims(std::vector<int>& _bias_dims) { bias_dims = _bias_dims; }
-    void set_weight_dims(std::vector<int>& _weight_dims) { weight_dims = _weight_dims; }
+    void set_bias_dims(std::vector<Index>& _bias_dims) { bias_dims = _bias_dims; }
+    void set_weight_dims(std::vector<Index>& _weight_dims) { weight_dims = _weight_dims; }
 
   protected:
     Dispatcher<Device_>& dispatcher;
-    std::vector<int> in_dims, out_dims, bias_dims, weight_dims;
+    std::vector<Index> in_dims, out_dims, bias_dims, weight_dims;
 
-    bool are_dims_unset(const std::vector<int>& dims) { return in_dims.size() == 0 || dims[0] != in_dims[0]; }
+    bool are_dims_unset(std::vector<Index>& dims) { return in_dims.size() == 0 || dims[0] != in_dims[0]; }
 
     LayerBase(Dispatcher<Device_>& _dispatcher) : dispatcher(_dispatcher) {
     }

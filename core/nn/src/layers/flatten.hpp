@@ -15,14 +15,14 @@ namespace EigenSinn {
 
     void forward(LayerBase<Scalar, Device_>& prev_layer_any) {
       
-      TensorMap<Tensor<Scalar, 4>> orig(prev_layer_any.get_output(), vector2array<int, 4>(prev_layer_any.get_out_dims()));
+      TensorMap<Tensor<Scalar, 4>> orig(prev_layer_any.get_output(), vector2array< 4>(prev_layer_any.get_out_dims()));
 
       original_dimensions = orig.dimensions();
 
       unfolded = unfold_kernel<Scalar>(orig);
 
       if (are_dims_unset(prev_layer_any.get_out_dims())) {
-        set_dims(prev_layer_any.get_out_dims(), array2vector<int, 2>(unfolded.dimensions()));
+        set_dims(prev_layer_any.get_out_dims(), array2vector<2>(unfolded.dimensions()));
       }
 
     }
