@@ -19,6 +19,7 @@ namespace EigenSinnTest {
       cd.init();
     }
     CommonData2d cd;
+
   };
 
   TEST_F(FullyConnected, BackpropNoBias) {
@@ -64,7 +65,7 @@ namespace EigenSinnTest {
     Linear<float> linear(in_dim, 512);
 
     linear.init();
-    Tensor<float, 2> weights = from_any<float, 2>(linear.get_weights());
+    TensorMap<Tensor<float, 2>> weights(linear.get_weights(), vector2array<2>(linear.get_weight_dims()));
     Tensor<float, 0> avg = weights.mean();
     Tensor<float, 0> std = (weights - *(avg.data())).pow(2.).mean();
 

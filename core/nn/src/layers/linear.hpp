@@ -42,8 +42,6 @@ namespace EigenSinn {
       if (are_dims_unset(prev_layer.get_out_dims())) {
         std::vector<Index> _out_dims{ batch_size, out_dim };
         set_dims(prev_layer.get_out_dims(), _out_dims);
-        set_bias_dims(std::vector<Index> {out_dim});
-        set_weight_dims(std::vector<Index>{in_dim, out_dim});
 
         layer_output.resize(batch_size, layer_output.dimension(1));
         layer_grad_loss_by_input.resize(batch_size, layer_grad_loss_by_input.dimension(1));
@@ -80,11 +78,13 @@ namespace EigenSinn {
     }
 
     void init(const Tensor<Scalar, 2>& _weights) {
+      init();
       weights = _weights;
       bias.setZero();
     }
 
     void init(const Tensor<Scalar, 2>& _weights, const Tensor<Scalar, 1>& _bias) {
+
       init(_weights);
       bias = _bias;
     }
@@ -94,6 +94,9 @@ namespace EigenSinn {
       if (in_dim <= 0 || out_dim <= 0 || in_dim > MAX_ELEM || out_dim > MAX_ELEM) {
         throw std::invalid_argument("inappropriate dimensions");
       }
+
+      set_bias_dims(std::vector<Index> {out_dim});
+      set_weight_dims(std::vector<Index>{in_dim, out_dim});
 
       //weights of dimension (D, M)
       weights = generate_xavier<Scalar, 2>(vector2array< 2>(weight_dims), dispatcher.get_device());
