@@ -131,13 +131,13 @@ namespace EigenSinn {
 
       // TODO: Will be different for CUDA
       TensorMap <Tensor<Scalar, 2>> out(_weights, weights.dimensions());
-      weights = out;
+      weights.device(dispatcher.get_device()) = out;
     }
 
     void set_bias(Scalar * _bias) override {
 
       TensorMap <Tensor<Scalar, 1>> out(_bias, bias.dimensions());
-      bias = out;
+      bias.device(dispatcher.get_device()) = out;
     }
 
   private:

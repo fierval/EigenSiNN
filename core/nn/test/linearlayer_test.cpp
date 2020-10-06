@@ -1,4 +1,5 @@
 #include "layers/linear.hpp"
+#include "layers/input.hpp"
 #include "include/commondata2d.hpp"
 #include <iostream>
 #include "ops/comparisons.hpp"
@@ -22,11 +23,14 @@ namespace EigenSinnTest {
 
   TEST_F(FullyConnected, BackpropNoBias) {
 
+    Input<float, 2> input(cd.dims);
+    input.set_input(cd.linearInput.data());
+
     Linear<float> linear(cd.dims[1], cd.out_dims[1]);
 
     linear.init(cd.weights);
-    linear.forward(cd.linearInput);
-    linear.backward(cd.linearInput, cd.fakeloss);
+    linear.forward(input);
+    linear.backward(input, cd.fakeloss.data());
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.output, linear.get_output()));
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dinput, linear.get_loss_by_input_derivative()));
@@ -35,12 +39,15 @@ namespace EigenSinnTest {
 
   TEST_F(FullyConnected, BackpropBias) {
 
+    Input<float, 2> input(cd.dims);
+    input.set_input(cd.linearInput.data());
+
     Linear<float> linear(cd.dims[1], cd.out_dims[1]);
 
     linear.init(cd.weights, cd.bias);
-    linear.forward(cd.linearInput);
-    linear.backward(cd.linearInput, cd.fakeloss);
-    
+    linear.forward(input);
+    linear.backward(input, cd.fakeloss.data());
+
     cd.output.setValues({ { 0.23947978,  1.57379603,  0.23219500,  0.99900943},
         { 1.11431766, -1.17991734, -0.41367567,  1.14438200},
         { 0.11173135,  0.14724597,  0.10992362,  1.70647931} });
