@@ -4,6 +4,7 @@
 #include "include/commondata2d.hpp"
 #include "include/testutils.hpp"
 #include "ops/comparisons.hpp"
+#include <layers/input.hpp>
 
 using namespace EigenSinn;
 
@@ -59,40 +60,28 @@ namespace EigenSinnTest {
 
   };
 
-  TEST_F(ReLU2d, Forward) {
-
-    ReLU<float, 2> rl;
-    rl.init();
-    rl.forward(cd.linearInput);
-
-    EXPECT_TRUE(is_elementwise_approx_eq(rl.get_output(), output));
-  }
-
   TEST_F(ReLU2d, Backward) {
+    
+    Input<float, 2> input(cd.linearInput.dimensions());
+    input.set_input(cd.linearInput.data());
 
     ReLU<float, 2> rl;
     rl.init();
-    rl.forward(cd.linearInput);
-    rl.backward(cd.linearInput, cd.linearLoss);
+    rl.forward(input);
+    rl.backward(input, cd.linearLoss.data());
 
     EXPECT_TRUE(is_elementwise_approx_eq(rl.get_loss_by_input_derivative(), dinput, 3e-5));
   }
 
-  TEST_F(ReLU2d, LeakyForward) {
-
-    LeakyReLU<float, 2> rl(thresh);
-    rl.init();
-    rl.forward(cd.linearInput);
-
-    EXPECT_TRUE(is_elementwise_approx_eq(rl.get_output(), output_leaky));
-  }
-
   TEST_F(ReLU2d, LeakyBackward) {
 
+    Input<float, 2> input(cd.linearInput.dimensions());
+    input.set_input(cd.linearInput.data());
+
     LeakyReLU<float, 2> rl(thresh);
     rl.init();
-    rl.forward(cd.linearInput);
-    rl.backward(cd.linearInput, cd.linearLoss);
+    rl.forward(input);
+    rl.backward(input, cd.linearLoss.data());
 
     EXPECT_TRUE(is_elementwise_approx_eq(rl.get_loss_by_input_derivative(), dinput_leaky));
   }

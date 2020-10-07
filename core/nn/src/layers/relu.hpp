@@ -23,8 +23,8 @@ namespace EigenSinn {
         set_dims(prev_layer.get_out_dims(), prev_layer.get_out_dims());
       }
 
-      TensorMap<Tensor<Scalar, Rank>> x(prev_layer.get_output(), vector2array< Rank>(in_dims));
-      auto res = leaky_relu(x, thresh);
+      TensorMap<Tensor<Scalar, Rank>> x(prev_layer.get_output(), vector2array<Rank>(in_dims));
+      auto res = leaky_relu<Scalar, Rank>(x, thresh);
 
       layer_output = res.second;
       mask = res.first;
@@ -32,9 +32,9 @@ namespace EigenSinn {
 
     void backward(LayerBase<Scalar, Device_>& prev_layer, Scalar * next_layer_grad) override {
 
-      TensorMap<Tensor<Scalar, Rank>> x(next_layer_grad, vector2array< Rank>(out_dims));
+      TensorMap<Tensor<Scalar, Rank>> x(next_layer_grad, vector2array<Rank>(out_dims));
 
-      layer_grad = leaky_relu_back(x, mask, dispatcher.get_device());
+      layer_grad = leaky_relu_back<Scalar, Rank, Device_>(x, mask, dispatcher.get_device());
     }
 
     Scalar * get_output() override {
