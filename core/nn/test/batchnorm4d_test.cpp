@@ -5,6 +5,7 @@
 #include <ops/comparisons.hpp>
 
 #include "include/commondata4d.hpp"
+#include <layers\input.hpp>
 
 using namespace EigenSinn;
 
@@ -105,21 +106,15 @@ namespace EigenSinnTest {
       const float prec = 1e-5;
     };
 
-    TEST_F(Batchnorm4dTest, Forward) {
-
-      BatchNormalizationLayer<float, 4> bn(3);
-      bn.init(beta, gamma);
-      bn.forward(input);
-
-      EXPECT_TRUE(is_elementwise_approx_eq(output, from_any<float, 4>(bn.get_output()), 2e-6));
-    }
-
     TEST_F(Batchnorm4dTest, Backward) {
 
+      Input<float, 4> input_layer(input.dimensions());
+      input_layer.set_input(input.data());
+
       BatchNormalizationLayer<float, 4> bn(3);
       bn.init(beta, gamma);
-      bn.forward(input);
-      bn.backward(input, loss);
+      bn.forward(input_layer);
+      bn.backward(input_layer, loss.data());
 
       Tensor<float, 1> dbeta(cd.dims[1]), dgamma(cd.dims[1]);
       dbeta.setValues({ 15.55493259, 17.75424004, 14.48464108 });
