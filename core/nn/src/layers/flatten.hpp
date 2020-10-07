@@ -29,17 +29,17 @@ namespace EigenSinn {
 
     void backward(LayerBase<Scalar, Device_>& prev_layer, Scalar * next_layer_grad) {
 
-      TensorMap<Tensor<Scalar, 2>> unf_dout(next_layer_grad, original_dimensions);
+      TensorMap<Tensor<Scalar, 2>> unf_dout(next_layer_grad, vector2array<2>(out_dims));
 
       folded = fold_kernel<Scalar>(unf_dout, original_dimensions);
     }
 
     Scalar * get_output() override {
-      return unfolded;
+      return unfolded.data();
     }
 
     Scalar * get_loss_by_input_derivative() override {
-      return folded;
+      return folded.data();
     }
 
   private:

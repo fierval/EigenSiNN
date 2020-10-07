@@ -4,6 +4,7 @@
 #include "include/convdata4d.hpp"
 #include "include/testutils.hpp"
 #include "ops/comparisons.hpp"
+#include <layers/input.hpp>
 
 using namespace EigenSinn;
 
@@ -24,13 +25,14 @@ namespace EigenSinnTest {
   };
 
   TEST_F(FlatLayer, Flat) {
+    Input<float, 4> input(cd.dims);
+    input.set_input(cd.convInput.data());
 
     Flatten<float> conv2d;
 
-    conv2d.forward(cd.convInput);
+    conv2d.forward(input);
 
-    auto post_flat = conv2d.get_output();
-    conv2d.backward(cd.convInput, post_flat);
+    conv2d.backward(input, conv2d.get_output());
 
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.convInput, conv2d.get_loss_by_input_derivative()));
