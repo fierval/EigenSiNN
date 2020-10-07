@@ -9,7 +9,7 @@ namespace EigenSinn {
   class SGD : public OptimizerBase<Scalar> {
 
   public:
-    SGD(Scalar _lr, Dispatcher<Device_>& _device = OptimizerBase::default_dispatcher, Scalar _momentum = 0, bool _nesterov = false)
+    SGD(Scalar _lr, Scalar _momentum = 0, bool _nesterov = false, Dispatcher<Device_>& _device = OptimizerBase::default_dispatcher)
       : OptimizerBase(_lr, _device)
       , nesterov(_nesterov)
       , momentum(_momentum)
@@ -52,7 +52,7 @@ namespace EigenSinn {
 
       weights -= lr * dweights;
       bias -= lr * dbias;
-      return make_tuple(weights.data(), bias.data());
+      return std::make_tuple(weights.data(), bias.data());
     }
 
   private:
