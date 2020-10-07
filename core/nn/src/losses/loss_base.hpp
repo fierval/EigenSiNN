@@ -34,6 +34,7 @@ namespace EigenSinn {
       if (!is_dim_set) {
         orig_dims = actual.dimensions();
         spread_grad.resize(orig_dims);
+        // TODO: rewrite for Rank > 2
         spread_grad.setConstant(1. / (orig_dims[0] * orig_dims[1]));
         is_dim_set = true;
       }

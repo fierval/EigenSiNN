@@ -6,6 +6,7 @@
 #include "losses/mse.hpp"
 #include "losses/crossentropyloss.hpp"
 #include "include/testutils.hpp"
+#include <layers/input.hpp>
 
 using namespace EigenSinn;
 
@@ -18,23 +19,25 @@ namespace EigenSinnTest {
       cd.init();
       dloss.resize(cd.out_dims);
 
+      inp = new Input<float, 2>(cd.dims);
+      inp->set_input(cd.linearInput.data());
+
       fc = new Linear<float>(cd.dims[1], cd.out_dims[1]);
 
       fc->init(cd.weights);
-      fc->forward(cd.linearInput);
-
-      EXPECT_TRUE(is_elementwise_approx_eq(fc->get_output(), cd.output));
-
+      fc->forward(*inp);
     }
 
     void TearDown() {
       delete fc;
+      delete inp;
     }
 
     float loss;
     Tensor<float, 2> dloss;
     CommonData2d cd;
     Linear<float>* fc;
+    Input<float, 2> * inp;
   };
 
   TEST_F(Loss, MSE) {
@@ -45,13 +48,12 @@ namespace EigenSinnTest {
       { 0.04065431, -0.21157818, -0.09260463, -0.06111295},
       {-0.12644342,  0.00961572, -0.17200474,  0.19923662} });
 
-    Tensor<float, 2> output = from_any<float, 2>(fc->get_output());
+    TensorMap<Tensor<float, 2>> output(fc->get_output(), vector2array<2>(fc->get_out_dims()));
 
-    MseLoss<float> loss_func;
-    loss_func.forward(output, cd.target);
-    loss_func.backward();
+    MseLoss<float, float, 2> loss_func;
+    loss_func.step(output, cd.target);
 
-    EXPECT_EQ(loss, from_any_scalar<float>(loss_func.get_output()));
+    EXPECT_EQ(loss, loss_func.get_output());
     EXPECT_TRUE(is_elementwise_approx_eq(dloss, loss_func.get_loss_derivative_by_input()));
   }
 
@@ -63,13 +65,12 @@ namespace EigenSinnTest {
               { 0.10596204,  0.02332874,  0.04763307, -0.17692387},
               { 0.02690827,  0.06087292, -0.27768427,  0.18990307} });
 
-    Tensor<float, 2> output = from_any<float, 2>(fc->get_output());
+    TensorMap<Tensor<float, 2>> output(fc->get_output(), vector2array<2>(fc->get_out_dims()));
 
-    CrossEntropyLoss<float> loss_func;
-    loss_func.forward(output, cd.target);
-    loss_func.backward();
+    CrossEntropyLoss<float, float, 2> loss_func;
+    loss_func.step(output, cd.target);
 
-    EXPECT_EQ(loss, from_any_scalar<float>(loss_func.get_output()));
+    EXPECT_EQ(loss, loss_func.get_output());
     EXPECT_TRUE(is_elementwise_approx_eq(dloss, loss_func.get_loss_derivative_by_input()));
   }
 
