@@ -33,22 +33,23 @@ namespace EigenSinn {
     void forward(LayerBase<Scalar, Device_>& prev_layer) override {
 
       if (are_dims_unset(prev_layer.get_out_dims())) {
-        set_dims(prev_layer.get_out_dims(), prev_layer.get_out_dims());
+        set_in_dims(prev_layer.get_out_dims());
       }
 
-      TensorMap<Tensor<Scalar, Rank>> x(prev_layer.get_output(), vector2array< Rank>(in_dims));
+      TensorMap<Tensor<Scalar, Rank>> x(prev_layer.get_output(), vector2array<Rank>(in_dims));
       auto res = max_pooler.do_max_pool(x, extents, stride, dispatcher.get_device());
 
       original_dimensions = x.dimensions();
       layer_output = res.first;
       mask = res.second;
       
+      set_out_dims(array2vector<Rank>(mask.dimensions()));
     }
 
     // for derivations
     void backward(LayerBase<Scalar, Device_>& prev_layer, Scalar * next_layer_grad) override {
 
-      TensorMap<Tensor<Scalar, Rank>> x(next_layer_grad, vector2array< Rank>(out_dims));
+      TensorMap<Tensor<Scalar, Rank>> x(next_layer_grad, vector2array<Rank>(out_dims));
 
       layer_gradient = max_pooler.do_max_pool_backward(x, mask, original_dimensions, extents, stride);
     }

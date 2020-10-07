@@ -2,7 +2,9 @@
 #include <gtest/gtest.h>
 #include <layers/maxpooling.hpp>
 #include "include/commondata4d.hpp"
+#include "include/testutils.hpp"
 #include "ops/comparisons.hpp"
+#include <layers/input.hpp>
 
 using namespace EigenSinn;
 
@@ -142,23 +144,19 @@ namespace EigenSinnTest {
     EXPECT_FALSE(res);
   }
 
-  TEST_F(Pool4d, Forward) {
-
-    MaxPooling<float, 4> pl(extents2d, stride);
-    pl.init();
-    pl.forward(cd.convInput);
-
-    EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 4>(pl.get_output()), output));
-  }
-
   TEST_F(Pool4d, Backward) {
 
-    MaxPooling<float, 4> pl(extents2d, stride);
-    pl.init();
-    pl.forward(cd.convInput);
-    pl.backward(cd.convInput, fakeloss);
+    Input<float, 4> input(cd.convInput.dimensions());
+    input.set_input(cd.convInput.data());
 
-    EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 4>(pl.get_loss_by_input_derivative()), dinput));
+    MaxPooling<float, 4> pl(extents2d, stride);
+
+    pl.init();
+    pl.forward(input);
+    pl.backward(input, fakeloss.data());
+
+    EXPECT_TRUE(is_elementwise_approx_eq(pl.get_output(), output));
+    EXPECT_TRUE(is_elementwise_approx_eq(pl.get_loss_by_input_derivative(), dinput));
   }
 
 
