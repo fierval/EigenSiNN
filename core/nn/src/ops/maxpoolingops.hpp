@@ -39,7 +39,7 @@ namespace EigenSinn {
 
   template <typename Scalar, typename Device_>
   struct MaxPooler<Scalar, 2, Device_> {
-    inline auto do_max_pool(Tensor<Scalar, 2>& t, const array<Index, 1>& extents, int stride, const Device_& device) {
+    inline auto do_max_pool(const Tensor<Scalar, 2>& t, const array<Index, 1>& extents, int stride, const Device_& device) {
       auto dims = t.dimensions();
 
       if (!check_valid_params<2>(extents, stride, dims)) {
@@ -109,7 +109,7 @@ namespace EigenSinn {
 
   template <typename Scalar, typename Device_>
   struct MaxPooler<Scalar, 4, Device_> {
-    inline auto do_max_pool(Tensor<Scalar, 4>& t, const array<Index, 2>& extents, int stride, const Device_& device) {
+    inline auto do_max_pool(const Tensor<Scalar, 4>& t, const array<Index, 2>& extents, int stride, const Device_& device) {
       auto dims = t.dimensions();
 
       if (!check_valid_params<4>(extents, stride, dims)) {

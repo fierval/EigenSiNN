@@ -3,6 +3,7 @@
 #include <layers/maxpooling.hpp>
 #include "include/commondata2d.hpp"
 #include "ops/comparisons.hpp"
+#include <layers/input.hpp>
 
 using namespace EigenSinn;
 
@@ -60,22 +61,28 @@ namespace EigenSinnTest {
   }
 
   TEST_F(Pool2d, Forward) {
+    Input<float, 2> input(cd.linearInput.dimensions());
+    input.set_input(cd.linearInput.data());
 
     MaxPooling<float, 2> pl(extents1d, stride);
     pl.init();
-    pl.forward(cd.linearInput);
+    pl.forward(input);
 
-    EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(pl.get_output()), output));
+    EXPECT_TRUE(is_elementwise_approx_eq(pl.get_output(), output));
   }
 
   TEST_F(Pool2d, Backward) {
 
+    Input<float, 2> input(cd.linearInput.dimensions());
+    input.set_input(cd.linearInput.data());
+
     MaxPooling<float, 2> pl(extents1d, stride);
     pl.init();
-    pl.forward(cd.linearInput);
-    pl.backward(cd.linearInput, fakeloss);
+    pl.forward(input);
 
-    EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(pl.get_loss_by_input_derivative()), dinput));
+    pl.backward(input, fakeloss.data());
+
+    EXPECT_TRUE(is_elementwise_approx_eq(pl.get_loss_by_input_derivative(), dinput));
   }
 
 
