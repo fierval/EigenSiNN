@@ -4,6 +4,7 @@
 #include "include/commondata2d.hpp"
 #include "include/testutils.hpp"
 #include "ops/comparisons.hpp"
+#include "layers/input.hpp"
 
 using namespace EigenSinn;
 
@@ -22,9 +23,13 @@ namespace EigenSinnTest {
 
   TEST_F(Dropout, Forward) {
 
+    Input<float, 2> input(cd.linearInput.dimensions());
+    input.set_input(cd.linearInput.data());
+
     EigenSinn::Dropout<float, 2> dropout;
-    dropout.forward(cd.linearInput);
-    auto output = from_any<float, 2>(dropout.get_output());
+    dropout.forward(input);
+
+    TensorMap<Tensor<float, 2>> output(dropout.get_output(), vector2array<2>(dropout.get_out_dims()));
 
     Tensor<float, 2> zeros(output.dimensions());
     zeros.setZero();
@@ -43,11 +48,14 @@ namespace EigenSinnTest {
 
   TEST_F(Dropout, Backward) {
 
-    EigenSinn::Dropout<float, 2> dropout;
-    dropout.forward(cd.linearInput);
-    dropout.backward(cd.linearInput, cd.linearLoss);
+    Input<float, 2> input(cd.linearInput.dimensions());
+    input.set_input(cd.linearInput.data());
 
-    auto dinput = from_any<float, 2>(dropout.get_loss_by_input_derivative());
+    EigenSinn::Dropout<float, 2> dropout;
+    dropout.forward(input);
+    dropout.backward(input, cd.linearLoss.data());
+
+    TensorMap<Tensor<float, 2>> dinput(dropout.get_loss_by_input_derivative(), vector2array<2>(dropout.get_out_dims()));
 
     Tensor<float, 2> zeros(dinput.dimensions());
     zeros.setZero();
