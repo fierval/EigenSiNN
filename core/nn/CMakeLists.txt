@@ -7,7 +7,7 @@ set(TEST_EXE eigentest)
 
 # discover test sources
 #file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "test/*.cu")
-set(TEST_SOURCES "test/linearlayer_test.cpp")
+set(TEST_SOURCES "test/batchnorm_test.cpp")
 
 message(STATUS "Sources: ${TEST_SOURCES}")
 message(STATUS "CUDA Include: ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")

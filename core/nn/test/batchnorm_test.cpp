@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <layers/batchnorm.hpp>
+#include <layers/input.hpp>
 #include <iostream>
 #include <ops/conversions.hpp>
 #include <ops/comparisons.hpp>
@@ -39,23 +40,10 @@ namespace EigenSinnTest {
     const Index batch_size = 2, cols = 5;
   };
 
-  TEST_F(Batchnorm1dTest, Forward) {
-
-    BatchNormalizationLayer<float, 2> bn(cols, eps, momentum);
-
-    MatrixXf expected(batch_size, cols); 
-    
-    expected << 1.09985983, 2.19994974, -2.69904351, -3.59016228, -4.49944401,
-      -0.89985991, -1.79994965, 3.29904366, 4.39015722, 5.49944448;
-
-
-    bn.init(beta, gamma);
-    bn.forward(input);
-
-    EXPECT_TRUE(expected.isApprox(Tensor_to_Matrix(from_any<float, 2>(bn.get_output())), 1e-5));
-  }
-
   TEST_F(Batchnorm1dTest, Backward) {
+
+    Input<float, 2> input_layer(input.dimensions());
+    input_layer.set_input(input.data());
 
     BatchNormalizationLayer<float, 2> bn(cols, eps, momentum);
 
@@ -69,12 +57,12 @@ namespace EigenSinnTest {
       {1.90745224e-04, 3.91245958e-05, -1.86752446e-03, -4.88256179e-02, -2.96444632e-04 }});
 
     bn.init(beta, gamma);
-    bn.forward(input);
-    bn.backward(input, loss);
+    bn.forward(input_layer);
+    bn.backward(input_layer, loss.data());
 
 
-    EXPECT_TRUE(is_elementwise_approx_eq(expected_derivative, from_any<float, 2>(bn.get_loss_by_input_derivative()), 4e-5));
-    EXPECT_TRUE(is_elementwise_approx_eq(exp_dbeta, from_any<float, 1>(bn.get_loss_by_bias_derivative()), 1e-5));
-    EXPECT_TRUE(is_elementwise_approx_eq(exp_dgamma, from_any<float, 1>(bn.get_loss_by_weights_derivative()), 1e-5));
+    EXPECT_TRUE(is_elementwise_approx_eq(expected_derivative, bn.get_loss_by_input_derivative(), 4e-5));
+    EXPECT_TRUE(is_elementwise_approx_eq(exp_dbeta, bn.get_loss_by_bias_derivative(), 1e-5));
+    EXPECT_TRUE(is_elementwise_approx_eq(exp_dgamma, bn.get_loss_by_weights_derivative(), 1e-5));
   } 
 }

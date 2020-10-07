@@ -52,10 +52,11 @@ namespace EigenSinn {
         set_dims(prev_layer_base.get_out_dims(), prev_layer_base.get_out_dims());
       }
 
-      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_base.get_output(), vector2array< Rank>(in_dims));
+      TensorMap<Tensor<Scalar, Rank>> prev_layer_map(prev_layer_base.get_output(), vector2array< Rank>(in_dims));
+      Tensor<Scalar, Rank> prev_layer = prev_layer_map;
 
       std::tie(layer_output, xhat, running_mean, running_variance, mu, var) =
-        batch_norm(prev_layer, gamma, beta, eps, momentum, running_mean, running_variance, is_training, dispatcher.get_device());
+        batch_norm<Scalar, Rank, Device_>(prev_layer, gamma, beta, eps, momentum, running_mean, running_variance, is_training, dispatcher.get_device());
     }
 
     // see https://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html
@@ -76,7 +77,7 @@ namespace EigenSinn {
         total_channel *= prev_layer.dimension(i);
       }
 
-      std::tie(reduction_dims, broadcast_dims) = get_broadcast_and_reduction_dims(dout);
+      std::tie(reduction_dims, broadcast_dims) = get_broadcast_and_reduction_dims<Rank>(dout);
 
       //broadcast values
       Tensor<Scalar, Rank> broadcast_mean = broadcast_as_last_dim(mu, broadcast_dims, dispatcher.get_device());
@@ -165,15 +166,15 @@ namespace EigenSinn {
       return beta.data();
     }
 
-    void set_weights(const Scalar* _weights) override {
+    void set_weights(Scalar* _weights) override {
       // TODO: Will be different for CUDA
-      TensorMap <Tensor<Scalar, Rank>> out(_weights, gamma.dimensions());
+      TensorMap <Tensor<Scalar, 1>> out(_weights, gamma.dimensions());
       gamma = out;
     }
 
-    void set_bias(const Scalar* _bias) override {
+    void set_bias(Scalar* _bias) override {
       // TODO: Will be different for CUDA
-      TensorMap <Tensor<Scalar, Rank>> out(_bias, beta.dimensions());
+      TensorMap <Tensor<Scalar, 1>> out(_bias, beta.dimensions());
       beta = out;
     }
 
