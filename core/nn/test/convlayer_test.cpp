@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "layers/convolution.hpp"
+#include "layers/input.hpp"
 #include "include/commondata4d.hpp"
 #include "include/convdata4d.hpp"
 #include "include/testutils.hpp"
@@ -23,23 +24,17 @@ namespace EigenSinnTest {
     const Padding2D padding = { 0, 0 };
   };
 
-  TEST_F(Convolution, Forward) {
-
-    Conv2d<float> conv2d(cd.kernelDims);
-
-    conv2d.init(cd.convWeights);
-    conv2d.forward(cd.convInput);
-
-    EXPECT_TRUE(is_elementwise_approx_eq(cd.output, conv2d.get_output()));
-  }
-
+  
   TEST_F(Convolution, ForwardIm2Col) {
 
+    Input<float, 4> input(cd.convInput.dimensions());
+    input.set_input(cd.convInput.data());
+
     Conv2d<float> conv2d(cd.kernelDims);
 
     conv2d.init(cd.convWeights);
-    conv2d.forward(cd.convInput);
-    auto convolved = from_any<float, 4>(conv2d.get_output());
+    conv2d.forward(input);
+    auto convolved = conv2d.get_output();
 
     // perform convolutiion with GEMM using im2col
     auto col_inputs = im2col(cd.convInput, cd.convWeights.dimensions(), padding);
@@ -57,12 +52,15 @@ namespace EigenSinnTest {
 
   TEST_F(Convolution, Backward) {
 
+    Input<float, 4> input(cd.convInput.dimensions());
+    input.set_input(cd.convInput.data());
+
     Conv2d<float> conv2d(cd.kernelDims);
 
     conv2d.init(cd.convWeights);
-    conv2d.forward(cd.convInput);
+    conv2d.forward(input);
 
-    conv2d.backward(cd.convInput, cd.convLoss);
+    conv2d.backward(input, cd.convLoss.data());
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dinput, conv2d.get_loss_by_input_derivative()));
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dweight, conv2d.get_loss_by_weights_derivative()));
@@ -74,9 +72,9 @@ namespace EigenSinnTest {
     array<Index, 4> kdims = { 1, 512, 3, 3 };
     Conv2d<float> conv2d(kdims);
 
-
     conv2d.init();
-    auto weights = from_any<float, 4>(conv2d.get_weights());
+    TensorMap<Tensor<float, 4>> weights(conv2d.get_weights(), vector2array<4>(conv2d.get_weight_dims()));
+
     Tensor<float, 0> avg = weights.mean();
     Tensor<float, 0> var = (weights - *(avg.data())).pow(2.).mean();
     Tensor<float, 0> var_expected;
@@ -100,25 +98,17 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(folded_kernel, cd.convWeights));
   }
 
-  TEST_F(Convolution, Forward1Padding) {
-
-    Conv2d<float> conv2d(cd.kernelDims, { 1, 1 });
-
-    conv2d.init(cd.convWeights);
-    conv2d.forward(cd.convInput);
-
-    EXPECT_TRUE(is_elementwise_approx_eq(cd1p.output, conv2d.get_output()));
-
-  }
-
   TEST_F(Convolution, Backward1Padding) {
 
+    Input<float, 4> input(cd.convInput.dimensions());
+    input.set_input(cd.convInput.data());
+
     Conv2d<float> conv2d(cd.kernelDims, { 1, 1 });
 
     conv2d.init(cd.convWeights);
-    conv2d.forward(cd.convInput);
+    conv2d.forward(input);
 
-    conv2d.backward(cd.convInput, cd1p.convLoss);
+    conv2d.backward(input, cd1p.convLoss.data());
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd1p.dinput, conv2d.get_loss_by_input_derivative()));
     EXPECT_TRUE(is_elementwise_approx_eq(cd1p.dweight, conv2d.get_loss_by_weights_derivative()));

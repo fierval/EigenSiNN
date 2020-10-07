@@ -73,4 +73,12 @@ namespace EigenSinn {
     return out;
   }
 
+  template<Index Rank>
+  inline std::vector<Index> array2vector(const DSizes<Index, Rank>& a) {
+
+    std::vector<Index> out(Rank);
+    std::copy_n(a.begin(), Rank, out.begin());
+    return out;
+  }
+
 }

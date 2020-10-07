@@ -28,29 +28,33 @@ namespace EigenSinn {
     // TODO: this needs to be implemented for real
     // Also strides and padding should be added
     void init() override {
+
+      set_bias_dims(std::vector<Index>(kernel.dimension(0)));
+      set_weight_dims(array2vector<4>(kernel.dimensions()));
+
       kernel = generate_xavier<Scalar, 4>(kernel.dimensions(), dispatcher.get_device());
       bias.setZero();
     }
 
     void init(const Tensor<Scalar, 4> _weights) {
+      init();
+
       kernel = _weights;
       bias.setZero();
     }
 
     void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
 
-      TensorMap<Tensor<Scalar, 4>> prev_layer(prev_layer_any.get_output(), vector2array< 4>(prev_layer_any.get_out_dims()));
+      TensorMap<Tensor<Scalar, 4>> prev_layer(prev_layer_any.get_output(), vector2array<4>(prev_layer_any.get_out_dims()));
 
       if (are_dims_unset(prev_layer_any.get_out_dims()))
       {
         set_in_dims(prev_layer_any.get_out_dims());
-        auto _out_dims = get_output_dimensions(prev_layer, kernel, padding, stride);
-        set_out_dims(_out_dims);
-        set_bias_dims(std::vector<Index>(kernel.dimension(0)));
-        set_weight_dims(array2vector<4>(kernel.dimensions()));
+        auto _out_dims = get_output_dimensions<Scalar, 4>(prev_layer, kernel, padding, stride);
+        set_out_dims(array2vector<4>(_out_dims));
       }
 
-      layer_output = convolve(prev_layer, kernel, padding, stride, dispatcher.get_device());
+      layer_output = convolve<Scalar, 4, Device_>(prev_layer, kernel, padding, stride, dispatcher.get_device());
 
 
       //add bias to each channel
@@ -68,11 +72,11 @@ namespace EigenSinn {
       TensorMap<Tensor<Scalar, 4>> prev_layer(prev_layer_any.get_output(), vector2array< 4>(in_dims));
       TensorMap<Tensor<Scalar, 4>> next_layer_grad(next_layer_grad_any, vector2array< 4>(out_dims));
 
-      Tensor<Scalar, 2> dout = unfold_conv_res(next_layer_grad);
+      Tensor<Scalar, 2> dout = unfold_conv_res<Scalar>(next_layer_grad);
 
       // flatten weights and kernel
       Tensor<Scalar, 2> unf_kernel = unfold_kernel(kernel);
-      Tensor<Scalar, 2> x_col = im2col(prev_layer, kernel.dimensions(), padding, stride, dispatcher.get_device());
+      Tensor<Scalar, 2> x_col = im2col<Scalar, 4>(prev_layer, kernel.dimensions(), padding, stride, dispatcher.get_device());
 
       // dX: kernel.T * dout
       ProductDims prod_dims = { IndexPair<int>(0, 0) };
@@ -116,16 +120,16 @@ namespace EigenSinn {
       return loss_by_bias_derivative.data();
     }
 
-    void set_weights(const Scalar * _weights) override {
+    void set_weights(Scalar * _weights) override {
 
       // TODO: Will be different for CUDA
-      TensorMap <Tensor<Scalar, Rank>> out(_weights, kernel.dimensions());
+      TensorMap <Tensor<Scalar, 4>> out(_weights, kernel.dimensions());
       kernel = out;
     }
 
-    void set_bias(const Scalar * _bias) override {
+    void set_bias(Scalar * _bias) override {
 
-      TensorMap <Tensor<Scalar, Rank>> out(_bias, bias.dimensions());
+      TensorMap <Tensor<Scalar, 1>> out(_bias, bias.dimensions());
       bias = out;
     }
 

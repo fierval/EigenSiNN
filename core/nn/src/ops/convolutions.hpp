@@ -64,7 +64,7 @@ namespace EigenSinn {
   // NCHW format
   //TODO: support stride
   template <typename Scalar, Index Rank = 4, typename Device_ = DefaultDevice>
-  inline Tensor<Scalar, Rank> convolve(Tensor<Scalar, Rank>& input, Tensor<Scalar, Rank>& kernel, const Padding2D& padding, Index stride = 1, const Device_& device = DefaultDevice()) {
+  inline Tensor<Scalar, Rank> convolve(const Tensor<Scalar, Rank>& input, Tensor<Scalar, Rank>& kernel, const Padding2D& padding, Index stride = 1, const Device_& device = DefaultDevice()) {
 
     //dimensions involved in the convolution. Channel dimension is also involved.
     array<Index, 3> dims({ (int)ImageDims::channel, (int)ImageDims::height, (int)ImageDims::width });
