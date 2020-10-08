@@ -25,7 +25,7 @@ namespace EigenSinn {
     void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
 
       set_dims(prev_layer_any);
-      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_any, vector2array< Rank>(in_dims));
+      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_any.get_output(), vector2array< Rank>(in_dims));
       
       // we have never initialized or switched from train to test
       // initialize the "1" tensor used for sigmoid backprop
@@ -80,7 +80,7 @@ namespace EigenSinn {
     };
 
   private:
-    void init_cached(Eigen::Tensor<Scalar, Rank>& prev_layer)
+    void init_cached(const Eigen::Tensor<Scalar, Rank>& prev_layer)
     {
       layer_output.resize(prev_layer.dimensions());
       layer_grad.resize(prev_layer.dimensions());

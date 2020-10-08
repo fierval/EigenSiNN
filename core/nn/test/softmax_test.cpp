@@ -4,6 +4,7 @@
 #include "include/commondata2d.hpp"
 #include "include/testutils.hpp"
 #include "ops/comparisons.hpp"
+#include <layers/input.hpp>
 
 using namespace EigenSinn;
 
@@ -39,22 +40,17 @@ namespace EigenSinnTest {
 
   };
 
-  TEST_F(Softmax, Forward) {
-
-    EigenSinn::Softmax<float, 2> softmax;
-    softmax.init();
-    softmax.forward(cd.linearInput);
-
-    EXPECT_TRUE(is_elementwise_approx_eq(softmax.get_output(), output));
-  }
-
   TEST_F(Softmax, Backward) {
 
+    Input<float, 2> input(cd.dims);
+    input.set_input(cd.linearInput.data());
+
     EigenSinn::Softmax<float, 2> softmax;
     softmax.init();
-    softmax.forward(cd.linearInput);
-    softmax.backward(cd.linearInput, cd.linearLoss);
+    softmax.forward(input);
+    softmax.backward(input, cd.linearLoss.data());
 
+    EXPECT_TRUE(is_elementwise_approx_eq(softmax.get_output(), output));
     EXPECT_TRUE(is_elementwise_approx_eq(softmax.get_loss_by_input_derivative(), dinput));
   }
 
