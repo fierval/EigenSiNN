@@ -49,7 +49,7 @@ namespace EigenSinn {
 
 
   private:
-    void init_cached(Eigen::Tensor<Scalar, Rank>& prev_layer)
+    void init_cached(const Eigen::Tensor<Scalar, Rank>& prev_layer)
     {
       ones.resize(prev_layer.dimensions());
       ones.setConstant(1);

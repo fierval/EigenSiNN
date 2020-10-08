@@ -3,6 +3,7 @@
 #include <layers/tanh.hpp>
 #include "include/commondata2d.hpp"
 #include "ops/comparisons.hpp"
+#include <layers/input.hpp>
 
 using namespace EigenSinn;
 
@@ -38,22 +39,17 @@ namespace EigenSinnTest {
 
   };
 
-  TEST_F(Tanh, Forward) {
-
-    EigenSinn::Tanh<float, 2> tanh;
-    tanh.init();
-    tanh.forward(cd.linearInput);
-
-    EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(tanh.get_output()), output));
-  }
-
   TEST_F(Tanh, Backward) {
 
+    Input<float, 2> input(cd.dims);
+    input.set_input(cd.linearInput.data());
+
     EigenSinn::Tanh<float, 2> tanh;
     tanh.init();
-    tanh.forward(cd.linearInput);
-    tanh.backward(cd.linearInput, cd.linearLoss);
-
+    tanh.forward(input);
+    tanh.backward(input, cd.linearLoss.data());
+ 
+    EXPECT_TRUE(is_elementwise_approx_eq(tanh.get_output(), output));
     EXPECT_TRUE(is_elementwise_approx_eq(tanh.get_loss_by_input_derivative(), dinput));
   }
 
