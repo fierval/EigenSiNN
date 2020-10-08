@@ -130,19 +130,6 @@ namespace EigenSinn {
       return bias.data();
     }
 
-    void set_weights(Scalar * _weights) override {
-
-      // TODO: Will be different for CUDA
-      TensorMap <Tensor<Scalar, 2>> out(_weights, weights.dimensions());
-      weights.device(dispatcher.get_device()) = out;
-    }
-
-    void set_bias(Scalar * _bias) override {
-
-      TensorMap <Tensor<Scalar, 1>> out(_bias, bias.dimensions());
-      bias.device(dispatcher.get_device()) = out;
-    }
-
   private:
 
     Tensor<Scalar, 2> weights;

@@ -26,10 +26,6 @@ namespace EigenSinn {
 
     virtual  Scalar* get_bias() { return nullptr; }
 
-    virtual void set_weights(Scalar* _weights) {}
-
-    virtual void set_bias(Scalar* _bias) {}
-
     virtual  Scalar* get_output() = 0;
 
     virtual  Scalar* get_loss_by_input_derivative() = 0;

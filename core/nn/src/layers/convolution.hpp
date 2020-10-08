@@ -120,20 +120,6 @@ namespace EigenSinn {
       return loss_by_bias_derivative.data();
     }
 
-    void set_weights(Scalar * _weights) override {
-
-      // TODO: Will be different for CUDA
-      TensorMap <Tensor<Scalar, 4>> out(_weights, kernel.dimensions());
-      kernel = out;
-    }
-
-    void set_bias(Scalar * _bias) override {
-
-      TensorMap <Tensor<Scalar, 1>> out(_bias, bias.dimensions());
-      bias = out;
-    }
-
-
   private:
     Tensor<Scalar, 4> kernel, layer_output, dX, dW;
     Tensor<Scalar, 1> bias, loss_by_bias_derivative;

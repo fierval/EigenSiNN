@@ -166,20 +166,6 @@ namespace EigenSinn {
       return beta.data();
     }
 
-    void set_weights(Scalar* _weights) override {
-      // TODO: Will be different for CUDA
-      TensorMap <Tensor<Scalar, 1>> out(_weights, gamma.dimensions());
-      gamma = out;
-    }
-
-    void set_bias(Scalar* _bias) override {
-      // TODO: Will be different for CUDA
-      TensorMap <Tensor<Scalar, 1>> out(_bias, beta.dimensions());
-      beta = out;
-    }
-
-
-
   private:
     Tensor<Scalar, Rank> layer_output, layer_gradient, xhat;
 
