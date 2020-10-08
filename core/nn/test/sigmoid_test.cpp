@@ -1,6 +1,7 @@
 #include <iostream>
 #include <gtest/gtest.h>
 #include <layers/sigmoid.hpp>
+#include <layers/input.hpp>
 #include "include/commondata2d.hpp"
 #include "ops/comparisons.hpp"
 
@@ -38,22 +39,17 @@ namespace EigenSinnTest {
 
   };
 
-  TEST_F(Sigmoid, Forward) {
-
-    EigenSinn::Sigmoid<float, 2> sg;
-    sg.init();
-    sg.forward(cd.linearInput);
-
-    EXPECT_TRUE(is_elementwise_approx_eq(from_any<float, 2>(sg.get_output()), output));
-  }
-
   TEST_F(Sigmoid, Backward) {
 
+    Input<float, 2> input(cd.dims);
+    input.set_input(cd.linearInput.data());
+
     EigenSinn::Sigmoid<float, 2> sg;
     sg.init();
-    sg.forward(cd.linearInput);
-    sg.backward(cd.linearInput, cd.linearLoss);
+    sg.forward(input);
+    sg.backward(input, cd.linearLoss.data());
 
+    EXPECT_TRUE(is_elementwise_approx_eq(sg.get_output(), output));
     EXPECT_TRUE(is_elementwise_approx_eq(sg.get_loss_by_input_derivative(), dinput));
   }
 
