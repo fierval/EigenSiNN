@@ -21,6 +21,10 @@ namespace EigenSinnTest {
 
     auto PropagateGradient(int epochs, float momentum = 0.0, bool nesterov = false) {
 
+      // collect weights and biases and perform the GD step
+      float* weights_auto;
+      float* bias_auto;
+
       Input<float, 2> input(cd.dims);
       input.set_input(cd.linearInput.data());
 
@@ -52,27 +56,13 @@ namespace EigenSinnTest {
         // compute dL/dw, dL/db, dL/dx
         linear.backward(input, dloss.data());
 
-        // collect weights and biases and perform the GD step
-        float * weights_auto;
-        float * bias_auto;
-
         //std::any new_weights, new_bias;
         std::tie(weights_auto, bias_auto) = sgd.step(linear);
 
-        // set new weights and biases in the layer
-        linear.set_weights(weights_auto);
-        linear.set_bias(bias_auto);
       }
 
-      return std::make_tuple(linear.get_weights(), linear.get_bias());
-    }
-
-    void RunPropTest(int epochs, float moment, bool nesterov) {
-      float * weights, * bias;
-      std::tie(weights, bias) = PropagateGradient(epochs, moment, nesterov);
-
-      EXPECT_TRUE(is_elementwise_approx_eq(new_weights, weights));
-      EXPECT_TRUE(is_elementwise_approx_eq(new_bias, bias));
+      EXPECT_TRUE(is_elementwise_approx_eq(new_weights, weights_auto));
+      EXPECT_TRUE(is_elementwise_approx_eq(new_bias, bias_auto));
 
     }
 
@@ -98,7 +88,7 @@ namespace EigenSinnTest {
     new_weights = tmp.shuffle(array<Index, 2>{1, 0});
     new_bias.setValues({ -0.01560039,  0.00573337,  0.01824698, -0.00837997 });
 
-    RunPropTest(1, 0, false);
+    PropagateGradient(1, 0, false);
   }
 
   TEST_F(SGD, Momentum1Step) {
@@ -116,7 +106,7 @@ namespace EigenSinnTest {
     new_weights = tmp.shuffle(array<Index, 2>{1, 0});
     new_bias.setValues({ -0.03066470,  0.01040321,  0.03756850, -0.01730700 });
     
-    RunPropTest(2, 0.1, false);
+    PropagateGradient(2, 0.1, false);
   }
 
   TEST_F(SGD, Momentum1StepNesterov) {
@@ -135,7 +125,7 @@ namespace EigenSinnTest {
 
     new_bias.setValues({ -0.03194755,  0.01070375,  0.03941960, -0.01817579 });
     
-    RunPropTest(2, 0.1, true);
+    PropagateGradient(2, 0.1, true);
   }
 
 }

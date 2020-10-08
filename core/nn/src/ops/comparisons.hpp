@@ -8,7 +8,7 @@ using namespace Eigen;
 namespace EigenSinn {
 
   template <typename Scalar, Index Dim>
-  inline auto is_elementwise_approx_eq(const Tensor<Scalar, Dim> a, const Tensor<Scalar, Dim> b, float prec = 1e-5) {
+  inline auto is_elementwise_approx_eq(const Tensor<Scalar, Dim>& a, const Tensor<Scalar, Dim>& b, float prec = 1e-5) {
 
     Tensor<Scalar, Dim> diff = a - b;
     Tensor<Scalar, 0> res = diff.abs().maximum();

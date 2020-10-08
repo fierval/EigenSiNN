@@ -26,7 +26,7 @@ namespace EigenSinn {
       array<Index, Rank> dims = vector2array< Rank>(layer.get_weight_dims());
       array<Index, 1> dims_bias = vector2array< 1>(layer.get_bias_dims());
 
-      TensorMap<Tensor<Scalar, Rank>> weights(layer.get_output(), dims), dweights(layer.get_loss_by_weights_derivative(), dims);
+      TensorMap<Tensor<Scalar, Rank>> weights(layer.get_weights(), dims), dweights(layer.get_loss_by_weights_derivative(), dims);
       TensorMap<Tensor<Scalar, 1>> bias(layer.get_bias(), dims_bias), dbias(layer.get_loss_by_bias_derivative(), dims_bias);
 
       if (momentum != 0.0) {
