@@ -22,6 +22,10 @@ namespace EigenSinnTest {
 
     auto PropagateGradient(int epochs) {
 
+      // collect weights and biases and perform the GD step
+      float* weights_auto;
+      float* bias_auto;
+
       // input layer
       Input<float, 2> input(cd.dims);
       input.set_input(cd.linearInput.data());
@@ -45,33 +49,20 @@ namespace EigenSinnTest {
 
         // compute loss
         loss_func.step(output, cd.target);
+        TensorMap<Tensor<float, 2>> dloss(loss_func.get_loss_derivative_by_input(), loss_func.get_dims());
+
+        std::cout << "LOSS:" << std::endl << dloss << std::endl;
 
         // propagate back through the fc layer
         // compute dL/dw, dL/db, dL/dx
-        linear.backward(linear, loss_func.get_loss_derivative_by_input());
-
-        // collect weights and biases and perform the GD step
-        float * weights_auto;
-        float * bias_auto;
+        linear.backward(input, dloss.data());
 
         //std::any new_weights, new_bias;
         std::tie(weights_auto, bias_auto) = adam.step(linear);
-
-        // set new weights and biases in the layer
-        linear.set_weights(weights_auto);
-        linear.set_bias(bias_auto);
       }
 
-      return std::make_tuple<float*, float*>(linear.get_weights(), linear.get_bias());
-    }
-
-    void RunPropTest(int epochs) {
-      float * weights, * bias;
-      std::tie(weights, bias) = PropagateGradient(epochs);
-
-      EXPECT_TRUE(is_elementwise_approx_eq(new_weights, weights));
-      EXPECT_TRUE(is_elementwise_approx_eq(new_bias, bias));
-
+      EXPECT_TRUE(is_elementwise_approx_eq(new_weights, weights_auto));
+      EXPECT_TRUE(is_elementwise_approx_eq(new_bias, bias_auto));
     }
 
     Tensor<float, 2> new_weights;
@@ -96,7 +87,7 @@ namespace EigenSinnTest {
     new_weights = tmp.shuffle(array<Index, 2>{1, 0});
     new_bias.setValues({ -0.00100000,  0.00100000,  0.00100000, -0.00100000 });
 
-    RunPropTest(1);
+    PropagateGradient(1);
   }
 
   TEST_F(Adam, TwoSteps) {
@@ -114,6 +105,6 @@ namespace EigenSinnTest {
     new_weights = tmp.shuffle(array<Index, 2>{1, 0});
     new_bias.setValues({ -0.00199981,  0.00199963,  0.00199995, -0.00199998 });
     
-    RunPropTest(2);
+    PropagateGradient(2);
   }
 }

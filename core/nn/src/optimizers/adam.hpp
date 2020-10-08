@@ -9,7 +9,7 @@ namespace EigenSinn {
   class Adam : public OptimizerBase<Scalar, Device_> {
 
   public:
-    Adam(Scalar _lr, Dispatcher<Device_>& _device = OptimizerBase::default_dispatcher, float _beta1 = 0.9, float _beta2 = 0.999, float _eps = 1e-8 )
+    Adam(Scalar _lr, float _beta1 = 0.9, float _beta2 = 0.999, float _eps = 1e-8, Dispatcher<Device_>& _device = OptimizerBase::default_dispatcher)
       : OptimizerBase(_lr, _device)
       , beta1(_beta1)
       , beta2(_beta2)
@@ -24,10 +24,10 @@ namespace EigenSinn {
     // Computation: https://towardsdatascience.com/adam-latest-trends-in-deep-learning-optimization-6be9a291375c
     std::tuple<Scalar *, Scalar *> step(LayerBase<Scalar, Device_>& layer) override {
 
-      array<Index, Rank> dims = vector2array< Rank>(layer.get_weight_dims());
-      array<Index, 1> dims_bias = vector2array< 1>(layer.get_bias_dims());
+      array<Index, Rank> dims = vector2array<Rank>(layer.get_weight_dims());
+      array<Index, 1> dims_bias = vector2array<1>(layer.get_bias_dims());
 
-      TensorMap<Tensor<Scalar, Rank>> weights(layer.get_output(), dims), dweights(layer.get_loss_by_weights_derivative(), dims);
+      TensorMap<Tensor<Scalar, Rank>> weights(layer.get_weights(), dims), dweights(layer.get_loss_by_weights_derivative(), dims);
       TensorMap<Tensor<Scalar, 1>> bias(layer.get_bias(), dims_bias), dbias(layer.get_loss_by_bias_derivative(), dims_bias);
 
       if (!param_set) {
