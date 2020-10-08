@@ -51,8 +51,8 @@ namespace EigenSinn {
     return dtensor_data;
   }
 
-  template<typename Scalar, int Dims>
-  inline Tensor<Scalar, Dims> from_device(Scalar * dt, array<Index, Dims> dims) {
+  template<typename Scalar, int Dims, int Layout = ColMajor>
+  inline Tensor<Scalar, Dims, Layout> from_device(Scalar * dt, array<Index, Dims> dims) {
 
     size_t size = 1;
     for (Index i = 0; i < Dims; i++) { size *= dims[i]; }
@@ -62,11 +62,10 @@ namespace EigenSinn {
     cudaCheckError();
 
     cudaFree(dt);
-    TensorMap<Tensor<Scalar, Dims, RowMajor>> out_map(data, dims);
-    Tensor<Scalar, Dims> out(dims);
+    TensorMap<Tensor<Scalar, Dims, Layout>> out_map(data, dims);
+    Tensor<Scalar, Dims, Layout> out(dims);
 
-    array<Index, Dims> rev_dims = reverse_dims(dims);
-    out = out_map.swap_layout().shuffle(rev_dims);
+    out = out_map;
     return out;
   }
 
