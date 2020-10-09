@@ -31,10 +31,10 @@ int main(int argc, char* argv[]) {
   Tensor<float, 2> data_tensor;
   Tensor<float, 2> label_tensor;
 
-  auto network = create_network(input_size, hidden_size, num_classes, learning_rate);
+  auto network = create_network(batch_size, input_size, hidden_size, num_classes, learning_rate);
   init_network(network);
 
-  CrossEntropyLoss<float> loss;
+  CrossEntropyLoss<float, uint8_t, 2> loss;
 
   std::vector<std::any> prev_outputs;
   bool restart = true;
@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
 
       // convert to Eigen tensors
       data_tensor = create_2d_image_tensor<float>(next_data);
-      label_tensor = create_2d_label_tensor<uint8_t, float>(next_labels, num_classes);
+      label_tensor = create_2d_label_tensor(next_labels, num_classes);
       prev_outputs.clear();
 
       // forward
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
       }
 
       // compute loss
-      loss.forward(tensor, label_tensor);
+      loss.step(network.rbegin()->layer, label_tensor);
 
       //backprop
       // loss gradient
@@ -100,9 +100,7 @@ int main(int argc, char* argv[]) {
         std::any weights, bias;
         auto layer = optit->layer;
 
-        std::tie(weights, bias) = optit->optimizer->step(layer->get_weights(), layer->get_bias(), layer->get_loss_by_weights_derivative(), layer->get_loss_by_bias_derivative());
-        layer->set_weights(weights);
-        layer->set_bias(bias);
+        std::tie(weights, bias) = optit->optimizer->step(layer);
       }
 
       step++;

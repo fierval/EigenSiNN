@@ -30,12 +30,12 @@ inline Tensor<Scalar, 2> create_2d_image_tensor(std::vector<std::vector<float>>&
 }
 
 // convert loss class into categorical representation and convert to the network data type
-template<typename Loss, typename Scalar>
-inline Tensor<Scalar, 2> create_2d_label_tensor(std::vector<Loss>& labels, Index n_categories) {
+template<typename Loss>
+inline Tensor<Loss, 2> create_2d_label_tensor(std::vector<Loss>& labels, Index n_categories) {
 
   array<Index, 2> dims{(Index)labels.size(), n_categories};
 
-  Tensor<Scalar, 2> out(dims);
+  Tensor<Loss, 2> out(dims);
   out.setZero();
 
   Index i = 0;

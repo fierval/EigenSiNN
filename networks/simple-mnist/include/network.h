@@ -4,12 +4,13 @@
 #include <optimizers/optimizer_base.hpp>
 #include <layers/linear.hpp>
 #include <layers/relu.hpp>
+#include <layers/input.hpp>
 
 using namespace Eigen;
 using namespace EigenSinn;
 
 struct NetworkNode {
-  LayerBase<DefaultDevice> * layer;
+  LayerBase<float> * layer;
   OptimizerBase<float> * optimizer;
   NetworkNode() : layer(nullptr), optimizer(nullptr) {}
 
@@ -26,18 +27,21 @@ struct NetworkNode {
     other.optimizer = nullptr;
   }
 
-  NetworkNode(LayerBase<DefaultDevice>* _layer, OptimizerBase<float> * _optimizer) : layer(_layer), optimizer(_optimizer) {}
+  NetworkNode(LayerBase<float>* _layer, OptimizerBase<float> * _optimizer) : layer(_layer), optimizer(_optimizer) {}
 };
 
 
-inline auto create_network(int input_size, int hidden_size, int num_classes, float learning_rate) {
+inline auto create_network(int batch_size, int input_size, int hidden_size, int num_classes, float learning_rate) {
 
   std::vector<NetworkNode> network;
 
+  array<Index, 2> dims{ batch_size, input_size };
+
   // push back rvalues so we don't have to invoke the copy constructor
-  network.emplace_back(NetworkNode(new Linear<float>(input_size, hidden_size), new Adam<float, 2>(learning_rate)));
-  network.emplace_back(NetworkNode(new ReLU<float, 2>(), nullptr));
-  network.emplace_back(NetworkNode(new Linear<float>(hidden_size, num_classes), new Adam<float, 2>(learning_rate)));
+  network.emplace_back(NetworkNode(dynamic_cast<LayerBase<float>*>(new Input<float, 2>(dims)), nullptr));
+  network.emplace_back(NetworkNode(dynamic_cast<LayerBase<float>*>(new Linear<float>(input_size, hidden_size)), new Adam<float, 2>(learning_rate)));
+  network.emplace_back(NetworkNode(dynamic_cast<LayerBase<float>*>(new ReLU<float, 2>()), nullptr));
+  network.emplace_back(NetworkNode(dynamic_cast<LayerBase<float>*>(new Linear<float>(hidden_size, num_classes)), new Adam<float, 2>(learning_rate)));
 
   return network;
 }

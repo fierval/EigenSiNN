@@ -22,7 +22,7 @@ namespace EigenSinn {
 
   public:
     Linear(int _in_dim, int _out_dim, Dispatcher<Device_>& _device =  LayerBase::default_dispatcher) :
-      LayerBase(_device),
+      LayerBase<Scalar, Device_>(_device),
       layer_output(1, _out_dim),
       layer_grad_loss_by_input(1, _in_dim),
       layer_grad_loss_by_weight(_in_dim, _out_dim),
