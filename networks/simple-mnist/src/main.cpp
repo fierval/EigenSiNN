@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
   Tensor<float, 2> data_tensor;
   Tensor<uint8_t, 2> label_tensor;
 
-  auto network = create_network(input_size, hidden_size, num_classes, learning_rate);
+  auto network = create_network(batch_size, input_size, hidden_size, num_classes, learning_rate);
   init_network(network);
 
   CrossEntropyLoss<float, uint8_t, 2> loss;
@@ -69,17 +69,11 @@ int main(int argc, char* argv[]) {
       data_tensor = create_2d_image_tensor<float>(next_data);
       label_tensor = create_2d_label_tensor(next_labels, num_classes);
 
-      input.set_input(data_tensor.data());
+      dynamic_cast<Input<float, 2>*>(network[0].layer)->set_input(data_tensor.data());
 
       // forward
-      for (auto it = network.begin(); it != network.end(); it++) {
-        if (it == network.begin())
-        {
-          it->layer->forward(input);
-        }
-        else {
+      for (auto it = network.begin() + 1; it != network.end(); it++) {
           it->layer->forward(*(it - 1)->layer);
-        }
       }
 
       // compute loss
@@ -92,12 +86,9 @@ int main(int argc, char* argv[]) {
 
       auto prev_out_iter = prev_outputs.rbegin();
 
-      for (auto rit = network.rbegin(); rit != network.rend(); rit++) {
+      for (auto rit = network.rbegin(); rit != network.rend() - 1; rit++) {
 
-        if (rit == network.rend() - 1) {
-          rit->layer->backward(input, back_grad);
-        }
-        else if (rit == network.rbegin()) {
+        if (rit == network.rbegin()) {
           rit->layer->backward(*(rit + 1)->layer, back_grad);
         }
         else {
@@ -144,17 +135,13 @@ int main(int argc, char* argv[]) {
   Tensor<uint8_t, 1> test_label_tensor = create_1d_label_tensor<uint8_t>(next_labels);
 
   // forward
-  array<Index, 2> test_dims{ test_size, input_size };
-  Input<float, 2> test_input(test_dims);
+  std::vector<Index> test_dims{ (Index)test_size, input_size };
+  network[0].layer->set_dims(test_dims, test_dims);
 
-  for (auto it = network.begin(); it != network.end(); it++) {
-    if (it == network.begin()) {
+  dynamic_cast<Input<float, 2>*>(network[0].layer)->set_input(data_tensor.data());
 
-      it->layer->forward(test_input);
-    }
-    else {
+  for (auto it = network.begin() + 1; it != network.end(); it++) {
       it->layer->forward(*(it - 1)->layer);
-    }
   }
 
   TensorMap<Tensor<float, 2>> test_output(network.rbegin()->layer->get_output(), vector2array<2>(network.rbegin()->layer->get_out_dims()));

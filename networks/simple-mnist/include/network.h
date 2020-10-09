@@ -31,11 +31,12 @@ struct NetworkNode {
 };
 
 
-inline auto create_network(int input_size, int hidden_size, int num_classes, float learning_rate) {
+inline auto create_network(int batch_size, int input_size, int hidden_size, int num_classes, float learning_rate) {
 
   std::vector<NetworkNode> network;
 
   // push back rvalues so we don't have to invoke the copy constructor
+  network.emplace_back(NetworkNode(new Input<float, 2>(array<Index, 2>{batch_size, input_size}), nullptr));
   network.emplace_back(NetworkNode(new Linear<float>(input_size, hidden_size), new Adam<float, 2>(learning_rate)));
   network.emplace_back(NetworkNode(new ReLU<float, 2>(), nullptr));
   network.emplace_back(NetworkNode(new Linear<float>(hidden_size, num_classes), new Adam<float, 2>(learning_rate)));
