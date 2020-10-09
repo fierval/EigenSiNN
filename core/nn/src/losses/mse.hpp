@@ -17,7 +17,7 @@ namespace EigenSinn {
       
       initialize(predicted, actual);
 
-      Tensor<float, Rank> predicted_actual_diff = predicted - actual;
+      Tensor<float, Rank> predicted_actual_diff = predicted - actual.cast<Scalar>();
       Tensor<Scalar, 0> loss_t = predicted_actual_diff.pow(2).mean();
       loss = *loss_t.data();
 

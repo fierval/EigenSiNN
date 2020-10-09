@@ -29,6 +29,8 @@ message(STATUS "Local includes:  ${CUR_INCLUDE_DIR}")
 # build app exe
 add_executable(${APP_EXE} ${APP_SOURCES})
 
+target_compile_definitions(${APP_EXE} PRIVATE EIGEN_USE_THREADS)
+
 target_include_directories(${APP_EXE} PRIVATE ${OpenCV_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS} ${EIGENSINN_INCLUDE_DIR} ${MNIST_INCLUDE_DIR} ${CUR_INCLUDE_DIR})
 target_compile_definitions(${APP_EXE} PRIVATE MNIST_DATA_LOCATION="${MNIST_DATA_DIR}")
 target_link_libraries(${APP_EXE} PUBLIC ${OpenCV_LIBS})

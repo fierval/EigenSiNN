@@ -29,17 +29,18 @@ namespace EigenSinn {
     void step(const Tensor<Scalar, Rank>& predicted, const Tensor<Actual, Rank>& actual) override {
 
       initialize(predicted, actual);
+      Tensor<Scalar, Rank> act_scalar = actual.cast<Scalar>();
 
       // memoize these for the backward pass
       Tensor<Scalar, Rank> exp_all = predicted.exp();
       Tensor<Scalar, 1> exp_sum = exp_all.sum(reduction_dims);
 
-      Tensor<Scalar, 0> loss_t = ((-predicted * actual).sum(reduction_dims) + exp_sum.log()).mean();
+      Tensor<Scalar, 0> loss_t = ((-predicted * act_scalar).sum(reduction_dims) + exp_sum.log()).mean();
       loss = loss_t(0);
       
       // backward step
       Tensor<Scalar, Rank> dlog = (1. / exp_sum * dsum).reshape(array<Index, 2>{orig_dims[0], 1}).eval().broadcast(broadcast_dims);
-      dloss = -1. / orig_dims[0] * actual + exp_all * dlog;
+      dloss = -1. / orig_dims[0] * act_scalar + exp_all * dlog;
     }
 
   private:

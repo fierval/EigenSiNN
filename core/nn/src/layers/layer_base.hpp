@@ -9,7 +9,7 @@ using namespace Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, typename Device_ = Dispatcher<DefaultDevice>>
+  template <typename Scalar, typename Device_ = DefaultDevice>
   class LayerBase {
 
   public:

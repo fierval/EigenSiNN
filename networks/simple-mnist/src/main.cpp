@@ -3,6 +3,7 @@
 #include "unsupported/Eigen/CXX11/Tensor"
 #include <layers/linear.hpp>
 #include <layers/relu.hpp>
+#include <layers/input.hpp>
 #include <losses/crossentropyloss.hpp>
 #include <optimizers/adam.hpp>
 #include <chrono>
@@ -29,9 +30,9 @@ int main(int argc, char* argv[]) {
 
   // label tensor and network tensor need to have the same type
   Tensor<float, 2> data_tensor;
-  Tensor<float, 2> label_tensor;
+  Tensor<uint8_t, 2> label_tensor;
 
-  auto network = create_network(batch_size, input_size, hidden_size, num_classes, learning_rate);
+  auto network = create_network(input_size, hidden_size, num_classes, learning_rate);
   init_network(network);
 
   CrossEntropyLoss<float, uint8_t, 2> loss;
@@ -42,6 +43,9 @@ int main(int argc, char* argv[]) {
   auto start = std::chrono::high_resolution_clock::now();
   auto start_step = std::chrono::high_resolution_clock::now();
   auto stop = std::chrono::high_resolution_clock::now();
+
+  array<Index, 2> dims{ batch_size, input_size };
+  Input<float, 2> input(dims);
 
   // Train
   for (int i = 0; i < num_epochs; i++) {
@@ -64,31 +68,41 @@ int main(int argc, char* argv[]) {
       // convert to Eigen tensors
       data_tensor = create_2d_image_tensor<float>(next_data);
       label_tensor = create_2d_label_tensor(next_labels, num_classes);
-      prev_outputs.clear();
+
+      input.set_input(data_tensor.data());
 
       // forward
-      std::any tensor(data_tensor);
-
       for (auto it = network.begin(); it != network.end(); it++) {
-
-        prev_outputs.push_back(tensor);
-        it->layer->forward(tensor);
-        tensor = it->layer->get_output();
+        if (it == network.begin())
+        {
+          it->layer->forward(input);
+        }
+        else {
+          it->layer->forward(*(it - 1)->layer);
+        }
       }
 
       // compute loss
-      loss.step(network.rbegin()->layer, label_tensor);
+      TensorMap<Tensor<float, 2>> output(network.rbegin()->layer->get_output(), label_tensor.dimensions());
+      loss.step(output, label_tensor);
 
       //backprop
       // loss gradient
-      loss.backward();
-      auto& back_grad = loss.get_loss_derivative_by_input();
+      auto back_grad = loss.get_loss_derivative_by_input();
 
       auto prev_out_iter = prev_outputs.rbegin();
 
-      for (auto rit = network.rbegin(); rit != network.rend(); rit++, prev_out_iter++) {
-        rit->layer->backward(*prev_out_iter, back_grad);
-        back_grad = rit->layer->get_loss_by_input_derivative();
+      for (auto rit = network.rbegin(); rit != network.rend(); rit++) {
+
+        if (rit == network.rend() - 1) {
+          rit->layer->backward(input, back_grad);
+        }
+        else if (rit == network.rbegin()) {
+          rit->layer->backward(*(rit + 1)->layer, back_grad);
+        }
+        else {
+          rit->layer->backward(*(rit + 1)->layer, *(rit - 1)->layer);
+        }
       }
 
       // optimizer
@@ -97,10 +111,10 @@ int main(int argc, char* argv[]) {
           continue;
         }
 
-        std::any weights, bias;
+        float* weights, * bias;
         auto layer = optit->layer;
 
-        std::tie(weights, bias) = optit->optimizer->step(layer);
+        std::tie(weights, bias) = optit->optimizer->step(*(optit->layer));
       }
 
       step++;
@@ -130,15 +144,20 @@ int main(int argc, char* argv[]) {
   Tensor<uint8_t, 1> test_label_tensor = create_1d_label_tensor<uint8_t>(next_labels);
 
   // forward
-  std::any tensor(data_tensor);
+  array<Index, 2> test_dims{ test_size, input_size };
+  Input<float, 2> test_input(test_dims);
 
   for (auto it = network.begin(); it != network.end(); it++) {
+    if (it == network.begin()) {
 
-    it->layer->forward(tensor);
-    tensor = it->layer->get_output();
+      it->layer->forward(test_input);
+    }
+    else {
+      it->layer->forward(*(it - 1)->layer);
+    }
   }
 
-  Tensor<float, 2> test_output = from_any<float, 2>(tensor);
+  TensorMap<Tensor<float, 2>> test_output(network.rbegin()->layer->get_output(), vector2array<2>(network.rbegin()->layer->get_out_dims()));
   Tensor<Tuple<Index, float>, 2> test_index_tuples = test_output.index_tuples();
   Tensor<Tuple<Index, float>, 1> pred_res = test_index_tuples.reduce(array<Index, 1> {1}, internal::ArgMaxTupleReducer<Tuple<Index, float>>());
   Tensor<Index, 1> predictions(pred_res.dimension(0));
