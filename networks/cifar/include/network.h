@@ -9,6 +9,7 @@
 #include <layers/maxpooling.hpp>
 #include <layers/linear.hpp>
 #include <layers/relu.hpp>
+#include <layers/input.hpp>
 
 #include "helpers.h"
 
@@ -17,8 +18,8 @@ using namespace EigenSinn;
 
 template <typename Device_= DefaultDevice>
 struct NetworkNode {
-  LayerBase<Device_> * layer;
-  OptimizerBase<float>* optimizer;
+  LayerBase<float, Device_> * layer;
+  OptimizerBase<float, Device_>* optimizer;
   NetworkNode() : layer(nullptr), optimizer(nullptr) {}
 
   ~NetworkNode() {
@@ -26,7 +27,7 @@ struct NetworkNode {
     if (optimizer) delete optimizer;
   }
 
-  NetworkNode(NetworkNode&& other)  noexcept : NetworkNode() {
+  NetworkNode(NetworkNode<Device_>&& other)  noexcept : NetworkNode<Device_>() {
     layer = other.layer;
     optimizer = other.optimizer;
 
@@ -34,8 +35,8 @@ struct NetworkNode {
     other.optimizer = nullptr;
   }
 
-  NetworkNode(LayerBase<Device_>* _layer, OptimizerBase<float>* _optimizer) : layer(_layer), optimizer(_optimizer) {}
-  NetworkNode(LayerBase<Device_>* _layer) : layer(_layer), optimizer(nullptr) {}
+  NetworkNode(LayerBase<float, Device_>* _layer, OptimizerBase<float>* _optimizer) : layer(_layer), optimizer(_optimizer) {}
+  NetworkNode(LayerBase<float, Device_>* _layer) : layer(_layer), optimizer(nullptr) {}
 };
 
 
@@ -43,21 +44,16 @@ typedef std::vector<NetworkNode<ThreadPoolDevice>> Network;
 
 // assuming that the last layer of the network is Flatten, we can get the flattened dimension
 inline int get_flat_dimension(const Network& network, const array<Index, 4>& input_dims) {
-  Tensor<float, 4> input(input_dims);
-  input.setZero();
+  Tensor<float, 4> inp(input_dims);
+  inp.setZero();
 
-  std::any tensor(input);
-  Tensor<float, 4>  output;
+  dynamic_cast<Input<float, 4>*>(network[0].layer)->set_input(inp.data());
 
-  for (const auto& n : network) {
-    n.layer->forward(tensor);
-    tensor = n.layer->get_output();
-    output = from_any<float, 4>(tensor);
-  }
+  forward(network);
 
-  auto dims = from_any<float, 4>(tensor).dimensions();
+  auto dims = network.rbegin()->layer->get_out_dims();
 
-  return dims[1] * dims[2] * dims[3];
+  return std::accumulate(dims.begin() +1, dims.end(), 1, std::multiplies<int>());
 }
 
 inline void init(const Network& network, bool debug = false) {
@@ -88,38 +84,22 @@ inline void init(const Network& network, bool debug = false) {
   }
 }
 
-inline Tensor<float, 2> forward(const Network& network, std::any& input) {
+inline void forward(const Network& network) {
 
-  std::any tensor = input;
-
-  Tensor<float, 2> output;
-
-  for (const auto& n : network) {
-    n.layer->forward(tensor);
-    tensor = n.layer->get_output();
+  for (auto it = network.begin() + 1; it != network.end(); it++) {
+    it->layer->forward(*(it - 1)->layer);
   }
-
-  output = from_any<float, 2>(tensor);
-  return output;
 }
 
-inline void backward(const Network& network, std::any& loss_derivative, std::any& input) {
+inline void backward(const Network& network, float * loss_derivative) {
 
-  std::any next_level_grad = loss_derivative;
+  for (auto rit = network.rbegin(); rit != network.rend() - 1; rit++) {
 
-  // point at the "previous" layer
-  auto reverse_input_it = network.rbegin() + 1;
-  for (auto it = network.rbegin(); it != network.rend(); it++) {
-
-    // get previous layer output = input to this layer
-    auto prev_layer = reverse_input_it != network.rend() ? reverse_input_it->layer->get_output() : input;
-
-    // backward pass through the current layer
-    it->layer->backward(prev_layer, next_level_grad);
-    next_level_grad = it->layer->get_loss_by_input_derivative();
-    
-    if (reverse_input_it != network.rend()) {
-      reverse_input_it++;
+    if (rit == network.rbegin()) {
+      rit->layer->backward(*(rit + 1)->layer, loss_derivative);
+    }
+    else {
+      rit->layer->backward(*(rit + 1)->layer, *(rit - 1)->layer);
     }
   }
 }
@@ -131,21 +111,19 @@ inline void optimizer(const Network& network) {
       continue;
     }
 
-    std::any weights, bias;
     auto layer = optit->layer;
 
-    std::tie(weights, bias) = optit->optimizer->step(layer->get_weights(), layer->get_bias(), layer->get_loss_by_weights_derivative(), layer->get_loss_by_bias_derivative());
-    layer->set_weights(weights);
-    layer->set_bias(bias);
+    optit->optimizer->step(*(optit->layer));
   }
 
 }
 
-inline auto create_network(int num_classes, float learning_rate, Dispatcher<ThreadPoolDevice>& device) {
+inline auto create_network(array<Index, 4> input_dims, int num_classes, float learning_rate, Dispatcher<ThreadPoolDevice>& device) {
 
   Network network;
 
   // push back rvalues so we don't have to invoke the copy constructor
+  network.push_back(NetworkNode<ThreadPoolDevice>(new Input<float, 4, ThreadPoolDevice>(input_dims, device)));
   network.push_back(NetworkNode<ThreadPoolDevice>(new Conv2d<float, ThreadPoolDevice>(array<Index, 4>{6, 3, 5, 5}, Padding2D{ 0, 0 }, 1, device), new SGD<float, 4>(learning_rate)));
   network.push_back(NetworkNode<ThreadPoolDevice>(new ReLU<float, 4, ThreadPoolDevice>(device)));
   network.push_back(NetworkNode<ThreadPoolDevice>(new MaxPooling<float, 4, ThreadPoolDevice>(array<Index, 2>{2, 2}, 2, device)));

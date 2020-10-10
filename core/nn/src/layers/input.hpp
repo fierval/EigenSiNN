@@ -11,7 +11,7 @@ namespace EigenSinn {
   public:
     
     Input(array<Index, Rank> dims, Dispatcher<Device_>& _device = LayerBase<Scalar, Device_>::default_dispatcher) :
-      LayerBase(_device) {
+      LayerBase<Scalar, Device_>(_device) {
 
       std::vector<Index> v_dims = array2vector(dims);
       set_dims(v_dims, v_dims);
