@@ -37,7 +37,6 @@ int main(int argc, char* argv[]) {
 
   CrossEntropyLoss<float, uint8_t, 2> loss;
 
-  std::vector<std::any> prev_outputs;
   bool restart = true;
 
   auto start = std::chrono::high_resolution_clock::now();
@@ -83,8 +82,6 @@ int main(int argc, char* argv[]) {
       //backprop
       // loss gradient
       auto back_grad = loss.get_loss_derivative_by_input();
-
-      auto prev_out_iter = prev_outputs.rbegin();
 
       for (auto rit = network.rbegin(); rit != network.rend() - 1; rit++) {
 
