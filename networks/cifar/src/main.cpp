@@ -96,7 +96,9 @@ int main(int argc, char* argv[]) {
   auto batch_tensor = create_batch_tensor(dataset.test_images, 0, dataset.test_images.size());
   Tensor<int, 1> label_tensor = create_1d_label_tensor(dataset.test_labels).cast<int>();
 
-  dynamic_cast<Input<float, 4, ThreadPoolDevice>*>(network[0].layer)->set_input(batch_tensor.data());
+  auto inp_layer = dynamic_cast<Input<float, 4, ThreadPoolDevice>*>(network[0].layer);
+  inp_layer->set_dims(array2vector(batch_tensor.dimensions()), array2vector(batch_tensor.dimensions()));
+  inp_layer->set_input(batch_tensor.data());
 
   forward(network);
 
