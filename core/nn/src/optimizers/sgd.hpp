@@ -6,7 +6,7 @@
 namespace EigenSinn {
 
   template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
-  class SGD : public OptimizerBase<Scalar> {
+  class SGD : public OptimizerBase<Scalar, Device_> {
 
   public:
     SGD(Scalar _lr, Scalar _momentum = 0, bool _nesterov = false, Dispatcher<Device_>& _device = OptimizerBase::default_dispatcher)

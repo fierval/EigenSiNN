@@ -16,6 +16,16 @@
                     "name": "OpenCV_DIR",
                     "value": "C:/git/OpenCV-All/opencv/build/install",
                     "type": "PATH"
+                },
+                {
+                    "name": "VCPKG_TARGET_TRIPLET",
+                    "value": "x64-windows",
+                    "type": "STRING"
+                },
+                {
+                    "name": "Eigen3_DIR",
+                    "value": "C:/git/NN/vcpkg/installed/x64-windows/share/eigen3",
+                    "type": "PATH"
                 }
             ]
         },
@@ -34,6 +44,16 @@
                 {
                     "name": "OpenCV_DIR",
                     "value": "C:/git/OpenCV-All/opencv/build/install",
+                    "type": "PATH"
+                },
+                {
+                    "name": "VCPKG_TARGET_TRIPLET",
+                    "value": "x64-windows",
+                    "type": "STRING"
+                },
+                {
+                    "name": "Eigen3_DIR",
+                    "value": "C:/git/NN/vcpkg/installed/x64-windows/share/eigen3",
                     "type": "PATH"
                 }
             ]

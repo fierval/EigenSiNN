@@ -13,8 +13,6 @@ find_package(Eigen3 REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-set(CUDA_STANDARD 17)
-
 get_filename_component(EIGENSINN_INCLUDE_DIR "../../core/nn/src" ABSOLUTE)
 get_filename_component(CUR_INCLUDE_DIR "include" ABSOLUTE)
 
@@ -28,6 +26,8 @@ message(STATUS "EigenSiNN path: ${EIGENSINN_INCLUDE_DIR}")
 message(STATUS "OpenCV path: ${OpenCV_INCLUDE_DIRS}")
 message(STATUS "Local includes:  ${CUR_INCLUDE_DIR}")
 message(STATUS "CIFAR10 location: ${CIFAR_DATA_DIR}")
+message(STATUS "OpenCV libs: ${OpenCV_LIBS}")
+
 set(APP_EXE simple_cifar)
 
 # discover sources

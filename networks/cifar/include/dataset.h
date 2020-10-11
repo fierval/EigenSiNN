@@ -23,12 +23,12 @@ inline cifar::CIFAR10_dataset<std::vector, Tensor<float, 3>, uint8_t> read_cifar
 }
 
 // convert loss class into categorical representation and convert to the network data type
-template<typename Loss, typename Scalar>
-inline Tensor<Scalar, 2> create_2d_label_tensor(std::vector<Loss>& labels, int start, int batch_size, Index n_categories) {
+template<typename Loss>
+inline Tensor<Loss, 2> create_2d_label_tensor(std::vector<Loss>& labels, int start, int batch_size, Index n_categories) {
 
   array<Index, 2> dims{ (Index)batch_size, n_categories };
 
-  Tensor<Scalar, 2> out(dims);
+  Tensor<Loss, 2> out(dims);
   out.setZero();
 
   Index i = batch_size * start;
@@ -101,6 +101,7 @@ inline void shuffle(ImageContainer& images, LabelContainer& labels, bool should_
 // explore the dataset
 inline void explore(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3>, uint8_t>& dataset, bool should_explore = false) {
 
+#ifndef _DEBUG
   if (!should_explore) {
     return;
   };
@@ -129,5 +130,5 @@ inline void explore(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3>, uint8_
       break;
     }
   }
-
+#endif
 }

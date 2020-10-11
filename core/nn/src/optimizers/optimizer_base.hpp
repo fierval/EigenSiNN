@@ -2,6 +2,7 @@
 
 #include <ops/opsbase.hpp>
 #include <ops/conversions.hpp>
+#include <layers/layer_base.hpp>
 
 using namespace Eigen;
 

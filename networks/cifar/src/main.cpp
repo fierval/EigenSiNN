@@ -1,7 +1,6 @@
 #include "dataset.h"
 
 #include <losses/crossentropyloss.hpp>
-#include <optimizers/adam.hpp>
 #include <ops/threadingdevice.hpp>
 #include <chrono>
 #include <vector>
@@ -12,16 +11,18 @@ using namespace EigenSinn;
 using namespace Eigen;
 
 bool should_shuffle = true;
-bool explore_dataset = true;
+bool explore_dataset = false;
 bool debug_init = false;
 
 int main(int argc, char* argv[]) {
 
   size_t batch_size = 10;
+  int side = 32;
   int num_epochs = 4;
+  int channels = 3;
   float learning_rate = 0.001;
   
-  CrossEntropyLoss<float> loss;
+  CrossEntropyLoss<float, uint8_t, 2> loss;
 
   std::vector<std::string> classes = { "plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck" };
   int num_classes = classes.size();
@@ -35,7 +36,7 @@ int main(int argc, char* argv[]) {
 
   Dispatcher<ThreadPoolDevice> dispatcher;
 
-  auto network = create_network(num_classes, learning_rate, dispatcher);
+  auto network = create_network(array<Index, 4>{(Index)batch_size, channels, side, side}, num_classes, learning_rate, dispatcher);
   init(network, debug_init);
 
   auto start = std::chrono::high_resolution_clock::now();
@@ -52,20 +53,22 @@ int main(int argc, char* argv[]) {
 
     for (int step = 1; step <= dataset.training_images.size() / batch_size; step++) {
 
-      std::any batch_tensor = std::any(create_batch_tensor(dataset.training_images, step - 1, batch_size));
-      Tensor<float, 2> label_tensor = create_2d_label_tensor<uint8_t, float>(dataset.training_labels, step - 1, batch_size, num_classes);
+      Tensor<float, 4> batch_tensor = create_batch_tensor(dataset.training_images, step - 1, batch_size);
+      Tensor<uint8_t, 2> label_tensor = create_2d_label_tensor<uint8_t>(dataset.training_labels, step - 1, batch_size, num_classes);
 
       // forward
-      auto tensor = forward(network, batch_tensor);
+      dynamic_cast<Input<float, 4, ThreadPoolDevice>*>(network[0].layer)->set_input(batch_tensor.data());
+
+      forward(network);
 
       // loss
-      loss.forward(tensor, label_tensor);
-      loss.backward();
+      TensorMap<Tensor<float, 2>> output(network.rbegin()->layer->get_output(), label_tensor.dimensions());
+      loss.step(output, label_tensor);
 
       // std::cout << "Step: " << step << ". Loss: " << std::any_cast<float>(loss.get_output()) << std::endl;
 
       // backward
-      backward(network, loss.get_loss_derivative_by_input(), batch_tensor);
+      backward(network, loss.get_loss_derivative_by_input());
 
       // optimizer
       optimizer(network);
@@ -90,12 +93,14 @@ int main(int argc, char* argv[]) {
   
   // Test
   std::cout << "Starting test..." << std::endl;
-  std::any batch_tensor = std::any(create_batch_tensor(dataset.test_images, 0, dataset.test_images.size()));
+  auto batch_tensor = create_batch_tensor(dataset.test_images, 0, dataset.test_images.size());
   Tensor<int, 1> label_tensor = create_1d_label_tensor(dataset.test_labels).cast<int>();
 
-  auto tensor = forward(network, batch_tensor);
+  dynamic_cast<Input<float, 4, ThreadPoolDevice>*>(network[0].layer)->set_input(batch_tensor.data());
 
-  Tensor<float, 2> test_output = from_any<float, 2>(tensor);
+  forward(network);
+
+  TensorMap<Tensor<float, 2>> test_output(network.rbegin()->layer->get_output(), vector2array<2>(network.rbegin()->layer->get_out_dims()));
   Tensor<Tuple<Index, float>, 2> test_index_tuples = test_output.index_tuples();
   Tensor<Tuple<Index, float>, 1> pred_res = test_index_tuples.reduce(array<Index, 1> {1}, internal::ArgMaxTupleReducer<Tuple<Index, float>>());
   Tensor<int, 1> predictions(pred_res.dimension(0));
