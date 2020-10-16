@@ -5,21 +5,9 @@
 #include <cudnn.h>
 #include <vector>
 #include <algorithm>
-
-#ifdef EIGEN_DEFAULT_DENSE_INDEX_TYPE
-#undef EIGEN_DEFAULT_DENSE_INDEX_TYPE
-#endif
-#define EIGEN_DEFAULT_DENSE_INDEX_TYPE int
+#include "helper.h"
 
 using namespace Eigen;
-
-#define cudaCheckError() {                                          \
- cudaError_t e=cudaGetLastError();                                 \
- if(e!=cudaSuccess) {                                              \
-   printf("Cuda failure %s:%d: '%s'\n",__FILE__,__LINE__,cudaGetErrorString(e));           \
-   throw std::runtime_error(cudaGetErrorString(e)); \
- }                                                                 \
-}
 
 namespace EigenSinn {
 
