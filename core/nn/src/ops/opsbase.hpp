@@ -14,8 +14,12 @@
 #include <numeric>
 #include <execution>
 #include <type_traits>
+#include <vector>
+#include <array>
 
 using namespace Eigen;
+
+#include "threadingdevice.hpp"
 
 namespace EigenSinn {
 

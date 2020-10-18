@@ -61,7 +61,10 @@ namespace EigenSinn {
   inline array<Index, Rank> vector2array(std::vector<Index>& v) {
 
     array<Index, Rank> out;
-    std::copy_n(v.begin(), Rank, out.begin());
+    // TODO: NVCCC doesn't like this: std::copy_n(v.begin(), Rank, out.begin());
+    for (int i = 0; i < v.size(); i++) {
+      out[i] = v[i];
+    }
     return out;
   }
 
@@ -69,7 +72,10 @@ namespace EigenSinn {
   inline std::vector<Index> array2vector(array<Index, Rank>& a) {
 
     std::vector<Index> out(Rank);
-    std::copy_n(a.begin(), Rank, out.begin());
+    // TODO: NVCCC doesn't like this:  std::copy_n(a.begin(), Rank, out.begin());
+    for (int i = 0; i < a.size(); i++) {
+      out[i] = a[i];
+    }
     return out;
   }
 
@@ -77,7 +83,10 @@ namespace EigenSinn {
   inline std::vector<Index> array2vector(const DSizes<Index, Rank>& a) {
 
     std::vector<Index> out(Rank);
-    std::copy_n(a.begin(), Rank, out.begin());
+    // TODO: NVCCC doesn't like this:   std::copy_n(a.begin(), Rank, out.begin());
+    for (int i = 0; i < a.size(); i++) {
+      out[i] = a[i];
+    }
     return out;
   }
 

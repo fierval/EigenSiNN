@@ -3,7 +3,6 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 #include <ops/opsbase.hpp>
 #include <ops/conversions.hpp>
-#include <ops/threadingdevice.hpp>
 
 using namespace Eigen;
 

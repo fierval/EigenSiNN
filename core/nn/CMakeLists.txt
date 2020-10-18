@@ -21,7 +21,7 @@ message(STATUS "CUDA Flags: ${CMAKE_CUDA_FLAGS}")
 set_property(TARGET ${TEST_EXE} 
              PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 # allow threadpool device
-target_compile_definitions(${TEST_EXE} PRIVATE EIGEN_USE_THREADS)
+target_compile_definitions(${TEST_EXE} PRIVATE EIGEN_USE_THREADS EIGEN_USE_GPU EIGEN_HAS_C99_MATH)
 
 target_include_directories(${TEST_EXE} PRIVATE "src" ${EIGEN_PATH} ${Boost_INCLUDE_DIRS} ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 target_link_libraries(${TEST_EXE} PUBLIC gtest_main )

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "opsbase.hpp"
 #include <thread>
 
 namespace EigenSinn {
@@ -48,4 +47,21 @@ namespace EigenSinn {
   private:
     DefaultDevice cpu_device;
   };
+
+#ifdef EIGEN_USE_GPU
+  template <>
+  class Dispatcher<GpuDevice> {
+  public:
+    Dispatcher() : gpu_device(&stream) {}
+
+    GpuDevice& get_device() {
+      return gpu_device;
+    }
+
+  private:
+    CudaStreamDevice stream;
+    GpuDevice gpu_device;
+
+  };
+#endif
 }
