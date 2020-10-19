@@ -32,16 +32,12 @@
             "inheritEnvironments": [ "msvc_x64_x64" ],
             "variables": [
                 {
-                    "name": "CMAKE_TOOLCHAIN_FILE",
-                    "value": "C:/git/NN/vcpkg/scripts/buildsystems/vcpkg.cmake",
-                    "type": "FILEPATH"
-                },
-                {
                     "name": "VCPKG_TARGET_TRIPLET",
                     "value": "x64-windows-static",
                     "type": "STRING"
                 }
-            ]
+            ],
+            "cmakeToolchain": "C:\\git\\NN\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
         }
     ]
 }
