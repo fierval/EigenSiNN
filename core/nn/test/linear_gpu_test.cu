@@ -21,7 +21,7 @@ namespace EigenSinnTest {
 
   TEST_F(LinearGpu, Backward) {
     EigenSinn::Dispatcher<GpuDevice> device;
-    float* d_input = EigenSinn::to_device(cd.linearInput);
+    float* d_input = to_device(cd.linearInput);
 
     EigenSinn::Input<float, 2, GpuDevice> input(cd.dims, device);
     input.set_input(d_input);
