@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.18.4)
 
 # set the project name
 project(EgenSiNN LANGUAGES CXX CUDA)
@@ -10,8 +10,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # OpenCV supports CMAKE_CUDA_STANDARD 17
 # We manually add the --std=c++17 flag 
 # for CUDA compilation
-set(CMAKE_CUDA_STANDARD 14)
-set(CMAKE_CUDA_STANDARD_REQUIRED False)
+set(CMAKE_CUDA_STANDARD 17)
+set(CMAKE_CUDA_STANDARD_REQUIRED True)
 
 include_directories("eigen")
 

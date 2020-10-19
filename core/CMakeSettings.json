@@ -10,6 +10,7 @@
             "cmakeCommandArgs": "",
             "buildCommandArgs": "",
             "ctestCommandArgs": "",
+            "cmakeExecutable": "C:\\Program Files\\CMake\\bin\\cmake.exe",
             "variables": [
                 {
                     "name": "CMAKE_TOOLCHAIN_FILE",
@@ -27,6 +28,7 @@
             "cmakeCommandArgs": "",
             "buildCommandArgs": "",
             "ctestCommandArgs": "",
+            "cmakeExecutable": "C:\\Program Files\\CMake\\bin\\cmake.exe",
             "inheritEnvironments": [ "msvc_x64_x64" ],
             "variables": [
                 {
