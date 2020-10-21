@@ -16,6 +16,7 @@
 #include <type_traits>
 #include <vector>
 #include <array>
+#include <type_traits>
 
 using namespace Eigen;
 

@@ -3,6 +3,7 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 #include <ops/opsbase.hpp>
 #include <ops/conversions.hpp>
+#include <gpu/gpu_tensor.hpp>
 
 using namespace Eigen;
 
@@ -33,7 +34,7 @@ namespace EigenSinn {
 
     virtual  Scalar* get_loss_by_bias_derivative() { return nullptr; }
 
-    inline static Dispatcher<DefaultDevice> default_dispatcher = Dispatcher<DefaultDevice>();
+    inline static Dispatcher<Device_> default_dispatcher = Dispatcher<Device_>();
 
     std::vector<Index>& get_in_dims() { return in_dims; }
     std::vector<Index>& get_out_dims() { return out_dims; }
@@ -63,10 +64,23 @@ namespace EigenSinn {
     std::vector<Index> in_dims, out_dims, bias_dims, weight_dims;
 
     bool are_dims_unset(std::vector<Index>& dims) { return in_dims.size() == 0 || dims[0] != in_dims[0]; }
+    bool renew_gpu_values;
 
+    // constructor called by derived class only
     LayerBase(Dispatcher<Device_>& _dispatcher) : dispatcher(_dispatcher) {
+      invalidate_gpu();
     }
 
-  };
+    bool should_move_to_gpu() {
+      return std::is_same<Device_, GpuDevice>::value && renew_gpu_values;
+    }
 
+    void invalidate_gpu() {
+      renew_gpu_values = should_move_to_gpu();
+    }
+
+    void fix_gpu_values() {
+      renew_gpu_values = false;
+    }
+  };
 }

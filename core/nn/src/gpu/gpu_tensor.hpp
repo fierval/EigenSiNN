@@ -12,7 +12,7 @@ using namespace Eigen;
 namespace EigenSinn {
 
   template<typename Scalar, int Dims, int Layout, int Outlayout = Layout>
-  inline auto to_device(Tensor<Scalar, Dims, Layout>& t) {
+  inline Scalar * to_device(Tensor<Scalar, Dims, Layout>& t) {
 
     Scalar* tensor_data = t.data();
     Scalar* dtensor_data;
@@ -39,6 +39,14 @@ namespace EigenSinn {
     return dtensor_data;
   }
 
+  template<typename Scalar, int Dims, int Layout, int Outlayout = Layout>
+  inline TensorMap<Tensor<Scalar, Dims>>* to_gpu_tensor(Tensor<Scalar, Dims, Layout>& t) {
+
+    Scalar* t_data = to_device(t);
+    TensorMap<Tensor<Scalar, Dims>>* t_map = new TensorMap<Tensor<Scalar, Dims>>(t_data, t.dimensions());
+    return t_map;
+  }
+
   template<typename Scalar, int Dims, int Layout = ColMajor>
   inline Tensor<Scalar, Dims, Layout> from_device(Scalar * dt, array<Index, Dims> dims) {
 
@@ -61,5 +69,11 @@ namespace EigenSinn {
   inline void free_gpu(Scalar * d_data) {
 
     cudaFree(d_data);
+  }
+
+  template<typename Scalar, int Dims, int Layout = ColMajor>
+  inline Tensor<Scalar, Dims> from_gpu_tensor(TensorMap<Tensor<Scalar, Dims, Layout>>* t_map) {
+
+    return from_device(t_map->data(), t_map->dimensions());
   }
 }

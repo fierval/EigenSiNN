@@ -31,7 +31,9 @@ namespace EigenSinn {
       out_dim(_out_dim),
       broadcast_bias_dim({ 1, 1 }),
       bias(_out_dim)   {
-
+        
+      weights_gpu = layer_output_gpu = layer_grad_loss_by_weight_gpu = layer_grad_loss_by_input_gpu = nullptr;
+      bias_gpu = loss_by_bias_derivative_gpu = nullptr;
     }
 
     // prev_layer_out: X[l-1], dim: [N, D]
@@ -45,6 +47,10 @@ namespace EigenSinn {
 
         layer_output.resize(batch_size, layer_output.dimension(1));
         layer_grad_loss_by_input.resize(batch_size, layer_grad_loss_by_input.dimension(1));
+      }
+
+      if (should_move_to_gpu()) {
+        weights_gpu = new TensorMap<Tensor<Scalar, 2>>(to_device(weights), weights.dimensions());
       }
 
       // dims: [N, D] * [D, M] -> [N, M]
@@ -80,7 +86,6 @@ namespace EigenSinn {
     void init(const Tensor<Scalar, 2>& _weights) {
       init();
       weights = _weights;
-      bias.setZero();
     }
 
     void init(const Tensor<Scalar, 2>& _weights, const Tensor<Scalar, 1>& _bias) {
@@ -135,6 +140,10 @@ namespace EigenSinn {
     Tensor<Scalar, 2> weights;
     Tensor<Scalar, 2> layer_output, layer_grad_loss_by_weight, layer_grad_loss_by_input;
     Tensor<Scalar, 1> bias, loss_by_bias_derivative;
+
+    // GPU support
+    TensorMap<Tensor<Scalar, 2>> *weights_gpu, *layer_output_gpu, *layer_grad_loss_by_weight_gpu, *layer_grad_loss_by_input_gpu;
+    TensorMap<Tensor<Scalar, 1>> *bias_gpu, *loss_by_bias_derivative_gpu;
 
     const int in_dim, out_dim;
     array<int, 2> broadcast_bias_dim;
