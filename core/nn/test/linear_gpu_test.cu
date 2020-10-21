@@ -6,6 +6,7 @@
 #include "gpu/gpu_tensor.hpp"
 
 using namespace Eigen;
+using namespace EigenSinn;
 
 namespace EigenSinnTest {
   class LinearGpu : public ::testing::Test {
@@ -20,11 +21,13 @@ namespace EigenSinnTest {
   };
 
   TEST_F(LinearGpu, Backward) {
-    EigenSinn::Dispatcher<GpuDevice> device;
+    Dispatcher<GpuDevice> device;
     float* d_input = to_device(cd.linearInput);
 
-    EigenSinn::Input<float, 2, GpuDevice> input(cd.dims, device);
+    Input<float, 2, GpuDevice> input(cd.dims, device);
     input.set_input(d_input);
+
+    Linear<float, GpuDevice> linear(cd.dims[1], cd.out_dims[1]);
 
   }
 }
