@@ -26,6 +26,7 @@ namespace EigenSinn {
       layer_output(1, _out_dim),
       layer_grad_loss_by_input(1, _in_dim),
       layer_grad_loss_by_weight(_in_dim, _out_dim),
+      weights(_in_dim, _out_dim),
       loss_by_bias_derivative(_out_dim),
       in_dim(_in_dim),
       out_dim(_out_dim),
@@ -50,7 +51,7 @@ namespace EigenSinn {
       }
 
       if (should_move_to_gpu()) {
-        weights_gpu = new TensorMap<Tensor<Scalar, 2>>(to_device(weights), weights.dimensions());
+        weights_gpu = to_gpu_tensor(weights);
       }
 
       // dims: [N, D] * [D, M] -> [N, M]

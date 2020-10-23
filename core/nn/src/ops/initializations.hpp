@@ -13,7 +13,7 @@ namespace EigenSinn {
     std.setConstant(1. / (layer_dims[1] * layer_dims[2] * layer_dims[3]));
     std = std.sqrt();
 
-    return *(std.data());
+    return std(0);
 
   }
 
@@ -25,14 +25,16 @@ namespace EigenSinn {
     std.setConstant(1. / layer_dims[0]);
     std = std.sqrt();
 
-    return *(std.data());
+    return std(0);
 
   }
 
   template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
-  inline Tensor<Scalar, Rank> generate_xavier(array<Index, Rank> layer_dims, const Device_& device = DefaultDevice()) {
+  inline Scalar * generate_xavier(array<Index, Rank> layer_dims, const Device_& device = DefaultDevice()) {
 
     assert(Rank == 2 || Rank == 4);
+
+    // all this wrapping due to possible GPU invokations
     Scalar std;
 
     switch (Rank) {
@@ -48,7 +50,17 @@ namespace EigenSinn {
 
     Tensor<Scalar, Rank> weights(layer_dims);
     weights.template setRandom<::internal::NormalRandomGenerator<Scalar>>();
-    weights.device(device) = std * weights;
-    return weights;
+
+    if (std::is_same<Device_, GpuDevice>::value) {
+      std::unique_ptr<TensorMap<Tensor<Scalar, Rank>>> weights_gpu(to_gpu_tensor(weights));
+
+      weights_gpu->device(device) = std * (*weights_gpu);
+      return weights_gpu->data();
+    }
+    else {
+      weights.device(device) = std * weights;
+      return weights.data();
+    }
+
   }
 }
