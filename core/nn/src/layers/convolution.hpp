@@ -48,6 +48,16 @@ namespace EigenSinn {
         bias.setZero();
       }
 
+#ifdef EIGEN_USE_GPU
+      if (std::is_same<Device_, GpuDevice>::value) {
+        cudaFree(kernel_data);
+      }
+      else
+#endif
+      {
+        std::free(kernel_data);
+      }
+
     }
 
     void init(const Tensor<Scalar, 4>& _weights) {

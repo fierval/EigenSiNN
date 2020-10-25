@@ -1,5 +1,5 @@
 #pragma once
-
+#ifdef EIGEN_USE_GPU
 #include <unsupported/Eigen/CXX11/Tensor>
 #include "ops/opsbase.hpp"
 #include <cudnn.h>
@@ -77,3 +77,4 @@ namespace EigenSinn {
     return from_device(t_map->data(), t_map->dimensions());
   }
 }
+#endif

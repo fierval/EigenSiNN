@@ -59,6 +59,8 @@ namespace EigenSinn {
     }
     else {
       weights.device(device) = std * weights;
+      Scalar* weights_data = (Scalar *)std::malloc(sizeof(Scalar) * weights.size());
+      std::memcpy(weights_data, weights.data(), sizeof(Scalar) * weights.size());
       return weights.data();
     }
 

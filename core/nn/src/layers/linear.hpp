@@ -104,6 +104,8 @@ namespace EigenSinn {
       // Wrapping the pointer and moving it to the tensor keeping in mind the GPU device
       Scalar* weights_data = generate_xavier<Scalar, 2>(weights.dimensions(), get_device());
       TensorMap<Tensor<Scalar, 2>> weights_view(weights_data, weights.dimensions());
+
+
       weights.device(get_device()) = weights_view;
 
       if (std::is_same<Device_, GpuDevice>::value) {
@@ -116,6 +118,17 @@ namespace EigenSinn {
       else {
         bias.setZero();
       }
+
+#ifdef EIGEN_USE_GPU
+      if (std::is_same<Device_, GpuDevice>::value) {
+        cudaFree(weights_data);
+      }
+      else
+#endif
+      {
+        std::free(weights_data);
+      }
+
     }
 
     // this will be fed to compute dL/dW[l-1]
