@@ -82,5 +82,7 @@ namespace EigenSinn {
     void fix_gpu_values() {
       renew_gpu_values = false;
     }
+
+    Device_& get_device() { return dispatcher.get_device(); }
   };
 }

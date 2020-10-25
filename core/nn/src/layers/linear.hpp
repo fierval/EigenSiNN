@@ -50,10 +50,6 @@ namespace EigenSinn {
         layer_grad_loss_by_input.resize(batch_size, layer_grad_loss_by_input.dimension(1));
       }
 
-      if (should_move_to_gpu()) {
-        weights_gpu = to_gpu_tensor(weights);
-      }
-
       // dims: [N, D] * [D, M] -> [N, M]
       ProductDims prod_dims = { IndexPair<int>(1, 0) };
       TensorMap<Tensor<Scalar, 2>> prev_layer_tensor(prev_layer.get_output(), vector2array<2>(in_dims));
@@ -86,13 +82,13 @@ namespace EigenSinn {
 
     void init(const Tensor<Scalar, 2>& _weights) {
       init();
-      weights = _weights;
+      weights.device(get_device()) = _weights;
     }
 
     void init(const Tensor<Scalar, 2>& _weights, const Tensor<Scalar, 1>& _bias) {
 
       init(_weights);
-      bias = _bias;
+      bias.device(get_device()) = _bias;
     }
 
     // TODO: actual initialization needed
@@ -105,8 +101,21 @@ namespace EigenSinn {
       set_weight_dims(std::vector<Index>{in_dim, out_dim});
 
       //weights of dimension (D, M)
-      weights = generate_xavier<Scalar, 2>(vector2array< 2>(weight_dims), dispatcher.get_device());
-      bias = bias.setZero();
+      // Wrapping the pointer and moving it to the tensor keeping in mind the GPU device
+      Scalar* weights_data = generate_xavier<Scalar, 2>(weights.dimensions(), get_device());
+      TensorMap<Tensor<Scalar, 2>> weights_view(weights_data, weights.dimensions());
+      weights.device(get_device()) = weights_view;
+
+      if (std::is_same<Device_, GpuDevice>::value) {
+        Tensor<Scalar, 1> bias_tensor(weights.dimension(0));
+        bias_tensor.setZero();
+        Scalar* bias_ptr = to_device(bias_tensor);
+        TensorMap<Tensor<Scalar, 1>> bias_view(bias_ptr, bias.dimensions());
+        bias.device(get_device()) = bias_view;
+      }
+      else {
+        bias.setZero();
+      }
     }
 
     // this will be fed to compute dL/dW[l-1]

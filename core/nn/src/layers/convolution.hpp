@@ -32,15 +32,28 @@ namespace EigenSinn {
       set_bias_dims(std::vector<Index>(kernel.dimension(0)));
       set_weight_dims(array2vector<4>(kernel.dimensions()));
 
-      kernel = generate_xavier<Scalar, 4>(kernel.dimensions(), dispatcher.get_device());
-      bias.setZero();
+      // Wrapping the pointer and moving it to the tensor keeping in mind the GPU device
+      Scalar * kernel_data = generate_xavier<Scalar, 4>(kernel.dimensions(), get_device());
+      TensorMap<Tensor<Scalar, 4>> kernel_view(kernel_data, kernel.dimensions());
+      kernel.device(get_device()) = kernel_view;
+
+      if (std::is_same<Device_, GpuDevice>::value) {
+        Tensor<Scalar, 1> bias_tensor(kernel.dimension(0));
+        bias_tensor.setZero();
+        Scalar* bias_ptr = to_device(bias_tensor);
+        TensorMap<Tensor<Scalar, 1>> bias_view(bias_ptr, bias.dimensions());
+        bias.device(get_device()) = bias_view;
+      }
+      else {
+        bias.setZero();
+      }
+
     }
 
-    void init(const Tensor<Scalar, 4> _weights) {
+    void init(const Tensor<Scalar, 4>& _weights) {
       init();
 
-      kernel = _weights;
-      bias.setZero();
+      kernel.device(get_device()) = _weights;
     }
 
     void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
