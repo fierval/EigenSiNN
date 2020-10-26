@@ -34,23 +34,22 @@ namespace EigenSinn {
       , is_training(_is_training)
 
     {
-     
+      Device_& device = get_device();
+      array<Index, 1> dim{ num_features };
+      beta = create_device_view<Device_, Scalar, Rank>(device, dim);
+      gamma = create_device_view<Device_, Scalar, Rank>(device, dim);
+      running_variance = create_device_view<Device_, Scalar, Rank>(device, dim);
+      running_mean = create_device_view<Device_, Scalar, Rank>(device, dim);
     }
 
     void init() override {
 
-      Device_& device = get_device();
-      array<Index, Rank>
-      beta = create_device_view<Device_, Scalar, Rank>>(beta_ptr, num_features);
       beta->device(device).setZero();
 
-      gamma = make_unique<TensorView<Scalar, Rank>>(gamma_ptr, num_features);
       gamma->device(device).setConstant(1.);
 
-      running_variance = make_unique<TensorView<Scalar, Rank>>(running_variance_ptr, num_features);
       running_variance->device(device).setZero();
 
-      running_mean = make_unique<TensorView<Scalar, Rank>>(running_mean_ptr, num_features);
       running_mean->device(device).setZero();
     }
 
@@ -79,7 +78,7 @@ namespace EigenSinn {
 
     // see https://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html
     // for derivations
-    void backward(LayerBase<Scalar, Device_>& prev_layer_any, Scalar * next_layer_grad_any) override {
+    void backward(LayerBase<Scalar, Device_>& prev_layer_any, Scalar* next_layer_grad_any) override {
 
       TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_any.get_output(), vector2array<Rank>(in_dims));
       TensorMap<Tensor<Scalar, Rank>> dout(next_layer_grad_any, vector2array< Rank>(out_dims));
