@@ -62,7 +62,13 @@ namespace EigenSinn {
     Tensor<Scalar, Dims, Layout> out(dims);
 
     out = out_map;
+    free(data);
     return out;
+  }
+
+  template<typename Scalar>
+  inline Tensor<Scalar, 0> from_device(Scalar* dt) {
+    return from_device(dt, array<Index, 0>{});
   }
 
   template<typename Scalar>

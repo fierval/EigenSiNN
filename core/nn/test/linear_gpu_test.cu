@@ -5,6 +5,7 @@
 #include "layers/input.hpp"
 #include "ops/comparisons.hpp"
 #include "gpu/gpu_tensor.hpp"
+#include "ops/conversions.hpp"
 
 using namespace Eigen;
 using namespace EigenSinn;
@@ -20,6 +21,29 @@ namespace EigenSinnTest {
 
     CommonData2d cd;
   };
+
+  TEST_F(LinearGpu, Initialization) {
+
+    Dispatcher<GpuDevice> dispatcher;
+    GpuDevice& device = dispatcher.get_device();
+
+    array<Index, 2> kdims = {512, 3};
+    Linear<float, GpuDevice> linear(kdims[0], kdims[1]);
+
+    linear.init();
+    TensorMap<Tensor<float, 2>> weights(linear.get_weights(), vector2array<2>(linear.get_weight_dims()));
+
+    Tensor<float, 0> avg;
+    Tensor<float, 0> var;
+    Tensor<float, 0> var_expected;
+
+    var.device(device) = (weights - *(avg.data())).pow(2.).mean();
+    avg.device(device) = weights.mean();
+    var_expected.setConstant(1. / kdims[0]);
+
+    Tensor<float, 0> var_cpu = from_device(var.data());
+    EXPECT_TRUE(is_elementwise_approx_eq(var_expected, var, 1e-4));
+  }
 
   //TEST_F(LinearGpu, Backward) {
   //  Dispatcher<GpuDevice> device;
