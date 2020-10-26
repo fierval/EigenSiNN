@@ -9,6 +9,12 @@ using namespace Eigen;
 
 namespace EigenSinn {
 
+  enum class DebugInit : int {
+    False = 0,
+    Weights = 1,
+    Bias = 2
+  };
+
   template <typename Scalar, typename Device_ = DefaultDevice>
   class LayerBase {
 
@@ -67,7 +73,10 @@ namespace EigenSinn {
     bool renew_gpu_values;
 
     // constructor called by derived class only
-    LayerBase(Dispatcher<Device_>& _dispatcher) : dispatcher(_dispatcher) {
+    LayerBase(Dispatcher<Device_>& _dispatcher) 
+      : dispatcher(_dispatcher)
+      , device(_dispatcher.get_device())
+      , debug_init((int)DebugInit::False) {
       invalidate_gpu();
     }
 
@@ -83,6 +92,18 @@ namespace EigenSinn {
       renew_gpu_values = false;
     }
 
+    // if we initialized biases/weights through outside tensors
+    // we don't own their pointers so should not release them
+    int debug_init;
+
+    bool is_debug_weights() { return debug_init & (int)DebugInit::Weights; }
+    bool is_debug_bias() { return debug_init & (int)DebugInit::Bias; }
+
+    void set_debug_weights() { debug_init &= (int)DebugInit::Weights; }
+    void set_debug_bias() { debug_init &= (int)DebugInit::Weights; }
+
     Device_& get_device() { return dispatcher.get_device(); }
+    Device_& device;
+
   };
 }

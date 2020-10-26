@@ -52,7 +52,7 @@ namespace EigenSinn {
   template <>
   class Dispatcher<GpuDevice> {
   public:
-    Dispatcher() : gpu_device(&stream) {}
+    Dispatcher() : stream(), gpu_device(&stream) {}
 
     GpuDevice& get_device() {
       return gpu_device;

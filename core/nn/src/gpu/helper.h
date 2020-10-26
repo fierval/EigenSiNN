@@ -1,6 +1,7 @@
 #ifndef _HELPER_H_
 #define _HELPER_H_
 
+#ifdef EIGEN_USE_GPU
 #include <cudnn.h>
 #include <cublas_v2.h>
 
@@ -178,4 +179,5 @@ class CudaContext
 
 } // namespace cudl
 
+#endif // EIGEN_USE_GPU
 #endif // _HELPER_H_

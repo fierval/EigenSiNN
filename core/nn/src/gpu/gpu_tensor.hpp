@@ -1,16 +1,18 @@
 #pragma once
-#ifdef EIGEN_USE_GPU
-#include <unsupported/Eigen/CXX11/Tensor>
 #include "ops/opsbase.hpp"
+
+#ifdef EIGEN_USE_GPU
 #include <cudnn.h>
 #include <vector>
 #include <algorithm>
 #include "helper.h"
+#endif
 
 using namespace Eigen;
 
 namespace EigenSinn {
 
+#ifdef EIGEN_USE_GPU
   template<typename Scalar, int Dims, int Layout, int Outlayout = Layout>
   inline Scalar * to_device(Tensor<Scalar, Dims, Layout>& t) {
 
@@ -71,16 +73,26 @@ namespace EigenSinn {
     return from_device(dt, array<Index, 0>{});
   }
 
-  template<typename Scalar>
-  inline void free_gpu(Scalar * d_data) {
-
-    cudaFree(d_data);
-  }
-
   template<typename Scalar, int Dims, int Layout = ColMajor>
   inline Tensor<Scalar, Dims> from_gpu_tensor(TensorMap<Tensor<Scalar, Dims, Layout>>* t_map) {
 
     return from_device(t_map->data(), t_map->dimensions());
   }
-}
 #endif
+
+  template<typename Scalar, typename Device_>
+  inline void free(Device_ device, Scalar* d_data) {
+
+    device.deallocate(d_data);
+    DefaultDevice dev;
+  }
+
+  template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
+  inline std::unique_ptr<TensorView<Scalar, Rank, Layout>> create_device_view(Device_ device, const array<Index, Rank>& dims)
+  {
+    size_t alloc_size = size * sizeof(Scalar);
+    Scalar * ptr = static_cast<Scalar*>(device.allocate(alloc_size));
+    std::unique_ptr<TensorView<Scalar, Rank, Layout>> out(new TensorView<Scalar, Rank, Layout>(ptr, dims));
+    return std::move(out);
+  }
+}

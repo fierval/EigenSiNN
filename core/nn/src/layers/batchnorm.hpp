@@ -2,8 +2,11 @@
 
 #include "layer_base.hpp"
 #include <ops/batchnorm.hpp>
+#include <gpu/gpu_tensor.hpp>
 
 using namespace  Eigen;
+using std::unique_ptr;
+using std::make_unique;
 
 namespace EigenSinn {
 
@@ -18,31 +21,46 @@ namespace EigenSinn {
     BatchNormalizationLayer(Index num_features, float _eps = 1e-5, float _momentum = 0.9, bool _is_training = true,
       Dispatcher<Device_>& _device = LayerBase::default_dispatcher)
       : LayerBase(_device)
-      , beta(num_features)
-      , gamma(num_features)
-      , dbeta(num_features)
-      , dgamma(num_features)
+      , beta(nullptr)
+      , gamma(nullptr)
+      , dbeta(nullptr)
+      , dgamma(nullptr)
       , momentum(_momentum)
       , eps(_eps)
-      , running_variance(num_features)
-      , running_mean(num_features)
-      , mu()
-      , var()
-      , is_training(_is_training) {
+      , running_variance(nullptr)
+      , running_mean(nullptr)
+      , mu(nullptr)
+      , var(nullptr)
+      , is_training(_is_training)
 
+    {
+     
     }
 
     void init() override {
-      beta.setZero();
-      gamma.setConstant(1.);
-      running_variance.setZero();
-      running_mean.setZero();
+
+      Device_& device = get_device();
+      array<Index, Rank>
+      beta = create_device_view<Device_, Scalar, Rank>>(beta_ptr, num_features);
+      beta->device(device).setZero();
+
+      gamma = make_unique<TensorView<Scalar, Rank>>(gamma_ptr, num_features);
+      gamma->device(device).setConstant(1.);
+
+      running_variance = make_unique<TensorView<Scalar, Rank>>(running_variance_ptr, num_features);
+      running_variance->device(device).setZero();
+
+      running_mean = make_unique<TensorView<Scalar, Rank>>(running_mean_ptr, num_features);
+      running_mean->device(device).setZero();
     }
 
     void init(TensorSingleDim<Scalar>& _beta, TensorSingleDim<Scalar> _gamma) {
-      this->init();
-      beta = _beta;
-      gamma = _gamma;
+      init();
+      beta->device(get_device()) = _beta;
+      gamma->device(get_device()) = _gamma;
+
+      set_debug_weights();
+      set_debug_bias();
     }
 
     void forward(LayerBase<Scalar, Device_>& prev_layer_base) override {
@@ -56,14 +74,14 @@ namespace EigenSinn {
       Tensor<Scalar, Rank> prev_layer = prev_layer_map;
 
       std::tie(layer_output, xhat, running_mean, running_variance, mu, var) =
-        batch_norm<Scalar, Rank, Device_>(prev_layer, gamma, beta, eps, momentum, running_mean, running_variance, is_training, dispatcher.get_device());
+        batch_norm<Scalar, Rank, Device_>(prev_layer, gamma, beta, eps, momentum, running_mean, running_variance, is_training, get_device());
     }
 
     // see https://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html
     // for derivations
     void backward(LayerBase<Scalar, Device_>& prev_layer_any, Scalar * next_layer_grad_any) override {
 
-      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_any.get_output(), vector2array< Rank>(in_dims));
+      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_any.get_output(), vector2array<Rank>(in_dims));
       TensorMap<Tensor<Scalar, Rank>> dout(next_layer_grad_any, vector2array< Rank>(out_dims));
 
       array<Index, Rank - 1> reduction_dims;
@@ -167,10 +185,10 @@ namespace EigenSinn {
     }
 
   private:
-    Tensor<Scalar, Rank> layer_output, layer_gradient, xhat;
+    unique_ptr<TensorView<Scalar, Rank>> layer_output, layer_gradient, xhat;
 
-    TensorSingleDim<Scalar> gamma, beta, running_mean, running_variance, mu, var;
-    TensorSingleDim<Scalar> dbeta, dgamma;
+    unique_ptr<TensorView<Scalar, 1>> gamma, beta, running_mean, running_variance, mu, var;
+    unique_ptr<TensorView<Scalar, 1>> dbeta, dgamma;
     float momentum, eps;
     bool is_training;
 
