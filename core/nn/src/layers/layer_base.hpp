@@ -65,6 +65,8 @@ namespace EigenSinn {
     void set_bias_dims(std::vector<Index>& _bias_dims) { bias_dims = _bias_dims; }
     void set_weight_dims(std::vector<Index>& _weight_dims) { weight_dims = _weight_dims; }
 
+    virtual ~LayerBase() = default;
+
   protected:
     Dispatcher<Device_>& dispatcher;
     std::vector<Index> in_dims, out_dims, bias_dims, weight_dims;

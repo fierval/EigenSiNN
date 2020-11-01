@@ -9,6 +9,8 @@
 #endif
 
 using namespace Eigen;
+using std::unique_ptr;
+using std::make_unique;
 
 namespace EigenSinn {
 
@@ -80,19 +82,55 @@ namespace EigenSinn {
   }
 #endif
 
-  template<typename Scalar, typename Device_>
-  inline void free(Device_ device, Scalar* d_data) {
+  template<typename Device_, typename Scalar, Index Rank>
+  inline void free(unique_ptr<TensorView<Scalar, Rank>>& t, Device_& device) {
 
-    device.deallocate(d_data);
-    DefaultDevice dev;
+    if (t && t->data() != nullptr) {
+      device.deallocate(t->data());
+    }
+   
   }
 
   template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
-  inline std::unique_ptr<TensorView<Scalar, Rank, Layout>> create_device_view(Device_ device, const array<Index, Rank>& dims)
+  inline std::unique_ptr<TensorView<Scalar, Rank, Layout>> create_device_view(Device_& device, const array<Index, Rank>& dims)
   {
     size_t alloc_size = size * sizeof(Scalar);
     Scalar * ptr = static_cast<Scalar*>(device.allocate(alloc_size));
     std::unique_ptr<TensorView<Scalar, Rank, Layout>> out(new TensorView<Scalar, Rank, Layout>(ptr, dims));
     return std::move(out);
   }
+
+  /// <summary>
+  /// Just line t.setConstant but extending for GPU
+  /// Assuming memory has been allocated
+  /// </summary>
+  /// <typeparam name="Device_"></typeparam>
+  /// <typeparam name="Scalar"></typeparam>
+  /// <param name="t"></param>
+  /// <param name="val"></param>
+  /// <param name="device"></param>
+  template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
+  inline void setConstant(unique_ptr<TensorView<Scalar, Rank, Layout>>& t, Scalar val, Device_& device) {
+
+    assert(t);
+    std::vector<Scalar> const_mem(t->size());
+    std::fill(const_mem.begin(), const_mem.end(), val);
+
+    size_t final_size = t->size() * sizeof(Scalar);
+
+#ifdef EIGEN_USE_GPU
+    if (std::is_same<Device_, GpuDevice>::value) {
+
+      device.memcpyHostToDevice(t->data(), const_mem.data(), final_size);
+    }
+    else
+#endif
+    { 
+      device.memcpy(t->data(), const_mem.data(), final_size);
+    }
+  }
+
+  template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
+  inline void setZero(unique_ptr<TensorView<Scalar, Rank, Layout>>& t, Device_& device) {
+    setConstant(t, 0, device);
 }

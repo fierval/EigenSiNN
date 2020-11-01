@@ -21,42 +21,35 @@ namespace EigenSinn {
     BatchNormalizationLayer(Index num_features, float _eps = 1e-5, float _momentum = 0.9, bool _is_training = true,
       Dispatcher<Device_>& _device = LayerBase::default_dispatcher)
       : LayerBase(_device)
-      , beta(nullptr)
-      , gamma(nullptr)
-      , dbeta(nullptr)
-      , dgamma(nullptr)
       , momentum(_momentum)
       , eps(_eps)
-      , running_variance(nullptr)
-      , running_mean(nullptr)
-      , mu(nullptr)
-      , var(nullptr)
       , is_training(_is_training)
 
     {
-      Device_& device = get_device();
       array<Index, 1> dim{ num_features };
-      beta = create_device_view<Device_, Scalar, Rank>(device, dim);
-      gamma = create_device_view<Device_, Scalar, Rank>(device, dim);
-      running_variance = create_device_view<Device_, Scalar, Rank>(device, dim);
-      running_mean = create_device_view<Device_, Scalar, Rank>(device, dim);
+
+      beta = create_device_view<Device_, Scalar, 1>(device, dim);
+      dgamma = create_device_view<Device_, Scalar, 1>(device, dim);
+      dbeta = create_device_view<Device_, Scalar, 1>(device, dim);
+      gamma = create_device_view<Device_, Scalar, 1>(device, dim);
+      running_variance = create_device_view<Device_, Scalar, 1>(device, dim);
+      running_mean = create_device_view<Device_, Scalar, 1>(device, dim);
+      mu = create_device_view<Device_, Scalar, 1>(device, array<Index, 1>{1});
+      var = create_device_view<Device_, Scalar, 1>(device, array<Index, 1>{1});
     }
 
     void init() override {
 
-      beta->device(device).setZero();
-
-      gamma->device(device).setConstant(1.);
-
-      running_variance->device(device).setZero();
-
-      running_mean->device(device).setZero();
+      setZero(beta, device);
+      setConstant(gammar, 1., device);
+      setZero(running_variance, device);
+      setZero(running_mean, device);
     }
 
     void init(TensorSingleDim<Scalar>& _beta, TensorSingleDim<Scalar> _gamma) {
       init();
-      beta->device(get_device()) = _beta;
-      gamma->device(get_device()) = _gamma;
+      beta->device(device) = _beta;
+      gamma->device(device) = _gamma;
 
       set_debug_weights();
       set_debug_bias();
@@ -152,19 +145,19 @@ namespace EigenSinn {
 
     Scalar* get_output() {
 
-      return layer_output.data();
+      return layer_output->data();
     }
 
     Scalar* get_loss_by_input_derivative() {
-      return layer_gradient.data();
+      return layer_gradient->data();
     }
 
     Scalar* get_loss_by_weights_derivative() override {
-      return dgamma.data();
+      return dgamma->data();
     }
 
     Scalar* get_loss_by_bias_derivative() override {
-      return dbeta.data();
+      return dbeta->data();
     }
 
     inline void SetTraining(bool training) {
@@ -176,11 +169,22 @@ namespace EigenSinn {
     }
 
     Scalar* get_weights() override {
-      return gamma.data();
+      return gamma->data();
     }
 
     Scalar* get_bias() override {
-      return beta.data();
+      return beta->data();
+    }
+
+    virtual ~BatchNormalizationLayer() {
+      free(gamma, devcie);
+      free(beta, devcie);
+      free(runtime_mean, devcie);
+      free(runtime_variance, devcie);
+      free(mu, devcie);
+      free(var, devcie);
+      free(dbeta, devcie);
+      free(dgamma, devcie);
     }
 
   private:
