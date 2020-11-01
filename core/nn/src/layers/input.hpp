@@ -27,10 +27,21 @@ namespace EigenSinn {
     /// <summary>
     /// Grab data from the existing tensor
     /// </summary>
-    /// <param name="inp_tensor"></param>
-    void set_input(Tensor<Scalar, Rank>& inp_tensor) {
+    /// <param name="inp_tensor">input data tensor</param>
+    /// <param name= "move_to_device">whether to move the original memory to device before setting</param>
+    void set_input(Tensor<Scalar, Rank>& inp_tensor, move_to_device=false) {
       
-      set_input(inp_tensor.data(), inp_tensor.dimensions());
+      Scalar* data;
+
+      if (move_to_device) {
+        size_t alloc_size = inp_tensor.dimensions().TotalSize() * sizeof(Scalar);
+        data = static_cast<Scalar*>(device.allocate(alloc_size);
+        device.memcpyHostToDevice(data, inp_tensor.data(), alloc_size);
+      }
+      else {
+        data = inp_tensor.data();
+      }
+      set_input(data, inp_tensor.dimensions());
     }
 
     // Required overrides
@@ -42,10 +53,7 @@ namespace EigenSinn {
     void set_input(Scalar* _input, array<Index, Rank>& _out_dims) {
 
       set_dims(_out_dims, _out_dims);
-      set_input(input);
-
       input = std::make_unique<TensorView<Scalar, Rank>>(_input, vector2array<Rank>(out_dims));
-
     }
 
     unique_ptr<TensorMap<Tensor<Scalar, Rank>>> input;
