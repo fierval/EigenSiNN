@@ -71,7 +71,7 @@ namespace EigenSinn {
       Tensor<Scalar, Rank> prev_layer = prev_layer_map;
 
       std::tie(layer_output, xhat, running_mean, running_variance, mu, var) =
-        batch_norm<Scalar, Rank, Device_>(prev_layer, gamma, beta, eps, momentum, running_mean, running_variance, is_training, get_device());
+        batch_norm<Scalar, Rank, Device_>(*prev_layer, *gamma, *beta, eps, momentum, *running_mean, *running_variance, is_training, device);
     }
 
     // see https://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html

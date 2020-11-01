@@ -1,7 +1,8 @@
 #pragma once
 
 #include "opsbase.hpp"
-#include <ops/conversions.hpp>
+#include <device/device_tensor.hpp>
+#include "conversions.hpp"
 
 namespace EigenSinn {
 
@@ -50,17 +51,35 @@ namespace EigenSinn {
   inline auto batch_norm(Tensor<Scalar, Rank>& x, TensorSingleDim<Scalar>& gamma, TensorSingleDim<Scalar>& beta, float eps, float momentum, 
     TensorSingleDim<Scalar>& running_mean, TensorSingleDim<Scalar>& running_var, bool is_training, const Device_& device) {
 
-    TensorSingleDim<Scalar> mu(x.dimension(1)), variance(x.dimension(1)), std(x.dimension(1));
-    Tensor<Scalar, Rank> mu_broadcasted(x.dimensions()), mean_broadcasted(x.dimensions()), x_hat(x.dimensions()), std_broadcasted(x.dimensions()), x_out(x.dimensions());
+    DSizes<Index, 1> single_dim{ x.dimension(1) };
 
-    TensorSingleDim<Scalar> new_running_mean = running_mean;
-    TensorSingleDim<Scalar> new_running_var = running_var;;
+    TensorView<Scalar, 1>* mu, * variance, *std;
+    TensorView<Scalar, 1>* new_running_var;
+    TensorView<Scalar, 1>* new_running_mean;
+
+    TensorView<Scalar, Rank>* mu_broadcasted, *mean_broadcasted, *x_hat, *std_broadcasted, *x_out;
+
+    mu = create_device_view<Device_, Scalar, 1>(single_dim, device);
+    variance = create_device_view<Device_, Scalar, 1>(single_dim, device);
+    std = create_device_view<Device_, Scalar, 1>(single_dim, device);
+    new_running_mean = create_device_view<Device_, Scalar, 1>(DSizes{ running_mean.dimensions() }, device);
+    new_running_var = create_device_view<Device_, Scalar, 1>(DSizes{ running_mean.dimensions() }, device);
+
+    mu_broadcasted = create_device_view<Device_, Scalar, Rank>(x.dimensions(), device);
+    mean_broadcasted = create_device_view<Device_, Scalar, Rank>(x.dimensions(), device);
+    x_hat = create_device_view<Device_, Scalar, Rank>(x.dimensions(), device);
+    std_broadcasted = create_device_view<Device_, Scalar, Rank>(x.dimensions(), device);
+    x_out = create_device_view<Device_, Scalar, Rank>(x.dimensions(), device);
+
 
     // get sample mean
     Eigen::array<Index, Rank - 1> reduction_dims;
     Eigen::array<Index, Rank> broadcast_dims;
 
     std::tie(reduction_dims, broadcast_dims) = get_broadcast_and_reduction_dims(x);
+
+    move_to(new_running_mean, running_mean, device);
+    move_to(new_running_var, running_var, device);
 
     // if training we compute all the values.
     // otherwise use their running analogs
