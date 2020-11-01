@@ -59,10 +59,12 @@ namespace EigenSinn {
 
       if (are_dims_unset(prev_layer_base.get_out_dims())) {
 
+        DSizes<Index, Rank> dims = vector2Dsizes<Rank>(prev_layer_base.get_out_dims());
+
         set_dims(prev_layer_base.get_out_dims(), prev_layer_base.get_out_dims());
-        layer_gradient = resize(*layer_gradient, vector2DSizes<Rank>(prev_layer_base.get_out_dims()));
-        layer_output = resize(*layer_output, vector2Dsizes<Rank>(prev_layer_base.get_out_dims()));
-        xhat = resize(*xhat, vector2Dsizes<Rank>(prev_layer_base.get_out_dims()));
+        layer_gradient = resize(*layer_gradient, dims, device);
+        layer_output = resize(*layer_output, dims, device);
+        xhat = resize(*xhat, dims, device);
       }
 
       TensorMap<Tensor<Scalar, Rank>> prev_layer_map(prev_layer_base.get_output(), vector2array< Rank>(in_dims));

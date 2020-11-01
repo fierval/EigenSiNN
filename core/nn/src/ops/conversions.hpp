@@ -69,7 +69,7 @@ namespace EigenSinn {
   }
 
   template<Index Rank>
-  inline array<Index, Rank> vector2Diszes(std::vector<Index>& v) {
+  inline DSizes<Index, Rank> vector2Dsizes(std::vector<Index>& v) {
 
     DSizes<Index, Rank> out;
     // TODO: NVCCC doesn't like this: std::copy_n(v.begin(), Rank, out.begin());
