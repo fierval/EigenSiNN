@@ -13,9 +13,10 @@ namespace EigenSinn {
   public:
     
     Input(Dispatcher<Device_>& _device = LayerBase<Scalar, Device_>::default_dispatcher) 
-      : LayerBase<Scalar, Device_>(_device) {
+      : LayerBase<Scalar, Device_>(_device)
+      , input(nullptr)
+      , has_data_ownership(false) {
       
-      input = nullptr;
     }
 
     Scalar* get_output() { 
@@ -34,6 +35,11 @@ namespace EigenSinn {
       Scalar* data;
 
       if (move_to_device) {
+        // free whatever was there before
+        if (input && has_data_ownership) {
+          device.deallocate(input.data());
+          input.reset(nullptr);
+        }
         size_t alloc_size = inp_tensor.dimensions().TotalSize() * sizeof(Scalar);
         data = static_cast<Scalar*>(device.allocate(alloc_size);
         device.memcpyHostToDevice(data, inp_tensor.data(), alloc_size);
@@ -41,6 +47,8 @@ namespace EigenSinn {
       else {
         data = inp_tensor.data();
       }
+
+      has_data_ownership = move_to_device;
       set_input(data, inp_tensor.dimensions());
     }
 
@@ -48,16 +56,22 @@ namespace EigenSinn {
     void forward(LayerBase<Scalar, Device_>& prev_layer_base) {};
     void backward(LayerBase<Scalar, Device_>& prev_layer, Scalar* next_layer_grad) {};
 
+    virtual ~Input() {
+      if (input) {
+        device.deallocate(input.data());
+      }
+    }
+
   private:
 
     void set_input(Scalar* _input, array<Index, Rank>& _out_dims) {
 
       set_dims(_out_dims, _out_dims);
-      input = std::make_unique<TensorView<Scalar, Rank>>(_input, vector2array<Rank>(out_dims));
+      input.reset(new TensorView<Scalar, Rank>(_input, vector2array<Rank>(out_dims)));
     }
 
     unique_ptr<TensorMap<Tensor<Scalar, Rank>>> input;
-
+    bool has_data_ownership;
 
   };
 }
