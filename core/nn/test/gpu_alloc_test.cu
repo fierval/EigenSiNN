@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include "include/commondata2d.hpp"
 #include <ops/comparisons.hpp>
-#include <gpu/gpu_tensor.hpp>
+#include <device/device_tensor.hpp>
 
 using namespace EigenSinn;
 

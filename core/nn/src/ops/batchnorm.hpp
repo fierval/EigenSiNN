@@ -31,7 +31,7 @@ namespace EigenSinn {
 
   // broadcast channel dimension - first in the list of arguments, las
   template  <typename Scalar = float, Index Rank, typename Device_>
-  inline Tensor<Scalar, Rank> broadcast_as_last_dim(TensorSingleDim<Scalar>& t, Eigen::array<Index, Rank> broadcast_dims, const Device_& device) {
+  inline Tensor<Scalar, Rank> broadcast_as_last_dim(const TensorSingleDim<Scalar>& t, Eigen::array<Index, Rank> broadcast_dims, const Device_& device) {
 
     Eigen::array<Index, Rank> reshaped_dims;
     Eigen::array<Index, Rank> original_dims = broadcast_dims;

@@ -26,7 +26,7 @@ using namespace Eigen;
 namespace EigenSinn {
 
   template<typename Scalar, Index Rank, int Layout = ColMajor>
-  using TensorView = TensorMap<Tensor<Scalar, Rank, Layout>>
+  using TensorView = TensorMap<Tensor<Scalar, Rank, Layout>>;
 
   typedef array<std::pair<Index, Index>, 4> Padding;
   typedef IndexPair<Index> Dim2D;

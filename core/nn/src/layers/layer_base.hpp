@@ -3,7 +3,7 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 #include <ops/opsbase.hpp>
 #include <ops/conversions.hpp>
-#include <gpu/gpu_tensor.hpp>
+#include <device/device_tensor.hpp>
 
 using namespace Eigen;
 
