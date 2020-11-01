@@ -32,7 +32,7 @@ namespace EigenSinn {
 
   // broadcast channel dimension - first in the list of arguments, las
   template  <typename Scalar = float, Index Rank, typename Device_>
-  inline Tensor<Scalar, Rank> broadcast_as_last_dim(const TensorSingleDim<Scalar>& t, Eigen::array<Index, Rank> broadcast_dims, const Device_& device) {
+  inline TensorView<Scalar, Rank> *broadcast_as_last_dim(const TensorSingleDim<Scalar>& t, Eigen::array<Index, Rank> broadcast_dims, const Device_& device) {
 
     Eigen::array<Index, Rank> reshaped_dims;
     Eigen::array<Index, Rank> original_dims = broadcast_dims;
@@ -41,15 +41,17 @@ namespace EigenSinn {
     reshaped_dims[(int)ImageDims::channel] = t.dimension(0);
     original_dims[(int)ImageDims::channel] = t.dimension(0);
 
-    Tensor<Scalar, Rank> broadcasted(original_dims);
-    broadcasted.device(device) = t.reshape(reshaped_dims).broadcast(broadcast_dims);
+    TensorView<Scalar, Rank> *broadcasted(original_dims);
+
+    broadcasted = create_device_view<Scalar, Rank, Device_>(original_dims, device);
+    broadcasted->device(device) = t.reshape(reshaped_dims).broadcast(broadcast_dims);
     return broadcasted;
   }
 
   // NHWC format
   template<typename Scalar = float, Index Rank, typename Device_>
-  inline auto batch_norm(Tensor<Scalar, Rank>& x, TensorSingleDim<Scalar>& gamma, TensorSingleDim<Scalar>& beta, float eps, float momentum, 
-    TensorSingleDim<Scalar>& running_mean, TensorSingleDim<Scalar>& running_var, bool is_training, const Device_& device) {
+  inline auto batch_norm(const Tensor<Scalar, Rank>& x, const TensorSingleDim<Scalar>& gamma, const TensorSingleDim<Scalar>& beta, float eps, float momentum, 
+    const TensorSingleDim<Scalar>& running_mean, TensorSingleDim<Scalar>& running_var, bool is_training, const Device_& device) {
 
     DSizes<Index, 1> single_dim{ x.dimension(1) };
 
@@ -85,17 +87,17 @@ namespace EigenSinn {
     // otherwise use their running analogs
     if (is_training) {
       // mean
-      mu = x.mean(reduction_dims);
-      mu_broadcasted = broadcast_as_last_dim(mu, broadcast_dims, device);
+      mu->device(device) = x.mean(reduction_dims);
+      mu_broadcasted->device(device) = broadcast_as_last_dim(*mu, broadcast_dims, device);
 
       // variance
-      variance = (x - mu_broadcasted).pow(2.).mean(reduction_dims);
+      variance->device(device) = (x - *mu_broadcasted).pow(2.).mean(reduction_dims);
 
-      new_running_mean.device(device) = momentum * running_mean + (1.0 - momentum) * mu;
-      new_running_var.device(device) = momentum * running_var + (1.0 - momentum) * variance;
+      new_running_mean->device(device) = momentum * (*running_mean) + (1.0 - momentum) * (*mu);
+      new_running_var->device(device) = momentum * (*running_var) + (1.0 - momentum) * (*variance);
       
-      std = (variance + eps).sqrt();
-      mean_broadcasted = broadcast_as_last_dim<Scalar, Rank>(mu, broadcast_dims, device);
+      std->device(device) = (*variance + eps).sqrt();
+      mean_broadcasted = broadcast_as_last_dim<Scalar, Rank>(*mu, broadcast_dims, device);
     }
     else {
       std = (running_var + eps).sqrt();
