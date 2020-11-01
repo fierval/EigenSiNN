@@ -107,7 +107,7 @@ namespace EigenSinn {
       Tensor<Scalar, Rank> dxhat(dout.dimensions());
 
       dxhat.device(device) = dout * gamma_broad;
-      dgamma->device(device) = (dout * xhat).sum(reduction_dims);
+      dgamma->device(device) = (dout * (* xhat)).sum(reduction_dims);
 
       // Step 7
       // d_inv_std
@@ -142,7 +142,7 @@ namespace EigenSinn {
       dx2.device(device) = 1. / total_channel * broadcast_as_last_dim<Scalar, Rank>(dmu, broadcast_dims, device);
 
       // step 0
-      layer_gradient.device(device) = dx1 + dx2;
+      layer_gradient->device(device) = dx1 + dx2;
     }
 
     Scalar* get_output() {

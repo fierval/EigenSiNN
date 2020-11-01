@@ -14,7 +14,6 @@ namespace EigenSinn {
     
     Input(Dispatcher<Device_>& _device = LayerBase<Scalar, Device_>::default_dispatcher) 
       : LayerBase<Scalar, Device_>(_device)
-      , input(nullptr)
       , has_data_ownership(false) {
       
     }
@@ -30,7 +29,7 @@ namespace EigenSinn {
     /// </summary>
     /// <param name="inp_tensor">input data tensor</param>
     /// <param name= "move_to_device">whether to move the original memory to device before setting</param>
-    void set_input(Tensor<Scalar, Rank>& inp_tensor, move_to_device=false) {
+    void set_input(Tensor<Scalar, Rank>& inp_tensor, bool move_to_device=false) {
       
       Scalar* data;
 
@@ -41,7 +40,7 @@ namespace EigenSinn {
           input.reset(nullptr);
         }
         size_t alloc_size = inp_tensor.dimensions().TotalSize() * sizeof(Scalar);
-        data = static_cast<Scalar*>(device.allocate(alloc_size);
+        data = static_cast<Scalar*>(device.allocate(alloc_size));
         device.memcpyHostToDevice(data, inp_tensor.data(), alloc_size);
       }
       else {
@@ -70,7 +69,7 @@ namespace EigenSinn {
       input.reset(new TensorView<Scalar, Rank>(_input, vector2array<Rank>(out_dims)));
     }
 
-    unique_ptr<TensorMap<Tensor<Scalar, Rank>>> input;
+    unique_ptr<TensorView<Scalar, Rank>> input;
     bool has_data_ownership;
 
   };
