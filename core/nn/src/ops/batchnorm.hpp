@@ -4,6 +4,8 @@
 #include <device/device_tensor.hpp>
 #include "conversions.hpp"
 
+using std::unique_ptr;
+
 namespace EigenSinn {
 
   template <typename Scalar>
@@ -32,7 +34,7 @@ namespace EigenSinn {
 
   // broadcast channel dimension - first in the list of arguments, las
   template  <typename Scalar = float, Index Rank, typename Device_>
-  inline TensorView<Scalar, Rank> *broadcast_as_last_dim(const TensorSingleDim<Scalar>& t, Eigen::array<Index, Rank> broadcast_dims, const Device_& device) {
+  inline TensorView<Scalar, Rank> *broadcast_as_last_dim(const TensorView<Scalar, 1>& t, Eigen::array<Index, Rank> broadcast_dims, const Device_& device) {
 
     Eigen::array<Index, Rank> reshaped_dims;
     Eigen::array<Index, Rank> original_dims = broadcast_dims;
@@ -41,7 +43,7 @@ namespace EigenSinn {
     reshaped_dims[(int)ImageDims::channel] = t.dimension(0);
     original_dims[(int)ImageDims::channel] = t.dimension(0);
 
-    TensorView<Scalar, Rank> *broadcasted(original_dims);
+    TensorView<Scalar, Rank> *broadcasted;
 
     broadcasted = create_device_view<Scalar, Rank, Device_>(original_dims, device);
     broadcasted->device(device) = t.reshape(reshaped_dims).broadcast(broadcast_dims);
@@ -50,16 +52,14 @@ namespace EigenSinn {
 
   // NHWC format
   template<typename Scalar = float, Index Rank, typename Device_>
-  inline auto batch_norm(const Tensor<Scalar, Rank>& x, const TensorSingleDim<Scalar>& gamma, const TensorSingleDim<Scalar>& beta, float eps, float momentum, 
-    const TensorSingleDim<Scalar>& running_mean, TensorSingleDim<Scalar>& running_var, bool is_training, const Device_& device) {
+  inline auto batch_norm(TensorView<Scalar, Rank>& x, TensorView<Scalar, 1>& gamma, TensorView<Scalar, 1>& beta, float eps, float momentum, 
+     TensorView<Scalar, 1>& running_mean, TensorView<Scalar, 1>& running_var, bool is_training, const Device_& device) {
 
     DSizes<Index, 1> single_dim{ x.dimension(1) };
 
-    TensorView<Scalar, 1>* mu, * variance, *std;
-    TensorView<Scalar, 1>* new_running_var;
-    TensorView<Scalar, 1>* new_running_mean;
+    unique_ptr<TensorView<Scalar, 1>> mu, variance, std, new_running_var,  new_running_mean;
 
-    TensorView<Scalar, Rank>* mu_broadcasted, *mean_broadcasted, *x_hat, *std_broadcasted, *x_out;
+    unique_ptr<TensorView<Scalar, Rank>> mu_broadcasted, mean_broadcasted, x_hat, std_broadcasted, x_out;
 
     mu = create_device_view<Device_, Scalar, 1>(single_dim, device);
     variance = create_device_view<Device_, Scalar, 1>(single_dim, device);
@@ -80,9 +80,6 @@ namespace EigenSinn {
 
     std::tie(reduction_dims, broadcast_dims) = get_broadcast_and_reduction_dims(x);
 
-    move_to(new_running_mean, running_mean, device);
-    move_to(new_running_var, running_var, device);
-
     // if training we compute all the values.
     // otherwise use their running analogs
     if (is_training) {
@@ -100,21 +97,28 @@ namespace EigenSinn {
       mean_broadcasted = broadcast_as_last_dim<Scalar, Rank>(*mu, broadcast_dims, device);
     }
     else {
-      std = (running_var + eps).sqrt();
-      mean_broadcasted = broadcast_as_last_dim<Scalar, Rank>(running_mean, broadcast_dims, device);
+      std->device(device) = (*running_var + eps).sqrt();
+      mean_broadcasted = broadcast_as_last_dim<Scalar, Rank>(*running_mean, broadcast_dims, device);
+
+      move_to(*new_running_mean, *running_mean, device);
+      move_to(*new_running_var, *running_var, device);
+
     }
-    std_broadcasted = broadcast_as_last_dim<Scalar, Rank>(std, broadcast_dims, device);
+    std_broadcasted = broadcast_as_last_dim<Scalar, Rank>(*std, broadcast_dims, device);
 
     
-    Tensor<Scalar, Rank> gamma_broadcasted(x.dimensions());
-    gamma_broadcasted.device(device) = broadcast_as_last_dim<Scalar, Rank>(gamma, broadcast_dims, device);
+    unique_ptr<TensorView<Scalar, Rank>> gamma_broadcasted, beta_broadcasted;
 
-    Tensor<Scalar, Rank> beta_broadcasted(x.dimensions());
+    gamma_broadcasted = create_device_view(x.dimensions(), device);
+    gamma_broadcasted->device(device) = broadcast_as_last_dim<Scalar, Rank>(gamma, broadcast_dims, device);
+
+    Tensor<Scalar, Rank> beta_broadcasted;
+    beta_broadcasted = create_device_view(x.dimensions(), device);
     beta_broadcasted.device(device) = broadcast_as_last_dim<Scalar, Rank>(beta, broadcast_dims, device);
 
-    x_hat.device(device) = (x - mean_broadcasted) / std_broadcasted;
-    x_out.device(device) = gamma_broadcasted * x_hat + beta_broadcasted;
+    x_hat->device(device) = (x - mean_broadcasted) / std_broadcasted;
+    x_out->device(device) = gamma_broadcasted * x_hat + beta_broadcasted;
 
-    return std::make_tuple(x_out, x_hat, new_running_mean, new_running_var, mu, variance);
+    return std::make_tuple(std::move(x_out), std::move(x_hat), std::move(new_running_mean), std::move(new_running_var), std::move(mu, variance));
   }
 }
