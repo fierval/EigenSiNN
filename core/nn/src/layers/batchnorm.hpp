@@ -24,18 +24,18 @@ namespace EigenSinn {
       , momentum(_momentum)
       , eps(_eps)
       , is_training(_is_training)
-
+      , beta(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1> { num_features }, device))
+      , dgamma(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1> { num_features }, device))
+      , dbeta(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1> { num_features }, device))
+      , gamma(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1> { num_features }, device))
+      , running_variance(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1> { num_features }, device))
+      , running_mean(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1> { num_features }, device))
+      , mu(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1>{1}, device))
+      , var(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1>{1}, device))
+      , layer_output(nullptr, 0, 0)
+      , layer_gradient(nullptr, 0, 0)
+      , xhat(nullptr, 0, 0)
     {
-      array<Index, 1> dim{ num_features };
-
-      beta = create_device_view<Device_, Scalar, 1>(device, dim);
-      dgamma = create_device_view<Device_, Scalar, 1>(device, dim);
-      dbeta = create_device_view<Device_, Scalar, 1>(device, dim);
-      gamma = create_device_view<Device_, Scalar, 1>(device, dim);
-      running_variance = create_device_view<Device_, Scalar, 1>(device, dim);
-      running_mean = create_device_view<Device_, Scalar, 1>(device, dim);
-      mu = create_device_view<Device_, Scalar, 1>(device, array<Index, 1>{1});
-      var = create_device_view<Device_, Scalar, 1>(device, array<Index, 1>{1});
     }
 
     void init() override {
