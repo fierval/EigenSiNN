@@ -83,7 +83,7 @@ namespace EigenSinn {
 #endif
 
   template<typename Device_, typename Scalar, Index Rank>
-  inline void free(unique_ptr<TensorView<Scalar, Rank>>& t, Device_& device) {
+  inline void free(TensorView<Scalar, Rank>& t, Device_& device) {
 
     if (t && t->data() != nullptr) {
       device.deallocate(t->data());
@@ -100,12 +100,12 @@ namespace EigenSinn {
   /// <param name="dims"></param>
   /// <returns></returns>
   template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
-  inline auto create_device_view(const DSizes<Index, Rank>& dims, Device_& device)  {
+  inline TensorView<Scalar, Rank, Layout> create_device_view(const DSizes<Index, Rank>& dims, Device_& device)  {
 
     size_t alloc_size = dims.TotalSize() * sizeof(Scalar);
     Scalar* ptr = static_cast<Scalar*>(device.allocate(alloc_size));
-    unique_ptr<TensorView<Scalar, Rank, Layout>> out(new TensorView<Scalar, Rank, Layout>(ptr, dims));
-    return std::move(out);
+    TensorView<Scalar, Rank, Layout> out(ptr, dims);
+    return out;
   }
 
   template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
@@ -141,7 +141,7 @@ namespace EigenSinn {
   /// <param name="val"></param>
   /// <param name="device"></param>
   template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
-  inline void setConstant(unique_ptr<TensorView<Scalar, Rank, Layout>>& t, Scalar val, Device_& device) {
+  inline void setConstant(TensorView<Scalar, Rank, Layout>& t, Scalar val, Device_& device) {
 
     assert(t);
     std::vector<Scalar> const_mem(t->size());
@@ -153,7 +153,7 @@ namespace EigenSinn {
 
 
   template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
-  inline void setZero(unique_ptr<TensorView<Scalar, Rank, Layout>>& t, Device_& device) {
+  inline void setZero(TensorView<Scalar, Rank, Layout>& t, Device_& device) {
     setConstant(t, 0, device);
   }
 }
