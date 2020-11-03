@@ -33,19 +33,18 @@ namespace EigenSinn {
   }
 
   // broadcast channel dimension - first in the list of arguments, las
-  template  <typename Scalar = float, Index Rank, typename Device_>
-  inline TensorView<Scalar, Rank> broadcast_as_last_dim(const TensorView<Scalar, 1>& t, Eigen::array<Index, Rank> broadcast_dims, const Device_& device) {
+  template  <typename Scalar, Index Rank, typename Device_>
+  inline TensorView<Scalar, Rank> broadcast_as_last_dim(const TensorView<Scalar, 1>& t, DSizes<Index, Rank> broadcast_dims, Device_& device) {
 
-    Eigen::array<Index, Rank> reshaped_dims;
-    Eigen::array<Index, Rank> original_dims = broadcast_dims;
+    DSizes<Index, Rank> reshaped_dims;
+    DSizes<Index, Rank> original_dims = broadcast_dims;
 
     reshaped_dims.fill(1);
     reshaped_dims[(int)ImageDims::channel] = t.dimension(0);
     original_dims[(int)ImageDims::channel] = t.dimension(0);
 
-    TensorView<Scalar, Rank> *broadcasted;
+    TensorView<Scalar, Rank> broadcasted(create_device_view<Device_, Scalar, Rank>(original_dims, device));
 
-    broadcasted = create_device_view<Scalar, Rank, Device_>(original_dims, device);
     broadcasted.device(device) = t.reshape(reshaped_dims).broadcast(broadcast_dims);
     return broadcasted;
   }
@@ -68,8 +67,8 @@ namespace EigenSinn {
       x_out(create_device_view<Device_, Scalar, Rank>(x.dimensions(), device));
 
     // get sample mean
-    Eigen::array<Index, Rank - 1> reduction_dims;
-    Eigen::array<Index, Rank> broadcast_dims;
+    DSizes<Index, Rank - 1> reduction_dims;
+    DSizes<Index, Rank> broadcast_dims;
 
     std::tie(reduction_dims, broadcast_dims) = get_broadcast_and_reduction_dims<Scalar, Rank>(x);
 

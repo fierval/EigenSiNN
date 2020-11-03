@@ -80,8 +80,8 @@ namespace EigenSinn {
       TensorView<Scalar, Rank> prev_layer(prev_layer_any.get_output(), vector2array<Rank>(in_dims));
       TensorView<Scalar, Rank> dout(next_layer_grad_any, vector2array< Rank>(out_dims));
 
-      array<Index, Rank - 1> reduction_dims;
-      array<Index, Rank> broadcast_dims;
+      DSizes<Index, Rank - 1> reduction_dims;
+      DSizes<Index, Rank> broadcast_dims;
 
       float total_channel = 1.;
       for (int i = 0; i < Rank; i++) {

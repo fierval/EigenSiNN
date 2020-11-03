@@ -85,8 +85,8 @@ namespace EigenSinn {
   template<typename Device_, typename Scalar, Index Rank>
   inline void free(TensorView<Scalar, Rank>& t, Device_& device) {
 
-    if (t && t->data() != nullptr) {
-      device.deallocate(t->data());
+    if (t.data() != nullptr) {
+      device.deallocate(t.data());
     }
 
   }
@@ -143,17 +143,17 @@ namespace EigenSinn {
   template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
   inline void setConstant(TensorView<Scalar, Rank, Layout>& t, Scalar val, Device_& device) {
 
-    assert(t);
-    std::vector<Scalar> const_mem(t->size());
+    assert(t.size());
+    std::vector<Scalar> const_mem(t.size());
     std::fill(const_mem.begin(), const_mem.end(), val);
 
-    size_t final_size = t->size() * sizeof(Scalar);
-    device.memcpyHostToDevice(t->data(), const_mem.data(), final_size);
+    size_t final_size = t.size() * sizeof(Scalar);
+    device.memcpyHostToDevice(t.data(), const_mem.data(), final_size);
   }
 
 
   template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
   inline void setZero(TensorView<Scalar, Rank, Layout>& t, Device_& device) {
-    setConstant(t, 0, device);
+    setConstant(t, (Scalar)0, device);
   }
 }
