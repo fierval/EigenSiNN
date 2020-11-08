@@ -30,8 +30,8 @@ namespace EigenSinn {
       , gamma(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1> { num_features }, device))
       , running_variance(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1> { num_features }, device))
       , running_mean(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1> { num_features }, device))
-      , mu(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1>{1}, device))
-      , var(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1>{1}, device))
+      , mu(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1>{num_features}, device))
+      , var(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1>{num_features}, device))
     {
     }
 
@@ -66,7 +66,7 @@ namespace EigenSinn {
 
       TensorView<Scalar, Rank> prev_layer(prev_layer_base.get_output(), vector2array< Rank>(in_dims));
 
-      std::tie(layer_output, xhat, running_mean, running_variance, mu, var) =
+        std::tie(layer_output, xhat, running_mean, running_variance, mu, var) =
         batch_norm<Scalar, Rank, Device_>(prev_layer, gamma, beta, eps, momentum, running_mean, running_variance, is_training, device);
     }
 

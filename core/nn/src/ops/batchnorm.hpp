@@ -57,8 +57,10 @@ namespace EigenSinn {
     DSizes<Index, 1> single_dim{ x.dimension(1) };
 
     TensorView<Scalar, 1> mu(create_device_view<Device_, Scalar, 1>(single_dim, device)),
-      variance(create_device_view<Device_, Scalar, 1>(single_dim, device)), std(create_device_view<Device_, Scalar, 1>(single_dim, device)),
-      new_running_var(create_device_view<Device_, Scalar, 1>(single_dim, device)), new_running_mean(create_device_view<Device_, Scalar, 1>(single_dim, device));
+      variance(create_device_view<Device_, Scalar, 1>(single_dim, device)),
+      std(create_device_view<Device_, Scalar, 1>(single_dim, device)),
+      new_running_var(create_device_view<Device_, Scalar, 1>(single_dim, device)), 
+      new_running_mean(create_device_view<Device_, Scalar, 1>(single_dim, device));
 
     TensorView<Scalar, Rank> mu_broadcasted(create_device_view<Device_, Scalar, Rank>(x.dimensions(), device)),
       mean_broadcasted(create_device_view<Device_, Scalar, Rank>(x.dimensions(), device)),
