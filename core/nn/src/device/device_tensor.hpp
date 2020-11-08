@@ -115,22 +115,29 @@ namespace EigenSinn {
     device.memcpyHostToDevice(dest.data(), src.data(), dest.dimensions().TotalSize() * sizeof(Scalar));
   }
 
+  template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
+  inline void move_to(TensorView<Scalar, Rank, Layout>& dest, Scalar * src, Device_& device) {
+
+    device.memcpyHostToDevice(dest.data(), src, dest.dimensions().TotalSize() * sizeof(Scalar));
+  }
+
   /// <summary>
   /// Allocate original tensor
   /// </summary>
   /// <typeparam name="Device_"></typeparam>
   /// <typeparam name="Scalar"></typeparam>
-  /// <param name="t"></param>
   /// <param name="dims"></param>
   /// <param name="device"></param>
   template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
-  inline auto resize(TensorView<Scalar, Rank, Layout>& t, DSizes<Index, Rank> dims, Device_& device) {
+  inline PtrTensorView<Scalar, Rank> create_device_ptr(DSizes<Index, Rank> dims, Device_& device) {
 
-    if (t.data() != nullptr) {
-      device.deallocate(t.data());
-    }
-    return create_device_view<Device_, Scalar, Rank, Layout>(dims, device);
+    size_t alloc_size = dims.TotalSize() * sizeof(Scalar);
+    Scalar* ptr = static_cast<Scalar*>(device.allocate(alloc_size));
+    PtrTensorView<Scalar, Rank, Layout> out(new TensorView<Scalar, Rank, Layout>(ptr, dims));
+
+    return std::move(out);
   }
+
   /// <summary>
   /// Just line t.setConstant but extending for GPU
   /// Assuming memory has been allocated
@@ -156,4 +163,5 @@ namespace EigenSinn {
   inline void setZero(TensorView<Scalar, Rank, Layout>& t, Device_& device) {
     setConstant(t, (Scalar)0, device);
   }
+
 }

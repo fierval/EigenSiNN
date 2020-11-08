@@ -60,7 +60,7 @@ namespace EigenSinn {
     void set_input(Scalar* _input, const DSizes<Index, Rank>& _out_dims) {
 
       set_dims(array2vector<Rank>(_out_dims), array2vector<Rank>(_out_dims));
-      input.reset(new TensorView<Scalar, Rank>(_input, vector2array<Rank>(out_dims)));
+      input.reset(new TensorView<Scalar, Rank>(_input, _out_dims));
     }
 
     PtrTensorView<Scalar, Rank> input;

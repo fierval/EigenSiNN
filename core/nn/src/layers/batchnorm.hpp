@@ -32,9 +32,6 @@ namespace EigenSinn {
       , running_mean(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1> { num_features }, device))
       , mu(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1>{1}, device))
       , var(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1>{1}, device))
-      , layer_output(nullptr, 0, 0)
-      , layer_gradient(nullptr, 0, 0)
-      , xhat(nullptr, 0, 0)
     {
     }
 
@@ -48,8 +45,8 @@ namespace EigenSinn {
 
     void init(TensorSingleDim<Scalar>& _beta, TensorSingleDim<Scalar>& _gamma) {
       init();
-      beta.device(device) = _beta;
-      gamma.device(device) = _gamma;
+      move_to<Device_, Scalar, 1>(beta, _beta.data(), device);
+      move_to<Device_, Scalar, 1>(gamma, _gamma.data(), device);
 
       set_debug_weights();
       set_debug_bias();
@@ -62,12 +59,12 @@ namespace EigenSinn {
         DSizes<Index, Rank> dims = vector2Dsizes<Rank>(prev_layer_base.get_out_dims());
 
         set_dims(prev_layer_base.get_out_dims(), prev_layer_base.get_out_dims());
-        layer_gradient = resize(layer_gradient, dims, device);
-        layer_output = resize(layer_output, dims, device);
-        xhat = resize(xhat, dims, device);
+        layer_gradient = create_device_ptr<Device_, Scalar, Rank>(dims, device);
+        layer_output = create_device_ptr<Device_, Scalar, Rank>(dims, device);
+        xhat = create_device_ptr<Device_, Scalar, Rank>(dims, device);
       }
 
-      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_base.get_output(), vector2array< Rank>(in_dims));
+      TensorView<Scalar, Rank> prev_layer(prev_layer_base.get_output(), vector2array< Rank>(in_dims));
 
       std::tie(layer_output, xhat, running_mean, running_variance, mu, var) =
         batch_norm<Scalar, Rank, Device_>(prev_layer, gamma, beta, eps, momentum, running_mean, running_variance, is_training, device);
@@ -109,7 +106,7 @@ namespace EigenSinn {
       TensorView<Scalar, Rank> gamma_broad(broadcast_as_last_dim<Scalar, Rank, Device_>(gamma, broadcast_dims, device));
       TensorView<Scalar, Rank> dxhat = create_device_view<Device_, Scalar, Rank>(dout.dimensions(), device);
       dxhat.device(device) = dout * gamma_broad;
-      dgamma.device(device) = (dout * xhat).sum(reduction_dims);
+      dgamma.device(device) = (dout * *xhat).sum(reduction_dims);
 
       // Step 7
       // d_inv_std
@@ -148,16 +145,16 @@ namespace EigenSinn {
       dx2.device(device) = 1. / total_channel * dmu_broadcast;
 
       // step 0
-      layer_gradient.device(device) = dx1 + dx2;
+      layer_gradient->device(device) = dx1 + dx2;
     }
 
     Scalar* get_output() {
 
-      return layer_output.data();
+      return layer_output->data();
     }
 
     Scalar* get_loss_by_input_derivative() {
-      return layer_gradient.data();
+      return layer_gradient->data();
     }
 
     Scalar* get_loss_by_weights_derivative() override {
@@ -194,13 +191,13 @@ namespace EigenSinn {
       free(dbeta, device);
       free(dgamma, device);
 
-      free(layer_output, device);
-      free(layer_gradient, device);
-      free(xhat, device);
+      free(*layer_output, device);
+      free(*layer_gradient, device);
+      free(*xhat, device);
     }
 
   private:
-    TensorView<Scalar, Rank> layer_output, layer_gradient, xhat;
+    PtrTensorView<Scalar, Rank> layer_output, layer_gradient, xhat;
 
     TensorView<Scalar, 1> gamma, beta, running_mean, running_variance, mu, var;
     TensorView<Scalar, 1> dbeta, dgamma;

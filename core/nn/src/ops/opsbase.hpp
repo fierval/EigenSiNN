@@ -64,6 +64,17 @@ namespace EigenSinn {
 
     return rev;
   }
+
+  template <Index Rank>
+  inline DSizes<Index, Rank> empty_dims() {
+    DSizes<Index, Rank> out;
+
+    for (int i = 0; i < Rank; i++) {
+      out[i] = 0;
+    }
+
+    return out;
+  }
 }
 
 

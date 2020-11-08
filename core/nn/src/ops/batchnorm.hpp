@@ -50,7 +50,7 @@ namespace EigenSinn {
   }
 
   // NHWC format
-  template<typename Scalar = float, Index Rank, typename Device_>
+  template<typename Scalar, Index Rank, typename Device_>
   inline auto batch_norm(TensorView<Scalar, Rank>& x, TensorView<Scalar, 1>& gamma, TensorView<Scalar, 1>& beta, float eps, float momentum, 
      TensorView<Scalar, 1>& running_mean, TensorView<Scalar, 1>& running_var, bool is_training, Device_& device) {
 
@@ -61,10 +61,11 @@ namespace EigenSinn {
       new_running_var(create_device_view<Device_, Scalar, 1>(single_dim, device)), new_running_mean(create_device_view<Device_, Scalar, 1>(single_dim, device));
 
     TensorView<Scalar, Rank> mu_broadcasted(create_device_view<Device_, Scalar, Rank>(x.dimensions(), device)),
-      mean_broadcasted(create_device_view<Device_, Scalar, Rank>(x.dimensions(), device)), 
-      x_hat(create_device_view<Device_, Scalar, Rank>(x.dimensions(), device)),
-      std_broadcasted(create_device_view<Device_, Scalar, Rank>(x.dimensions(), device)),
-      x_out(create_device_view<Device_, Scalar, Rank>(x.dimensions(), device));
+      mean_broadcasted(create_device_view<Device_, Scalar, Rank>(x.dimensions(), device)),
+      std_broadcasted(create_device_view<Device_, Scalar, Rank>(x.dimensions(), device));
+      
+    PtrTensorView<Scalar, Rank> x_out(create_device_ptr<Device_, Scalar, Rank>(x.dimensions(), device)),
+      x_hat(create_device_ptr<Device_, Scalar, Rank>(x.dimensions(), device));
 
     // get sample mean
     DSizes<Index, Rank - 1> reduction_dims;
@@ -102,8 +103,8 @@ namespace EigenSinn {
     TensorView<Scalar, Rank> gamma_broadcasted(broadcast_as_last_dim<Scalar, Rank>(gamma, broadcast_dims, device));
     TensorView<Scalar, Rank> beta_broadcasted(broadcast_as_last_dim<Scalar, Rank>(beta, broadcast_dims, device));
 
-    x_hat.device(device) = (x - mean_broadcasted) / std_broadcasted;
-    x_out.device(device) = gamma_broadcasted * x_hat + beta_broadcasted;
+    x_hat->device(device) = (x - mean_broadcasted) / std_broadcasted;
+    x_out->device(device) = gamma_broadcasted * *x_hat + beta_broadcasted;
 
     free(beta_broadcasted, device);
     free(gamma_broadcasted, device);
@@ -111,6 +112,6 @@ namespace EigenSinn {
     free(mean_broadcasted, device);
     free(std, device);
 
-    return std::make_tuple(std::move(x_out), std::move(x_hat), std::move(new_running_mean), std::move(new_running_var), std::move(mu), std::move(variance));
+    return std::make_tuple(std::move(x_out), std::move(x_hat), new_running_mean, new_running_var, mu, variance);
   }
 }
