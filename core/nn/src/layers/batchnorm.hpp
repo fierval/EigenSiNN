@@ -146,6 +146,21 @@ namespace EigenSinn {
 
       // step 0
       layer_gradient->device(device) = dx1 + dx2;
+
+      free(broadcast_mean, device);
+      free(broadcast_var, device);
+      free(xmu, device);
+      free(gamma_broad, device);
+      free(dxhat, device);
+      free(dxmu1, device);
+      free(d_var, device);
+      free(d_var_broadcast, device);
+      free(d_sq, device);
+      free(dxmu2, device);
+      free(dx1, device);
+      free(dx2, device);
+      free(dmu_broadcast, device);
+
     }
 
     Scalar* get_output() {

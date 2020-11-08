@@ -79,20 +79,8 @@ namespace EigenSinn {
       : dispatcher(_dispatcher)
       , device(_dispatcher.get_device())
       , debug_init((int)DebugInit::False) {
-      invalidate_gpu();
     }
 
-    bool should_move_to_gpu() {
-      return std::is_same<Device_, GpuDevice>::value && renew_gpu_values;
-    }
-
-    void invalidate_gpu() {
-      renew_gpu_values = should_move_to_gpu();
-    }
-
-    void fix_gpu_values() {
-      renew_gpu_values = false;
-    }
 
     // if we initialized biases/weights through outside tensors
     // we don't own their pointers so should not release them

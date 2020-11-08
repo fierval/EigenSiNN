@@ -65,4 +65,31 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(exp_dbeta, bn.get_loss_by_bias_derivative(), 1e-5));
     EXPECT_TRUE(is_elementwise_approx_eq(exp_dgamma, bn.get_loss_by_weights_derivative(), 1e-5));
   } 
+
+  TEST_F(Batchnorm1dTest, ThreadBackward) {
+
+    Input<float, 2, ThreadPoolDevice> input_layer;
+    input_layer.set_input(input);
+
+    BatchNormalizationLayer<float, 2, ThreadPoolDevice> bn(cols, eps, momentum);
+
+    Tensor<float, 2> expected_derivative(batch_size, cols);
+    Tensor<float, 1> exp_dbeta(cols), exp_dgamma(cols);
+
+    exp_dbeta.setValues({ 0.41630989, 1.14248097, 0.73172224, 0.94878352, 1.50353050 });
+    exp_dgamma.setValues({ -0.25724539, -0.34655440, -0.24452491, -0.22366823, -0.11281815 });
+
+    expected_derivative.setValues({ {-1.90824110e-04, -3.91245958e-05, 1.86752446e-03, 4.88124043e-02, 2.96708080e-04},
+      {1.90745224e-04, 3.91245958e-05, -1.86752446e-03, -4.88256179e-02, -2.96444632e-04 } });
+
+    bn.init(beta, gamma);
+    bn.forward(input_layer);
+    bn.backward(input_layer, loss.data());
+
+
+    EXPECT_TRUE(is_elementwise_approx_eq(expected_derivative, bn.get_loss_by_input_derivative(), 4e-5));
+    EXPECT_TRUE(is_elementwise_approx_eq(exp_dbeta, bn.get_loss_by_bias_derivative(), 1e-5));
+    EXPECT_TRUE(is_elementwise_approx_eq(exp_dgamma, bn.get_loss_by_weights_derivative(), 1e-5));
+  }
+
 }
