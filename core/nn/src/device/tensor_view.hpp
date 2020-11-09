@@ -127,6 +127,15 @@ namespace EigenSinn
 			tensor_view.reset(std::move(d.tensor_view));
 		}
 
+		// access
+		TensorView<Scalar, Rank, Layout> operator* () {
+			return *tensor_view;
+		}
+
+		TensorView<Scalar, Rank, Layout> * operator-> () {
+			return tensor_view->get();
+		}
+
 	private:
 		PtrTensorView<Scalar, Rank, Layout> tensor_view;
 		std::unique_ptr<Dispatcher<Device_>>& dispatcher;
