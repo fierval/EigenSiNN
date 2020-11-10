@@ -39,11 +39,13 @@ namespace EigenSinn
 		/// Take ownership of the pointer already on the device
 		///</summary
 		explicit DeviceTensor(Scalar* data, const DSizes<Index, Rank> dims) 
-			: tensor_view(new TensorView<Scalar, Rank, Layout>(data, dims))	{
+			: DeviceTensor()
+			, tensor_view(new TensorView<Scalar, Rank, Layout>(data, dims))	{
 		}
 
 		explicit DeviceTensor(Scalar* data, const array<Index, Rank> dims)
-			: tensor_view(new TensorView<Scalar, Rank, Layout>(data, dims)) {
+			: DeviceTensor()
+			, tensor_view(new TensorView<Scalar, Rank, Layout>(data, dims)) {
 		}
 
 
@@ -69,6 +71,16 @@ namespace EigenSinn
 
 		explicit DeviceTensor(const Tensor<Scalar, Rank, Layout> data, const Index firstDimension)
 			: DeviceTensor(data, DSizes<Index, Rank>(firstDimension)) {
+		}
+
+		void set_data_from_device(Scalar* data, DSizes<Index, Rank> dims) {
+			create_device_tensor_if_needed(dims);
+			device.memcpy(tensor_view->data(), data, tensor_view->dimensions().TotalSize() * sizeof(Scalar));
+		}
+
+		void set_data_from_host(Scalar* data, DSizes<Index, Rank> dims) {
+			create_device_tensor_if_needed(dims);
+			move_to<Scalar, Rank, Layout>(*tensor_view, data, device);
 		}
 
 		// Rule of 5 definitions
@@ -137,6 +149,13 @@ namespace EigenSinn
 		}
 
 	private:
+		void create_device_tensor_if_needed(const DSizes<Scalar, Rank>& dims) {
+			if (!tensor_view) {
+				free(*tensor_view, device);
+				tensor_view.reset(create_device_ptr(dims, device));
+			}
+		}
+
 		PtrTensorView<Scalar, Rank, Layout> tensor_view;
 		std::unique_ptr<Dispatcher<Device_>>& dispatcher;
 		Device_& device;
