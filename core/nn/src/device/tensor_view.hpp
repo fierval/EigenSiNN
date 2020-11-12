@@ -16,14 +16,15 @@ namespace EigenSinn
 		}
 
 		explicit DeviceTensor(const DSizes<Index, Rank> dims)
-			: DeviceTensor()
-			, tensor_view(create_device_ptr(device, dims)) {
+			: DeviceTensor() {
+
+			tensor_view = create_device_ptr<Device_, Scalar, Rank, Layout>(dims, device);
 
 		}
 
 		template<typename... IndexTypes>
 		explicit DeviceTensor(Index firstDimension, Index secondDimension, IndexTypes... otherDimensions) 
-			: DeviceTensor(DSizes<Index, Rank>(firstDimension, otherDimensions...)) {
+			: DeviceTensor(DSizes<Index, Rank>(firstDimension, secondDimension, otherDimensions...)) {
 		}
 
 		explicit DeviceTensor(const Index firstDimension)
@@ -54,23 +55,10 @@ namespace EigenSinn
 		/// </summary>
 		/// <param name="data"></param>
 		/// <param name="dims"></param>
-		explicit DeviceTensor(const Tensor<Scalar, Rank, Layout> data, const DSizes<Index, Rank> dims)
-			: DeviceTensor(dims) {
-			move_to(*tensor_view, data, device);
-		}
+		explicit DeviceTensor(const Tensor<Scalar, Rank, Layout>& data)
+			: DeviceTensor(data.dimensions()) {
 
-		explicit DeviceTensor(const Tensor<Scalar, Rank, Layout> data, const array<Index, Rank> dims)
-			: DeviceTensor(dims) {
-			move_to(*tensor_view, data, device);
-		}
-
-		template<typename... IndexTypes>
-		explicit DeviceTensor(const Tensor<Scalar, Rank, Layout> data, Index firstDimension, Index secondDimension, IndexTypes... otherDimensions)
-			: DeviceTensor(data, DSizes<Index, Rank>(firstDimension, otherDimensions...)) {
-		}
-
-		explicit DeviceTensor(const Tensor<Scalar, Rank, Layout> data, const Index firstDimension)
-			: DeviceTensor(data, DSizes<Index, Rank>(firstDimension)) {
+			move_to<Device_, Scalar, Rank, Layout>(*tensor_view, data.data(), device);
 		}
 
 		void set_data_from_device(Scalar* data, DSizes<Index, Rank> dims) {
@@ -80,7 +68,7 @@ namespace EigenSinn
 
 		void set_data_from_host(Scalar* data, DSizes<Index, Rank> dims) {
 			create_device_tensor_if_needed(dims);
-			move_to<Scalar, Rank, Layout>(*tensor_view, data, device);
+			move_to<Device_, Scalar, Rank, Layout>(*tensor_view, data, device);
 		}
 
 		void set_data_from_host(const Tensor<Scalar, Rank, Layout> data) {
@@ -153,10 +141,6 @@ namespace EigenSinn
 		TensorView<Scalar, Rank, Layout> * operator-> () {
 			return tensor_view.operator->();
 		}
-
-		//operator!() const {
-		//	return !tensor_view;
-		//}
 
 		explicit operator bool() const {
 			return tensor_view ? true : false;

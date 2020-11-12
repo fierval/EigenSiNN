@@ -109,14 +109,14 @@ namespace EigenSinn {
   }
 
   template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
-  inline void move_to(TensorView<Scalar, Rank, Layout>& dest, TensorView<Scalar, Rank, Layout>& src, Device_& device) {
+  inline void move_to(TensorView<Scalar, Rank, Layout>& dest, const TensorView<Scalar, Rank, Layout>& src, Device_& device) {
 
     assert(src.dimensions() == dest.dimensions());
     device.memcpyHostToDevice(dest.data(), src.data(), dest.dimensions().TotalSize() * sizeof(Scalar));
   }
 
   template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
-  inline void move_to(TensorView<Scalar, Rank, Layout>& dest, Scalar * src, Device_& device) {
+  inline void move_to(TensorView<Scalar, Rank, Layout>& dest, const Scalar * src, Device_& device) {
 
     device.memcpyHostToDevice(dest.data(), src, dest.dimensions().TotalSize() * sizeof(Scalar));
   }

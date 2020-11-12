@@ -37,7 +37,7 @@ namespace EigenSinn {
       if (n_devices == 0) { n_devices = 2; }
     }
 
-    static std::unique_ptr<Dispatcher<ThreadPoolDevice>> instance;
+    static inline std::unique_ptr<Dispatcher<ThreadPoolDevice>> instance;
     int n_devices;
     ThreadPool _tp;
     ThreadPoolDevice thread_pool_device ;
@@ -66,7 +66,7 @@ namespace EigenSinn {
     }
 
   private:
-    static std::unique_ptr<Dispatcher<DefaultDevice>> instance;
+    static inline std::unique_ptr<Dispatcher<DefaultDevice>> instance;
 
     Dispatcher() = default;
     DefaultDevice cpu_device;
