@@ -38,4 +38,14 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(cd.convInput, d->data()));
   }
 
+  TEST_F(DeviceTensorTest, SetFromHost) {
+
+    DeviceTensor<ThreadPoolDevice, float, 4> d(cd.convInput);
+
+    d.set_data_from_host(cd.convWeights);
+
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.convWeights, d->data()));
+
+  }
+
 }
