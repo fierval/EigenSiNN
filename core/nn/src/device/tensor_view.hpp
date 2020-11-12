@@ -12,7 +12,7 @@ namespace EigenSinn
 		// allocation constructors
 		explicit DeviceTensor() 
 			: dispatcher(Dispatcher<Device_>::create()) 
-			, device(dispatcher->get_device()) {
+			, device(dispatcher.get_device()) {
 		}
 
 		explicit DeviceTensor(const DSizes<Index, Rank> dims)
@@ -180,7 +180,7 @@ namespace EigenSinn
 		}
 
 		PtrTensorView<Scalar, Rank, Layout> tensor_view;
-		std::unique_ptr<Dispatcher<Device_>>& dispatcher;
+		Dispatcher<Device_>& dispatcher;
 		Device_& device;
 	};
 }

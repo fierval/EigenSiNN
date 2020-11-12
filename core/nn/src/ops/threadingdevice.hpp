@@ -19,14 +19,24 @@ namespace EigenSinn {
       return thread_pool_device;
     }
 
-    static inline unique_ptr<Dispatcher<ThreadPoolDevice>>& create() {
-      if (!instance) {
-        instance.reset(new Dispatcher);
+    static inline Dispatcher<ThreadPoolDevice>& create() {
+      if (instance == nullptr) {
+        instance = new Dispatcher;
+        instance->ref_count = 0;
       }
-
-      return instance;
+      instance->ref_count++;
+      return *instance;
     }
 
+    ~Dispatcher() {
+      if (instance != nullptr) {
+        instance->ref_count--;
+        if (!instance->ref_count) {
+          delete instance;
+          instance = nullptr;
+        }
+      }
+    }
   private:
 
     Dispatcher() :
@@ -37,7 +47,8 @@ namespace EigenSinn {
       if (n_devices == 0) { n_devices = 2; }
     }
 
-    static inline std::unique_ptr<Dispatcher<ThreadPoolDevice>> instance;
+    static inline Dispatcher<ThreadPoolDevice> *instance = nullptr;
+    int ref_count;
     int n_devices;
     ThreadPool _tp;
     ThreadPoolDevice thread_pool_device ;
@@ -53,21 +64,32 @@ namespace EigenSinn {
   class Dispatcher<DefaultDevice> {
   public:
 
-    static inline unique_ptr<Dispatcher<DefaultDevice>>& create() {
-      if (!instance) {
-        instance.reset(new Dispatcher);
+    static inline Dispatcher<DefaultDevice>& create() {
+      if (instance == nullptr) {
+        instance = new Dispatcher;
+        instance->ref_count = 0;
       }
-
-      return instance;
+      instance->ref_count++;
+      return *instance;
     }
 
     DefaultDevice& get_device() {
       return cpu_device;
     }
 
-  private:
-    static inline std::unique_ptr<Dispatcher<DefaultDevice>> instance;
+    ~Dispatcher() {
+      if (instance != nullptr) {
+        instance->ref_count--;
+        if (!instance->ref_count) {
+          delete instance;
+          instance = nullptr;
+        }
+      }
+    }
 
+  private:
+    static inline Dispatcher<DefaultDevice> *instance = nullptr;
+    int ref_count;
     Dispatcher() = default;
     DefaultDevice cpu_device;
   };
@@ -81,16 +103,28 @@ namespace EigenSinn {
       return gpu_device;
     }
 
-    static inline unique_ptr<Dispatcher<GpuDevice>>& create() {
-      if (!instance) {
-        instance.reset(new Dispatcher);
+    static inline Dispatcher<GpuDevice>& create() {
+      if (instance == nullptr) {
+        instance = new Dispatcher;
+        instance->ref_count = 0;
       }
+      instance->ref_count++;
+      return *instance;
+    }
 
-      return instance;
+    ~Dispatcher() {
+      if (instance != nullptr) {
+        instance->ref_count--;
+        if (!instance->ref_count) {
+          delete instance;
+          instance = nullptr;
+        }
+      }
     }
 
   private:
-    static inline std::unique_ptr<Dispatcher<GpuDevice>> instance;
+    static inline Dispatcher<GpuDevice> *instance = nullptr;
+    int ref_count;
     Dispatcher() : stream(), gpu_device(&stream) {}
 
     CudaStreamDevice stream;
