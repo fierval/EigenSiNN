@@ -115,9 +115,6 @@ namespace EigenSinn
 				return *this;
 			}
 
-			dispatcher = Dispatcher<Device_>::create();
-			device_ = dispatcher->get_device();
-
 			if (tensor_view) {
 				free(*tensor_view, device_);
 			}
@@ -140,13 +137,15 @@ namespace EigenSinn
 		// move assignment
 		DeviceTensor& operator=(DeviceTensor&& d) noexcept {
 			if (&d == this) {
-				return this;
+				return *this;
 			}
 
-			dispatcher = Dispatcher<Device_>::create();
-			device_ = dispatcher->get_device();
+			if (tensor_view) {
+				free(*tensor_view, device_);
+			}
 
-			tensor_view.reset(std::move(d.tensor_view));
+			tensor_view = std::move(d.tensor_view);
+			d.tensor_view.reset(nullptr);
 			return *this;
 		}
 
@@ -172,6 +171,13 @@ namespace EigenSinn
 		}
 
 		Device_& device() { return device_; }
+
+		DeviceTensor operator+(DeviceTensor<Device_, Scalar, Rank, Layout>& d) {
+
+			DeviceTensor<Device_, Scalar, Rank, Layout> res(dimensions());
+			res->device(res.device()) = *tensor_view + *d;
+			return res;
+		}
 
 	private:
 		void create_device_tensor_if_needed(const DSizes<Index, Rank>& dims) {
