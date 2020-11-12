@@ -151,7 +151,7 @@ namespace EigenSinn
 		}
 
 		// access
-		TensorView<Scalar, Rank, Layout> operator* () {
+		TensorView<Scalar, Rank, Layout>& operator* () {
 			return *tensor_view;
 		}
 
@@ -170,6 +170,8 @@ namespace EigenSinn
 		const DSizes<Index, Rank>& dimensions() {
 			return tensor_view->dimensions();
 		}
+
+		Device_& get_device() { return device; }
 
 	private:
 		void create_device_tensor_if_needed(const DSizes<Index, Rank>& dims) {
