@@ -148,7 +148,7 @@ namespace EigenSinn
 
 	private:
 		void create_device_tensor_if_needed(const DSizes<Index, Rank>& dims) {
-			if (!tensor_view) {
+			if (tensor_view) {
 				free(*tensor_view, device);
 				tensor_view = create_device_ptr<Device_, Scalar, Rank, Layout>(dims, device);
 			}
