@@ -40,13 +40,14 @@ namespace EigenSinn
 		/// Take ownership of the pointer already on the device
 		///</summary
 		explicit DeviceTensor(Scalar* data, const DSizes<Index, Rank> dims) 
-			: DeviceTensor()
-			, tensor_view(new TensorView<Scalar, Rank, Layout>(data, dims))	{
+			: DeviceTensor() {
+
+			tensor_view.reset(new TensorView<Scalar, Rank, Layout>(data, dims));
 		}
 
 		explicit DeviceTensor(Scalar* data, const array<Index, Rank> dims)
-			: DeviceTensor()
-			, tensor_view(new TensorView<Scalar, Rank, Layout>(data, dims)) {
+			: DeviceTensor() {
+			tensor_view.reset(new TensorView<Scalar, Rank, Layout>(data, dims));
 		}
 
 
@@ -73,6 +74,22 @@ namespace EigenSinn
 
 		void set_data_from_host(const Tensor<Scalar, Rank, Layout>& data) {
 			set_data_from_host(data.data(), data.dimensions());
+		}
+
+		/// <summary>
+		/// Create tensor on the host from the device tensor.
+		/// </summary>
+		/// <returns></returns>
+		TensorView<Scalar, Rank, Layout> to_host() {
+
+			DefaultDevice host;
+
+			size_t alloc_size = size() * sizeof(Scalar);
+
+			Scalar* data = static_cast<Scalar*>(host.allocate(alloc_size));
+			device.memcpyDeviceToHost(data, tensor_view->data(), alloc_size);
+			TensorView<Scalar, Rank, Layout> out(data, dimensions());
+			return out;
 		}
 
 		// Rule of 5 definitions
@@ -115,9 +132,9 @@ namespace EigenSinn
 
 		// move constructor
 		DeviceTensor(DeviceTensor&& d) noexcept
-			: DeviceTensor() 
-			, tensor_view(std::move(d.tensor_view)) {
+			: DeviceTensor() {
 
+			tensor_view = std::move(d.tensor_view);
 		}
 
 		// move assignment
@@ -144,6 +161,14 @@ namespace EigenSinn
 
 		explicit operator bool() const {
 			return tensor_view ? true : false;
+		}
+
+		Index size() {
+			return tensor_view->dimensions().TotalSize();
+		}
+
+		const DSizes<Index, Rank>& dimensions() {
+			return tensor_view->dimensions();
 		}
 
 	private:

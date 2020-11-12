@@ -90,7 +90,7 @@ namespace EigenSinn {
     }
 
   private:
-    static std::unique_ptr<Dispatcher<GpuDevice>> instance;
+    static inline std::unique_ptr<Dispatcher<GpuDevice>> instance;
     Dispatcher() : stream(), gpu_device(&stream) {}
 
     CudaStreamDevice stream;
