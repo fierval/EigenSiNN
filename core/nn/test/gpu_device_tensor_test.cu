@@ -54,7 +54,8 @@ namespace EigenSinnTest {
   TEST_F(DeviceTensorTestGpu, AddTensors) {
     DeviceTensor<GpuDevice, float, 4> d1(cd.convInput), d2(cd.convInput), sum_tensor(cd.convInput.dimensions());
 
-    sum_tensor->device(sum_tensor.get_device()) = *d1 + *d2;
+    auto device = sum_tensor.device();
+    sum_tensor->device(device) = *d1 + *d2;
 
     TensorView<float, 4> h_tensor = sum_tensor.to_host();
     Tensor<float, 4> convsum = cd.convInput + cd.convInput;

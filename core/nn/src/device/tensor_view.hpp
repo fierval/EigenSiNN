@@ -12,13 +12,13 @@ namespace EigenSinn
 		// allocation constructors
 		explicit DeviceTensor() 
 			: dispatcher(Dispatcher<Device_>::create()) 
-			, device(dispatcher.get_device()) {
+			, device_(dispatcher.get_device()) {
 		}
 
 		explicit DeviceTensor(const DSizes<Index, Rank> dims)
 			: DeviceTensor() {
 
-			tensor_view = create_device_ptr<Device_, Scalar, Rank, Layout>(dims, device);
+			tensor_view = create_device_ptr<Device_, Scalar, Rank, Layout>(dims, device_);
 
 		}
 
@@ -59,17 +59,17 @@ namespace EigenSinn
 		explicit DeviceTensor(const Tensor<Scalar, Rank, Layout>& data)
 			: DeviceTensor(data.dimensions()) {
 
-			move_to<Device_, Scalar, Rank, Layout>(*tensor_view, data.data(), device);
+			move_to<Device_, Scalar, Rank, Layout>(*tensor_view, data.data(), device_);
 		}
 
 		void set_data_from_device(const Scalar* data, const DSizes<Index, Rank>& dims) {
 			create_device_tensor_if_needed(dims);
-			device.memcpy(tensor_view->data(), data, tensor_view->dimensions().TotalSize() * sizeof(Scalar));
+			device_.memcpy(tensor_view->data(), data, tensor_view->dimensions().TotalSize() * sizeof(Scalar));
 		}
 
 		void set_data_from_host(const Scalar* data, const DSizes<Index, Rank>& dims) {
 			create_device_tensor_if_needed(dims);
-			move_to<Device_, Scalar, Rank, Layout>(*tensor_view, data, device);
+			move_to<Device_, Scalar, Rank, Layout>(*tensor_view, data, device_);
 		}
 
 		void set_data_from_host(const Tensor<Scalar, Rank, Layout>& data) {
@@ -87,7 +87,7 @@ namespace EigenSinn
 			size_t alloc_size = size() * sizeof(Scalar);
 
 			Scalar* data = static_cast<Scalar*>(host.allocate(alloc_size));
-			device.memcpyDeviceToHost(data, tensor_view->data(), alloc_size);
+			device_.memcpyDeviceToHost(data, tensor_view->data(), alloc_size);
 			TensorView<Scalar, Rank, Layout> out(data, dimensions());
 			return out;
 		}
@@ -96,16 +96,16 @@ namespace EigenSinn
 		// the destructor frees the data held by the tensor_view
 		~DeviceTensor() {
 			if (!tensor_view) { return; }
-			free(*tensor_view, device);
+			free(*tensor_view, device_);
 		}
 
 		// copy constructor: deep copy
 		DeviceTensor(const DeviceTensor& d) 
 			: DeviceTensor() {
 			size_t alloc_size = sizeof(scalar) * d.tensor_view->dimensions().TotalSize();
-			Scalar* data = device.allocate(alloc_size);
+			Scalar* data = device_.allocate(alloc_size);
 
-			device.memcpy(data, d.tensor_view->data(), alloc_size);
+			device_.memcpy(data, d.tensor_view->data(), alloc_size);
 			tensor_view = make_unique<Scalar, Rank, Layout>(data, d.tensor_view->dimensions());
 		}
 
@@ -116,16 +116,16 @@ namespace EigenSinn
 			}
 
 			dispatcher = Dispatcher<Device_>::create();
-			device = dispatcher->get_device();
+			device_ = dispatcher->get_device();
 
 			if (tensor_view) {
-				free(*tensor_view, device);
+				free(*tensor_view, device_);
 			}
 
 			size_t alloc_size = sizeof(scalar) * d.tensor_view->dimensions().TotalSize();
-			Scalar* data = device.allocate(alloc_size);
+			Scalar* data = device_.allocate(alloc_size);
 
-			device.memcpy(data, d.tensor_view->data(), alloc_size);
+			device_.memcpy(data, d.tensor_view->data(), alloc_size);
 			tensor_view.reset(new TensorView<Scalar, Rank, Layout>(data, d.tensor_view->dimensions()));
 			return *this;
 		}
@@ -144,7 +144,7 @@ namespace EigenSinn
 			}
 
 			dispatcher = Dispatcher<Device_>::create();
-			device = dispatcher->get_device();
+			device_ = dispatcher->get_device();
 
 			tensor_view.reset(std::move(d.tensor_view));
 			return *this;
@@ -171,18 +171,18 @@ namespace EigenSinn
 			return tensor_view->dimensions();
 		}
 
-		Device_& get_device() { return device; }
+		Device_& device() { return device_; }
 
 	private:
 		void create_device_tensor_if_needed(const DSizes<Index, Rank>& dims) {
 			if (tensor_view) {
-				free(*tensor_view, device);
-				tensor_view = create_device_ptr<Device_, Scalar, Rank, Layout>(dims, device);
+				free(*tensor_view, device_);
+				tensor_view = create_device_ptr<Device_, Scalar, Rank, Layout>(dims, device_);
 			}
 		}
 
 		PtrTensorView<Scalar, Rank, Layout> tensor_view;
 		Dispatcher<Device_>& dispatcher;
-		Device_& device;
+		Device_& device_;
 	};
 }
