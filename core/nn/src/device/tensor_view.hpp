@@ -11,8 +11,8 @@ namespace EigenSinn
 
 		// allocation constructors
 		explicit DeviceTensor() 
-			: dispatcher(Dispatcher<Device_>::create()) {
-			, device(dispatcher->get_device())
+			: dispatcher(Dispatcher<Device_>::create()) 
+			, device(dispatcher->get_device()) {
 		}
 
 		explicit DeviceTensor(const DSizes<Index, Rank> dims)
@@ -83,6 +83,10 @@ namespace EigenSinn
 			move_to<Scalar, Rank, Layout>(*tensor_view, data, device);
 		}
 
+		void set_data_from_host(const Tensor<Scalar, Rank, Layout> data) {
+			set_data_from_host(data.data(), data.dimensions());
+		}
+
 		// Rule of 5 definitions
 		// the destructor frees the data held by the tensor_view
 		~DeviceTensor() {
@@ -117,7 +121,8 @@ namespace EigenSinn
 			Scalar* data = device.allocate(alloc_size);
 
 			device.memcpy(data, d.tensor_view->data(), alloc_size);
-			tensor_view.reset(new TensorView<Scalar, Rank, Layout>(data, d.tensor_view->dimensions());
+			tensor_view.reset(new TensorView<Scalar, Rank, Layout>(data, d.tensor_view->dimensions()));
+			return *this;
 		}
 
 		// move constructor
@@ -137,6 +142,7 @@ namespace EigenSinn
 			device = dispatcher->get_device();
 
 			tensor_view.reset(std::move(d.tensor_view));
+			return *this;
 		}
 
 		// access
@@ -145,7 +151,15 @@ namespace EigenSinn
 		}
 
 		TensorView<Scalar, Rank, Layout> * operator-> () {
-			return tensor_view->get();
+			return tensor_view.operator->();
+		}
+
+		//operator!() const {
+		//	return !tensor_view;
+		//}
+
+		explicit operator bool() const {
+			return tensor_view ? true : false;
 		}
 
 	private:

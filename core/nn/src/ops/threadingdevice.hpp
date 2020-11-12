@@ -1,6 +1,7 @@
 #pragma once
 
 #include <thread>
+using std::unique_ptr;
 
 namespace EigenSinn {
 
@@ -20,7 +21,7 @@ namespace EigenSinn {
 
     static inline unique_ptr<Dispatcher<ThreadPoolDevice>>& create() {
       if (!instance) {
-        instance = std::make_unique<Dispatcher<ThreadPoolDevice>>();
+        instance.reset(new Dispatcher);
       }
 
       return instance;
@@ -54,7 +55,7 @@ namespace EigenSinn {
 
     static inline unique_ptr<Dispatcher<DefaultDevice>>& create() {
       if (!instance) {
-        instance = std::make_unique<Dispatcher<DefaultDevice>>();
+        instance.reset(new Dispatcher);
       }
 
       return instance;
@@ -82,7 +83,7 @@ namespace EigenSinn {
 
     static inline unique_ptr<Dispatcher<GpuDevice>>& create() {
       if (!instance) {
-        instance = std::make_unique<Dispatcher<GpuDevice>>();
+        instance.reset(new Dispatcher);
       }
 
       return instance;

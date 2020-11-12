@@ -8,13 +8,27 @@ using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
-  class DeviceTensor : public ::testing::Test {
+  class DeviceTensorTest : public ::testing::Test {
 
   protected:
+  
+    void SetUp() {
+      cd.init();
+    }
+
     CommonData4d cd;
   };
 
-  TEST_F(DeviceTensor, CreateVariadicNoValue) {
+  TEST_F(DeviceTensorTest, CreateEmpty) {
+    DeviceTensor<ThreadPoolDevice, float, 4> d;
 
+    EXPECT_FALSE(d);
   }
+
+  TEST_F(DeviceTensorTest, CreateDims) {
+    DeviceTensor<ThreadPoolDevice, float, 4> d(4, 3, 2, 1);
+
+    EXPECT_EQ(24, d->dimensions());
+  }
+
 }
