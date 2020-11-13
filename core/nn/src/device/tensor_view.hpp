@@ -102,11 +102,12 @@ namespace EigenSinn
 		// copy constructor: deep copy
 		DeviceTensor(const DeviceTensor& d) 
 			: DeviceTensor() {
-			size_t alloc_size = sizeof(scalar) * d.tensor_view->dimensions().TotalSize();
-			Scalar* data = device_.allocate(alloc_size);
+			size_t alloc_size = sizeof(Scalar) * d.tensor_view->dimensions().TotalSize();
+			Scalar* data = static_cast<Scalar*>(device_.allocate(alloc_size));
 
 			device_.memcpy(data, d.tensor_view->data(), alloc_size);
-			tensor_view = make_unique<Scalar, Rank, Layout>(data, d.tensor_view->dimensions());
+
+			tensor_view.reset(new TensorView<Scalar, Rank, Layout>(data, d.tensor_view->dimensions()));
 		}
 
 		// copy assignment
@@ -172,11 +173,90 @@ namespace EigenSinn
 
 		Device_& device() { return device_; }
 
-		DeviceTensor operator+(DeviceTensor<Device_, Scalar, Rank, Layout>& d) {
+		// Operators with device tensor
+		DeviceTensor& operator+=(const DeviceTensor& d) {
 
-			DeviceTensor<Device_, Scalar, Rank, Layout> res(dimensions());
-			res->device(res.device()) = *tensor_view + *d;
-			return res;
+			tensor_view->device(device_) = *tensor_view + *d.tensor_view;
+			return *this;
+		}
+
+		friend DeviceTensor operator+(DeviceTensor lhs, DeviceTensor& rhs) {
+			lhs += rhs;
+			return lhs;
+		}
+
+		DeviceTensor& operator-=(const DeviceTensor& d) {
+
+			tensor_view->device(device_) = *tensor_view - *d.tensor_view;
+			return *this;
+		}
+
+		friend DeviceTensor operator-(DeviceTensor lhs, DeviceTensor& rhs) {
+			lhs -= rhs;
+			return lhs;
+		}
+
+		DeviceTensor& operator*=(const DeviceTensor& d) {
+
+			tensor_view->device(device_) = *tensor_view * *d.tensor_view;
+			return *this;
+		}
+
+		friend DeviceTensor operator*(DeviceTensor lhs, DeviceTensor& rhs) {
+			lhs *= rhs;
+			return lhs;
+		}
+
+		DeviceTensor& operator/=(const DeviceTensor& d) {
+
+			tensor_view->device(device_) = *tensor_view / *d.tensor_view;
+			return *this;
+		}
+
+		friend DeviceTensor operator/(DeviceTensor lhs, DeviceTensor& rhs) {
+			lhs /= rhs;
+			return lhs;
+		}
+
+		// Operators with device const
+		DeviceTensor& operator+=(Scalar& rhs) {
+			tensor_view->device(device_) = *tensor_view + rhs;
+			return *this;
+		}
+
+		friend DeviceTensor operator+(DeviceTensor lhs, Scalar& rhs) {
+			lhs += rhs;
+			return lhs;
+		}
+
+		DeviceTensor& operator-=(Scalar& rhs) {
+			tensor_view->device(device_) = *tensor_view - rhs;
+			return *this;
+		}
+
+		friend DeviceTensor operator-(DeviceTensor lhs, Scalar& rhs) {
+			lhs -= rhs;
+			return lhs;
+		}
+
+		DeviceTensor& operator*=(Scalar& rhs) {
+			tensor_view->device(device_) = *tensor_view * rhs;
+			return *this;
+		}
+
+		friend DeviceTensor operator*(DeviceTensor lhs, Scalar& rhs) {
+			lhs *= rhs;
+			return lhs;
+		}
+
+		DeviceTensor& operator/=(Scalar& rhs) {
+			tensor_view->device(device_) = *tensor_view / rhs;
+			return *this;
+		}
+
+		friend DeviceTensor operator/(DeviceTensor lhs, Scalar& rhs) {
+			lhs /= rhs;
+			return lhs;
 		}
 
 	private:
