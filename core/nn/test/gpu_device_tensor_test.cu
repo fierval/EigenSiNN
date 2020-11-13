@@ -74,4 +74,26 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(convsum, h_tensor.data()));
   }
 
+  TEST_F(DeviceTensorTestGpu, MultTensorsOperator) {
+    DeviceTensor<GpuDevice, float, 4> d1(cd.convInput), d2(cd.convInput), res_tensor;
+
+    res_tensor = d1 * d2;
+
+    TensorView<float, 4> h_tensor = res_tensor.to_host();
+    Tensor<float, 4> expected = cd.convInput * cd.convInput;
+
+    EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
+  }
+
+  TEST_F(DeviceTensorTestGpu, DivTensorsOperator) {
+    DeviceTensor<GpuDevice, float, 4> d1(cd.convInput), d2(cd.dinput), res_tensor;
+
+    res_tensor = d1 / d2;
+
+    TensorView<float, 4> h_tensor = res_tensor.to_host();
+    Tensor<float, 4> expected = cd.convInput / cd.dinput;
+
+    EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
+  }
+
 }
