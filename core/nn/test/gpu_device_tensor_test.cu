@@ -96,4 +96,16 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
   }
 
+  TEST_F(DeviceTensorTestGpu, SqrtTensor) {
+    DeviceTensor<GpuDevice, float, 4> d1(cd.convInput), res_tensor(d1.dimensions()), d2(cd.dinput);
+
+    auto device = res_tensor.device();
+    res_tensor->device(device) = d1->sqrt() + *d2;
+
+    TensorView<float, 4> h_tensor = res_tensor.to_host();
+    Tensor<float, 4> expected = cd.convInput.sqrt() + cd.dinput;
+
+    EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
+  }
+
 }
