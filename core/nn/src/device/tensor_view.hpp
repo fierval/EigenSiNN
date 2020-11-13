@@ -259,6 +259,13 @@ namespace EigenSinn
 			return lhs;
 		}
 
+		friend DeviceTensor operator/(Scalar& lhs, DeviceTensor rhs) {
+
+			DeviceTensor<Device_, Scalar, Rank, Layout> res(rhs.dimensions());
+			res->device(rhs.device_) = lhs / rhs;
+			return res;
+		}
+
 	private:
 		void create_device_tensor_if_needed(const DSizes<Index, Rank>& dims) {
 			if (tensor_view) {
