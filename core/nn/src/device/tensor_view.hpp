@@ -195,7 +195,7 @@ namespace EigenSinn
 			return tensor_view->dimensions();
 		}
 
-		Device_& device() { return device_; }
+		auto device() { return tensor_view->device(device_); }
 
 		// Operators with device tensor
 		DeviceTensor& operator+=(const DeviceTensor& d) {
