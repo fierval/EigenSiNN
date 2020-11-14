@@ -48,4 +48,100 @@ namespace EigenSinnTest {
 
   }
 
+  TEST_F(DeviceTensorTest, AddTensors) {
+    DeviceTensor<ThreadPoolDevice, float, 4> d1(cd.convInput), d2(cd.convInput), sum_tensor(cd.convInput.dimensions());
+
+    auto device = sum_tensor.device();
+    sum_tensor->device(device) = *d1 + *d2;
+
+    TensorView<float, 4> h_tensor = sum_tensor.to_host();
+    Tensor<float, 4> convsum = cd.convInput + cd.convInput;
+
+    EXPECT_TRUE(is_elementwise_approx_eq(convsum, h_tensor.data()));
+  }
+
+  TEST_F(DeviceTensorTest, AddTensorsOperator) {
+    DeviceTensor<ThreadPoolDevice, float, 4> d1(cd.convInput), d2(cd.convInput), sum_tensor;
+
+    sum_tensor = d1 + d2;
+
+    TensorView<float, 4> h_tensor = sum_tensor.to_host();
+    Tensor<float, 4> convsum = cd.convInput + cd.convInput;
+
+    EXPECT_TRUE(is_elementwise_approx_eq(convsum, h_tensor.data()));
+  }
+
+  TEST_F(DeviceTensorTest, MultTensorsOperator) {
+    DeviceTensor<ThreadPoolDevice, float, 4> d1(cd.convInput), d2(cd.convInput), res_tensor;
+
+    res_tensor = d1 * d2;
+
+    TensorView<float, 4> h_tensor = res_tensor.to_host();
+    Tensor<float, 4> expected = cd.convInput * cd.convInput;
+
+    EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
+  }
+
+  TEST_F(DeviceTensorTest, DivTensorsOperator) {
+    DeviceTensor<ThreadPoolDevice, float, 4> d1(cd.convInput), d2(cd.dinput), res_tensor;
+
+    res_tensor = d1 / d2;
+
+    TensorView<float, 4> h_tensor = res_tensor.to_host();
+    Tensor<float, 4> expected = cd.convInput / cd.dinput;
+
+    EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
+  }
+
+  TEST_F(DeviceTensorTest, SqrtTensor) {
+    DeviceTensor<ThreadPoolDevice, float, 4> d1(cd.convInput), res_tensor(d1.dimensions()), d2(cd.dinput);
+
+    auto device = res_tensor.device();
+    res_tensor->device(device) = d1->sqrt() + *d2;
+
+    TensorView<float, 4> h_tensor = res_tensor.to_host();
+    Tensor<float, 4> expected = cd.convInput.sqrt() + cd.dinput;
+
+    EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
+  }
+
+  TEST_F(DeviceTensorTest, Resize) {
+    DeviceTensor<ThreadPoolDevice, float, 4> t1, t2(2, 3, 4, 5);
+
+    t1.resize(array<Index, 4>{2, 3, 4, 5});
+    t2.resize(array<Index, 4>{3, 3, 3, 3});
+
+    EXPECT_EQ(t1.dimensions().TotalSize(), 2 * 3 * 4 * 5);
+    EXPECT_EQ(t2.dimensions().TotalSize(), 3 * 3 * 3 * 3);
+
+  }
+
+  TEST_F(DeviceTensorTest, SetConstant) {
+
+    DeviceTensor<ThreadPoolDevice, float, 4> t1(4, 4, 4, 4);
+    t1.setConstant(1);
+
+    Tensor<float, 4> expected(4, 4, 4, 4);
+    expected.setConstant(1);
+
+    TensorView<float, 4> h_tensor = t1.to_host();
+
+    EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
+
+  }
+
+  TEST_F(DeviceTensorTest, SetZero) {
+
+    DeviceTensor<ThreadPoolDevice, float, 4> t1(4, 4, 4, 4);
+    t1.setZero();
+
+    Tensor<float, 4> expected(4, 4, 4, 4);
+    expected.setZero();
+
+    TensorView<float, 4> h_tensor = t1.to_host();
+
+    EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
+
+  }
+
 }
