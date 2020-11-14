@@ -108,4 +108,14 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
   }
 
+  TEST_F(DeviceTensorTestGpu, Resize) {
+    DeviceTensor<GpuDevice, float, 4> t1, t2(2, 3, 4, 5);
+
+    t1.resize(array<Index, 4>{2, 3, 4, 5});
+    t2.resize(array<Index, 4>{3, 3, 3, 3});
+
+    EXPECT_EQ(t1.dimensions().TotalSize(), 2 * 3 * 4 * 5);
+    EXPECT_EQ(t2.dimensions().TotalSize(), 3 * 3 * 3 * 3);
+
+  }
 }

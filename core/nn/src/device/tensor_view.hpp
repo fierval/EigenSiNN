@@ -97,6 +97,7 @@ namespace EigenSinn
 		~DeviceTensor() {
 			if (!tensor_view) { return; }
 			free(*tensor_view, device_);
+			tensor_view.release();
 		}
 
 		// copy constructor: deep copy
@@ -143,11 +144,30 @@ namespace EigenSinn
 
 			if (tensor_view) {
 				free(*tensor_view, device_);
+				tensor_view.release();
 			}
 
 			tensor_view = std::move(d.tensor_view);
 			d.tensor_view.reset(nullptr);
 			return *this;
+		}
+
+		// resizing, setting values
+		void resize(array<Index, Rank> dims) {
+			if (tensor_view) {
+				free(*tensor_view, device_);
+				tensor_view.release();
+			}
+
+			tensor_view = create_device_ptr<Device_, Scalar, Rank, Layout>(DSizes<Index, Rank>(dims), device_);
+		}
+
+		void setConstant(Scalar c) {
+			EigenSinn::setConstant<Device_, Scalar, Rank, Layout>(*tensor_view, c, device_);
+		}
+
+		void setZero() {
+			EigenSinn::setZero<Device_, Scalar, Rank, Layout>(*tensor_view, device_);
 		}
 
 		// access
@@ -270,6 +290,7 @@ namespace EigenSinn
 		void create_device_tensor_if_needed(const DSizes<Index, Rank>& dims) {
 			if (tensor_view) {
 				free(*tensor_view, device_);
+				tensor_view.release();
 				tensor_view = create_device_ptr<Device_, Scalar, Rank, Layout>(dims, device_);
 			}
 		}
