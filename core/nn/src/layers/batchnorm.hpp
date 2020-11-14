@@ -95,27 +95,27 @@ namespace EigenSinn {
 
       // Step 9
       // dbeta = sum(dout, reduced by all dims except channel)
-      dbeta->device() = dout->sum(reduction_dims);
+      dbeta.view() = dout->sum(reduction_dims);
 
       // Step 8
       // dgamma = sum (dout * y, reduced by all dims except channel)
       DeviceTensor<Device_, Scalar, Rank> gamma_broad(broadcast_as_last_dim<Scalar, Rank, Device_>(gamma, broadcast_dims));
       DeviceTensor<Device_, Scalar, Rank> dxhat(dout.dimensions());
       dxhat = dout * gamma_broad;
-      dgamma->device() = (dout * xhat)->sum(reduction_dims);
+      dgamma.view() = (dout * xhat)->sum(reduction_dims);
 
       // Step 7
       // d_inv_std
       //TensorSingleDim d_inv_std = (dxhat * xmu).sum(reduction_dims);
       DeviceTensor<Device_, Scalar, Rank> dxmu1(dxhat.dimensions());
-      dxmu1->device() = *dxhat * (1. / (*broadcast_var + eps).sqrt());
+      dxmu1.view() = *dxhat * (1. / (*broadcast_var + eps).sqrt());
 
       // Step 6
       // TensorSingleDim d_std = -d_inv_std / (running_var + eps);
 
       // Step 5
       DeviceTensor<Device_, Scalar, 1> d_var(var.dimensions());
-      d_var->device() = -0.5 * (dxhat * xmu)->sum(reduction_dims) / (*var + eps).pow(3. / 2.);
+      d_var.view() = -0.5 * (dxhat * xmu)->sum(reduction_dims) / (*var + eps).pow(3. / 2.);
 
       // Step 4
       DeviceTensor<Device_, Scalar, Rank> d_var_broadcast = broadcast_as_last_dim<Scalar, Rank, Device_>(d_var, broadcast_dims);
@@ -132,7 +132,7 @@ namespace EigenSinn {
       dx1 = dxmu1 + dxmu2;
 
       DeviceTensor<Device_, Scalar, 1> dmu(dout.dimension(1));
-      dmu->device() = -dx1->sum(reduction_dims);
+      dmu.view() = -dx1->sum(reduction_dims);
 
       // step 1
       DeviceTensor<Device_, Scalar, Rank> dx2(dout.dimensions());
@@ -141,7 +141,7 @@ namespace EigenSinn {
       dx2 = 1. / total_channel * dmu_broadcast;
 
       // step 0
-      layer_gradient->device() = dx1 + dx2;
+      layer_gradient.view() = dx1 + dx2;
     }
 
     Scalar* get_output() {

@@ -45,7 +45,7 @@ namespace EigenSinn {
 
     DeviceTensor<Device_, Scalar, Rank> broadcasted(original_dims);
 
-    broadcasted->device() = t->reshape(reshaped_dims).broadcast(broadcast_dims);
+    broadcasted.view() = t->reshape(reshaped_dims).broadcast(broadcast_dims);
     return broadcasted;
   }
 
@@ -72,20 +72,20 @@ namespace EigenSinn {
     // otherwise use their running analogs
     if (is_training) {
       // mean
-      mu->device() = x.mean(reduction_dims);
-      mu_broadcasted->device() = broadcast_as_last_dim(mu, broadcast_dims);
+      mu.view() = x.mean(reduction_dims);
+      mu_broadcasted.view() = broadcast_as_last_dim(mu, broadcast_dims);
 
       // variance
-      variance->device() = (*x - *mu_broadcasted).pow(2.).mean(reduction_dims);
+      variance.view() = (x - mu_broadcasted)->pow(2.).mean(reduction_dims);
 
       new_running_mean = momentum * running_mean + (1.0 - momentum) * mu;
       new_running_var = momentum * running_var + (1.0 - momentum) * variance;
       
-      std->device() = (*variance + eps).sqrt();
+      std.view() = (*variance + eps).sqrt();
       mean_broadcasted = broadcast_as_last_dim(mu, broadcast_dims);
     }
     else {
-      std->device() = (*running_var + eps).sqrt();
+      std.view() = (*running_var + eps).sqrt();
       mean_broadcasted = broadcast_as_last_dim(running_mean, broadcast_dims);
 
       new_running_mean = running_mean;

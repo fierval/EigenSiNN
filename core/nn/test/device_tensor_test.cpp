@@ -51,7 +51,7 @@ namespace EigenSinnTest {
   TEST_F(DeviceTensorTest, AddTensors) {
     DeviceTensor<ThreadPoolDevice, float, 4> d1(cd.convInput), d2(cd.convInput), sum_tensor(cd.convInput.dimensions());
 
-    sum_tensor.device() = *d1 + *d2;
+    sum_tensor.view() = *d1 + *d2;
 
     TensorView<float, 4> h_tensor = sum_tensor.to_host();
     Tensor<float, 4> convsum = cd.convInput + cd.convInput;
@@ -95,7 +95,7 @@ namespace EigenSinnTest {
   TEST_F(DeviceTensorTest, SqrtTensor) {
     DeviceTensor<ThreadPoolDevice, float, 4> d1(cd.convInput), res_tensor(d1.dimensions()), d2(cd.dinput);
 
-    res_tensor.device() = d1->sqrt() + *d2;
+    res_tensor.view() = d1->sqrt() + *d2;
 
     TensorView<float, 4> h_tensor = res_tensor.to_host();
     Tensor<float, 4> expected = cd.convInput.sqrt() + cd.dinput;
