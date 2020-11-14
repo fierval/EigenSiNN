@@ -43,8 +43,8 @@ namespace EigenSinn {
     void init(TensorSingleDim<Scalar>& _beta, TensorSingleDim<Scalar>& _gamma) {
       init();
 
-      beta.set_data_from_host(_beta);
-      beta.set_data_from_host(_gamma);
+      beta.set_from_host(_beta);
+      beta.set_from_host(_gamma);
     }
 
     void forward(LayerBase<Scalar, Device_>& prev_layer_base) override {
@@ -54,9 +54,10 @@ namespace EigenSinn {
         DSizes<Index, Rank> dims = vector2Dsizes<Rank>(prev_layer_base.get_out_dims());
 
         set_dims(prev_layer_base.get_out_dims(), prev_layer_base.get_out_dims());
-        layer_gradient = create_device_ptr<Device_, Scalar, Rank>(dims, device);
-        layer_output = create_device_ptr<Device_, Scalar, Rank>(dims, device);
-        xhat = create_device_ptr<Device_, Scalar, Rank>(dims, device);
+
+        layer_gradient.resize(dims);
+        layer_output.resize(dims);
+        xhat.resize(dims);
       }
 
       TensorView<Scalar, Rank> prev_layer(prev_layer_base.get_output(), vector2array< Rank>(in_dims));

@@ -62,18 +62,18 @@ namespace EigenSinn
 			move_to<Device_, Scalar, Rank, Layout>(*tensor_view, data.data(), device_);
 		}
 
-		void set_data_from_device(const Scalar* data, const DSizes<Index, Rank>& dims) {
+		void set_from_device(const Scalar* data, const DSizes<Index, Rank>& dims) {
 			create_device_tensor_if_needed(dims);
 			device_.memcpy(tensor_view->data(), data, tensor_view->dimensions().TotalSize() * sizeof(Scalar));
 		}
 
-		void set_data_from_host(const Scalar* data, const DSizes<Index, Rank>& dims) {
+		void set_from_host(const Scalar* data, const DSizes<Index, Rank>& dims) {
 			create_device_tensor_if_needed(dims);
 			move_to<Device_, Scalar, Rank, Layout>(*tensor_view, data, device_);
 		}
 
-		void set_data_from_host(const Tensor<Scalar, Rank, Layout>& data) {
-			set_data_from_host(data.data(), data.dimensions());
+		void set_from_host(const Tensor<Scalar, Rank, Layout>& data) {
+			set_from_host(data.data(), data.dimensions());
 		}
 
 		/// <summary>
@@ -153,13 +153,17 @@ namespace EigenSinn
 		}
 
 		// resizing, setting values
-		void resize(array<Index, Rank> dims) {
+		void resize(DSizes<Index, Rank> dims) {
 			if (tensor_view) {
 				free(*tensor_view, device_);
 				tensor_view.release();
 			}
 
 			tensor_view = create_device_ptr<Device_, Scalar, Rank, Layout>(DSizes<Index, Rank>(dims), device_);
+		}
+
+		void resize(array<Index, Rank> dims) {
+			resize(DSizes(dims));
 		}
 
 		void setConstant(Scalar c) {

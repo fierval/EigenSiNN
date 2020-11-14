@@ -44,7 +44,7 @@ namespace EigenSinnTest {
 
     DeviceTensor<GpuDevice, float, 4> d(cd.convInput);
 
-    d.set_data_from_host(cd.convWeights);
+    d.set_from_host(cd.convWeights);
     TensorView<float, 4> h_tensor = d.to_host();
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.convWeights, h_tensor.data()));
