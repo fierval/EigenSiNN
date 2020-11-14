@@ -2,7 +2,7 @@
 
 #include "layer_base.hpp"
 #include <ops/batchnorm.hpp>
-#include <device/device_tensor.hpp>
+#include <device/tensor_view.hpp>
 
 using namespace  Eigen;
 using std::unique_ptr;
@@ -15,41 +15,36 @@ namespace EigenSinn {
   // N - batch size
   // C - number of channels (1 for fully connected layers)
   template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
-  class BatchNormalizationLayer : public LayerBase<Scalar, Device_> {
+  class BatchNormalizationLayer : public LayerBase<Scalar> {
   public:
 
-    BatchNormalizationLayer(Index num_features, float _eps = 1e-5, float _momentum = 0.9, bool _is_training = true,
-      Dispatcher<Device_>& _device = LayerBase::default_dispatcher)
-      : LayerBase(_device)
+    BatchNormalizationLayer(Index num_features, float _eps = 1e-5, float _momentum = 0.9, bool _is_training = true)
+      : LayerBase<Scalar>()
       , momentum(_momentum)
       , eps(_eps)
       , is_training(_is_training)
-      , beta(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1> { num_features }, device))
-      , dgamma(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1> { num_features }, device))
-      , dbeta(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1> { num_features }, device))
-      , gamma(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1> { num_features }, device))
-      , running_variance(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1> { num_features }, device))
-      , running_mean(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1> { num_features }, device))
-      , mu(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1>{num_features}, device))
-      , var(create_device_view<Device_, Scalar, 1>(DSizes<Index, 1>{num_features}, device))
-    {
+      , beta(num_features)
+      , dgamma(num_features)
+      , dbeta(num_features)
+      , gamma(num_features)
+      , running_variance(num_features)
+      , running_mean(num_features)
+      , mu(num_features)
+      , var(num_features) {
     }
 
     void init() override {
-
-      setZero(beta, device);
-      setConstant<Device_, Scalar, 1>(gamma, 1., device);
-      setZero(running_variance, device);
-      setZero(running_mean, device);
+      beta.setZero();
+      gamma.setConstant(1.);
+      running_variance.setZero();
+      running_mean.setZero();
     }
 
     void init(TensorSingleDim<Scalar>& _beta, TensorSingleDim<Scalar>& _gamma) {
       init();
-      move_to<Device_, Scalar, 1>(beta, _beta.data(), device);
-      move_to<Device_, Scalar, 1>(gamma, _gamma.data(), device);
 
-      set_debug_weights();
-      set_debug_bias();
+      beta.set_data_from_host(_beta);
+      beta.set_data_from_host(_gamma);
     }
 
     void forward(LayerBase<Scalar, Device_>& prev_layer_base) override {
@@ -146,21 +141,6 @@ namespace EigenSinn {
 
       // step 0
       layer_gradient->device(device) = dx1 + dx2;
-
-      free(broadcast_mean, device);
-      free(broadcast_var, device);
-      free(xmu, device);
-      free(gamma_broad, device);
-      free(dxhat, device);
-      free(dxmu1, device);
-      free(d_var, device);
-      free(d_var_broadcast, device);
-      free(d_sq, device);
-      free(dxmu2, device);
-      free(dx1, device);
-      free(dx2, device);
-      free(dmu_broadcast, device);
-
     }
 
     Scalar* get_output() {
@@ -196,26 +176,11 @@ namespace EigenSinn {
       return beta.data();
     }
 
-    virtual ~BatchNormalizationLayer() {
-      free(gamma, device);
-      free(beta, device);
-      free(running_mean, device);
-      free(running_variance, device);
-      free(mu, device);
-      free(var, device);
-      free(dbeta, device);
-      free(dgamma, device);
-
-      free(*layer_output, device);
-      free(*layer_gradient, device);
-      free(*xhat, device);
-    }
-
   private:
-    PtrTensorView<Scalar, Rank> layer_output, layer_gradient, xhat;
+    DeviceTensor<Device_, Scalar, Rank> layer_output, layer_gradient, xhat;
 
-    TensorView<Scalar, 1> gamma, beta, running_mean, running_variance, mu, var;
-    TensorView<Scalar, 1> dbeta, dgamma;
+    DeviceTensor<Device_, Scalar, 1> gamma, beta, running_mean, running_variance, mu, var;
+    DeviceTensor<Device_, Scalar, 1> dbeta, dgamma;
     float momentum, eps;
     bool is_training;
 

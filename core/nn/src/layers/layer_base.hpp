@@ -15,18 +15,18 @@ namespace EigenSinn {
     Bias = 2
   };
 
-  template <typename Scalar, typename Device_ = DefaultDevice>
+  template <typename Scalar>
   class LayerBase {
 
   public:
     virtual void init() {};
 
-    virtual void forward(LayerBase<Scalar, Device_>& prev_layer_base) = 0;
+    virtual void forward(LayerBase<Scalar>& prev_layer_base) = 0;
 
-    virtual void backward(LayerBase<Scalar, Device_>& prev_layer, LayerBase<Scalar, Device_>& next_layer_grad) { 
+    virtual void backward(LayerBase<Scalar>& prev_layer, LayerBase<Scalar>& next_layer_grad) { 
       return backward(prev_layer, next_layer_grad.get_loss_by_input_derivative()); }
 
-    virtual void backward(LayerBase<Scalar, Device_>& prev_layer, Scalar * next_layer_grad) = 0;
+    virtual void backward(LayerBase<Scalar>& prev_layer, Scalar * next_layer_grad) = 0;
 
     virtual  Scalar* get_weights() { return nullptr; }
 
@@ -56,7 +56,7 @@ namespace EigenSinn {
       set_out_dims(_out_dims);
     }
 
-    void set_dims(LayerBase<Scalar, Device_>& layer) {
+    void set_dims(LayerBase<Scalar>& layer) {
       if (are_dims_unset(layer.get_out_dims())) {
         set_dims(layer.get_out_dims(), layer.get_out_dims());
       }
@@ -68,32 +68,13 @@ namespace EigenSinn {
     virtual ~LayerBase() = default;
 
   protected:
-    Dispatcher<Device_>& dispatcher;
     std::vector<Index> in_dims, out_dims, bias_dims, weight_dims;
 
     bool are_dims_unset(std::vector<Index>& dims) { return in_dims.size() == 0 || dims[0] != in_dims[0]; }
-    bool renew_gpu_values;
 
     // constructor called by derived class only
-    LayerBase(Dispatcher<Device_>& _dispatcher) 
-      : dispatcher(_dispatcher)
-      , device(_dispatcher.get_device())
-      , debug_init((int)DebugInit::False) {
+    LayerBase() {
     }
-
-
-    // if we initialized biases/weights through outside tensors
-    // we don't own their pointers so should not release them
-    int debug_init;
-
-    bool is_debug_weights() { return debug_init & (int)DebugInit::Weights; }
-    bool is_debug_bias() { return debug_init & (int)DebugInit::Bias; }
-
-    void set_debug_weights() { debug_init &= (int)DebugInit::Weights; }
-    void set_debug_bias() { debug_init &= (int)DebugInit::Weights; }
-
-    Device_& get_device() { return dispatcher.get_device(); }
-    Device_& device;
 
   };
 }
