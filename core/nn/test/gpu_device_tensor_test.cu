@@ -118,4 +118,33 @@ namespace EigenSinnTest {
     EXPECT_EQ(t2.dimensions().TotalSize(), 3 * 3 * 3 * 3);
 
   }
+
+  TEST_F(DeviceTensorTestGpu, SetConstant) {
+
+    DeviceTensor<GpuDevice, float, 4> t1(4, 4, 4, 4);
+    t1.setConstant(1);
+
+    Tensor<float, 4> expected(4, 4, 4, 4);
+    expected.setConstant(1);
+
+    TensorView<float, 4> h_tensor = t1.to_host();
+
+    EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
+
+  }
+
+  TEST_F(DeviceTensorTestGpu, SetZero) {
+
+    DeviceTensor<GpuDevice, float, 4> t1(4, 4, 4, 4);
+    t1.setZero();
+
+    Tensor<float, 4> expected(4, 4, 4, 4);
+    expected.setZero();
+
+    TensorView<float, 4> h_tensor = t1.to_host();
+
+    EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
+
+  }
+
 }
