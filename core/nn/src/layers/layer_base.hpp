@@ -3,7 +3,7 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 #include <ops/opsbase.hpp>
 #include <ops/conversions.hpp>
-#include <device/device_tensor.hpp>
+#include <device/tensor_view.hpp>
 
 using namespace Eigen;
 
@@ -40,8 +40,6 @@ namespace EigenSinn {
 
     virtual  Scalar* get_loss_by_bias_derivative() { return nullptr; }
 
-    inline static Dispatcher<Device_> default_dispatcher = Dispatcher<Device_>();
-
     std::vector<Index>& get_in_dims() { return in_dims; }
     std::vector<Index>& get_out_dims() { return out_dims; }
 
@@ -71,10 +69,6 @@ namespace EigenSinn {
     std::vector<Index> in_dims, out_dims, bias_dims, weight_dims;
 
     bool are_dims_unset(std::vector<Index>& dims) { return in_dims.size() == 0 || dims[0] != in_dims[0]; }
-
-    // constructor called by derived class only
-    LayerBase() {
-    }
 
   };
 }

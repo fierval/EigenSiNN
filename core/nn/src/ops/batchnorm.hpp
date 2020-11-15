@@ -34,7 +34,7 @@ namespace EigenSinn {
 
   // broadcast channel dimension
   template  <typename Scalar, Index Rank, typename Device_>
-  inline TensorView<Scalar, Rank> broadcast_as_last_dim(const DeviceTensor<Device_, Scalar, 1>& t, DSizes<Index, Rank> broadcast_dims) {
+  inline DeviceTensor<Device_, Scalar, Rank> broadcast_as_last_dim(DeviceTensor<Device_, Scalar, 1>& t, DSizes<Index, Rank> broadcast_dims) {
 
     DSizes<Index, Rank> reshaped_dims;
     DSizes<Index, Rank> original_dims = broadcast_dims;
@@ -54,7 +54,7 @@ namespace EigenSinn {
   inline auto batch_norm(DeviceTensor<Device_, Scalar, Rank>& x, DeviceTensor<Device_, Scalar, 1>& gamma, DeviceTensor<Device_, Scalar, 1>& beta, float eps, float momentum, 
      DeviceTensor<Device_, Scalar, 1>& running_mean, DeviceTensor<Device_, Scalar, 1>& running_var, bool is_training) {
 
-    DSizes<Index, 1> single_dim{ x.dimension(1) };
+    DSizes<Index, 1> single_dim{ x->dimension(1) };
 
     DeviceTensor<Device_, Scalar, 1> mu(single_dim), variance(single_dim), std(single_dim), new_running_var(single_dim), new_running_mean(single_dim);
 
@@ -66,26 +66,26 @@ namespace EigenSinn {
     DSizes<Index, Rank - 1> reduction_dims;
     DSizes<Index, Rank> broadcast_dims;
 
-    std::tie(reduction_dims, broadcast_dims) = get_broadcast_and_reduction_dims<Scalar, Rank>(x);
+    std::tie(reduction_dims, broadcast_dims) = get_broadcast_and_reduction_dims<Scalar, Rank>(*x);
 
     // if training we compute all the values.
     // otherwise use their running analogs
     if (is_training) {
       // mean
-      mu.view() = x.mean(reduction_dims);
-      mu_broadcasted.view() = broadcast_as_last_dim(mu, broadcast_dims);
+      mu->device(mu.get_device()) = x->mean(reduction_dims);
+      mu_broadcasted = broadcast_as_last_dim(mu, broadcast_dims);
 
       // variance
-      variance.view() = (x - mu_broadcasted)->pow(2.).mean(reduction_dims);
+      variance->device(variance.get_device()) = (x - mu_broadcasted)->pow(2.).mean(reduction_dims);
 
       new_running_mean = momentum * running_mean + (1.0 - momentum) * mu;
       new_running_var = momentum * running_var + (1.0 - momentum) * variance;
       
-      std.view() = (*variance + eps).sqrt();
+      std->device(std.get_device()) = (*variance + eps).sqrt();
       mean_broadcasted = broadcast_as_last_dim(mu, broadcast_dims);
     }
     else {
-      std.view() = (*running_var + eps).sqrt();
+      std->device(std.get_device()) = (*running_var + eps).sqrt();
       mean_broadcasted = broadcast_as_last_dim(running_mean, broadcast_dims);
 
       new_running_mean = running_mean;

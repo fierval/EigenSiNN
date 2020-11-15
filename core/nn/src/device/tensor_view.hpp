@@ -121,8 +121,8 @@ namespace EigenSinn
 				free(*tensor_view, device_);
 			}
 
-			size_t alloc_size = sizeof(scalar) * d.tensor_view->dimensions().TotalSize();
-			Scalar* data = device_.allocate(alloc_size);
+			size_t alloc_size = sizeof(Scalar) * d.tensor_view->dimensions().TotalSize();
+			Scalar* data = static_cast<Scalar*>(device_.allocate(alloc_size));
 
 			device_.memcpy(data, d.tensor_view->data(), alloc_size);
 			tensor_view.reset(new TensorView<Scalar, Rank, Layout>(data, d.tensor_view->dimensions()));
@@ -193,6 +193,10 @@ namespace EigenSinn
 
 		const DSizes<Index, Rank>& dimensions() {
 			return tensor_view->dimensions();
+		}
+
+		const Index dimension(Index i) {
+			return tensor_view->dimension(i);
 		}
 
 		auto view() { return tensor_view->device(device_); }
@@ -290,6 +294,25 @@ namespace EigenSinn
 			return res;
 		}
 
+
+		friend DeviceTensor operator*(Scalar lhs, DeviceTensor& rhs) {
+			rhs *= lhs;
+			return rhs;
+		}
+
+
+		friend DeviceTensor operator-(Scalar lhs, DeviceTensor& rhs) {
+			rhs -= lhs;
+			return rhs;
+		}
+
+
+		friend DeviceTensor operator+(Scalar lhs, DeviceTensor& rhs) {
+			rhs += lhs;
+			return rhs;
+		}
+
+		Device_& get_device() { return device_; }
 	private:
 		void create_device_tensor_if_needed(const DSizes<Index, Rank>& dims) {
 			if (tensor_view) {
