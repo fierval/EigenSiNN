@@ -48,17 +48,6 @@ namespace EigenSinnTest {
 
   }
 
-  TEST_F(DeviceTensorTest, AddTensors) {
-    DeviceTensor<ThreadPoolDevice, float, 4> d1(cd.convInput), d2(cd.convInput), sum_tensor(cd.convInput.dimensions());
-
-    sum_tensor.view() = *d1 + *d2;
-
-    TensorView<float, 4> h_tensor = sum_tensor.to_host();
-    Tensor<float, 4> convsum = cd.convInput + cd.convInput;
-
-    EXPECT_TRUE(is_elementwise_approx_eq(convsum, h_tensor.data()));
-  }
-
   TEST_F(DeviceTensorTest, AddTensorsOperator) {
     DeviceTensor<ThreadPoolDevice, float, 4> d1(cd.convInput), d2(cd.convInput), sum_tensor;
 

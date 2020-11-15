@@ -81,11 +81,11 @@ namespace EigenSinn {
       new_running_mean = momentum * running_mean + (1.0 - momentum) * mu;
       new_running_var = momentum * running_var + (1.0 - momentum) * variance;
       
-      std->device(std.get_device()) = (*variance + eps).sqrt();
+      std.view() = (*variance + eps).sqrt();
       mean_broadcasted = broadcast_as_last_dim(mu, broadcast_dims);
     }
     else {
-      std->device(std.get_device()) = (*running_var + eps).sqrt();
+      std.view() = (*running_var + eps).sqrt();
       mean_broadcasted = broadcast_as_last_dim(running_mean, broadcast_dims);
 
       new_running_mean = running_mean;
