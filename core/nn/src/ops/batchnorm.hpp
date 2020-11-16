@@ -72,11 +72,11 @@ namespace EigenSinn {
     // otherwise use their running analogs
     if (is_training) {
       // mean
-      mu->device(mu.get_device()) = x->mean(reduction_dims);
+      mu.view() = x->mean(reduction_dims);
       mu_broadcasted = broadcast_as_last_dim(mu, broadcast_dims);
 
       // variance
-      variance->device(variance.get_device()) = (x - mu_broadcasted)->pow(2.).mean(reduction_dims);
+      variance.view() = (x - mu_broadcasted)->pow(2.).mean(reduction_dims);
 
       new_running_mean = momentum * running_mean + (1.0 - momentum) * mu;
       new_running_var = momentum * running_var + (1.0 - momentum) * variance;

@@ -28,7 +28,7 @@ namespace EigenSinn {
       return *instance;
     }
 
-    ~Dispatcher() {
+    inline void release() {
       if (instance != nullptr) {
         instance->ref_count--;
         if (!instance->ref_count) {
@@ -37,6 +37,7 @@ namespace EigenSinn {
         }
       }
     }
+
   private:
 
     Dispatcher() :
@@ -47,6 +48,7 @@ namespace EigenSinn {
       if (n_devices == 0) { n_devices = 2; }
     }
 
+    ~Dispatcher() {}
     static inline Dispatcher<ThreadPoolDevice> *instance = nullptr;
     int ref_count;
     int n_devices;
@@ -73,11 +75,7 @@ namespace EigenSinn {
       return *instance;
     }
 
-    DefaultDevice& get_device() {
-      return cpu_device;
-    }
-
-    ~Dispatcher() {
+    inline void release() {
       if (instance != nullptr) {
         instance->ref_count--;
         if (!instance->ref_count) {
@@ -87,10 +85,16 @@ namespace EigenSinn {
       }
     }
 
+    DefaultDevice& get_device() {
+      return cpu_device;
+    }
+
   private:
     static inline Dispatcher<DefaultDevice> *instance = nullptr;
     int ref_count;
     Dispatcher() = default;
+    ~Dispatcher() { }
+
     DefaultDevice cpu_device;
   };
 
@@ -112,7 +116,7 @@ namespace EigenSinn {
       return *instance;
     }
 
-    ~Dispatcher() {
+    inline void release() {
       if (instance != nullptr) {
         instance->ref_count--;
         if (!instance->ref_count) {
@@ -126,6 +130,7 @@ namespace EigenSinn {
     static inline Dispatcher<GpuDevice> *instance = nullptr;
     int ref_count;
     Dispatcher() : stream(), gpu_device(&stream) {}
+    ~Dispatcher() {}
 
     CudaStreamDevice stream;
     GpuDevice gpu_device;
