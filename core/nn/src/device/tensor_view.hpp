@@ -132,7 +132,6 @@ namespace EigenSinn
       : DeviceTensor() {
 
       tensor_view = std::move(d.tensor_view);
-      d.release();
     }
 
     // move assignment
@@ -144,7 +143,6 @@ namespace EigenSinn
       release();
 
       tensor_view = std::move(d.tensor_view);
-      d.release();
 
       return *this;
     }
@@ -308,10 +306,7 @@ namespace EigenSinn
     Device_& get_device() { return device_; }
   private:
     void create_device_tensor_if_needed(const DSizes<Index, Rank>& dims) {
-      if (tensor_view) {
-        free(*tensor_view, device_);
-        tensor_view.release();
-      }
+      release();
       tensor_view = create_device_ptr<Device_, Scalar, Rank, Layout>(dims, device_);
     }
 

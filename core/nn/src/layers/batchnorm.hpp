@@ -91,7 +91,7 @@ namespace EigenSinn {
       DeviceTensor<Device_, Scalar, Rank> broadcast_var = broadcast_as_last_dim<Scalar, Rank, Device_>(var, broadcast_dims);
       DeviceTensor<Device_, Scalar, Rank> xmu(prev_layer.dimensions());
 
-      xmu = (prev_layer - broadcast_mean);
+      xmu = prev_layer - broadcast_mean;
 
       // Step 9
       // dbeta = sum(dout, reduced by all dims except channel)

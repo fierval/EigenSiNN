@@ -81,6 +81,18 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
   }
 
+  TEST_F(DeviceTensorTest, ThreeTensorsOperator) {
+    DeviceTensor<ThreadPoolDevice, float, 4> d1(cd.convInput), d2(cd.dinput), d3(cd.convInput), res_tensor;
+
+    res_tensor = d1 / d2 + d3;
+
+    TensorView<float, 4> h_tensor = res_tensor.to_host();
+    Tensor<float, 4> expected = cd.convInput / cd.dinput + cd.convInput;
+
+    EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
+  }
+
+
   TEST_F(DeviceTensorTest, SqrtTensor) {
     DeviceTensor<ThreadPoolDevice, float, 4> d1(cd.convInput), res_tensor(d1.dimensions()), d2(cd.dinput);
 
