@@ -15,7 +15,7 @@ namespace EigenSinn {
     Bias = 2
   };
 
-  template <typename Device_, typename Scalar, Index InRank, Index OutRank, int Layout=ColMajor>
+  template <typename Scalar>
   class LayerBase {
 
   public:
@@ -23,24 +23,17 @@ namespace EigenSinn {
 
     virtual void forward(LayerBase<Scalar>& prev_layer_base) = 0;
 
-    virtual void backward(LayerBase<Scalar>& prev_layer, LayerBase<Scalar>& next_layer_grad) { 
-      return backward(prev_layer, next_layer_grad.get_loss_by_input_derivative()); }
+    virtual void backward(LayerBase<Scalar>& prev_layer, LayerBase<Scalar>& next_layer_grad) = 0;
 
-    virtual void backward(LayerBase<Scalar>& prev_layer, Scalar * next_layer_grad) = 0;
+    virtual  std::any get_output() = 0;
 
-    virtual  DeviceTensor<Device_, Scalar, OutRank, Layout>& get_output() {
-      return layer_output;
-    }
+    virtual  std::any get_loss_by_input_derivative() = 0;
 
-    virtual  DeviceTensor<Device_, Scalar, InRank, Layout>& get_loss_by_input_derivative() {
-      return layer_gradient;
-    }
+    virtual  std::any get_loss_by_weights_derivative() { return std::any; };
+    virtual  std::any get_weights() { return std::any; };
 
-    virtual  DeviceTensor<Device_, Scalar, InRank, Layout>& get_loss_by_weights_derivative() { return DeviceTensor(); };
-    virtual  DeviceTensor<Device_, Scalar, InRank, Layout>& get_weights() { return DeviceTensor(); };
-
-    virtual  DeviceTensor<Device_, Scalar, 1, Layout>& get_loss_by_bias_derivative() { return DeviceTensor(); }
-    virtual  DeviceTensor<Device_, Scalar, 1, Layout>& get_bias() { return DeviceTensor(); }
+    virtual  DeviceTensor<Device_, Scalar, 1, Layout>& get_loss_by_bias_derivative() { return std::any; }
+    virtual  DeviceTensor<Device_, Scalar, 1, Layout>& get_bias() { return std::any; }
 
     DSizes<Index, InRank>& get_in_dims() { return in_dims; }
     DSizes<Index, OutRank>& get_out_dims() { return out_dims; }
@@ -71,11 +64,6 @@ namespace EigenSinn {
     DSizes<Index, InRank> in_dims, weight_dims;
     DSizes<Index, OutRank> out_dims; 
     DSizes<Index, 1> bias_dims;
-
-    DeviceTensor<Device_, Scalar, OutRank, Layout> layer_output;
-    DeviceTensor<Device_, Scalar, InRank, Layout> layer_gradient;
-    DeviceTensor<Device_, Scalar, InRank, Layout> weights;
-    DeviceTensor<Device_, Scalar, 1, Layout> bias;
 
     bool are_dims_unset(std::vector<Index>& dims) { return in_dims.size() == 0 || dims[0] != in_dims[0]; }
 

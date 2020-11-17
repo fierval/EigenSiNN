@@ -27,9 +27,9 @@ namespace EigenSinn {
     return Eigen::TensorMap<Eigen::Tensor<const Scalar, rank>>(matrix.data(), { dims... });
   }
 
-  template<typename Scalar, Index Rank>
-  inline Tensor<Scalar, Rank> from_any(std::any t) {
-    return std::any_cast<Tensor<Scalar, Rank>&>(t);
+  template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
+  inline DeviceTensor<Device_, Scalar, Rank, Layout> from_any(std::any t) {
+    return std::any_cast<DeviceTensor<Device_, Scalar, Rank, Layout>&>(t);
   }
 
   template<typename Scalar>
