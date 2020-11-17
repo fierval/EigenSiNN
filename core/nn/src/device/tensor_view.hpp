@@ -52,6 +52,30 @@ namespace EigenSinn
 
 
     /// <summary>
+    /// Conversion from any
+    /// </summary>
+    /// <typeparam name="Device_"></typeparam>
+    /// <typeparam name="Scalar"></typeparam>
+    DeviceTensor& operator=(const std::any& any) {
+      DeviceTensor d = from_any(any);
+
+      if (&d == this) {
+        return *this;
+      }
+
+      if (tensor_view) {
+        release();
+      }
+
+      tensor_view = d.tensor_view;
+    }
+      
+    DeviceTensor(std::any any) 
+      : DeviceTensor(std::forward(from_any(any))) {
+      
+    }
+
+    /// <summary>
     /// Initialize from a tensor on the host
     /// </summary>
     /// <param name="data"></param>
