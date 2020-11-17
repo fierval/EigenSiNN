@@ -44,7 +44,7 @@ namespace EigenSinn {
       init();
 
       beta.set_from_host(_beta);
-      beta.set_from_host(_gamma);
+      gamma.set_from_host(_gamma);
     }
 
     void forward(LayerBase<Scalar>& prev_layer_base) override {

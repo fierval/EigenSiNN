@@ -286,19 +286,19 @@ namespace EigenSinn
     }
 
 
-    friend DeviceTensor operator*(Scalar lhs, DeviceTensor& rhs) {
+    friend DeviceTensor operator*(Scalar lhs, DeviceTensor rhs) {
       rhs *= lhs;
       return rhs;
     }
 
 
-    friend DeviceTensor operator-(Scalar lhs, DeviceTensor& rhs) {
+    friend DeviceTensor operator-(Scalar lhs, DeviceTensor rhs) {
       rhs -= lhs;
       return rhs;
     }
 
 
-    friend DeviceTensor operator+(Scalar lhs, DeviceTensor& rhs) {
+    friend DeviceTensor operator+(Scalar lhs, DeviceTensor rhs) {
       rhs += lhs;
       return rhs;
     }
