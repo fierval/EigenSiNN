@@ -58,7 +58,7 @@ namespace EigenSinn
     /// <typeparam name="Device_"></typeparam>
     /// <typeparam name="Scalar"></typeparam>
     DeviceTensor& operator=(const std::any& any) {
-      DeviceTensor d = from_any<Device_, Scalar, Rank, Layout>(any);
+      DeviceTensor d = from_any(any);
 
       if (&d == this) {
         return *this;
@@ -72,7 +72,7 @@ namespace EigenSinn
     }
       
     explicit DeviceTensor(std::any any) 
-      : DeviceTensor(from_any<Device_, Scalar, Rank, Layout>(any)) {
+      : DeviceTensor(from_any(any)) {
       
     }
 
@@ -352,8 +352,7 @@ namespace EigenSinn
     Dispatcher<Device_>& dispatcher;
     Device_& device_;
 
-    template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
-    inline auto from_any(std::any t) {
+    DeviceTensor<Device_, Scalar, Rank, Layout> from_any(std::any t) {
       return std::any_cast<DeviceTensor<Device_, Scalar, Rank, Layout>&>(t);
     }
 
