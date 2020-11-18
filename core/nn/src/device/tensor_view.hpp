@@ -1,6 +1,7 @@
 #pragma once
 
 #include "device_tensor.hpp"
+#include "ops/conversions.hpp"
 
 namespace EigenSinn
 {
@@ -57,7 +58,7 @@ namespace EigenSinn
     /// <typeparam name="Device_"></typeparam>
     /// <typeparam name="Scalar"></typeparam>
     DeviceTensor& operator=(const std::any& any) {
-      DeviceTensor d = from_any(any);
+      DeviceTensor d = from_any<Device_, Scalar, Rank, Layout>(any);
 
       if (&d == this) {
         return *this;
@@ -70,8 +71,8 @@ namespace EigenSinn
       tensor_view = d.tensor_view;
     }
       
-    DeviceTensor(std::any any) 
-      : DeviceTensor(std::forward(from_any(any))) {
+    explicit DeviceTensor(std::any any) 
+      : DeviceTensor(from_any<Device_, Scalar, Rank, Layout>(any)) {
       
     }
 
@@ -104,7 +105,7 @@ namespace EigenSinn
     /// Create tensor on the host from the device tensor.
     /// </summary>
     /// <returns></returns>
-    TensorView<Scalar, Rank, Layout> to_host() {
+    Tensor<Scalar, Rank, Layout> to_host() {
 
       DefaultDevice host;
 
@@ -112,7 +113,8 @@ namespace EigenSinn
 
       Scalar* data = static_cast<Scalar*>(host.allocate(alloc_size));
       device_.memcpyDeviceToHost(data, tensor_view->data(), alloc_size);
-      TensorView<Scalar, Rank, Layout> out(data, dimensions());
+      Tensor<Scalar, Rank, Layout> out = TensorView<Scalar, Rank, Layout>(data, dimensions());
+      
       return out;
     }
 
@@ -349,5 +351,11 @@ namespace EigenSinn
     PtrTensorView<Scalar, Rank, Layout> tensor_view;
     Dispatcher<Device_>& dispatcher;
     Device_& device_;
+
+    template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
+    inline auto from_any(std::any t) {
+      return std::any_cast<DeviceTensor<Device_, Scalar, Rank, Layout>&>(t);
+    }
+
   };
 }

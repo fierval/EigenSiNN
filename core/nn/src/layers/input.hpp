@@ -14,11 +14,11 @@ namespace EigenSinn {
 
     Input() = default;
 
-    Scalar* get_output() {
-      return input->data();
+    std::any get_output() {
+      return input;
     };
 
-    Scalar* get_loss_by_input_derivative() { return nullptr; };
+    std::any get_loss_by_input_derivative() { return std::any(); };
 
     /// <summary>
     /// Grab data from the existing tensor
@@ -27,13 +27,12 @@ namespace EigenSinn {
     /// <param name= "move_to_device">whether to move the original memory to device before setting</param>
     void set_input(Tensor<Scalar, Rank>& inp_tensor) {
 
-      set_dims(array2vector<Rank>(inp_tensor.dimensions()), array2vector<Rank>(inp_tensor.dimensions()));
       input.set_from_host(inp_tensor);
     }
 
     // Required overrides
-    void forward(LayerBase<Scalar>& prev_layer_base) {};
-    void backward(LayerBase<Scalar>& prev_layer, Scalar* next_layer_grad) {};
+    void forward(LayerBase<Scalar>& prev_layer_base) override {};
+    void backward(LayerBase<Scalar>& prev_layer, std::any next_layer_grad) override {};
 
   private:
 

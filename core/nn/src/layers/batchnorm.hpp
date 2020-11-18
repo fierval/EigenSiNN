@@ -49,29 +49,24 @@ namespace EigenSinn {
 
     void forward(LayerBase<Scalar>& prev_layer_base) override {
 
-      if (are_dims_unset(prev_layer_base.get_out_dims())) {
+      DeviceTensor<Device_, Scalar, Rank> prev_layer(prev_layer_base.get_output());
 
-        DSizes<Index, Rank> dims = vector2Dsizes<Rank>(prev_layer_base.get_out_dims());
+      DSizes<Index, Rank> dims = prev_layer.dimensions();
+      layer_gradient.resize(dims);
+      layer_output.resize(dims);
+      xhat.resize(dims);
 
-        set_dims(prev_layer_base.get_out_dims(), prev_layer_base.get_out_dims());
 
-        layer_gradient.resize(dims);
-        layer_output.resize(dims);
-        xhat.resize(dims);
-      }
-
-      DeviceTensor<Device_, Scalar, Rank> prev_layer(prev_layer_base.get_output(), vector2array<Rank>(in_dims));
-
-        std::tie(layer_output, xhat, running_mean, running_variance, mu, var) =
-          batch_norm<Scalar, Rank, Device_>(prev_layer, gamma, beta, eps, momentum, running_mean, running_variance, is_training);
+      std::tie(layer_output, xhat, running_mean, running_variance, mu, var) =
+        batch_norm<Scalar, Rank, Device_>(prev_layer, gamma, beta, eps, momentum, running_mean, running_variance, is_training);
     }
 
     // see https://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html
     // for derivations
-    void backward(LayerBase<Scalar>& prev_layer_any, Scalar* next_layer_grad_any) override {
+    void backward(LayerBase<Scalar>& prev_layer_any, std::any next_layer_grad_any) override {
 
-      DeviceTensor<Device_, Scalar, Rank> prev_layer(prev_layer_any.get_output(), vector2array<Rank>(in_dims));
-      DeviceTensor<Device_, Scalar, Rank> dout(next_layer_grad_any, vector2array< Rank>(out_dims));
+      DeviceTensor<Device_, Scalar, Rank> prev_layer(prev_layer_any.get_output());
+      DeviceTensor<Device_, Scalar, Rank> dout(next_layer_grad_any);
 
       DSizes<Index, Rank - 1> reduction_dims;
       DSizes<Index, Rank> broadcast_dims;
@@ -146,21 +141,21 @@ namespace EigenSinn {
       layer_gradient = dx1 + dx2;
     }
 
-    Scalar* get_output() {
+    std::any get_output() {
 
-      return layer_output->data();
+      return layer_output;
     }
 
-    Scalar* get_loss_by_input_derivative() {
-      return layer_gradient->data();
+    std::any get_loss_by_input_derivative() {
+      return layer_gradient;
     }
 
-    Scalar* get_loss_by_weights_derivative() override {
-      return dgamma->data();
+    std::any get_loss_by_weights_derivative() override {
+      return dgamma;
     }
 
-    Scalar* get_loss_by_bias_derivative() override {
-      return dbeta->data();
+    std::any get_loss_by_bias_derivative() override {
+      return dbeta;
     }
 
     inline void SetTraining(bool training) {
@@ -171,12 +166,12 @@ namespace EigenSinn {
       return is_training;
     }
 
-    Scalar* get_weights() override {
-      return gamma->data();
+    std::any get_weights() override {
+      return gamma;
     }
 
-    Scalar* get_bias() override {
-      return beta->data();
+    std::any get_bias() override {
+      return beta;
     }
 
   private:
