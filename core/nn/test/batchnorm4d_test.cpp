@@ -108,13 +108,13 @@ namespace EigenSinnTest {
 
     TEST_F(Batchnorm4dTest, Backward) {
 
-      Input<float, 4> input_layer(input.dimensions());
-      input_layer.set_input(input.data());
+      Input<float, 4> input_layer;
+      input_layer.set_input(input);
 
       BatchNormalizationLayer<float, 4> bn(3);
       bn.init(beta, gamma);
       bn.forward(input_layer);
-      bn.backward(input_layer, loss.data());
+      bn.backward(input_layer, loss);
 
       Tensor<float, 1> dbeta(cd.dims[1]), dgamma(cd.dims[1]);
       dbeta.setValues({ 15.55493259, 17.75424004, 14.48464108 });

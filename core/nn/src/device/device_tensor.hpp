@@ -184,6 +184,17 @@ namespace EigenSinn
       return *this;
     }
 
+    DeviceTensor& resize(Index dim) {
+      resize(DSizes<Index, 1>(dim));
+      return *this;
+    }
+
+    template<typename... IndexTypes>
+    DeviceTensor& resize(Index firstDim, Index secondDimension, IndexTypes... otherDimensions) {
+      resize(DSizes(firstDim, secondDimension, otherDimensions...));
+      return *this;
+    }
+
     DeviceTensor& setConstant(Scalar c) {
       EigenSinn::setConstant(*tensor_view, c, device_);
       return *this;
