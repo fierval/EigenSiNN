@@ -98,7 +98,7 @@ namespace EigenSinnTest {
 
     res_tensor.view() = d1->sqrt() + *d2;
 
-    TensorView<float, 4> h_tensor = res_tensor.to_host();
+    Tensor<float, 4> h_tensor = res_tensor.to_host();
     Tensor<float, 4> expected = cd.convInput.sqrt() + cd.dinput;
 
     EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
@@ -123,9 +123,7 @@ namespace EigenSinnTest {
     Tensor<float, 4> expected(4, 4, 4, 4);
     expected.setConstant(1);
 
-    TensorView<float, 4> h_tensor = t1.to_host();
-
-    EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
+    EXPECT_TRUE(is_elementwise_approx_eq(expected, t1->data()));
 
   }
 
@@ -137,10 +135,9 @@ namespace EigenSinnTest {
     Tensor<float, 4> expected(4, 4, 4, 4);
     expected.setZero();
 
-    TensorView<float, 4> h_tensor = t1.to_host();
+    Tensor<float, 4> h_tensor = t1.to_host();
 
-    EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
-
+    EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor));
   }
 
 }
