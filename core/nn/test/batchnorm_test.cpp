@@ -46,10 +46,10 @@ namespace EigenSinnTest {
 
   TEST_F(Batchnorm1dTest, Backward) {
 
-    Input<float, 2> input_layer;
+    Input<float, 2, ThreadPoolDevice> input_layer;
     input_layer.set_input(input);
 
-    BatchNormalizationLayer<float, 2> bn(cols, eps, momentum);
+    BatchNormalizationLayer<float, 2, ThreadPoolDevice> bn(cols, eps, momentum);
 
     Tensor<float, 2> expected_derivative(batch_size, cols);
     Tensor<float, 1> exp_dbeta(cols), exp_dgamma(cols);
@@ -65,11 +65,15 @@ namespace EigenSinnTest {
 
     EXPECT_TRUE(is_elementwise_approx_eq(output, bn.get_output()));
 
-    bn.backward(input_layer, loss.data());
+    DeviceTensor<ThreadPoolDevice, float, 2> loss_device(loss);
+    std::any any_loss = loss_device;
+    DeviceTensor<ThreadPoolDevice, float, 2>& cast_back = std::any_cast<DeviceTensor<ThreadPoolDevice, float, 2, ColMajor>&>(any_loss);
 
-    EXPECT_TRUE(is_elementwise_approx_eq(expected_derivative, bn.get_loss_by_input_derivative(), 4e-5));
-    EXPECT_TRUE(is_elementwise_approx_eq(exp_dbeta, bn.get_loss_by_bias_derivative(), 1e-5));
-    EXPECT_TRUE(is_elementwise_approx_eq(exp_dgamma, bn.get_loss_by_weights_derivative(), 1e-5));
+    bn.backward(input_layer, loss_device);
+
+    EXPECT_TRUE((is_elementwise_approx_eq<float, 2, ColMajor, ThreadPoolDevice>(expected_derivative, bn.get_loss_by_input_derivative(), 4e-5)));
+    EXPECT_TRUE((is_elementwise_approx_eq<float, 1, ColMajor, ThreadPoolDevice>(exp_dbeta, bn.get_loss_by_bias_derivative(), 1e-5)));
+    EXPECT_TRUE((is_elementwise_approx_eq<float, 1, ColMajor, ThreadPoolDevice>(exp_dgamma, bn.get_loss_by_weights_derivative(), 1e-5)));
   } 
 
   TEST_F(Batchnorm1dTest, ThreadBackward) {
@@ -88,14 +92,15 @@ namespace EigenSinnTest {
     expected_derivative.setValues({ {-1.90824110e-04, -3.91245958e-05, 1.86752446e-03, 4.88124043e-02, 2.96708080e-04},
       {1.90745224e-04, 3.91245958e-05, -1.86752446e-03, -4.88256179e-02, -2.96444632e-04 } });
 
+    DeviceTensor<ThreadPoolDevice, float, 2> loss_device(loss);
+
     bn.init(beta, gamma);
     bn.forward(input_layer);
-    bn.backward(input_layer, loss.data());
+    bn.backward(input_layer, loss_device);
 
-
-    EXPECT_TRUE(is_elementwise_approx_eq(expected_derivative, bn.get_loss_by_input_derivative(), 4e-5));
-    EXPECT_TRUE(is_elementwise_approx_eq(exp_dbeta, bn.get_loss_by_bias_derivative(), 1e-5));
-    EXPECT_TRUE(is_elementwise_approx_eq(exp_dgamma, bn.get_loss_by_weights_derivative(), 1e-5));
+    EXPECT_TRUE((is_elementwise_approx_eq<float, 2, ColMajor, ThreadPoolDevice>(expected_derivative, bn.get_loss_by_input_derivative(), 4e-5)));
+    EXPECT_TRUE((is_elementwise_approx_eq<float, 1, ColMajor, ThreadPoolDevice>(exp_dbeta, bn.get_loss_by_bias_derivative(), 1e-5)));
+    EXPECT_TRUE((is_elementwise_approx_eq<float, 1, ColMajor, ThreadPoolDevice>(exp_dgamma, bn.get_loss_by_weights_derivative(), 1e-5)));
   }
 
 }
