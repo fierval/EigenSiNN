@@ -179,22 +179,22 @@ namespace EigenSinn
       tensor_view = create_device_ptr<Device_, Scalar, Rank, Layout>(DSizes<Index, Rank>(dims), device_);
     }
 
-    DeviceTensor<Device_, Scalar, Rank, Layout>& resize(array<Index, Rank> dims) {
+    DeviceTensor& resize(array<Index, Rank> dims) {
       resize(DSizes(dims));
       return *this;
     }
 
-    DeviceTensor<Device_, Scalar, Rank, Layout>& setConstant(Scalar c) {
-      EigenSinn::setConstant<Device_, Scalar, Rank, Layout>(*tensor_view, c, device_);
+    DeviceTensor& setConstant(Scalar c) {
+      EigenSinn::setConstant(*tensor_view, c, device_);
       return *this;
     }
 
-    DeviceTensor<Device_, Scalar, Rank, Layout>& setZero() {
-      EigenSinn::setZero<Device_, Scalar, Rank, Layout>(*tensor_view, device_);
+    DeviceTensor& setZero() {
+      EigenSinn::setZero(*tensor_view, device_);
       return *this;
     }
 
-    DeviceTensor<Device_, Scalar, Rank, Layout>& setValues(
+    DeviceTensor& setValues(
       const typename internal::Initializer<Tensor<Scalar, Rank, Layout>, Rank>::InitList& vals) {
 
       Tensor<Scalar, Rank, Layout> temp(dimensions());
@@ -205,7 +205,7 @@ namespace EigenSinn
       return *this;
     }
 
-    DeviceTensor<Device_, Scalar, Rank, Layout>& setRandom() {
+    DeviceTensor& setRandom() {
 
       assert(tensor_view);
       Tensor<Scalar, Rank, Layout> temp(dimensions());
