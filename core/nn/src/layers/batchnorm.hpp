@@ -2,7 +2,7 @@
 
 #include "layer_base.hpp"
 #include <ops/batchnorm.hpp>
-#include <device/tensor_view.hpp>
+#include <device/device_tensor.hpp>
 
 using namespace  Eigen;
 using std::unique_ptr;

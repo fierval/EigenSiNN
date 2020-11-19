@@ -1,7 +1,7 @@
 #pragma once
 
 #include "opsbase.hpp"
-#include <device/tensor_view.hpp>
+#include <device/device_tensor.hpp>
 #include "conversions.hpp"
 
 using std::unique_ptr;

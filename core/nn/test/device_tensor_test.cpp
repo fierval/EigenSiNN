@@ -1,4 +1,4 @@
-#include <device/tensor_view.hpp>
+#include <device/device_tensor.hpp>
 #include "include/commondata4d.hpp"
 #include "include/testutils.hpp"
 #include "ops/comparisons.hpp"

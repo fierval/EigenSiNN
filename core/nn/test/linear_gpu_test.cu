@@ -4,7 +4,7 @@
 #include "include/testutils.hpp"
 #include "layers/input.hpp"
 #include "ops/comparisons.hpp"
-#include "device/device_tensor.hpp"
+#include "device/device_helpers.hpp"
 #include "ops/conversions.hpp"
 
 using namespace Eigen;
