@@ -89,4 +89,11 @@ namespace EigenSinn {
     setConstant(t, (Scalar)0, device);
   }
 
+  template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
+  inline void setValues(TensorView<Scalar, Rank, Layout>& t, const Tensor<Scalar, Rank, Layout>& vals, Device_& device) {
+
+    assert(t.size());
+    size_t final_size = t.size() * sizeof(Scalar);
+    device.memcpyHostToDevice(t.data(), vals.data(), final_size);
+  }
 }

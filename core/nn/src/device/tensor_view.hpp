@@ -105,7 +105,7 @@ namespace EigenSinn
     /// Create tensor on the host from the device tensor.
     /// </summary>
     /// <returns></returns>
-    Tensor<Scalar, Rank, Layout> to_host() {
+    Tensor<Scalar, Rank, Layout> to_host() const {
 
       DefaultDevice host;
 
@@ -179,16 +179,30 @@ namespace EigenSinn
       tensor_view = create_device_ptr<Device_, Scalar, Rank, Layout>(DSizes<Index, Rank>(dims), device_);
     }
 
-    void resize(array<Index, Rank> dims) {
+    DeviceTensor<Device_, Scalar, Rank, Layout>& resize(array<Index, Rank> dims) {
       resize(DSizes(dims));
+      return *this;
     }
 
-    void setConstant(Scalar c) {
+    DeviceTensor<Device_, Scalar, Rank, Layout>& setConstant(Scalar c) {
       EigenSinn::setConstant<Device_, Scalar, Rank, Layout>(*tensor_view, c, device_);
+      return *this;
     }
 
-    void setZero() {
+    DeviceTensor<Device_, Scalar, Rank, Layout>& setZero() {
       EigenSinn::setZero<Device_, Scalar, Rank, Layout>(*tensor_view, device_);
+      return *this;
+    }
+
+    DeviceTensor<Device_, Scalar, Rank, Layout>& setValues(
+      const typename internal::Initializer<Tensor<Scalar, Rank, Layout>, Rank>::InitList& vals) {
+
+      Tensor<Scalar, Rank, Layout> temp(dimensions());
+      TensorEvaluator<Tensor<Scalar, Rank, Layout>, DefaultDevice> eval(*static_cast<const Tensor<Scalar, Rank, Layout>*>(&temp), DefaultDevice());
+      internal::initialize_tensor<Tensor<Scalar, Rank, Layout>, Rank>(eval, vals);
+
+      EigenSinn::setValues(*tensor_view, temp, device_);
+      return *this;
     }
 
     // access
@@ -204,11 +218,11 @@ namespace EigenSinn
       return tensor_view ? true : false;
     }
 
-    Index size() {
+    Index size() const {
       return tensor_view->dimensions().TotalSize();
     }
 
-    const DSizes<Index, Rank>& dimensions() {
+    const DSizes<Index, Rank>& dimensions() const {
       return tensor_view->dimensions();
     }
 

@@ -51,8 +51,8 @@ namespace EigenSinnTest {
 
     BatchNormalizationLayer<float, 2, ThreadPoolDevice> bn(cols, eps, momentum);
 
-    Tensor<float, 2> expected_derivative(batch_size, cols);
-    Tensor<float, 1> exp_dbeta(cols), exp_dgamma(cols);
+    DeviceTensor<ThreadPoolDevice, float, 2> expected_derivative(batch_size, cols);
+    DeviceTensor<ThreadPoolDevice, float, 1> exp_dbeta(cols), exp_dgamma(cols);
 
     exp_dbeta.setValues({ 0.41630989, 1.14248097, 0.73172224, 0.94878352, 1.50353050 });
     exp_dgamma.setValues({ -0.25724539, -0.34655440, -0.24452491, -0.22366823, -0.11281815 });
