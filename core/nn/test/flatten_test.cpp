@@ -25,8 +25,8 @@ namespace EigenSinnTest {
   };
 
   TEST_F(FlatLayer, Flat) {
-    Input<float, 4> input(cd.dims);
-    input.set_input(cd.convInput.data());
+    Input<float, 4> input;
+    input.set_input(cd.convInput);
 
     Flatten<float> conv2d;
 
