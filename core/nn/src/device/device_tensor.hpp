@@ -141,9 +141,7 @@ namespace EigenSinn
         return *this;
       }
 
-      if (tensor_view) {
-        release();
-      }
+      release();
 
       size_t alloc_size = sizeof(Scalar) * d.tensor_view->dimensions().TotalSize();
       Scalar* data = static_cast<Scalar*>(device_.allocate(alloc_size));
