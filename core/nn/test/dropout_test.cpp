@@ -23,19 +23,23 @@ namespace EigenSinnTest {
 
   TEST_F(Dropout, Forward) {
 
-    Input<float, 2> input(cd.linearInput.dimensions());
-    input.set_input(cd.linearInput.data());
+    Input<float, 2> input;
+    input.set_input(cd.linearInput);
 
     EigenSinn::Dropout<float, 2> dropout;
     dropout.forward(input);
 
-    TensorMap<Tensor<float, 2>> output(dropout.get_output(), vector2array<2>(dropout.get_out_dims()));
+    Tensor<float, 2> output = DeviceTensor<DefaultDevice, float, 2>(dropout.get_output()).to_host();
 
-    Tensor<float, 2> zeros(output.dimensions());
+    Tensor<float, 2> zeros = DeviceTensor<DefaultDevice, float, 2>(output.dimensions()).to_host();
     zeros.setZero();
     
-    Tensor<bool, 0> anyzeros = (output == zeros).any();
-    Tensor<bool, 0> allzeros = (output == zeros).all();
+    Tensor<bool, 0> anyzeros; 
+    anyzeros = (output == zeros).any();
+    
+    Tensor<bool, 0> allzeros; 
+    allzeros = (output == zeros).all();
+
     EXPECT_TRUE(anyzeros(0));
     EXPECT_FALSE(allzeros(0));
 
@@ -48,17 +52,18 @@ namespace EigenSinnTest {
 
   TEST_F(Dropout, Backward) {
 
-    Input<float, 2> input(cd.linearInput.dimensions());
-    input.set_input(cd.linearInput.data());
+    Input<float, 2> input;
+    input.set_input(cd.linearInput);
 
     EigenSinn::Dropout<float, 2> dropout;
     dropout.forward(input);
-    dropout.backward(input, cd.linearLoss.data());
+    dropout.backward(input, cd.linearLoss);
 
-    TensorMap<Tensor<float, 2>> dinput(dropout.get_loss_by_input_derivative(), vector2array<2>(dropout.get_out_dims()));
+    Tensor<float, 2> dinput = DeviceTensor<DefaultDevice, float, 2>(dropout.get_loss_by_input_derivative()).to_host();
 
     Tensor<float, 2> zeros(dinput.dimensions());
     zeros.setZero();
+
     Tensor<bool, 0> anyzeros = (dinput == zeros).any();
     Tensor<bool, 0> allzeros = (dinput == zeros).all();
     EXPECT_TRUE(anyzeros(0));

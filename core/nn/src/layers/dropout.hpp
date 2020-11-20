@@ -14,12 +14,11 @@ using namespace  Eigen;
 namespace EigenSinn {
 
   template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
-  class Dropout : public LayerBase<Scalar, Device_> {
+  class Dropout : public LayerBase<Scalar> {
   public:
 
-    Dropout(float _prob = 0.5, Dispatcher<Device_>& _device =  LayerBase::default_dispatcher)
-      : LayerBase(_device)
-      , prob(_prob)
+    Dropout(float _prob = 0.5)
+      : prob(_prob)
       , is_training(true)
       , inited(false) {
     }
@@ -46,15 +45,11 @@ namespace EigenSinn {
       prob_tensor.setConstant(prob);
     }
 
-    void forward(LayerBase<Scalar, Device_>& prev_layer) override {
+    void forward(LayerBase<Scalar>& prev_layer) override {
       
       if (!is_training) { return; }
 
-      if (are_dims_unset(prev_layer.get_out_dims())) {
-        set_dims(prev_layer.get_out_dims(), prev_layer.get_out_dims());
-      }
-      
-      TensorMap<Tensor<Scalar, Rank>> x(prev_layer.get_output(), vector2array< Rank>(in_dims));
+      DeviceTensor<Device_, Scalar, Rank> x(prev_layer.get_output());
 
       if (!inited) {
         inited = true;
@@ -65,28 +60,28 @@ namespace EigenSinn {
       rands.setRandom<internal::UniformRandomGenerator<float>>();
             
       // create condition
-      if_tensor.device(dispatcher.get_device()) = rands >= prob_tensor;
-      mask.device(dispatcher.get_device()) = if_tensor.select(then_tensor, else_tensor);
+      if_tensor.view() = *rands >= *prob_tensor;
+      mask.view() = if_tensor->select(*then_tensor, *else_tensor);
 
-      layer_output.device(dispatcher.get_device()) = mask * x;
+      layer_output = mask * x;
     }
 
     // for derivations
-    void backward(LayerBase<Scalar, Device_>& prev_layer_any, Scalar * next_layer_grad_any) override {
+    void backward(LayerBase<Scalar>& prev_layer_any, std::any next_layer_grad_any) override {
 
-      TensorMap<Tensor<Scalar, Rank>> next_layer_grad(next_layer_grad_any, vector2array< Rank>(out_dims));
+      DeviceTensor<Device_, Scalar, Rank> next_layer_grad(next_layer_grad_any);
 
       if (!is_training) { return; }
 
-      layer_gradient.device(dispatcher.get_device()) = mask * next_layer_grad;
+      layer_gradient = mask * next_layer_grad;
     }
 
-    Scalar * get_output() override {
-      return layer_output.data();
+    std::any get_output() override {
+      return layer_output;
     }
 
-    Scalar * get_loss_by_input_derivative() {
-      return layer_gradient.data();
+    std::any get_loss_by_input_derivative() {
+      return layer_gradient;
     }
 
     void set_training(bool _is_training) { 
@@ -98,10 +93,10 @@ namespace EigenSinn {
     }
 
   private:
-    Tensor<Scalar, Rank> mask;
-    Tensor<Scalar, Rank> layer_output, layer_gradient;
-    Tensor<bool, Rank> if_tensor;
-    Tensor<float, Rank> rands, then_tensor, else_tensor, prob_tensor;
+    DeviceTensor<Device_, Scalar, Rank> mask;
+    DeviceTensor<Device_, Scalar, Rank> layer_output, layer_gradient;
+    DeviceTensor<Device_, bool, Rank> if_tensor;
+    DeviceTensor<Device_, float, Rank> rands, then_tensor, else_tensor, prob_tensor;
     bool is_training, inited;
     const float prob;
   };

@@ -226,6 +226,17 @@ namespace EigenSinn
       return *this;
     }
 
+    template <typename RandomGenerator>
+    DeviceTensor& setRandom() {
+
+      assert(tensor_view);
+      Tensor<Scalar, Rank, Layout> temp(dimensions());
+      temp.setRandom<RandomGenerator>();
+      move_to(*tensor_view, temp.data(), device_);
+
+      return *this;
+    }
+
     // access
     TensorView<Scalar, Rank, Layout>& operator* () {
       return *tensor_view;
@@ -362,6 +373,27 @@ namespace EigenSinn
     friend DeviceTensor operator+(Scalar lhs, DeviceTensor rhs) {
       rhs += lhs;
       return rhs;
+    }
+
+    // comparison operators
+    friend DeviceTensor<Device_, bool, Rank, Layout> operator==(DeviceTensor& lhs, DeviceTensor& rhs) {
+      return *lhs == *rhs;
+    }
+
+    friend DeviceTensor<Device_, bool, Rank, Layout> operator>(DeviceTensor& lhs, DeviceTensor& rhs) {
+      return *lhs > *rhs;
+    }
+
+    friend DeviceTensor<Device_, bool, Rank, Layout> operator<(DeviceTensor& lhs, DeviceTensor& rhs) {
+      return *lhs < *rhs;
+    }
+
+    friend DeviceTensor<Device_, bool, Rank, Layout> operator>=(DeviceTensor& lhs, DeviceTensor& rhs) {
+      return *lhs >= *rhs;
+    }
+
+    friend DeviceTensor<Device_, bool, Rank, Layout> operator<=(DeviceTensor& lhs, DeviceTensor& rhs) {
+      return *lhs <= *rhs;
     }
 
     Device_& get_device() { return device_; }

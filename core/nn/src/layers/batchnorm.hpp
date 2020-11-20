@@ -51,10 +51,12 @@ namespace EigenSinn {
 
       DeviceTensor<Device_, Scalar, Rank> prev_layer(prev_layer_base.get_output());
 
-      DSizes<Index, Rank> dims = prev_layer.dimensions();
-      layer_gradient.resize(dims);
-      layer_output.resize(dims);
-      xhat.resize(dims);
+      if (!xhat) {
+        DSizes<Index, Rank> dims = prev_layer.dimensions();
+        layer_gradient.resize(dims);
+        layer_output.resize(dims);
+        xhat.resize(dims);
+      }
 
 
       std::tie(layer_output, xhat, running_mean, running_variance, mu, var) =
