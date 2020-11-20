@@ -13,7 +13,7 @@ using namespace  Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
+  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
   class Dropout : public LayerBase<Scalar> {
   public:
 
@@ -23,10 +23,7 @@ namespace EigenSinn {
       , inited(false) {
     }
 
-    void init(const Tensor<Scalar, Rank>& x)  {
-
-      using std::begin;
-      using std::end;
+    void init(const DeviceTensor<Device_, Scalar, Rank, Layout>& x)  {
 
       layer_gradient.resize(x.dimensions());
       layer_output.resize(x.dimensions());
