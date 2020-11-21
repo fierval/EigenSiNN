@@ -187,7 +187,7 @@ namespace EigenSinn
     }
 
     DeviceTensor& resize(array<Index, Rank> dims) {
-      resize(DSizes(dims));
+      resize(DSizes<Index, Rank>(dims));
       return *this;
     }
 
@@ -198,7 +198,7 @@ namespace EigenSinn
 
     template<typename... IndexTypes>
     DeviceTensor& resize(Index firstDim, Index secondDimension, IndexTypes... otherDimensions) {
-      resize(DSizes(firstDim, secondDimension, otherDimensions...));
+      resize(DSizes<Index, Rank>(firstDim, secondDimension, otherDimensions...));
       return *this;
     }
 

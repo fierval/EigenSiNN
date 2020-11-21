@@ -21,8 +21,6 @@ namespace EigenSinn {
 
   public:
     Linear(int _in_dim, int _out_dim) :
-      layer_output(1, _out_dim),
-      layer_grad_loss_by_input(1, _in_dim),
       layer_grad_loss_by_weight(_in_dim, _out_dim),
       weights(_in_dim, _out_dim),
       loss_by_bias_derivative(_out_dim),
@@ -40,9 +38,15 @@ namespace EigenSinn {
 
       int batch_size = broadcast_bias_dim[0] = prev_layer_tensor->dimension(0);
 
+      // resize the inputs for the right dimensions
+      if (!layer_output) {
+        layer_output.resize(batch_size, out_dim);
+        layer_grad_loss_by_input.resize(batch_size, in_dim);
+      }
+
       // dims: [N, D] * [D, M] -> [N, M]
       ProductDims prod_dims = { IndexPair<int>(1, 0) };
-
+      
       layer_output.view() = prev_layer_tensor->contract(*weights, prod_dims);
 
       // bias: [1, M]
