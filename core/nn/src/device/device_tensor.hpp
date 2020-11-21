@@ -64,16 +64,25 @@ namespace EigenSinn
         return *this;
       }
 
-      if (tensor_view) {
-        release();
-      }
+      release();
 
       tensor_view = d.tensor_view;
+      return *this;
     }
       
     explicit DeviceTensor(std::any any) 
       : DeviceTensor(from_any(any)) {
       
+    }
+
+    /// <summary>
+    /// Copy tensor from host
+    /// </summary>
+    /// <param name="t"></param>
+    /// <returns></returns>
+    DeviceTensor& operator=(const Tensor<Scalar, Rank, Layout>& t) {
+      set_from_host(t);
+      return *this;
     }
 
     /// <summary>

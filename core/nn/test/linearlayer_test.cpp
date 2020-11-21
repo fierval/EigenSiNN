@@ -24,14 +24,14 @@ namespace EigenSinnTest {
 
   TEST_F(FullyConnected, BackpropNoBias) {
 
-    Input<float, 2> input(cd.dims);
-    input.set_input(cd.linearInput.data());
+    Input<float, 2> input;
+    input.set_input(cd.linearInput);
 
     Linear<float> linear(cd.dims[1], cd.out_dims[1]);
 
     linear.init(cd.weights);
     linear.forward(input);
-    linear.backward(input, cd.fakeloss.data());
+    linear.backward(input, DeviceTensor<DefaultDevice, float, 2>(cd.fakeloss));
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.output, linear.get_output()));
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dinput, linear.get_loss_by_input_derivative()));
@@ -40,14 +40,14 @@ namespace EigenSinnTest {
 
   TEST_F(FullyConnected, BackpropBias) {
 
-    Input<float, 2> input(cd.dims);
-    input.set_input(cd.linearInput.data());
+    Input<float, 2> input;
+    input.set_input(cd.linearInput);
 
     Linear<float> linear(cd.dims[1], cd.out_dims[1]);
 
     linear.init(cd.weights, cd.bias);
     linear.forward(input);
-    linear.backward(input, cd.fakeloss.data());
+    linear.backward(input, DeviceTensor<DefaultDevice, float, 2>(cd.fakeloss));
 
     cd.output.setValues({ { 0.23947978,  1.57379603,  0.23219500,  0.99900943},
         { 1.11431766, -1.17991734, -0.41367567,  1.14438200},
@@ -65,9 +65,9 @@ namespace EigenSinnTest {
     Linear<float> linear(in_dim, 512);
 
     linear.init();
-    TensorMap<Tensor<float, 2>> weights(linear.get_weights(), vector2array<2>(linear.get_weight_dims()));
+    Tensor<float, 2> weights(DeviceTensor<DefaultDevice, float, 2>((linear.get_weights())).to_host());
     Tensor<float, 0> avg = weights.mean();
-    Tensor<float, 0> std = (weights - *(avg.data())).pow(2.).mean();
+    Tensor<float, 0> std = (weights - avg).pow(2.).mean();
 
     Tensor<float, 0> std_expected;
     std_expected.setConstant(1. / in_dim);

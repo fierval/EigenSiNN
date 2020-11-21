@@ -1,6 +1,6 @@
 #pragma once
 
-#include "opsbase.hpp"
+#include "device/device_tensor.hpp"
 
 namespace EigenSinn {
 
@@ -29,8 +29,8 @@ namespace EigenSinn {
 
   }
 
-  template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
-  inline Scalar * generate_xavier(array<Index, Rank> layer_dims, const Device_& device = DefaultDevice()) {
+  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  inline DeviceTensor<Device_, Scalar, Rank, Layout> generate_xavier(DSizes<Index, Rank> layer_dims) {
 
     assert(Rank == 2 || Rank == 4);
 
@@ -48,23 +48,10 @@ namespace EigenSinn {
       assert(false);
     }
 
-    Tensor<Scalar, Rank> weights(layer_dims);
+    DeviceTensor<Device_, Scalar, Rank, Layout> weights(layer_dims);
     weights.template setRandom<::internal::NormalRandomGenerator<Scalar>>();
 
-    if (std::is_same<Device_, GpuDevice>::value) {
-      std::unique_ptr<TensorMap<Tensor<Scalar, Rank>>> weights_gpu(to_gpu_tensor(weights));
-
-      weights_gpu->device(device) = std * (*weights_gpu);
-      return weights_gpu->data();
-    }
-    else {
-      weights.device(device) = std * weights;
-      Scalar* weights_data = (Scalar *)std::malloc(sizeof(Scalar) * weights.size());
-      assert(weights_data);
-
-      std::memcpy(weights_data, weights.data(), sizeof(Scalar) * weights.size());
-      return weights_data;
-    }
-
+    weights = std * weights;
+    return weights;
   }
 }
