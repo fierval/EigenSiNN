@@ -50,8 +50,7 @@ namespace EigenSinn {
       bias_broadcast = { dims[0], 1, dims[2], dims[3] };
 
       // one bias per filter
-      DeviceTensor<Device_, Scalar, 4, Layout> reshaped = bias->reshape(array<Index, 4>{ 1, kernel.dimension(0), 1, 1 });
-      layer_output.view() += reshaped->broadcast(bias_broadcast);
+      layer_output.view() += bias->reshape(array<Index, 4>{ 1, kernel.dimension(0), 1, 1 }).broadcast(bias_broadcast);
 
     }
 
