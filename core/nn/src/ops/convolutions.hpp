@@ -122,7 +122,7 @@ namespace EigenSinn {
       for (col = 0, starts[3] = 0; col < out_dims[3]; col += stride, batch++, starts[3] += stride) {
 
         DeviceTensor<Device_, Scalar, Rank, Layout> cur_slice(slice_dims);
-        cur_slice.device(device) = padded.slice(starts, offsets).eval().shuffle(shuffle_dims);
+        cur_slice.view() = padded->slice(starts, offsets).eval().shuffle(shuffle_dims);
 
         DeviceTensor<Device_, Scalar, 2, Layout> flat_slice(col_dim, padded.dimension(0));
         flat_slice = cur_slice->reshape(DSizes<Index, 2>{col_dim, padded.dimension(0)});
