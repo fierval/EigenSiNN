@@ -1,6 +1,6 @@
 #pragma once
 
-#include "opsbase.hpp"
+#include "device/device_tensor.hpp"
 
 #define MAX_PAD 1e6
 using namespace Eigen;
@@ -63,8 +63,8 @@ namespace EigenSinn {
 
   // NCHW format
   //TODO: support stride
-  template <typename Scalar, Index Rank = 4, typename Device_ = DefaultDevice>
-  inline Tensor<Scalar, Rank> convolve(const Tensor<Scalar, Rank>& input, Tensor<Scalar, Rank>& kernel, const Padding2D& padding, Index stride = 1, const Device_& device = DefaultDevice()) {
+  template <typename Scalar, Index Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  inline DeviceTensor<Device_, Scalar, 4, Layout> convolve(const DeviceTensor<Device_, Scalar, 4, Layout>& input, DeviceTensor<Device_, Scalar, 4, Layout>& kernel, const Padding2D& padding, Index stride = 1, const Device_& device = DefaultDevice()) {
 
     //dimensions involved in the convolution. Channel dimension is also involved.
     array<Index, 3> dims({ (int)ImageDims::channel, (int)ImageDims::height, (int)ImageDims::width });
@@ -73,14 +73,14 @@ namespace EigenSinn {
 
     // Pad if apropriate
     auto padded_dims = get_padded_input_dims(input, padding);
-    Tensor<Scalar, Rank> padded(padded_dims);
+    DeviceTensor<Device_, Scalar, 4, Layout> padded(padded_dims);
     padded.device(device) = input.pad(pad2dim(padding));
 
     // output dimensions
-    Tensor<Scalar, Rank>::Dimensions out_dims = get_output_dimensions(input, kernel, padding, stride);
+    DeviceTensor<Device_, Scalar, 4, Layout>::Dimensions out_dims = get_output_dimensions(input, kernel, padding, stride);
 
     // NCHW output tensor
-    Tensor<Scalar, Rank> output(out_dims);
+    DeviceTensor<Device_, Scalar, 4, Layout> output(out_dims);
 
     for (int i = 0; i < kernel.dimension((int)ImageDims::batch); i++) {
       // convolve on 3 dimensions and set the channel dimension of the entire batch
@@ -179,13 +179,14 @@ namespace EigenSinn {
   // final dimensions should be the same as those of FX in col form:
   // F: [Bf x C * Hf * Wf], X: [C * Hf * Wf x B * Ho * Wo] -> [Bf X B * Ho * Wo], 
   // Resulting unrolled dimensions: [B, Bf, Ho, Wo], Bf = new C
-  template <typename Scalar>
-  inline auto unfold_conv_res(Tensor<Scalar, 4> layer) {
+  template <typename Scalar, int Layout, typename Device_>
+  inline auto unfold_conv_res(const DeviceTensor<Device_, Scalar, 4, Layout>& layer) {
 
     auto dims = layer.dimensions();
     Index col_channels = dims[0] * dims[2] * dims[3]; // B * Ho * Wo
 
-    Tensor<Scalar, 2> flat_layer = layer.shuffle(array<Index, 4>{1, 0, 3, 2}).reshape(array<Index, 2>{dims[1], col_channels});
+    DeviceTensor<Device_, Scalar, 2, Layout> flat_layer;
+    flat_layer.view() = layer->shuffle(array<Index, 4>{1, 0, 3, 2}).reshape(array<Index, 2>{dims[1], col_channels});
     return flat_layer;
   }
 

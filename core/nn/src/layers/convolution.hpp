@@ -8,15 +8,14 @@ namespace EigenSinn {
 
   // REVIEW: Not implementing bias for now
   // Batch normalization layers can take care of bias
-  template <typename Scalar, typename Device_ = DefaultDevice>
-  class Conv2d : public LayerBase<Scalar, Device_> {
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  class Conv2d : public LayerBase<Scalar> {
 
   public:
 
     Conv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const Index _stride = 1,
       Dispatcher<Device_>& _device = LayerBase::default_dispatcher) :
-      LayerBase(_device)
-      , kernel(kernelDims)
+        kernel(kernelDims)
       , padding(_padding)
       , stride(_stride)
       , bias(kernelDims[0])
@@ -29,123 +28,93 @@ namespace EigenSinn {
     // Also strides and padding should be added
     void init() override {
 
-      set_bias_dims(std::vector<Index>(kernel.dimension(0)));
-      set_weight_dims(array2vector<4>(kernel.dimensions()));
-
       // Wrapping the pointer and moving it to the tensor keeping in mind the GPU device
-      Scalar * kernel_data = generate_xavier<Scalar, 4>(kernel.dimensions(), get_device());
-      TensorMap<Tensor<Scalar, 4>> kernel_view(kernel_data, kernel.dimensions());
-      kernel.device(get_device()) = kernel_view;
-
-      if (std::is_same<Device_, GpuDevice>::value) {
-        Tensor<Scalar, 1> bias_tensor(kernel.dimension(0));
-        bias_tensor.setZero();
-        Scalar* bias_ptr = to_device(bias_tensor);
-        TensorMap<Tensor<Scalar, 1>> bias_view(bias_ptr, bias.dimensions());
-        bias.device(get_device()) = bias_view;
-      }
-      else {
-        bias.setZero();
-      }
-
-#ifdef EIGEN_USE_GPU
-      if (std::is_same<Device_, GpuDevice>::value) {
-        cudaFree(kernel_data);
-      }
-      else
-#endif
-      {
-        std::free(kernel_data);
-      }
-
+      kernel = generate_xavier<Scalar, 4, Layout, Device_>(kernel.dimensions());
+      bias.setZero();
     }
 
     void init(const Tensor<Scalar, 4>& _weights) {
       init();
 
-      kernel.device(get_device()) = _weights;
+      kernel = _weights;
     }
 
-    void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
+    void forward(LayerBase<Scalar>& prev_layer_any) override {
 
-      TensorMap<Tensor<Scalar, 4>> prev_layer(prev_layer_any.get_output(), vector2array<4>(prev_layer_any.get_out_dims()));
+      DeviceTensor<Device_, Scalar, 4, Layout> prev_layer(prev_layer_any.get_output(), vector2array<4>(prev_layer_any.get_out_dims()));
 
-      if (are_dims_unset(prev_layer_any.get_out_dims()))
-      {
-        set_in_dims(prev_layer_any.get_out_dims());
-        auto _out_dims = get_output_dimensions<Scalar, 4>(prev_layer, kernel, padding, stride);
-        set_out_dims(array2vector<4>(_out_dims));
-      }
-
-      layer_output = convolve<Scalar, 4, Device_>(prev_layer, kernel, padding, stride, dispatcher.get_device());
-
+      layer_output = convolve<Scalar, 4, Device_, Layout, Device_>(prev_layer, kernel, padding, stride);
 
       //add bias to each channel
       auto dims = layer_output.dimensions();
       bias_broadcast = { dims[0], 1, dims[2], dims[3] };
 
       // one bias per filter
-      Tensor<Scalar, 4> reshaped = bias.reshape(array<Index, 4>{ 1, kernel.dimension(0), 1, 1 });
-      layer_output.device(dispatcher.get_device()) += reshaped.broadcast(bias_broadcast);
+      DeviceTensor<Device_, Scalar, 4, Layout> reshaped = bias->reshape(array<Index, 4>{ 1, kernel.dimension(0), 1, 1 });
+      layer_output.view() += reshaped->broadcast(bias_broadcast);
 
     }
 
-    void backward(LayerBase<Scalar, Device_>& prev_layer_any, Scalar * next_layer_grad_any) override {
+    void backward(LayerBase<Scalar>& prev_layer_any, std::any next_layer_grad_any) override {
 
-      TensorMap<Tensor<Scalar, 4>> prev_layer(prev_layer_any.get_output(), vector2array< 4>(in_dims));
-      TensorMap<Tensor<Scalar, 4>> next_layer_grad(next_layer_grad_any, vector2array< 4>(out_dims));
+      DeviceTensor<Device_, Scalar, 4, Layout> prev_layer(prev_layer_any.get_output());
+      DeviceTensor<Device_, Scalar, 4, Layout> next_layer_grad(next_layer_grad_any);
 
-      Tensor<Scalar, 2> dout = unfold_conv_res<Scalar>(next_layer_grad);
+      DeviceTensor<Device_, Scalar, 2, Layout> dout = unfold_conv_res<Scalar>(next_layer_grad);
 
       // flatten weights and kernel
-      Tensor<Scalar, 2> unf_kernel = unfold_kernel(kernel);
-      Tensor<Scalar, 2> x_col = im2col<Scalar, 4>(prev_layer, kernel.dimensions(), padding, stride, dispatcher.get_device());
+      DeviceTensor<Device_, Scalar, 2, Layout> unf_kernel = unfold_kernel(kernel);
+      DeviceTensor<Device_, Scalar, 2, Layout> x_col = im2col<Device_, Scalar, 4, Layout>(prev_layer, kernel.dimensions(), padding, stride);
 
       // dX: kernel.T * dout
       ProductDims prod_dims = { IndexPair<int>(0, 0) };
-      Tensor<Scalar, 2> dX_col(unf_kernel.dimension(1), dout.dimension(1));
-      dX_col = unf_kernel.contract(dout, prod_dims);
+      DeviceTensor<Device_, Scalar, 2, Layout>  dX_col(unf_kernel.dimension(1), dout.dimension(1));
+      dX_col = unf_kernel->contract(dout, prod_dims);
 
+      // dW: dout * x_col.T
       prod_dims = { IndexPair<int>(1, 1) };
-      Tensor<Scalar, 2> dW_col(dout.dimension(0), x_col.dimension(0));
-      dW_col = dout.contract(x_col, prod_dims);
+      DeviceTensor<Device_, Scalar, 2, Layout>  dW_col(dout.dimension(0), x_col.dimension(0));
+      dW_col = dout->contract(x_col, prod_dims);
 
       dX = col2im(dX_col, kernel.dimensions(), prev_layer.dimensions(), padding, stride);
       dW = fold_kernel(dW_col, kernel.dimensions());
 
       //bias
-      loss_by_bias_derivative.resize(next_layer_grad.dimension(1));
-      loss_by_bias_derivative.device(dispatcher.get_device()) = next_layer_grad.sum(array<Index, 3>{0, 2, 3});
+      if (!loss_by_bias_derivative) {
+        loss_by_bias_derivative.resize(next_layer_grad.dimension(1));
+      }
+
+      loss_by_bias_derivative.view() = next_layer_grad->sum(array<Index, 3>{0, 2, 3});
     }
 
-    Scalar * get_loss_by_input_derivative() override {
-      return dX.data();
+    std::any get_loss_by_input_derivative() override {
+      return dX;
     }
 
     // feed to optimizer
-    Scalar * get_loss_by_weights_derivative() override {
-      return dW.data();
+    std::any get_loss_by_weights_derivative() override {
+      return dW;
     }
 
-    Scalar * get_output() override {
-      return layer_output.data();
+    std::any get_output() override {
+      return layer_output;
     }
 
-    Scalar * get_weights() override {
-      return kernel.data();
+    std::any get_weights() override {
+      return kernel;
     }
 
-    Scalar * get_bias() override {
-      return bias.data();
+    std::any get_bias() override {
+      return bias;
     }
 
-    Scalar * get_loss_by_bias_derivative() override {
-      return loss_by_bias_derivative.data();
+    std::any get_loss_by_bias_derivative() override {
+      return loss_by_bias_derivative;
     }
 
   private:
-    Tensor<Scalar, 4> kernel, layer_output, dX, dW;
-    Tensor<Scalar, 1> bias, loss_by_bias_derivative;
+    DeviceTensor<Device_, Scalar, 4, Layout> kernel, layer_output, dX, dW;
+    DeviceTensor<Device_, Scalar, 1, Layout> bias, loss_by_bias_derivative;
 
     const Index stride;
     const Padding2D padding;

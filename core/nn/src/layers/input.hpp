@@ -7,7 +7,7 @@ using std::unique_ptr;
 
 namespace EigenSinn {
 
-  template<typename Scalar, Index Rank, typename Device_ = DefaultDevice>
+  template<typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
   class Input : public LayerBase<Scalar> {
 
   public:
@@ -25,7 +25,7 @@ namespace EigenSinn {
     /// </summary>
     /// <param name="inp_tensor">input data tensor</param>
     /// <param name= "move_to_device">whether to move the original memory to device before setting</param>
-    void set_input(const Tensor<Scalar, Rank>& inp_tensor) {
+    void set_input(const Tensor<Scalar, Rank, Layout>& inp_tensor) {
 
       input.set_from_host(inp_tensor);
     }
@@ -36,6 +36,6 @@ namespace EigenSinn {
 
   private:
 
-    DeviceTensor<Device_, Scalar, Rank> input;
+    DeviceTensor<Device_, Scalar, Rank, Layout> input;
   };
 }
