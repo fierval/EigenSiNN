@@ -95,20 +95,14 @@ namespace EigenSinn {
   inline auto im2col(const DeviceTensor<Device_, Scalar, Rank, Layout>& input, const DSizes<Index, 4>& kernel_dims, const Padding2D& padding, Index stride = 1) {
 
     auto out_dims = get_output_dimensions(input, kernel_dims, padding, stride);
-
-    auto col_dim = kernel_dims[1] * kernel_dims[2] * kernel_dims[3];
-    array<Index, Rank> starts = { 0, 0, 0, 0 };
-    array<Index, Rank> offsets = { input.dimension(0), kernel_dims[1], kernel_dims[2], kernel_dims[3] };
-
-    array<Index, Rank> slice_dims = { kernel_dims[3], kernel_dims[2], kernel_dims[1], input.dimension(0) };
-
     // pad the tensor before we convolve
     DeviceTensor<Device_, Scalar, 4, Layout> padded = input.pad(pad2dim(padding));
 
-    // we want to take advantage of flattening but
-    // our tensors are stored in row-major order.
-    // we need to flatten as if it's col-major
-    array<int, 4> shuffle_dims = { 3, 2, 1, 0 };
+    auto col_dim = kernel_dims[1] * kernel_dims[2] * kernel_dims[3];
+    array<Index, Rank> starts = { 0, 0, 0, 0 };
+    array<Index, Rank> offsets = { padded.dimension(0), kernel_dims[1], kernel_dims[2], kernel_dims[3] };
+
+    array<Index, Rank> slice_dims = { kernel_dims[3], kernel_dims[2], kernel_dims[1], input.dimension(0) };
 
     // output second dimension is 
     // batch_size (input dim[0]) * how_many_convolution_locations there are
@@ -116,19 +110,21 @@ namespace EigenSinn {
 
     DeviceTensor<Device_, Scalar, 2, Layout> output(col_dim, input.dimension(0) * conv_locations);
 
-    // "move" the kernel along the batch and convert
-    Index col, row, batch = 0;
-    for (row = 0, starts[2] = 0; row < out_dims[2]; row += stride, starts[2] += stride) {
-      for (col = 0, starts[3] = 0; col < out_dims[3]; col += stride, batch++, starts[3] += stride) {
+    // "move" along axis 1 (columns) and append converted portions.
+    // each converted portion is a a batch of would-be convolution operations
+    Index converted_portion = 0;
+    for (starts[2] = 0; starts[2] < padded.dimension(2); starts[2] += stride) {
+      for (starts[3] = 0; starts[3] < padded.dimension(3); converted_portion++, starts[3] += stride) {
 
         DeviceTensor<Device_, Scalar, Rank, Layout> cur_slice(slice_dims);
-        cur_slice.view() = padded->slice(starts, offsets).eval().shuffle(shuffle_dims);
+        cur_slice.view() = padded->slice(starts, offsets);
 
         DeviceTensor<Device_, Scalar, 2, Layout> flat_slice(col_dim, padded.dimension(0));
         flat_slice = cur_slice->reshape(DSizes<Index, 2>{col_dim, padded.dimension(0)});
 
-        int shift = batch * flat_slice.dimension(1);
+        int shift = converted_portion * flat_slice.dimension(1);
         for (Index i = 0; i < flat_slice.dimension(1); i++) {
+          // REVIEW: This needs to be properly expressed through the DeviceTensor object
           output->chip(shift + i, 1).device(output.get_device()) = flat_slice->chip(i, 1);
         }
       }
