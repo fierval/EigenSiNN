@@ -59,7 +59,7 @@ namespace EigenSinn {
       DeviceTensor<Device_, Scalar, 4, Layout> prev_layer(prev_layer_any.get_output());
       DeviceTensor<Device_, Scalar, 4, Layout> next_layer_grad(next_layer_grad_any);
 
-      DeviceTensor<Device_, Scalar, 2, Layout> dout = unfold_conv_res<Scalar>(next_layer_grad);
+      DeviceTensor<Device_, Scalar, 2, Layout> dout = unfold_conv_res<Scalar, Layout, Device_>(next_layer_grad);
 
       // flatten weights and kernel
       DeviceTensor<Device_, Scalar, 2, Layout> unf_kernel = unfold_kernel(kernel);
