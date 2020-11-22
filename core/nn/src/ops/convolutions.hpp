@@ -91,8 +91,8 @@ namespace EigenSinn {
   }
 
   // NCHW format, col-major storage order
-  template <typename Scalar, Index Rank = 4, typename Device_ = DefaultDevice>
-  inline auto im2col(const Tensor<Scalar, Rank>& input, const DSizes<Index, 4>& kernel_dims, const Padding2D& padding, Index stride = 1, const Device_& device = DefaultDevice()) {
+  template <typename Scalar, Index Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  inline auto im2col(const DeviceTensor<Device_, Scalar, Rank, Layout>& input, const DSizes<Index, 4>& kernel_dims, const Padding2D& padding, Index stride = 1) {
 
     auto out_dims = get_output_dimensions(input, kernel_dims, padding, stride);
 
@@ -103,7 +103,7 @@ namespace EigenSinn {
     array<Index, Rank> slice_dims = { kernel_dims[3], kernel_dims[2], kernel_dims[1], input.dimension(0) };
 
     // pad the tensor before we convolve
-    Tensor<Scalar, 4> padded = input.pad(pad2dim(padding));
+    DeviceTensor<Device_, Scalar, 4, Layout> padded = input.pad(pad2dim(padding));
 
     // we want to take advantage of flattening but
     // our tensors are stored in row-major order.
@@ -114,32 +114,22 @@ namespace EigenSinn {
     // batch_size (input dim[0]) * how_many_convolution_locations there are
     int conv_locations = out_dims[3] * out_dims[2] / (stride * stride);
 
-    Tensor<Scalar, 2> output(col_dim, input.dimension(0) * conv_locations);
+    DeviceTensor<Device_, Scalar, 2, Layout> output(col_dim, input.dimension(0) * conv_locations);
 
     // "move" the kernel along the batch and convert
     Index col, row, batch = 0;
     for (row = 0, starts[2] = 0; row < out_dims[2]; row += stride, starts[2] += stride) {
       for (col = 0, starts[3] = 0; col < out_dims[3]; col += stride, batch++, starts[3] += stride) {
 
-        Tensor<Scalar, Rank> cur_slice(slice_dims);
+        DeviceTensor<Device_, Scalar, Rank, Layout> cur_slice(slice_dims);
         cur_slice.device(device) = padded.slice(starts, offsets).eval().shuffle(shuffle_dims);
 
-        TensorMap<Tensor<Scalar, 2>> flat_slice(cur_slice.data(), col_dim, padded.dimension(0));
+        DeviceTensor<Device_, Scalar, 2, Layout> flat_slice(col_dim, padded.dimension(0));
+        flat_slice = cur_slice->reshape(DSizes<Index, 2>{col_dim, padded.dimension(0)});
 
-        // concatenate takes 98% of time
-#ifdef _LOWPERF
-        if (col == 0 && row == 0) {
-          output = flat_slice;
-          continue;
-        }
-
-        Tensor<Scalar, 2> tmp = output;
-        tmp = output.concatenate(flat_slice, 1);
-        output = tmp;
-#endif
         int shift = batch * flat_slice.dimension(1);
         for (Index i = 0; i < flat_slice.dimension(1); i++) {
-          output.chip(shift + i, 1).device(device) = flat_slice.chip(i, 1);
+          output->chip(shift + i, 1).device(output.get_device()) = flat_slice->chip(i, 1);
         }
       }
 
@@ -149,7 +139,7 @@ namespace EigenSinn {
 
   // return kernel representation for GEMM with 
   // im2col representation of the conv layer
-  template <typename Scalar, int Layout, typename Device_>
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
   inline auto unfold_kernel(DeviceTensor<Device_, Scalar, 4, Layout>& kernel) {
 
     auto dims = kernel.dimensions();
@@ -161,7 +151,7 @@ namespace EigenSinn {
   }
 
   // convert back to the [b, c, h, w] kernel representation
-  template <typename Scalar, int Layout, typename Device_>
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
   inline auto fold_kernel(DeviceTensor<Device_, Scalar, 2, Layout>& kernel_col, const array<Index, 4>& expected_dims) {
 
     assert(expected_dims[0] == kernel_col.dimension(0));
@@ -179,7 +169,7 @@ namespace EigenSinn {
   // final dimensions should be the same as those of FX in col form:
   // F: [Bf x C * Hf * Wf], X: [C * Hf * Wf x B * Ho * Wo] -> [Bf X B * Ho * Wo], 
   // Resulting unrolled dimensions: [B, Bf, Ho, Wo], Bf = new C
-  template <typename Scalar, int Layout, typename Device_>
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
   inline auto unfold_conv_res(const DeviceTensor<Device_, Scalar, 4, Layout>& layer) {
 
     auto dims = layer.dimensions();
@@ -195,13 +185,14 @@ namespace EigenSinn {
   // assuming we have just performed a convolution operation.
   // e.g. t (*) k = r, t: [2, 3, 4, 4], k: [5, 3, 3, 3], r: [2, 5, 2, 2]
   // r in im2col form will be [5, 8]
-  template <typename Scalar>
-  inline auto fold_conv_res(const Tensor<Scalar, 2>& conv_res, const array<Index, 4>& expected_dims) {
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  inline auto fold_conv_res(const DeviceTensor<Device_, Scalar, 2, Layout>& conv_res, const array<Index, 4>& expected_dims) {
 
     assert(expected_dims[1] == conv_res.dimension(0));
     assert(expected_dims[0] * expected_dims[2] * expected_dims[3] == conv_res.dimension(1));
 
-    Tensor<Scalar, 4> out = conv_res.reshape(array<Index, 4>{ expected_dims[1], expected_dims[0], expected_dims[3], expected_dims[2] }).shuffle(array<Index, 4>{1, 0, 3, 2});
+    DeviceTensor<Device_, Scalar, 4, Layout> out(expected_dims);
+    out = conv_res->reshape(array<Index, 4>{ expected_dims[1], expected_dims[0], expected_dims[3], expected_dims[2] }).shuffle(array<Index, 4>{1, 0, 3, 2});
     return out;
   }
 
@@ -209,8 +200,8 @@ namespace EigenSinn {
   // Used to fold the backward pass result of dX/dL. 
   // We still slide the kernel window over the 2d representation, 
   // Adding contributions of each folded slice to the result
-  template <typename Scalar, typename Device_ = DefaultDevice>
-  inline auto col2im(const Tensor<Scalar, 2>& col,
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  inline auto col2im(const DeviceTensor<Device_, Scalar, 2, Layout>& col,
     const array<Index, 4>& kernel_dims,
     const array<Index, 4> orig_dims,
     const Padding2D& padding,
@@ -223,14 +214,14 @@ namespace EigenSinn {
       batch_size = orig_dims[0];
 
     array<Index, 2> col_dims = col.dimensions();
-    Tensor<Scalar, 4> out(batch_size, channels, height, width);
+    DeviceTensor<Device_, Scalar, 4, Layout> out(batch_size, channels, height, width);
     out.setZero();
 
     Index out_w = 0, out_h = 0;
     array<Index, 2> slice_starts = { 0, 0 };
     array<Index, 2> slice_offsets = { col.dimension(0), batch_size };
     array<Index, 4> rev_shape = { kernel_dims[3], kernel_dims[2], kernel_dims[1], batch_size };
-    Tensor<Scalar, 4> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[2]);
+    DeviceTensor<Device_, Scalar, 4, Layout> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[3]);
 
     // loop over col's batch size at a time
       // figure where it goes into the output
@@ -239,14 +230,13 @@ namespace EigenSinn {
     // unpad with slice
     for (Index i = 0; i < col_dims[1] / batch_size; i++, slice_starts[1] += batch_size) {
 
-      slice.device(device) = col.slice(slice_starts, slice_offsets)
-        .eval().reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
+      slice.view() = col->slice(slice_starts, slice_offsets).eval().reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
 
       for (Index b = 0; b < batch_size; b++) {
         for (Index c = 0; c < channels; c++) {
           for (Index h = 0; h < kernel_dims[2]; h++) {
             for (Index w = 0; w < kernel_dims[3]; w++) {
-              out(b, c, h + out_h, w + out_w) += slice(b, c, h, w);
+              out->operator()(b, c, h + out_h, w + out_w) += slice->operator()(b, c, h, w);
             }
           }
         }
@@ -262,7 +252,8 @@ namespace EigenSinn {
     //unpad
     array<Index, 4> unpad_starts = { 0, 0, padding.first, padding.second };
     array<Index, 4> unpad_offsets = { out.dimension(0), out.dimension(1), orig_dims[2], orig_dims[3] };
-    Tensor<Scalar, 4> output = out.slice(unpad_starts, unpad_offsets);
+    DeviceTensor<Device_, Scalar, 4, Layout> output(unpad_offsets);
+    output.view() = out->slice(unpad_starts, unpad_offsets);
     return output;
   }
 

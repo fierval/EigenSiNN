@@ -13,9 +13,8 @@ namespace EigenSinn {
 
   public:
 
-    Conv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const Index _stride = 1,
-      Dispatcher<Device_>& _device = LayerBase::default_dispatcher) :
-        kernel(kernelDims)
+    Conv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const Index _stride = 1) 
+      :  kernel(kernelDims)
       , padding(_padding)
       , stride(_stride)
       , bias(kernelDims[0])

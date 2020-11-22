@@ -27,8 +27,8 @@ namespace EigenSinnTest {
   
   TEST_F(Convolution, ForwardIm2Col) {
 
-    Input<float, 4> input(cd.convInput.dimensions());
-    input.set_input(cd.convInput.data());
+    Input<float, 4> input;
+    input.set_input(cd.convInput);
 
     Conv2d<float> conv2d(cd.kernelDims);
 
@@ -38,7 +38,7 @@ namespace EigenSinnTest {
 
     // perform convolutiion with GEMM using im2col
     auto col_inputs = im2col(cd.convInput, cd.convWeights.dimensions(), padding);
-    auto unf_kernel = unfold_kernel(cd.convWeights);
+    auto unf_kernel = unfold_kernel<float>(cd.convWeights);
 
     ProductDims prod_dims = { IndexPair<int>(1, 0) };
     Tensor<float, 2> res = unf_kernel.contract(col_inputs, prod_dims);
