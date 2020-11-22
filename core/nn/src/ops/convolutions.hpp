@@ -20,8 +20,8 @@ namespace EigenSinn {
     return paddings;
   }
 
-  template <typename Scalar, Index Rank>
-  inline array<Index, Rank> get_padded_input_dims(const Tensor<Scalar, Rank>& t, const Padding2D& pad2d) {
+  template <typename Scalar, Index Rank, int Layout=ColMajor>
+  inline array<Index, Rank> get_padded_input_dims(const TensorView<Scalar, Rank, Layout>& t, const Padding2D& pad2d) {
     array<Index, Rank> out({ t.dimension(0), t.dimension(1), t.dimension(2) + 2 * pad2d.first, t.dimension(3) + 2 * pad2d.second });
     return out;
   }
@@ -30,8 +30,8 @@ namespace EigenSinn {
     return pad2dim(pad2d.first, pad2d.second, pad2d.first, pad2d.second);
   }
 
-  template <typename Scalar, Index Rank = 4>
-  inline auto get_output_dimensions(const Tensor<Scalar, Rank>& input, const array<Index, Rank> kernel_dims, const Padding2D& padding, const Index stride = 1) {
+  template <typename Scalar, Index Rank = 4, int Layout = ColMajor>
+  inline auto get_output_dimensions(const TensorView<Scalar, Rank, Layout>& input, const array<Index, Rank> kernel_dims, const Padding2D& padding, const Index stride = 1) {
 
     assert(kernel_dims[(int)ImageDims::channel] == input.dimension((int)ImageDims::channel));
     assert(kernel_dims[(int)ImageDims::height] > 0 && kernel_dims[(int)ImageDims::width] > 0);
@@ -55,8 +55,8 @@ namespace EigenSinn {
   }
 
   // output dimensions for a convolution with constant padding
-  template <typename Scalar, Index Rank = 4>
-  inline auto get_output_dimensions(const Tensor<Scalar, Rank>& input, const Tensor<Scalar, Rank>& kernel, const Padding2D& padding, const Index stride = 1) {
+  template <typename Scalar, Index Rank = 4, int Layout = ColMajor>
+  inline auto get_output_dimensions(const TensorView<Scalar, Rank, Layout>& input, const TensorView<Scalar, Rank, Layout>& kernel, const Padding2D& padding, const Index stride = 1) {
 
     return get_output_dimensions(input, kernel.dimensions(), padding, stride);
   }
@@ -64,7 +64,8 @@ namespace EigenSinn {
   // NCHW format
   //TODO: support stride
   template <typename Scalar, Index Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
-  inline DeviceTensor<Device_, Scalar, 4, Layout> convolve(const DeviceTensor<Device_, Scalar, 4, Layout>& input, DeviceTensor<Device_, Scalar, 4, Layout>& kernel, const Padding2D& padding, Index stride = 1, const Device_& device = DefaultDevice()) {
+  inline DeviceTensor<Device_, Scalar, 4, Layout> convolve(const DeviceTensor<Device_, Scalar, 4, Layout>& input, 
+    DeviceTensor<Device_, Scalar, 4, Layout>& kernel, const Padding2D& padding, Index stride = 1) {
 
     //dimensions involved in the convolution. Channel dimension is also involved.
     array<Index, 3> dims({ (int)ImageDims::channel, (int)ImageDims::height, (int)ImageDims::width });
@@ -72,29 +73,29 @@ namespace EigenSinn {
     assert(input.dimension((int)ImageDims::channel) == kernel.dimension((int)ImageDims::channel));
 
     // Pad if apropriate
-    auto padded_dims = get_padded_input_dims(input, padding);
+    auto padded_dims = get_padded_input_dims(*input, padding);
     DeviceTensor<Device_, Scalar, 4, Layout> padded(padded_dims);
-    padded.device(device) = input.pad(pad2dim(padding));
+    padded.view() = input->pad(pad2dim(padding));
 
     // output dimensions
-    DeviceTensor<Device_, Scalar, 4, Layout>::Dimensions out_dims = get_output_dimensions(input, kernel, padding, stride);
+    DSizes<Index, Rank> out_dims = get_output_dimensions(*input, *kernel, padding, stride);
 
     // NCHW output tensor
     DeviceTensor<Device_, Scalar, 4, Layout> output(out_dims);
 
     for (int i = 0; i < kernel.dimension((int)ImageDims::batch); i++) {
       // convolve on 3 dimensions and set the channel dimension of the entire batch
-      output.chip(i, (int)ImageDims::channel).device(device) = padded.convolve(kernel.chip(i, (int)ImageDims::batch), dims).chip(0, (int)ImageDims::channel);
+      output->chip(i, (int)ImageDims::channel).device(device) = padded->convolve(kernel->chip(i, (int)ImageDims::batch), dims).chip(0, (int)ImageDims::channel);
     }
 
     return output;
   }
 
-  // NCHW format, col-major storage order
+  // NCHW format
   template <typename Scalar, Index Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
   inline auto im2col(const DeviceTensor<Device_, Scalar, Rank, Layout>& input, const DSizes<Index, 4>& kernel_dims, const Padding2D& padding, Index stride = 1) {
 
-    auto out_dims = get_output_dimensions(input, kernel_dims, padding, stride);
+    auto out_dims = get_output_dimensions(*input, kernel_dims, padding, stride);
     // pad the tensor before we convolve
     DeviceTensor<Device_, Scalar, 4, Layout> padded = input.pad(pad2dim(padding));
 
