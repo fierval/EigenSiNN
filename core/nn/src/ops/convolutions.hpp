@@ -36,7 +36,7 @@ namespace EigenSinn {
     assert(kernel_dims[(int)ImageDims::channel] == input.dimension((int)ImageDims::channel));
     assert(kernel_dims[(int)ImageDims::height] > 0 && kernel_dims[(int)ImageDims::width] > 0);
 
-    Tensor<Scalar, Rank>::Dimensions out_dims;
+    DSizes<Scalar, Rank> out_dims;
 
     Index pad_height = 2 * padding.first;
     Index pad_width = 2 * padding.second;
@@ -92,8 +92,8 @@ namespace EigenSinn {
   }
 
   // NCHW format
-  template <typename Scalar, Index Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
-  inline auto im2col(const DeviceTensor<Device_, Scalar, Rank, Layout>& input, const DSizes<Index, 4>& kernel_dims, const Padding2D& padding, Index stride = 1) {
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  inline auto im2col(const DeviceTensor<Device_, Scalar, 4, Layout>& input, const DSizes<Index, 4>& kernel_dims, const Padding2D& padding, Index stride = 1) {
 
     auto out_dims = get_output_dimensions(*input, kernel_dims, padding, stride);
     // pad the tensor before we convolve
@@ -117,7 +117,7 @@ namespace EigenSinn {
     for (starts[2] = 0; starts[2] < padded.dimension(2); starts[2] += stride) {
       for (starts[3] = 0; starts[3] < padded.dimension(3); converted_portion++, starts[3] += stride) {
 
-        DeviceTensor<Device_, Scalar, Rank, Layout> cur_slice(slice_dims);
+        DeviceTensor<Device_, Scalar, 4, Layout> cur_slice(slice_dims);
         cur_slice.view() = padded->slice(starts, offsets);
 
         DeviceTensor<Device_, Scalar, 2, Layout> flat_slice(col_dim, padded.dimension(0));
