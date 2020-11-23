@@ -94,38 +94,45 @@ namespace EigenSinnTest {
 
   TEST_F(Convolution, im2col) {
 
-    auto output = im2col(cd.convInput, cd.convWeights.dimensions(), { 0, 0 });
-    EXPECT_TRUE(is_elementwise_approx_eq(output, cd.convInputUnrolledPad0Stride1));
+    auto convInput = DeviceTensor<DefaultDevice, float, 4>(cd.convInput);
+    auto convWeights = DeviceTensor<DefaultDevice, float, 4>(cd.convWeights);
+
+    auto output = im2col(convInput, convWeights.dimensions(), { 0, 0 });
+    EXPECT_TRUE(is_elementwise_approx_eq(output.to_host(), cd.convInputUnrolledPad0Stride1));
   }
 
   TEST_F(Convolution, unfold_kernel) {
 
-    auto unf_kernel = unfold_kernel(cd.convWeights);
+    auto convWeights = DeviceTensor<DefaultDevice, float, 4>(cd.convWeights);
+
+    auto unf_kernel = unfold_kernel(convWeights);
     auto folded_kernel = fold_kernel(unf_kernel, cd.kernelDims);
 
-    EXPECT_TRUE(is_elementwise_approx_eq(cd.convWeightsFlat, unf_kernel));
-    EXPECT_TRUE(is_elementwise_approx_eq(folded_kernel, cd.convWeights));
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.convWeightsFlat, unf_kernel.to_host()));
+    EXPECT_TRUE(is_elementwise_approx_eq(folded_kernel.to_host(), cd.convWeights));
   }
 
   TEST_F(Convolution, Backward1Padding) {
 
-    Input<float, 4> input(cd.convInput.dimensions());
-    input.set_input(cd.convInput.data());
+    Input<float, 4> input;
+    input.set_input(cd.convInput);
 
     Conv2d<float> conv2d(cd.kernelDims, { 1, 1 });
 
     conv2d.init(cd.convWeights);
     conv2d.forward(input);
 
-    conv2d.backward(input, cd1p.convLoss.data());
+    auto cd1pConvLoss = DeviceTensor<DefaultDevice, float, 4>(cd1p.convLoss);
+    conv2d.backward(input, cd1pConvLoss);
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd1p.dinput, conv2d.get_loss_by_input_derivative()));
     EXPECT_TRUE(is_elementwise_approx_eq(cd1p.dweight, conv2d.get_loss_by_weights_derivative()));
   }
 
   TEST_F(Convolution, FoldUnfold) {
-    auto unf_fold = fold_conv_res(unfold_conv_res(cd.output), cd.output.dimensions());
+    auto output = DeviceTensor<DefaultDevice, float, 4>(cd.output);
+    auto unf_fold = fold_conv_res(unfold_conv_res(output), output.dimensions());
 
-    EXPECT_TRUE(is_elementwise_approx_eq(cd.output, unf_fold));
+    EXPECT_TRUE(is_elementwise_approx_eq(output, unf_fold));
   }
 }
