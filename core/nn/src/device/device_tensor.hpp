@@ -245,11 +245,11 @@ namespace EigenSinn
     }
 
     // access
-    TensorView<Scalar, Rank, Layout>& operator* () {
+    TensorView<Scalar, Rank, Layout>& operator* () const {
       return *tensor_view;
     }
 
-    TensorView<Scalar, Rank, Layout>* operator-> () {
+    TensorView<Scalar, Rank, Layout>* operator-> () const {
       return tensor_view.operator->();
     }
 
@@ -265,7 +265,7 @@ namespace EigenSinn
       return tensor_view->dimensions();
     }
 
-    const Index dimension(Index i) {
+    Index dimension(Index i) const {
       return tensor_view->dimension(i);
     }
 

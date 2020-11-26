@@ -44,7 +44,7 @@ namespace EigenSinnTest {
 
     ProductDims prod_dims = { IndexPair<int>(1, 0) };
     DeviceTensor<DefaultDevice, float, 2> res(unf_kernel.dimension(0), col_inputs.dimension(1));
-    res.view() = unf_kernel->contract(col_inputs, prod_dims);
+    res.view() = unf_kernel->contract(*col_inputs, prod_dims);
 
     auto conv_res = fold_conv_res(res, cd.convOutDims);
     auto unf_res = unfold_conv_res(conv_res);
@@ -84,7 +84,7 @@ namespace EigenSinnTest {
     avg.view() = weights->mean();
 
     DeviceTensor<DefaultDevice, float, 0> var;
-    var.view() = (weights - avg->operator()(0))->pow(2.).mean();
+    var.view() = (weights - avg.to_host()(0))->pow(2.).mean();
 
     Tensor<float, 0> var_expected;
     var_expected.setConstant(1. / (kdims[1] * kdims[2] * kdims[3]));

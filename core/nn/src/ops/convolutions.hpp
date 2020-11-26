@@ -36,7 +36,7 @@ namespace EigenSinn {
     assert(kernel_dims[(int)ImageDims::channel] == input.dimension((int)ImageDims::channel));
     assert(kernel_dims[(int)ImageDims::height] > 0 && kernel_dims[(int)ImageDims::width] > 0);
 
-    DSizes<Scalar, Rank> out_dims;
+    DSizes<Index, Rank> out_dims;
 
     Index pad_height = 2 * padding.first;
     Index pad_width = 2 * padding.second;
@@ -85,21 +85,22 @@ namespace EigenSinn {
 
     for (int i = 0; i < kernel.dimension((int)ImageDims::batch); i++) {
       // convolve on 3 dimensions and set the channel dimension of the entire batch
-      output->chip(i, (int)ImageDims::channel).device(device) = padded->convolve(kernel->chip(i, (int)ImageDims::batch), dims).chip(0, (int)ImageDims::channel);
+      output->chip(i, (int)ImageDims::channel).device(output.get_device()) = padded->convolve(kernel->chip(i, (int)ImageDims::batch), dims).chip(0, (int)ImageDims::channel);
     }
 
     return output;
   }
 
   // NCHW format
-  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
-  inline auto im2col(const DeviceTensor<Device_, Scalar, 4, Layout>& input, const DSizes<Index, 4>& kernel_dims, const Padding2D& padding, Index stride = 1) {
+  template <typename Scalar, int Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  inline auto im2col(const DeviceTensor<Device_, Scalar, Rank, Layout>& input, const DSizes<Index, Rank>& kernel_dims, const Padding2D& padding, Index stride = 1) {
 
-    auto out_dims = get_output_dimensions(*input, kernel_dims, padding, stride);
+    auto out_dims = get_output_dimensions( *input, kernel_dims, padding, stride);
     // pad the tensor before we convolve
-    DeviceTensor<Device_, Scalar, 4, Layout> padded = input.pad(pad2dim(padding));
+    DeviceTensor<Device_, Scalar, 4, Layout> padded(out_dims);
+    padded.view() = input->pad(pad2dim(padding));
 
-    auto col_dim = kernel_dims[1] * kernel_dims[2] * kernel_dims[3];
+    Index col_dim = kernel_dims[1] * kernel_dims[2] * kernel_dims[3];
     array<Index, Rank> starts = { 0, 0, 0, 0 };
     array<Index, Rank> offsets = { padded.dimension(0), kernel_dims[1], kernel_dims[2], kernel_dims[3] };
 
@@ -121,7 +122,7 @@ namespace EigenSinn {
         cur_slice.view() = padded->slice(starts, offsets);
 
         DeviceTensor<Device_, Scalar, 2, Layout> flat_slice(col_dim, padded.dimension(0));
-        flat_slice = cur_slice->reshape(DSizes<Index, 2>{col_dim, padded.dimension(0)});
+        flat_slice.view() = cur_slice->reshape(DSizes<Index, 2>{col_dim, padded.dimension(0)});
 
         int shift = converted_portion * flat_slice.dimension(1);
         for (Index i = 0; i < flat_slice.dimension(1); i++) {
@@ -189,7 +190,7 @@ namespace EigenSinn {
     assert(expected_dims[0] * expected_dims[2] * expected_dims[3] == conv_res.dimension(1));
 
     DeviceTensor<Device_, Scalar, 4, Layout> out(expected_dims);
-    out = conv_res->reshape(array<Index, 4>{ expected_dims[1], expected_dims[0], expected_dims[3], expected_dims[2] }).shuffle(array<Index, 4>{1, 0, 3, 2});
+    out.view() = conv_res->reshape(array<Index, 4>{ expected_dims[1], expected_dims[0], expected_dims[3], expected_dims[2] }).shuffle(array<Index, 4>{1, 0, 3, 2});
     return out;
   }
 
