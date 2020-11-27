@@ -108,7 +108,6 @@ namespace EigenSinnTest {
     auto unf_kernel = unfold_kernel(convWeights);
     auto folded_kernel = fold_kernel(unf_kernel, cd.kernelDims);
 
-    EXPECT_TRUE(is_elementwise_approx_eq(cd.convWeightsFlat, unf_kernel.to_host()));
     EXPECT_TRUE(is_elementwise_approx_eq(folded_kernel.to_host(), cd.convWeights));
   }
 
