@@ -173,7 +173,7 @@ namespace EigenSinn {
     Index col_channels = dims[0] * dims[2] * dims[3]; // B * Ho * Wo
 
     DeviceTensor<Device_, Scalar, 2, Layout> flat_layer(dims[1], col_channels);
-    flat_layer.view() = layer->shuffle(array<Index, 4>{1, 0, 3, 2}).reshape(array<Index, 2>{dims[1], col_channels});
+    flat_layer.view() = layer->shuffle(array<Index, 4>{1, 0, 2, 3}).reshape(array<Index, 2>{dims[1], col_channels});
     return flat_layer;
   }
 
@@ -189,7 +189,7 @@ namespace EigenSinn {
     assert(expected_dims[0] * expected_dims[2] * expected_dims[3] == conv_res.dimension(1));
 
     DeviceTensor<Device_, Scalar, 4, Layout> out(expected_dims);
-    out.view() = conv_res->reshape(array<Index, 4>{ expected_dims[1], expected_dims[0], expected_dims[3], expected_dims[2] }).shuffle(array<Index, 4>{1, 0, 3, 2});
+    out.view() = conv_res->reshape(array<Index, 4>{ expected_dims[1], expected_dims[0], expected_dims[2], expected_dims[3] }).shuffle(array<Index, 4>{1, 0, 2, 3});
     return out;
   }
 
@@ -200,9 +200,9 @@ namespace EigenSinn {
   template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
   inline auto col2im(const DeviceTensor<Device_, Scalar, 2, Layout>& col,
     const array<Index, 4>& kernel_dims,
-    const array<Index, 4> orig_dims,
+    const array<Index, 4>& orig_dims,
     const Padding2D& padding,
-    int stride = 1, const Device_& device = DefaultDevice()) {
+    int stride = 1) {
 
     // intermediate output: original dimensions padded
     Index channels = kernel_dims[1],
@@ -227,7 +227,7 @@ namespace EigenSinn {
     // unpad with slice
     for (Index i = 0; i < col_dims[1] / batch_size; i++, slice_starts[1] += batch_size) {
 
-      slice.view() = col->slice(slice_starts, slice_offsets).eval().reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
+      slice.view() = col->slice(slice_starts, slice_offsets).eval().reshape(rev_shape);
 
       for (Index b = 0; b < batch_size; b++) {
         for (Index c = 0; c < channels; c++) {
