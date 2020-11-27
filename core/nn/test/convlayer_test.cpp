@@ -64,6 +64,10 @@ namespace EigenSinnTest {
 
     conv2d.init(cd.convWeights);
     conv2d.forward(input);
+    
+    auto exp_output = DeviceTensor<DefaultDevice, float, 4>(cd.output);
+    EXPECT_TRUE(is_elementwise_approx_eq(exp_output, conv2d.get_output()));
+
     conv2d.backward(input, DeviceTensor<DefaultDevice, float, 4>(cd.convLoss));
 
     auto exp_dinput = DeviceTensor<DefaultDevice, float, 4>(cd.dinput);
