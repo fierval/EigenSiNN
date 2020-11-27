@@ -82,16 +82,14 @@ namespace EigenSinnTest {
     conv2d.init();
     DeviceTensor<DefaultDevice, float, 4> weights(conv2d.get_weights());
 
-    DeviceTensor<DefaultDevice, float, 0> avg;
-    avg.view() = weights->mean();
-
-    DeviceTensor<DefaultDevice, float, 0> var;
-    var.view() = (weights - avg.to_host()(0))->pow(2.).mean();
+    Tensor<float, 0> avg = weights.to_host().mean();
+    
+    Tensor<float, 0> var = (weights - avg(0)).to_host().pow(2.).mean();
 
     Tensor<float, 0> var_expected;
     var_expected.setConstant(1. / (kdims[1] * kdims[2] * kdims[3]));
 
-    EXPECT_TRUE(is_elementwise_approx_eq(var_expected, var.to_host(), 1e-4));
+    EXPECT_TRUE(is_elementwise_approx_eq(var_expected, var, 1e-4));
   }
 
   TEST_F(Convolution, im2col) {
