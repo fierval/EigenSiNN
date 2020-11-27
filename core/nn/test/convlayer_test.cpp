@@ -96,15 +96,6 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(var_expected, var, 1e-4));
   }
 
-  TEST_F(Convolution, im2col) {
-
-    auto convInput = DeviceTensor<DefaultDevice, float, 4>(cd.convInput);
-    auto convWeights = DeviceTensor<DefaultDevice, float, 4>(cd.convWeights);
-
-    auto output = im2col(convInput, convWeights.dimensions(), { 0, 0 });
-    EXPECT_TRUE(is_elementwise_approx_eq(output.to_host(), cd.convInputUnrolledPad0Stride1));
-  }
-
   TEST_F(Convolution, unfold_kernel) {
 
     auto convWeights = DeviceTensor<DefaultDevice, float, 4>(cd.convWeights);
