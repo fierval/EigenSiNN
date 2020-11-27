@@ -50,6 +50,8 @@ namespace EigenSinnTest {
     auto unf_res = unfold_conv_res(conv_res);
 
     EXPECT_TRUE(is_elementwise_approx_eq(conv_res, convolved));
+
+    // check for fold/unfold internal consitency
     EXPECT_TRUE(is_elementwise_approx_eq(unf_res, res));
   }
 
