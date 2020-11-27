@@ -46,14 +46,9 @@ namespace EigenSinnTest {
     DeviceTensor<DefaultDevice, float, 2> res(unf_kernel.dimension(0), col_inputs.dimension(1));
     res.view() = unf_kernel->contract(*col_inputs, prod_dims);
 
-    auto col2im_res = col2im<float>(res, convWeights.dimensions(), convInput.dimensions(), { 0, 0 });
+    //auto col2im_res = col2im<float>(res, convWeights.dimensions(), convInput.dimensions(), { 0, 0 });
     auto conv_res = fold_conv_res(res, cd.convOutDims);
-    auto unf_res = unfold_conv_res(conv_res);
-
-    EXPECT_TRUE(is_elementwise_approx_eq(col2im_res, convolved));
-
-    // check for fold/unfold internal consitency
-    EXPECT_TRUE(is_elementwise_approx_eq(unf_res, res));
+    EXPECT_TRUE(is_elementwise_approx_eq(conv_res, convolved));
   }
 
   TEST_F(Convolution, Backward) {

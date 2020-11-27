@@ -173,7 +173,7 @@ namespace EigenSinn {
     Index col_channels = dims[0] * dims[2] * dims[3]; // B * Ho * Wo
 
     DeviceTensor<Device_, Scalar, 2, Layout> flat_layer(dims[1], col_channels);
-    flat_layer.view() = layer->shuffle(array<Index, 4>{1, 0, 2, 3}).reshape(array<Index, 2>{dims[1], col_channels});
+    flat_layer.view() = layer->shuffle(array<Index, 4>{1, 0, 3, 2}).reshape(array<Index, 2>{dims[1], col_channels});
     return flat_layer;
   }
 
@@ -189,7 +189,7 @@ namespace EigenSinn {
     assert(expected_dims[0] * expected_dims[2] * expected_dims[3] == conv_res.dimension(1));
 
     DeviceTensor<Device_, Scalar, 4, Layout> out(expected_dims);
-    out.view() = conv_res->reshape(array<Index, 4>{ expected_dims[1], expected_dims[0], expected_dims[2], expected_dims[3] }).shuffle(array<Index, 4>{1, 0, 2, 3});
+    out.view() = conv_res->reshape(array<Index, 4>{ expected_dims[1], expected_dims[0], expected_dims[3], expected_dims[2] }).shuffle(array<Index, 4>{1, 0, 3, 2});
     return out;
   }
 
@@ -217,7 +217,7 @@ namespace EigenSinn {
     Index out_w = 0, out_h = 0;
     array<Index, 2> slice_starts = { 0, 0 };
     array<Index, 2> slice_offsets = { col.dimension(0), batch_size };
-    array<Index, 4> rev_shape = { kernel_dims[3], kernel_dims[2], kernel_dims[1], batch_size };
+    array<Index, 4> shape = { batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[3]};
     DeviceTensor<Device_, Scalar, 4, Layout> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[3]);
 
     // loop over col's batch size at a time
@@ -227,7 +227,7 @@ namespace EigenSinn {
     // unpad with slice
     for (Index i = 0; i < col_dims[1] / batch_size; i++, slice_starts[1] += batch_size) {
 
-      slice.view() = col->slice(slice_starts, slice_offsets).eval().reshape(rev_shape);
+      slice.view() = col->slice(slice_starts, slice_offsets).eval().reshape(shape);
 
       for (Index b = 0; b < batch_size; b++) {
         for (Index c = 0; c < channels; c++) {
