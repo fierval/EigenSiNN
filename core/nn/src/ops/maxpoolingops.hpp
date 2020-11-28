@@ -41,7 +41,7 @@ namespace EigenSinn {
   template <typename Scalar, typename Device_>
   struct MaxPooler<Scalar, 2, ColMajor, Device_> {
 
-    inline auto do_max_pool(const DeviceTensor<Device_, Scalar, 2, ColMajor>& t, const array<Index, 1>& extents, int stride, const Device_& device) {
+    inline auto do_max_pool(const DeviceTensor<Device_, Scalar, 2, ColMajor>& t, const array<Index, 1>& extents, int stride) {
       auto dims = t.dimensions();
 
       if (!check_valid_params<2>(extents, stride, dims)) {
@@ -72,8 +72,8 @@ namespace EigenSinn {
         // gradient will be propagated relative to the current slice
         for (int k = 0; k < local_pool.dimension(0); k++) {
           
-          output->operator()(k, output_starts[1]) = local_pool(k).second;
-          mask->operator()(k, output_starts[1]) = local_pool(k).first;
+          output->operator()(k, output_starts[1]) = (*local_pool)(k).second;
+          mask->operator()(k, output_starts[1]) = (*local_pool)(k).first;
         }
       }
 
@@ -96,7 +96,7 @@ namespace EigenSinn {
         // unroll the index of the gradient being passed
         for (int k = 0; k < original_dims[0]; k++) {
 
-          Index idx_flat = mask(k, grad_starts[1]);
+          Index idx_flat = (*mask)(k, grad_starts[1]);
           Index idx_col = (idx_flat - k) / lengths[0] % lengths[1];
 
           // index has been unrolled during the forward operation
@@ -109,7 +109,7 @@ namespace EigenSinn {
 
   template <typename Scalar, typename Device_>
   struct MaxPooler<Scalar, 4, ColMajor, Device_> {
-    inline auto do_max_pool(const DeviceTensor<Device_, Scalar, 4>& t, const array<Index, 2>& extents, int stride, const Device_& device) {
+    inline auto do_max_pool(const DeviceTensor<Device_, Scalar, 4>& t, const array<Index, 2>& extents, int stride) {
       auto dims = t.dimensions();
 
       if (!check_valid_params<4>(extents, stride, dims)) {
@@ -172,7 +172,7 @@ namespace EigenSinn {
             for (int j = 0; j < original_dims[1]; j++) {
 
               // index has been unrolled during the forward operation
-              Index idx_flat = mask(k, j, grad_starts[2], grad_starts[3]);
+              Index idx_flat = (*mask)(k, j, grad_starts[2], grad_starts[3]);
 
               // extract column-major order based on: https://en.wikipedia.org/wiki/Row-_and_column-major_order
               Index idx_plane = ((idx_flat - k) / lengths[0] - j) / lengths[1];

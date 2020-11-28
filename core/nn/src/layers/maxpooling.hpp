@@ -30,18 +30,13 @@ namespace EigenSinn {
 
     void forward(LayerBase<Scalar>& prev_layer) override {
 
-      if (are_dims_unset(prev_layer.get_out_dims())) {
-        set_in_dims(prev_layer.get_out_dims());
-      }
-
       DeviceTensor<Device_, Scalar, Rank, Layout> x(prev_layer.get_output());
-      auto res = max_pooler.do_max_pool(x, extents, stride, dispatcher.get_device());
+      auto res = max_pooler.do_max_pool(x, extents, stride);
 
       original_dimensions = x.dimensions();
       layer_output = res.first;
       mask = res.second;
       
-      set_out_dims(array2vector<Rank>(mask.dimensions()));
     }
 
     // for derivations
@@ -68,7 +63,7 @@ namespace EigenSinn {
     Index stride;
     array<Index, Rank / 2> extents;
     array<Index, Rank> original_dimensions;
-    MaxPooler<Scalar, Rank, Device_> max_pooler;
+    MaxPooler<Scalar, Rank, Layout, Device_> max_pooler;
   };
 
 }

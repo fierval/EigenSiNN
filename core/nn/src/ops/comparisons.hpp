@@ -40,7 +40,7 @@ namespace EigenSinn {
   inline bool is_elementwise_approx_eq(std::any a, const DeviceTensor<Device_, Scalar, Dim, Layout>& b, float prec = 1e-5) {
 
     DeviceTensor<Device_, Scalar, Dim, Layout> out(a);
-    return is_elementwise_approx_eq<Device_, Scalar, Dim, Layout>(b, out, prec);
+    return is_elementwise_approx_eq<Scalar, Dim, Layout, Device_>(b, out, prec);
   }
 
   template <typename Scalar, Index Dim, int Layout = ColMajor, typename Device_ = DefaultDevice>
