@@ -7,8 +7,8 @@ using std::make_unique;
 
 namespace EigenSinn {
 
-  template<typename Device_, typename Scalar, Index Rank>
-  inline void free(TensorView<Scalar, Rank>& t, Device_& device) {
+  template<typename Device_, typename Scalar, Index Rank, int Layout>
+  inline void free(TensorView<Scalar, Rank, Layout>& t, Device_& device) {
 
     if (t.data() != nullptr) {
       device.deallocate(t.data());
@@ -54,7 +54,7 @@ namespace EigenSinn {
   /// <param name="dims"></param>
   /// <param name="device"></param>
   template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
-  inline PtrTensorView<Scalar, Rank> create_device_ptr(DSizes<Index, Rank> dims, Device_& device) {
+  inline PtrTensorView<Scalar, Rank, Layout> create_device_ptr(DSizes<Index, Rank> dims, Device_& device) {
 
     size_t alloc_size = dims.TotalSize() * sizeof(Scalar);
     Scalar* ptr = static_cast<Scalar*>(device.allocate(alloc_size));
