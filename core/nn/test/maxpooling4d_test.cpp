@@ -15,7 +15,7 @@ namespace EigenSinnTest {
   protected:
 
     void SetUp() override {
-      Tensor<float, 4> tmp(cd.poolDims);
+
       cd.init();
       output.resize(cd.poolDims);
       fakeloss.resize(cd.poolDims);
@@ -94,7 +94,7 @@ namespace EigenSinnTest {
     }
 
     CommonData4d cd;
-    Tensor<float, 4> output, dinput, fakeloss;
+    DeviceTensor<DefaultDevice, float, 4> output, dinput, fakeloss;
     const array<Index, 2> extents2d = { 2, 2 };
     const array<Index, 2> extents1d = { 2 };
 
@@ -104,7 +104,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4d, Validate) {
 
-    Tensor<float, 4> t(1, 3, 4, 4);
+    DeviceTensor<DefaultDevice, float, 4> t(1, 3, 4, 4);
     t.setConstant(1);
 
     auto dims = t.dimensions();
@@ -118,7 +118,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4d, BadExtent) {
 
-    Tensor<float, 2> t(4, 4);
+    DeviceTensor<DefaultDevice, float, 2> t(4, 4);
     t.setConstant(1);
 
     auto dims = t.dimensions();
@@ -132,7 +132,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4d, BadStride4d) {
 
-    Tensor<float, 4> t(3, 4, 10, 10);
+    DeviceTensor<DefaultDevice, float, 4> t(3, 4, 10, 10);
     t.setConstant(1);
 
     auto dims = t.dimensions();
@@ -146,14 +146,14 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4d, Backward) {
 
-    Input<float, 4> input(cd.convInput.dimensions());
-    input.set_input(cd.convInput.data());
+    Input<float, 4> input;
+    input.set_input(cd.convInput);
 
     MaxPooling<float, 4> pl(extents2d, stride);
 
     pl.init();
     pl.forward(input);
-    pl.backward(input, fakeloss.data());
+    pl.backward(input, fakeloss);
 
     EXPECT_TRUE(is_elementwise_approx_eq(pl.get_output(), output));
     EXPECT_TRUE(is_elementwise_approx_eq(pl.get_loss_by_input_derivative(), dinput));

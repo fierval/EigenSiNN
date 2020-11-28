@@ -153,7 +153,7 @@ namespace EigenSinn {
       return Tuple(output, mask);
     }
 
-    inline DeviceTensor<Device_, Scalar, 4> do_max_pool_backward(const DeviceTensor<Device_, Scalar, 4>& grads, const Tensor<Index, 4>& mask,
+    inline DeviceTensor<Device_, Scalar, 4> do_max_pool_backward(const DeviceTensor<Device_, Scalar, 4>& grads, const DeviceTensor<Device_, Index, 4>& mask,
       const array<Index, 4>& original_dims, const array<Index, 2>& extents, int stride) {
 
       array<Index, 4> starts({ 0, 0, 0, 0 });
