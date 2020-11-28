@@ -20,8 +20,8 @@ namespace EigenSinn {
     return paddings;
   }
 
-  template <typename Scalar, Index Rank>
-  inline array<Index, Rank> get_padded_input_dims(const TensorView<Scalar, Rank>& t, const Padding2D& pad2d) {
+  template <typename Scalar, Index Rank, int Layout = ColMajor>
+  inline array<Index, Rank> get_padded_input_dims(const TensorView<Scalar, Rank, Layout>& t, const Padding2D& pad2d) {
     array<Index, Rank> out({ t.dimension(0), t.dimension(1), t.dimension(2) + 2 * pad2d.first, t.dimension(3) + 2 * pad2d.second });
     return out;
   }
@@ -30,8 +30,8 @@ namespace EigenSinn {
     return pad2dim(pad2d.first, pad2d.second, pad2d.first, pad2d.second);
   }
 
-  template <typename Scalar, Index Rank = 4>
-  inline auto get_output_dimensions(const TensorView<Scalar, Rank>& input, const array<Index, Rank> kernel_dims, const Padding2D& padding, const Index stride = 1) {
+  template <typename Scalar, Index Rank = 4, int Layout = ColMajor>
+  inline auto get_output_dimensions(const TensorView<Scalar, Rank, Layout>& input, const array<Index, Rank> kernel_dims, const Padding2D& padding, const Index stride = 1) {
 
     assert(kernel_dims[(int)ImageDims::channel] == input.dimension((int)ImageDims::channel));
     assert(kernel_dims[(int)ImageDims::height] > 0 && kernel_dims[(int)ImageDims::width] > 0);
@@ -55,17 +55,17 @@ namespace EigenSinn {
   }
 
   // output dimensions for a convolution with constant padding
-  template <typename Scalar, Index Rank = 4>
-  inline auto get_output_dimensions(const TensorView<Scalar, Rank>& input, const TensorView<Scalar, Rank>& kernel, const Padding2D& padding, const Index stride = 1) {
+  template <typename Scalar, Index Rank = 4, int Layout = ColMajor>
+  inline auto get_output_dimensions(const TensorView<Scalar, Rank, Layout>& input, const TensorView<Scalar, Rank, Layout>& kernel, const Padding2D& padding, const Index stride = 1) {
 
     return get_output_dimensions(input, kernel.dimensions(), padding, stride);
   }
 
   // NCHW format
   //TODO: support stride
-  template <typename Scalar, Index Rank = 4, typename Device_ = DefaultDevice>
-  inline DeviceTensor<Device_, Scalar, 4> convolve(const DeviceTensor<Device_, Scalar, 4>& input, 
-    DeviceTensor<Device_, Scalar, 4>& kernel, const Padding2D& padding, Index stride = 1) {
+  template <typename Scalar, Index Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  inline DeviceTensor<Device_, Scalar, 4, Layout> convolve(const DeviceTensor<Device_, Scalar, 4, Layout>& input,
+    DeviceTensor<Device_, Scalar, 4, Layout>& kernel, const Padding2D& padding, Index stride = 1) {
 
     //dimensions involved in the convolution. Channel dimension is also involved.
     array<Index, 3> dims({ (int)ImageDims::channel, (int)ImageDims::height, (int)ImageDims::width });
@@ -74,14 +74,14 @@ namespace EigenSinn {
 
     // Pad if apropriate
     auto padded_dims = get_padded_input_dims(*input, padding);
-    DeviceTensor<Device_, Scalar, 4> padded(padded_dims);
+    DeviceTensor<Device_, Scalar, 4, Layout> padded(padded_dims);
     padded.view() = input->pad(pad2dim(padding));
 
     // output dimensions
     DSizes<Index, Rank> out_dims = get_output_dimensions(*input, *kernel, padding, stride);
 
     // NCHW output tensor
-    DeviceTensor<Device_, Scalar, 4> output(out_dims);
+    DeviceTensor<Device_, Scalar, 4, Layout> output(out_dims);
 
     for (int i = 0; i < kernel.dimension((int)ImageDims::batch); i++) {
       // convolve on 3 dimensions and set the channel dimension of the entire batch
@@ -92,14 +92,14 @@ namespace EigenSinn {
   }
 
   // NCHW format
-  template <typename Scalar, int Rank = 4, typename Device_ = DefaultDevice>
-  inline auto im2col(const DeviceTensor<Device_, Scalar, Rank>& input, const DSizes<Index, Rank>& kernel_dims, const Padding2D& padding, Index stride = 1) {
+  template <typename Scalar, int Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  inline auto im2col(const DeviceTensor<Device_, Scalar, Rank, Layout>& input, const DSizes<Index, Rank>& kernel_dims, const Padding2D& padding, Index stride = 1) {
 
-    auto out_dims = get_output_dimensions( *input, kernel_dims, padding, stride);
+    auto out_dims = get_output_dimensions(*input, kernel_dims, padding, stride);
     // pad the tensor before we convolve
-   
+
     auto padded_dims = get_padded_input_dims(*input, padding);
-    DeviceTensor<Device_, Scalar, 4> padded(padded_dims);
+    DeviceTensor<Device_, Scalar, 4, Layout> padded(padded_dims);
     padded.view() = input->pad(pad2dim(padding));
 
     Index col_dim = kernel_dims[1] * kernel_dims[2] * kernel_dims[3];
@@ -112,7 +112,7 @@ namespace EigenSinn {
     // batch_size (input dim[0]) * how_many_convolution_locations there are
     int conv_locations = out_dims[3] * out_dims[2];
 
-    DeviceTensor<Device_, Scalar, 2> output(col_dim, input.dimension(0) * conv_locations);
+    DeviceTensor<Device_, Scalar, 2, Layout> output(col_dim, input.dimension(0) * conv_locations);
 
     // "move" along axis 1 (columns) and append converted portions.
     // each converted portion is a a batch of would-be convolution operations
@@ -120,10 +120,10 @@ namespace EigenSinn {
     for (starts[2] = 0; starts[2] + offsets[2] <= padded.dimension(2); starts[2] += stride) {
       for (starts[3] = 0; starts[3] + offsets[3] <= padded.dimension(3); converted_portion++, starts[3] += stride) {
 
-        DeviceTensor<Device_, Scalar, 4> cur_slice(slice_dims);
+        DeviceTensor<Device_, Scalar, 4, Layout> cur_slice(slice_dims);
         cur_slice.view() = padded->slice(starts, offsets).eval().shuffle(shuffle_dims);
 
-        DeviceTensor<Device_, Scalar, 2> flat_slice(col_dim, padded.dimension(0));
+        DeviceTensor<Device_, Scalar, 2, Layout> flat_slice(col_dim, padded.dimension(0));
         flat_slice.view() = cur_slice->reshape(DSizes<Index, 2>{ col_dim, padded.dimension(0) });
 
         int shift = converted_portion * flat_slice.dimension(1);
@@ -139,25 +139,25 @@ namespace EigenSinn {
 
   // return kernel representation for GEMM with 
   // im2col representation of the conv layer
-  template <typename Scalar, typename Device_ = DefaultDevice>
-  inline auto unfold_kernel(DeviceTensor<Device_, Scalar, 4>& kernel) {
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  inline auto unfold_kernel(DeviceTensor<Device_, Scalar, 4, Layout>& kernel) {
 
     auto dims = kernel.dimensions();
     Index col_channels = dims[1] * dims[2] * dims[3];
 
-    DeviceTensor<Device_, Scalar, 2> flat_kernel(dims[0], col_channels);
+    DeviceTensor<Device_, Scalar, 2, Layout> flat_kernel(dims[0], col_channels);
     flat_kernel.view() = kernel->shuffle(array<Index, 4>{ 0, 3, 2, 1 }).reshape(array<Index, 2>{dims[0], col_channels});
     return flat_kernel;
   }
 
   // convert back to the [b, c, h, w] kernel representation
-  template <typename Scalar, typename Device_ = DefaultDevice>
-  inline auto fold_kernel(DeviceTensor<Device_, Scalar, 2>& kernel_col, const array<Index, 4>& expected_dims) {
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  inline auto fold_kernel(DeviceTensor<Device_, Scalar, 2, Layout>& kernel_col, const array<Index, 4>& expected_dims) {
 
     assert(expected_dims[0] == kernel_col.dimension(0));
     assert(expected_dims[1] * expected_dims[2] * expected_dims[3] == kernel_col.dimension(1));
 
-    DeviceTensor<Device_, Scalar, 4> out(expected_dims);
+    DeviceTensor<Device_, Scalar, 4, Layout> out(expected_dims);
     out.view() = kernel_col->reshape(array<Index, 4>{ expected_dims[0], expected_dims[3], expected_dims[2], expected_dims[1] })
       .shuffle(array<Index, 4>{0, 3, 2, 1});;
 
@@ -169,13 +169,13 @@ namespace EigenSinn {
   // final dimensions should be the same as those of FX in col form:
   // F: [Bf x C * Hf * Wf], X: [C * Hf * Wf x B * Ho * Wo] -> [Bf X B * Ho * Wo], 
   // Resulting unrolled dimensions: [B, Bf, Ho, Wo], Bf = new C
-  template <typename Scalar, typename Device_ = DefaultDevice>
-  inline auto unfold_conv_res(const DeviceTensor<Device_, Scalar, 4>& layer) {
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  inline auto unfold_conv_res(const DeviceTensor<Device_, Scalar, 4, Layout>& layer) {
 
     auto dims = layer.dimensions();
     Index col_channels = dims[0] * dims[2] * dims[3]; // B * Ho * Wo
 
-    DeviceTensor<Device_, Scalar, 2> flat_layer(dims[1], col_channels);
+    DeviceTensor<Device_, Scalar, 2, Layout> flat_layer(dims[1], col_channels);
     flat_layer.view() = layer->shuffle(array<Index, 4>{1, 0, 3, 2}).reshape(array<Index, 2>{dims[1], col_channels});
     return flat_layer;
   }
@@ -185,13 +185,13 @@ namespace EigenSinn {
   // assuming we have just performed a convolution operation.
   // e.g. t (*) k = r, t: [2, 3, 4, 4], k: [5, 3, 3, 3], r: [2, 5, 2, 2]
   // r in im2col form will be [5, 8]
-  template <typename Scalar, typename Device_ = DefaultDevice>
-  inline auto fold_conv_res(const DeviceTensor<Device_, Scalar, 2>& conv_res, const array<Index, 4>& expected_dims) {
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  inline auto fold_conv_res(const DeviceTensor<Device_, Scalar, 2, Layout>& conv_res, const array<Index, 4>& expected_dims) {
 
     assert(expected_dims[1] == conv_res.dimension(0));
     assert(expected_dims[0] * expected_dims[2] * expected_dims[3] == conv_res.dimension(1));
 
-    DeviceTensor<Device_, Scalar, 4> out(expected_dims);
+    DeviceTensor<Device_, Scalar, 4, Layout> out(expected_dims);
     out.view() = conv_res->reshape(array<Index, 4>{ expected_dims[1], expected_dims[0], expected_dims[3], expected_dims[2] }).shuffle(array<Index, 4>{1, 0, 3, 2});
     return out;
   }
@@ -200,8 +200,8 @@ namespace EigenSinn {
   // Used to fold the backward pass result of dX/dL. 
   // We still slide the kernel window over the 2d representation, 
   // Adding contributions of each folded slice to the result
-  template <typename Scalar, typename Device_ = DefaultDevice>
-  inline auto col2im(const DeviceTensor<Device_, Scalar, 2>& col,
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  inline auto col2im(const DeviceTensor<Device_, Scalar, 2, Layout>& col,
     const array<Index, 4>& kernel_dims,
     const array<Index, 4>& orig_dims,
     const Padding2D& padding,
@@ -214,14 +214,14 @@ namespace EigenSinn {
       batch_size = orig_dims[0];
 
     array<Index, 2> col_dims = col.dimensions();
-    DeviceTensor<Device_, Scalar, 4> out(batch_size, channels, height, width);
+    DeviceTensor<Device_, Scalar, 4, Layout> out(batch_size, channels, height, width);
     out.setZero();
 
     Index out_w = 0, out_h = 0;
     array<Index, 2> slice_starts = { 0, 0 };
     array<Index, 2> slice_offsets = { col.dimension(0), batch_size };
     array<Index, 4> rev_shape = { kernel_dims[3], kernel_dims[2], kernel_dims[1], batch_size };
-    DeviceTensor<Device_, Scalar, 4> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[3]);
+    DeviceTensor<Device_, Scalar, 4, Layout> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[3]);
 
     // loop over col's batch size at a time
       // figure where it goes into the output
@@ -252,7 +252,7 @@ namespace EigenSinn {
     //unpad
     array<Index, 4> unpad_starts = { 0, 0, padding.first, padding.second };
     array<Index, 4> unpad_offsets = { out.dimension(0), out.dimension(1), orig_dims[2], orig_dims[3] };
-    DeviceTensor<Device_, Scalar, 4> output(unpad_offsets);
+    DeviceTensor<Device_, Scalar, 4, Layout> output(unpad_offsets);
     output.view() = out->slice(unpad_starts, unpad_offsets);
     return output;
   }

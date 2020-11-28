@@ -11,19 +11,19 @@ namespace EigenSinn {
   inline bool is_elementwise_approx_eq(const Tensor<Scalar, Dim, Layout>& a, const Tensor<Scalar, Dim, Layout>& b, float prec = 1e-5) {
 
     Tensor<Scalar, Dim, Layout> diff = a - b;
-    Tensor<Scalar, 0> res = diff.abs().maximum();
+    Tensor<Scalar, 0, Layout> res = diff.abs().maximum();
     return res(0) <= prec;
   }
 
   template <typename Scalar, Index Dim, int Layout = ColMajor>
-  inline bool is_elementwise_approx_eq(Scalar * a, const Tensor<Scalar, Dim> b, float prec = 1e-5) {
+  inline bool is_elementwise_approx_eq(Scalar* a, const Tensor<Scalar, Dim, Layout> b, float prec = 1e-5) {
 
     Tensor<Scalar, Dim, Layout> out = TensorView<Scalar, Dim, Layout>(a, b.dimensions());
     return is_elementwise_approx_eq<Scalar, Dim, Layout>(b, out, prec);
   }
 
   template <typename Scalar, Index Dim, int Layout = ColMajor>
-  inline bool is_elementwise_approx_eq(const Tensor<Scalar, Dim> a, Scalar * b, float prec = 1e-5) {
+  inline bool is_elementwise_approx_eq(const Tensor<Scalar, Dim> a, Scalar* b, float prec = 1e-5) {
 
     Tensor<Scalar, Dim, Layout> out = TensorView<Scalar, Dim, Layout>(b, a.dimensions());
     return is_elementwise_approx_eq<Scalar, Dim, Layout>(a, out, prec);
