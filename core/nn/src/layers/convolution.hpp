@@ -32,7 +32,7 @@ namespace EigenSinn {
       bias.setZero();
     }
 
-    void init(const Tensor<Scalar, 4, Layout>& _weights) {
+    void init(const Tensor<Scalar, 4>& _weights) {
       init();
 
       kernel = _weights;
