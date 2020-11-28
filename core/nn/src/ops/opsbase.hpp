@@ -20,7 +20,7 @@
 
 using namespace Eigen;
 
-#include "threadingdevice.hpp"
+#include "device/dispatcher.hpp"
 
 namespace EigenSinn {
 
