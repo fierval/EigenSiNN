@@ -3,9 +3,11 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 
 using namespace Eigen;
+using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
+  template<typename Device_>
   struct CommonData2d {
 
     // data will be presented in NHWC format
@@ -14,8 +16,9 @@ namespace EigenSinnTest {
       linearInput.resize(dims);
       output.resize(out_dims);
       target.resize(out_dims);
+      weights.resize(weights_dim_shuffled);
 
-      Tensor<float, 2> tmp(weight_dims);
+      DeviceTensor<Device_, float, 2> tmp(weight_dims);
 
       linearLoss.setValues({ {0.36603546, 0.40687686, 0.87746394, 0.62148917, 0.86859787, 0.51380110,
         0.60315830, 0.00604892},
@@ -57,7 +60,7 @@ namespace EigenSinnTest {
         {0.04713255, 0.51820499, 0.27709258, 0.74432141},
         {0.47782332, 0.82197350, 0.52797425, 0.03082085} });
 
-      weights = tmp.shuffle(array<Index, 2> {1, 0});
+      weights.view() = tmp->shuffle(array<Index, 2> {1, 0});
 
       dweights.resize(weights.dimensions());
       dweights.setValues({ {-0.06577596, -0.76513994,  0.19567230, -0.94930124},
@@ -76,13 +79,13 @@ namespace EigenSinnTest {
       dbias.setValues({ 0.66265798, 1.62600470, 1.67406428, 1.05092955 });
 
       target.setZero();
-      target(0, 1) = 1;
-      target(1, 3) = 1;
-      target(2, 2) = 1;
+      (*target)(0, 1) = 1;
+      (*target)(1, 3) = 1;
+      (*target)(2, 2) = 1;
     }
 
-    const array<Index, 2> dims = { 3, 8 }, out_dims = { 3, 4 }, weight_dims = { 4, 8 };
-    Tensor<float, 2> linearInput, linearLoss, outputGrad, output, target, weights, dinput, fakeloss, dweights;
-    Tensor<float, 1> bias, dbias;
+    const array<Index, 2> dims = { 3, 8 }, out_dims = { 3, 4 }, weight_dims = { 4, 8 }, weights_dim_shuffled = { 8, 4 };
+    DeviceTensor<Device_, float, 2> linearInput, linearLoss, outputGrad, output, target, weights, dinput, fakeloss, dweights;
+    DeviceTensor<Device_, float, 1> bias, dbias;
   };
 }

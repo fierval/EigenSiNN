@@ -93,7 +93,7 @@ namespace EigenSinnTest {
 
     }
 
-    CommonData4d cd;
+    CommonData4d<DefaultDevice> cd;
     DeviceTensor<DefaultDevice, float, 4> output, dinput, fakeloss;
     const array<Index, 2> extents2d = { 2, 2 };
     const array<Index, 2> extents1d = { 2 };

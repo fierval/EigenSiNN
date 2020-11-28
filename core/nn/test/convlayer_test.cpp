@@ -18,8 +18,8 @@ namespace EigenSinnTest {
       cd1p.init();
     }
 
-    CommonData4d cd;
-    ConvDataWith1Padding cd1p;
+    CommonData4d<DefaultDevice> cd;
+    ConvDataWith1Padding<DefaultDevice> cd1p;
 
     const Padding2D padding = { 0, 0 };
   };
@@ -32,15 +32,13 @@ namespace EigenSinnTest {
 
     Conv2d<float> conv2d(cd.kernelDims);
 
-    conv2d.init(cd.convWeights);
+    conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
     auto convolved = conv2d.get_output();
-    auto convInput = DeviceTensor<DefaultDevice, float, 4>(cd.convInput);
-    auto convWeights = DeviceTensor<DefaultDevice, float, 4>(cd.convWeights);
 
     // perform convolutiion with GEMM using im2col
-    auto col_inputs = im2col<float>(convInput, convWeights.dimensions(), padding);
-    auto unf_kernel = unfold_kernel<float>(convWeights);
+    auto col_inputs = im2col<float>(cd.convInput, cd.convWeights.dimensions(), padding);
+    auto unf_kernel = unfold_kernel<float>(cd.convWeights);
 
     ProductDims prod_dims = { IndexPair<int>(1, 0) };
     DeviceTensor<DefaultDevice, float, 2> res(unf_kernel.dimension(0), col_inputs.dimension(1));
@@ -58,19 +56,15 @@ namespace EigenSinnTest {
 
     Conv2d<float> conv2d(cd.kernelDims);
 
-    conv2d.init(cd.convWeights);
+    conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
     
-    auto exp_output = DeviceTensor<DefaultDevice, float, 4>(cd.output);
-    EXPECT_TRUE(is_elementwise_approx_eq(exp_output, conv2d.get_output()));
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.output, conv2d.get_output()));
 
-    conv2d.backward(input, DeviceTensor<DefaultDevice, float, 4>(cd.convLoss));
+    conv2d.backward(input, cd.convLoss);
 
-    auto exp_dinput = DeviceTensor<DefaultDevice, float, 4>(cd.dinput);
-    auto exp_dweight = DeviceTensor<DefaultDevice, float, 4>(cd.dweight);
-
-    EXPECT_TRUE(is_elementwise_approx_eq(exp_dinput, conv2d.get_loss_by_input_derivative()));
-    EXPECT_TRUE(is_elementwise_approx_eq(exp_dweight, conv2d.get_loss_by_weights_derivative()));
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.dinput, conv2d.get_loss_by_input_derivative()));
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.dweight, conv2d.get_loss_by_weights_derivative()));
   }
 
 
@@ -94,12 +88,10 @@ namespace EigenSinnTest {
 
   TEST_F(Convolution, unfold_kernel) {
 
-    auto convWeights = DeviceTensor<DefaultDevice, float, 4>(cd.convWeights);
-
-    auto unf_kernel = unfold_kernel(convWeights);
+    auto unf_kernel = unfold_kernel(cd.convWeights);
     auto folded_kernel = fold_kernel(unf_kernel, cd.kernelDims);
 
-    EXPECT_TRUE(is_elementwise_approx_eq(folded_kernel.to_host(), cd.convWeights));
+    EXPECT_TRUE(is_elementwise_approx_eq(folded_kernel, cd.convWeights));
   }
 
   TEST_F(Convolution, Backward1Padding) {
@@ -109,11 +101,10 @@ namespace EigenSinnTest {
 
     Conv2d<float> conv2d(cd.kernelDims, { 1, 1 });
 
-    conv2d.init(cd.convWeights);
+    conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
 
-    auto cd1pConvLoss = DeviceTensor<DefaultDevice, float, 4>(cd1p.convLoss);
-    conv2d.backward(input, cd1pConvLoss);
+    conv2d.backward(input, cd1p.convLoss);
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd1p.dinput, conv2d.get_loss_by_input_derivative()));
     EXPECT_TRUE(is_elementwise_approx_eq(cd1p.dweight, conv2d.get_loss_by_weights_derivative()));

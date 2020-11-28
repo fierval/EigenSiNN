@@ -14,7 +14,6 @@ namespace EigenSinnTest {
   protected:
     void SetUp() override {
 
-      Tensor<float, 4> tmp(cd.dims);
       cd.init();
 
       input = cd.convInput;
@@ -96,7 +95,7 @@ namespace EigenSinnTest {
 
      //void TearDown() override {}
 
-      Tensor<float, 4> input, loss, dinput, output;
+      DeviceTensor<DefaultDevice, float, 4> input, loss, dinput, output;
       Tensor<float, 1> beta, gamma;
       const float eps = 1e-5, momentum = 0.9;
 
@@ -110,14 +109,13 @@ namespace EigenSinnTest {
 
       Input<float, 4> input_layer;
       input_layer.set_input(input);
-      DeviceTensor<DefaultDevice, float, 4> loss_device(loss);
 
       BatchNormalizationLayer<float, 4> bn(3);
       bn.init(beta, gamma);
       bn.forward(input_layer);
-      bn.backward(input_layer, loss_device);
+      bn.backward(input_layer, loss);
 
-      Tensor<float, 1> dbeta(cd.dims[1]), dgamma(cd.dims[1]);
+      DeviceTensor<DefaultDevice, float, 1> dbeta(cd.dims[1]), dgamma(cd.dims[1]);
       dbeta.setValues({ 15.55493259, 17.75424004, 14.48464108 });
       dgamma.setValues({ 0.19619252, -0.61846262,  2.08176923 });
 

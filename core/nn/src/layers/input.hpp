@@ -30,6 +30,11 @@ namespace EigenSinn {
       input.set_from_host(inp_tensor);
     }
 
+    void set_input(const DeviceTensor<Device_, Scalar, Rank, Layout>& inp_tensor) {
+
+      input = inp_tensor;
+    }
+
     // Required overrides
     void forward(LayerBase<Scalar>& prev_layer_base) override {};
     void backward(LayerBase<Scalar>& prev_layer, std::any next_layer_grad) override {};
