@@ -18,15 +18,15 @@ namespace EigenSinnTest {
       cd1p.init();
     }
 
-    CommonData4d cd;
-    ConvDataWith1Padding cd1p;
+    CommonData4d<DefaultDevice> cd;
+    ConvDataWith1Padding<DefaultDevice> cd1p;
 
     const Padding2D padding = { 0, 0 };
   };
 
   TEST_F(FlatLayer, Flat) {
     Input<float, 4> input;
-    input.set_input(cd.convInput);
+    input.set_input(cd.convInput.to_host());
 
     Flatten<float> conv2d;
 

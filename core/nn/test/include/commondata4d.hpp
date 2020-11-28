@@ -1,11 +1,14 @@
 #pragma once
 
 #include <unsupported/Eigen/CXX11/Tensor>
+#include <device/device_tensor.hpp>
 
 using namespace Eigen;
+using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
+  template <typename Device_>
   struct CommonData4d {
 
     // data will be presented in NHWC format
@@ -366,7 +369,7 @@ namespace EigenSinnTest {
 
     // 4d testa
     const array<Index, 4> dims = { 2, 3, 4, 4 }, poolDims = { 2, 3, 2, 2 }, kernelDims = { 5, 3, 3, 3 }, convOutDims = { 2, 5, 2, 2 };
-    Tensor<float, 4> convInput, convLoss, batchNormLoss, convWeights, dweight, dinput, output;
-    Tensor<float, 2> convInputUnrolledPad0Stride1;
+    DeviceTensor<Device_, float, 4> convInput, convLoss, batchNormLoss, convWeights, dweight, dinput, output;
+    DeviceTensor<Device_, float, 2> convInputUnrolledPad0Stride1;
   };
 }

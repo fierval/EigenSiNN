@@ -1,11 +1,14 @@
 #pragma once
 
 #include <unsupported/Eigen/CXX11/Tensor>
+#include <device/device_tensor.hpp>
 
 using namespace Eigen;
+using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
+  template<typename Device_ = DefaultDevice>
   struct ConvDataWith1Padding {
 
     void init() {
@@ -213,7 +216,7 @@ namespace EigenSinnTest {
     }
 
     const array<Index, 4> dims = { 2, 3, 4, 4 }, kernelDims = { 5, 3, 3, 3 }, convOutDims = { 2, 5, 4, 4 };
-    Tensor<float, 4> convLoss, dweight, dinput, output;
+    DeviceTensor<Device_, float, 4> convLoss, dweight, dinput, output;
 
   };
 
