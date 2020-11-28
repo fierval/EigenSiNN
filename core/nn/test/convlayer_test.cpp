@@ -50,37 +50,6 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(conv_res, convolved));
   }
 
-  // TODO: RowMajor layout not supported
-  TEST_F(Convolution, ForwardIm2ColRowMajor) {
-
-    DSizes<Index, 4> swap_dims{ 3, 2, 1, 0 };
-    Input<float, 4, RowMajor> input;
-    Tensor<float, 4, RowMajor> convInputRows = cd.convInput.swap_layout().shuffle(swap_dims);
-    Tensor<float, 4, RowMajor> convWeightsRows = cd.convWeights.swap_layout().shuffle(swap_dims);
-
-    input.set_input(convInputRows);
-
-    Conv2d<float, RowMajor> conv2d(cd.kernelDims);
-
-    conv2d.init(convWeightsRows);
-    conv2d.forward(input);
-    auto convolved = conv2d.get_output();
-    auto convInput = DeviceTensor<DefaultDevice, float, 4, RowMajor>(convInputRows);
-    auto convWeights = DeviceTensor<DefaultDevice, float, 4, RowMajor>(convWeightsRows);
-
-    // perform convolutiion with GEMM using im2col
-    auto col_inputs = im2col(convInput, convWeights.dimensions(), padding);
-    auto unf_kernel = unfold_kernel(convWeights);
-
-    ProductDims prod_dims = { IndexPair<int>(1, 0) };
-    DeviceTensor<DefaultDevice, float, 2, RowMajor> res(unf_kernel.dimension(0), col_inputs.dimension(1));
-    res.view() = unf_kernel->contract(*col_inputs, prod_dims);
-
-    auto conv_res = fold_conv_res(res, cd.convOutDims);
-    // TODO: RowMajor layout not supported
-    EXPECT_FALSE(is_elementwise_approx_eq(conv_res, convolved));
-  }
-
   TEST_F(Convolution, Backward) {
 
     Input<float, 4> input;
