@@ -1,6 +1,7 @@
 #pragma once
 
 #include "opsbase.hpp"
+#include <device/device_tensor.hpp>
 
 namespace EigenSinn {
 
@@ -33,13 +34,14 @@ namespace EigenSinn {
     return true;
   }
 
-  template <typename T, int Rank, typename Device_ = DefaultDevice>
+  template <typename Scalar, int Rank, int Layer, typename Device_>
   struct MaxPooler {};
 
 
   template <typename Scalar, typename Device_>
-  struct MaxPooler<Scalar, 2, Device_> {
-    inline auto do_max_pool(const Tensor<Scalar, 2>& t, const array<Index, 1>& extents, int stride, const Device_& device) {
+  struct MaxPooler<Scalar, 2, ColMajor, Device_> {
+
+    inline auto do_max_pool(const DeviceTensor<Device_, Scalar, 2, ColMajor>& t, const array<Index, 1>& extents, int stride, const Device_& device) {
       auto dims = t.dimensions();
 
       if (!check_valid_params<2>(extents, stride, dims)) {
@@ -48,9 +50,9 @@ namespace EigenSinn {
       }
 
       // we get the index as well as the value so we can create a mask
-      Tensor<Tuple<Index, Scalar>, 1> local_pool(dims[0]);
-      Tensor <Scalar, 2> output(dims[0], (dims[1] - extents[0]) / stride + 1);
-      Tensor <Index, 2> mask(output.dimensions());
+      DeviceTensor<Device_, Tuple<Index, Scalar>, 1> local_pool(dims[0]);
+      DeviceTensor <Device_, Scalar, 2> output(dims[0], (dims[1] - extents[0]) / stride + 1);
+      DeviceTensor <Device_, Index, 2> mask(output.dimensions());
 
       array<Index, 2> starts({ 0, 0 });
       array<Index, 2> lengths({ dims[0], extents[0] });
@@ -58,20 +60,20 @@ namespace EigenSinn {
 
       array<Index, 2> output_starts({ 0, 0 });
 
-      Tensor < Tuple<Index, Scalar>, 2> index_tuples(lengths);
+      DeviceTensor <Device_, Tuple<Index, Scalar>, 2> index_tuples(lengths);
 
       for (starts[1] = 0, output_starts[1] = 0; starts[1] + extents[0] <= dims[1]; starts[1] += stride, output_starts[1]++) {
 
-        index_tuples.device(device) = t.slice(starts, lengths).index_tuples();
+        index_tuples.view() = t->slice(starts, lengths).index_tuples();
 
         // get the maximums and their indices
-        local_pool.device(device) = index_tuples.reduce(reduce_dims, internal::ArgMaxTupleReducer<Tuple<Index, Scalar>>());
+        local_pool.view() = index_tuples->reduce(reduce_dims, internal::ArgMaxTupleReducer<Tuple<Index, Scalar>>());
         // split the tuple into its arrays: value and index of the input where
         // gradient will be propagated relative to the current slice
         for (int k = 0; k < local_pool.dimension(0); k++) {
           
-          output(k, output_starts[1]) = local_pool(k).second;
-          mask(k, output_starts[1]) = local_pool(k).first;
+          output->operator()(k, output_starts[1]) = local_pool(k).second;
+          mask->operator()(k, output_starts[1]) = local_pool(k).first;
         }
       }
 
@@ -79,7 +81,7 @@ namespace EigenSinn {
 
     }
 
-    inline Tensor<Scalar, 2> do_max_pool_backward(const Tensor<Scalar, 2>& grads, const Tensor<Index, 2>& mask,
+    inline DeviceTensor<Device_, Scalar, 2, ColMajor> do_max_pool_backward(const DeviceTensor<Device_, Scalar, 2>& grads, const DeviceTensor<Device_, Index, 2>& mask,
       const array<Index, 2>& original_dims, const array<Index, 1>& extents, int stride) {
 
       array<Index, 2> starts({ 0, 0 });
@@ -87,7 +89,7 @@ namespace EigenSinn {
 
       array<Index, 2> grad_starts({ 0, 0 });
 
-      Tensor<Scalar, 2> output(original_dims);
+      DeviceTensor<Device_, Scalar, 2> output(original_dims);
       output.setZero();
 
       for (starts[1] = 0, grad_starts[1] = 0; starts[1] + extents[0] <= original_dims[1]; starts[1] += stride, grad_starts[1]++) {
@@ -98,18 +100,16 @@ namespace EigenSinn {
           Index idx_col = (idx_flat - k) / lengths[0] % lengths[1];
 
           // index has been unrolled during the forward operation
-          output(starts[0] + k, starts[1] + idx_col) += grads(k, grad_starts[1]);
+          (*output)(starts[0] + k, starts[1] + idx_col) += (*grads)(k, grad_starts[1]);
         }
       }
       return output;
     }
-
-
   };
 
   template <typename Scalar, typename Device_>
-  struct MaxPooler<Scalar, 4, Device_> {
-    inline auto do_max_pool(const Tensor<Scalar, 4>& t, const array<Index, 2>& extents, int stride, const Device_& device) {
+  struct MaxPooler<Scalar, 4, ColMajor, Device_> {
+    inline auto do_max_pool(const DeviceTensor<Device_, Scalar, 4>& t, const array<Index, 2>& extents, int stride, const Device_& device) {
       auto dims = t.dimensions();
 
       if (!check_valid_params<4>(extents, stride, dims)) {
@@ -117,11 +117,11 @@ namespace EigenSinn {
         throw std::invalid_argument("Invalid pooling dimensions");
       }
 
-      Tensor<Tuple<Index, Scalar>, 2> local_pool(dims[0], dims[1]);
+      DeviceTensor<Device_, Tuple<Index, Scalar>, 2> local_pool(dims[0], dims[1]);
       
-      Tensor<Scalar, 4> output(dims[0], dims[1], (dims[2] - extents[0]) / stride + 1, (dims[3] - extents[1]) / stride + 1);
+      DeviceTensor<Device_, Scalar, 4> output(dims[0], dims[1], (dims[2] - extents[0]) / stride + 1, (dims[3] - extents[1]) / stride + 1);
 
-      Tensor<Index, 4> mask(output.dimensions());
+      DeviceTensor<Device_, Index, 4> mask(output.dimensions());
 
       array<Index, 4> starts({ 0, 0, 0, 0 });
       array<Index, 4> lengths({ dims[0], dims[1], extents[0], extents[1]});
@@ -130,22 +130,22 @@ namespace EigenSinn {
       array<Index, 4> output_starts({ 0, 0, 0, 0 });
 
       // get index tuples in order to use tuple reducer
-      Tensor<Tuple<Index, Scalar>, 4> index_tuples(lengths);
+      DeviceTensor<Device_, Tuple<Index, Scalar>, 4> index_tuples(lengths);
 
       for (starts[2] = 0, output_starts[2] = 0; starts[2] + extents[0] <= dims[2]; starts[2] += stride, output_starts[2]++) {
         for (starts[3] = 0, output_starts[3] = 0; starts[3] + extents[1] <= dims[3]; starts[3] += stride, output_starts[3]++) {
 
-          index_tuples.device(device) = t.slice(starts, lengths).index_tuples();
+          index_tuples.view() = t->slice(starts, lengths).index_tuples();
 
           // get pooling results
-          local_pool.device(device) = index_tuples.reduce(reduce_dims, internal::ArgMaxTupleReducer<Tuple<Index, Scalar>>());
+          local_pool.view() = index_tuples->reduce(reduce_dims, internal::ArgMaxTupleReducer<Tuple<Index, Scalar>>());
 
           // unchain indices. TODO: unwinding them in the backward pass will be harder than 2 dims
           for (int k = 0; k < local_pool.dimension(0); k++) {
             for (int j = 0; j < local_pool.dimension(1); j++) {
 
-              mask(k, j, output_starts[2], output_starts[3]) = local_pool(k, j).first;
-              output(k, j, output_starts[2], output_starts[3]) = local_pool(k, j).second;
+              (*mask)(k, j, output_starts[2], output_starts[3]) = (*local_pool)(k, j).first;
+              (*output)(k, j, output_starts[2], output_starts[3]) = (*local_pool)(k, j).second;
             }
           }
         }
@@ -153,7 +153,7 @@ namespace EigenSinn {
       return Tuple(output, mask);
     }
 
-    inline Tensor<Scalar, 4> do_max_pool_backward(const Tensor<Scalar, 4>& grads, const Tensor<Index, 4>& mask,
+    inline DeviceTensor<Device_, Scalar, 4> do_max_pool_backward(const DeviceTensor<Device_, Scalar, 4>& grads, const Tensor<Index, 4>& mask,
       const array<Index, 4>& original_dims, const array<Index, 2>& extents, int stride) {
 
       array<Index, 4> starts({ 0, 0, 0, 0 });
@@ -161,7 +161,7 @@ namespace EigenSinn {
 
       array<Index, 4> grad_starts({ 0, 0, 0, 0 });
 
-      Tensor<Scalar, 4> output(original_dims);
+      DeviceTensor<Device_, Scalar, 4> output(original_dims);
 
       output.setZero();
 
@@ -179,7 +179,7 @@ namespace EigenSinn {
               Index idx_row = idx_plane % lengths[2];
               Index idx_col = (idx_plane - idx_row) / lengths[2];
 
-              output(k, j, starts[2] + idx_row, starts[3] + idx_col) += grads(k, j, grad_starts[2], grad_starts[3]);
+              (*output)(k, j, starts[2] + idx_row, starts[3] + idx_col) += (*grads)(k, j, grad_starts[2], grad_starts[3]);
             }
           }
         }

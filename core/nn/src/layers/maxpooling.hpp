@@ -12,14 +12,12 @@ namespace EigenSinn {
   // For Linear (fully connected) layers: (N, C)
   // N - batch size
   // C - number of channels (1 for fully connected layers)
-  template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
-  class MaxPooling : public LayerBase<Scalar, Device_> {
+  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  class MaxPooling : public LayerBase<Scalar> {
   public:
 
-    MaxPooling(const array<Index, Rank / 2>& _extents, Index _stride, 
-      Dispatcher<Device_>& _device =  LayerBase::default_dispatcher)
+    MaxPooling(const array<Index, Rank / 2>& _extents, Index _stride)
       : extents(_extents)
-      , LayerBase(_device)
       , stride(_stride)
       , original_dimensions({0})
     , max_pooler() {
@@ -30,13 +28,13 @@ namespace EigenSinn {
       
     }
 
-    void forward(LayerBase<Scalar, Device_>& prev_layer) override {
+    void forward(LayerBase<Scalar>& prev_layer) override {
 
       if (are_dims_unset(prev_layer.get_out_dims())) {
         set_in_dims(prev_layer.get_out_dims());
       }
 
-      TensorMap<Tensor<Scalar, Rank>> x(prev_layer.get_output(), vector2array<Rank>(in_dims));
+      DeviceTensor<Device_, Scalar, Rank, Layout> x(prev_layer.get_output());
       auto res = max_pooler.do_max_pool(x, extents, stride, dispatcher.get_device());
 
       original_dimensions = x.dimensions();
@@ -47,25 +45,25 @@ namespace EigenSinn {
     }
 
     // for derivations
-    void backward(LayerBase<Scalar, Device_>& prev_layer, Scalar * next_layer_grad) override {
+    void backward(LayerBase<Scalar>& prev_layer, std::any next_layer_grad) override {
 
-      TensorMap<Tensor<Scalar, Rank>> x(next_layer_grad, vector2array<Rank>(out_dims));
+      DeviceTensor<Device_, Scalar, Rank, Layout> x(next_layer_grad);
 
       layer_gradient = max_pooler.do_max_pool_backward(x, mask, original_dimensions, extents, stride);
     }
 
-    Scalar * get_output() override {
-      return layer_output.data();
+    std::any get_output() override {
+      return layer_output;
     }
 
-    Scalar * get_loss_by_input_derivative() {
-      return layer_gradient.data();
+    std::any get_loss_by_input_derivative() {
+      return layer_gradient;
     }
 
 
   private:
-    Tensor<Scalar, Rank> layer_output, layer_gradient;
-    Tensor<Index, Rank> mask;
+    DeviceTensor<Device_, Scalar, Rank, Layout> layer_output, layer_gradient;
+    DeviceTensor<Device_, Index, Rank, Layout> mask;
 
     Index stride;
     array<Index, Rank / 2> extents;

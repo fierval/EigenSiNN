@@ -38,7 +38,7 @@ namespace EigenSinnTest {
     }
 
     CommonData2d cd;
-    Tensor<float, 2> output, dinput, fakeloss;
+    DeviceTensor<DefaultDevice, float, 2> output, dinput, fakeloss;
     const array<Index, 1> extents1d = { 4 };
     const array<Index, 2> poolDims = { 3, 3 };
 
@@ -48,7 +48,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool2d, Validate) {
 
-    Tensor<float, 2> t(4, 4);
+    DeviceTensor<DefaultDevice, float, 2> t(4, 4);
     t.setConstant(1);
 
     auto dims = t.dimensions();
@@ -61,8 +61,9 @@ namespace EigenSinnTest {
   }
 
   TEST_F(Pool2d, Forward) {
-    Input<float, 2> input(cd.linearInput.dimensions());
-    input.set_input(cd.linearInput.data());
+    Input<float, 2> input;
+
+    input.set_input(cd.linearInput);
 
     MaxPooling<float, 2> pl(extents1d, stride);
     pl.init();
@@ -73,17 +74,17 @@ namespace EigenSinnTest {
 
   TEST_F(Pool2d, Backward) {
 
-    Input<float, 2> input(cd.linearInput.dimensions());
-    input.set_input(cd.linearInput.data());
+    Input<float, 2> input;
+    input.set_input(cd.linearInput);
 
     MaxPooling<float, 2> pl(extents1d, stride);
     pl.init();
     pl.forward(input);
 
-    pl.backward(input, fakeloss.data());
+    pl.backward(input, fakeloss);
 
     EXPECT_TRUE(is_elementwise_approx_eq(pl.get_loss_by_input_derivative(), dinput));
-  }
+  )
 
 
 }
