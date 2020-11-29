@@ -316,6 +316,42 @@ namespace EigenSinn
       return lhs;
     }
 
+    friend DeviceTensor<Device_, bool, Rank, Layout> operator==(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
+      DeviceTensor<Device_, bool, Rank, Layout> out(lhs.dimensions());
+      out.view() = (lhs == v);
+      return out;
+    }
+
+    friend DeviceTensor<Device_, bool, Rank, Layout> operator!=(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
+      DeviceTensor<Device_, bool, Rank, Layout> out(lhs.dimensions());
+      out.view() = (lhs != v);
+      return out;
+    }
+
+    friend DeviceTensor<Device_, bool, Rank, Layout> operator<=(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
+      DeviceTensor<Device_, bool, Rank, Layout> out(lhs.dimensions());
+      out.view() = (lhs <= v);
+      return out;
+    }
+
+    friend DeviceTensor<Device_, bool, Rank, Layout> operator>=(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
+      DeviceTensor<Device_, bool, Rank, Layout> out(lhs.dimensions());
+      out.view() = (lhs >= v);
+      return out;
+    }
+
+    friend DeviceTensor<Device_, bool, Rank, Layout> operator<(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
+      DeviceTensor<Device_, bool, Rank, Layout> out(lhs.dimensions());
+      out.view() = (lhs < v);
+      return out;
+    }
+
+    friend DeviceTensor<Device_, bool, Rank, Layout> operator>(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
+      DeviceTensor<Device_, bool, Rank, Layout> out(lhs.dimensions());
+      out.view() = (lhs > v);
+      return out;
+    }
+
     // Operators with device const
     DeviceTensor& operator+=(Scalar& rhs) {
       tensor_view->device(device_) = *tensor_view + rhs;

@@ -5,8 +5,8 @@
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank>
-  inline auto get_flat_dims(Tensor<Scalar, Rank> t) {
+  template <typename Scalar, Index Rank, int Layout, typename Device_>
+  inline auto get_flat_dims(const DeviceTensor<Device_, Scalar, Rank, Layout>& t) {
     const auto& dims = t.dimensions();
     Index flat_dim = 1;
 
@@ -16,42 +16,33 @@ namespace EigenSinn {
     return flat_dim;
   }
 
-  template<typename Scalar, Index Rank>
-  inline auto leaky_relu(const Tensor<Scalar, Rank>& t, float threshold) {
+  template<typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  inline auto leaky_relu(DeviceTensor<Device_, Scalar, Rank, Layout>& t, Scalar threshold) {
 
     auto flat_dim = get_flat_dims(t);
-
-    Tensor<Scalar, Rank> mask(t.dimensions());
-    Tensor<Scalar, Rank> output(t.dimensions());
+    
+    DeviceTensor<Device_, Scalar, Rank, Layout> pos_mask(t.dimensions());
+    DeviceTensor<Device_, Scalar, Rank, Layout> neg_mask(t.dimensions());
+    DeviceTensor<Device_, Scalar, Rank, Layout> mask(t.dimensions());
+    DeviceTensor<Device_, Scalar, Rank, Layout> output(t.dimensions());
+    
     output = t;
-    mask.setZero();
+    pos_mask.view() = (*output >= static_cast<Scalar>(0)).cast<Scalar>();
+    neg_mask.view() = (*output < static_cast<Scalar>(0)).cast<Scalar>();
+    
+    neg_mask *= threshold;
+    mask = neg_mask + pos_mask;
 
-    array<Index, 1> flat_dim_arr = { flat_dim };
-    TensorMap<Tensor<Scalar, 1>> flat_output(output.data(), flat_dim);
-    TensorMap<Tensor<Scalar, 1>> flat_mask(mask.data(), flat_dim);
-
-    std::vector<Index> range(flat_dim);
-    std::iota(range.begin(), range.end(), 0);
-
-    std::for_each(std::execution::par, range.begin(), range.end(), [&](Index i) {
-      if (flat_output(i) < 0) {
-        flat_output(i) *= threshold;
-        flat_mask(i) = threshold;
-      }
-      else {
-        flat_mask(i) = 1.;
-      }
-      });
-
+    output = mask * t;
     return Tuple(mask, output);
   }
 
-  template<typename Scalar, Index Rank, typename Device_ = DefaultDevice>
-  inline auto leaky_relu_back(const Tensor<Scalar, Rank>& next_layer_grad, const Tensor<Scalar, Rank>& mask, const Device_& device = DefaultDevice()) {
+  template<typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  inline auto leaky_relu_back(DeviceTensor<Device_, Scalar, Rank, Layout>& next_layer_grad, DeviceTensor<Device_, Scalar, Rank, Layout>& mask) {
 
-    Tensor<Scalar, Rank> output(next_layer_grad.dimensions());
+    DeviceTensor<Device_, Scalar, Rank, Layout> output(next_layer_grad.dimensions());
 
-    output.device(device) = next_layer_grad * mask;
+    output = next_layer_grad * mask;
     return output;
   }
 

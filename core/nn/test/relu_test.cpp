@@ -54,34 +54,34 @@ namespace EigenSinnTest {
     }
 
 
-    CommonData2d cd;
-    Tensor<float, 2> output, output_leaky, dinput, dinput_leaky;
+    CommonData2d<DefaultDevice> cd;
+    DeviceTensor<DefaultDevice, float, 2> output, output_leaky, dinput, dinput_leaky;
     float thresh = 0.01;
 
   };
 
   TEST_F(ReLU2d, Backward) {
     
-    Input<float, 2> input(cd.linearInput.dimensions());
-    input.set_input(cd.linearInput.data());
+    Input<float, 2> input;
+    input.set_input(cd.linearInput);
 
     ReLU<float, 2> rl;
     rl.init();
     rl.forward(input);
-    rl.backward(input, cd.linearLoss.data());
+    rl.backward(input, cd.linearLoss);
 
     EXPECT_TRUE(is_elementwise_approx_eq(rl.get_loss_by_input_derivative(), dinput, 3e-5));
   }
 
   TEST_F(ReLU2d, LeakyBackward) {
 
-    Input<float, 2> input(cd.linearInput.dimensions());
-    input.set_input(cd.linearInput.data());
+    Input<float, 2> input;
+    input.set_input(cd.linearInput);
 
     LeakyReLU<float, 2> rl(thresh);
     rl.init();
     rl.forward(input);
-    rl.backward(input, cd.linearLoss.data());
+    rl.backward(input, cd.linearLoss);
 
     EXPECT_TRUE(is_elementwise_approx_eq(rl.get_loss_by_input_derivative(), dinput_leaky));
   }

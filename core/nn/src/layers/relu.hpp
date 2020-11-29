@@ -7,55 +7,50 @@ using namespace  Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
-  class LeakyReLU : public LayerBase<Scalar, Device_> {
+  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  class LeakyReLU : public LayerBase<Scalar> {
   public:
     // leaky relu if necessary
-    LeakyReLU(float _thresh = 0.01, Dispatcher<Device_>& _device =  LayerBase::default_dispatcher) :
-      LayerBase(_device)
-      ,thresh(_thresh) {
+    LeakyReLU(float _thresh = 0.01) :
+      thresh(_thresh) {
 
     }
 
-    void forward(LayerBase<Scalar, Device_>& prev_layer) override {
+    void forward(LayerBase<Scalar>& prev_layer) override {
 
-      if (are_dims_unset(prev_layer.get_out_dims())) {
-        set_dims(prev_layer.get_out_dims(), prev_layer.get_out_dims());
-      }
-
-      TensorMap<Tensor<Scalar, Rank>> x(prev_layer.get_output(), vector2array<Rank>(in_dims));
-      auto res = leaky_relu<Scalar, Rank>(x, thresh);
+      DeviceTensor<Device_, Scalar, Rank, Layout> x(prev_layer.get_output());
+      auto res = leaky_relu<Scalar, Rank, Layout, Device_>(x, thresh);
 
       layer_output = res.second;
       mask = res.first;
     }
 
-    void backward(LayerBase<Scalar, Device_>& prev_layer, Scalar * next_layer_grad) override {
+    void backward(LayerBase<Scalar>& prev_layer, std::any next_layer_grad) override {
 
-      TensorMap<Tensor<Scalar, Rank>> x(next_layer_grad, vector2array<Rank>(out_dims));
+      DeviceTensor<Device_, Scalar, Rank, Layout> x(next_layer_grad);
 
-      layer_grad = leaky_relu_back<Scalar, Rank, Device_>(x, mask, dispatcher.get_device());
+      layer_grad = leaky_relu_back<Scalar, Rank, Layout, Device_>(x, mask);
     }
 
-    Scalar * get_output() override {
-      return layer_output.data();
+    std::any get_output() override {
+      return layer_output;
     };
 
-    Scalar * get_loss_by_input_derivative() override {
-      return layer_grad.data();
+    std::any get_loss_by_input_derivative() override {
+      return layer_grad;
     };
 
 
   private:
     float thresh;
-    Tensor<Scalar, Rank> mask;
-    Tensor<Scalar, Rank> layer_output, layer_grad;
+    DeviceTensor<Device_, Scalar, Rank, Layout> mask;
+    DeviceTensor<Device_, Scalar, Rank, Layout> layer_output, layer_grad;
   };
 
-  template<typename Scalar, Index Rank, typename Device_ = DefaultDevice>
-  class ReLU : public LeakyReLU<Scalar, Rank, Device_> {
+  template<typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  class ReLU : public LeakyReLU<Scalar, Rank, Layout, Device_> {
   public:
-    ReLU(Dispatcher<Device_>& _device = LayerBase::default_dispatcher) : LeakyReLU(0, _device) {}
+    ReLU() : LeakyReLU(0) {}
   };
 
 }

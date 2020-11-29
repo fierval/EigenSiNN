@@ -18,7 +18,7 @@ namespace EigenSinn {
     , dispatcher(_dispatcher) {
 
     }
-    virtual std::tuple<Scalar *, Scalar *> step(LayerBase<Scalar, Device_>& layer) = 0;
+    virtual std::tuple<Scalar *, Scalar *> step(LayerBase<Scalar>& layer) = 0;
 
     inline static Dispatcher<DefaultDevice> default_dispatcher = Dispatcher<DefaultDevice>();
 

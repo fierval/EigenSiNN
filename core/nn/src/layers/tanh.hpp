@@ -8,7 +8,7 @@ using namespace  Eigen;
 namespace EigenSinn {
 
   template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
-  class Tanh : public LayerBase<Scalar, Device_> {
+  class Tanh : public LayerBase<Scalar> {
   public:
     // leaky relu if necessary
     Tanh(Dispatcher<Device_>& _device =  LayerBase::default_dispatcher) :
@@ -16,7 +16,7 @@ namespace EigenSinn {
       , inited(false)
     {}
 
-    void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
+    void forward(LayerBase<Scalar>& prev_layer_any) override {
 
       set_dims(prev_layer_any);
       TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_any.get_output(), vector2array< Rank>(in_dims));
@@ -32,7 +32,7 @@ namespace EigenSinn {
     }
 
 
-    void backward(LayerBase<Scalar, Device_>& prev_layer_any, Scalar * next_layer_grad_any) override {
+    void backward(LayerBase<Scalar>& prev_layer_any, Scalar * next_layer_grad_any) override {
 
       TensorMap<Tensor<Scalar, Rank>> next_layer_grad(next_layer_grad_any, vector2array< Rank>(out_dims));
 
