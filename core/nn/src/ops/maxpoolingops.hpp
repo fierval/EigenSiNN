@@ -109,13 +109,8 @@ namespace EigenSinn {
 
   template <typename Scalar, typename Device_>
   struct MaxPooler<Scalar, 4, ColMajor, Device_> {
-    inline auto do_max_pool(const DeviceTensor<Device_, Scalar, 4>& t, const array<Index, 2>& extents, int stride) {
+   inline auto do_max_pool(const DeviceTensor<Device_, Scalar, 4>& t, const array<Index, 2>& extents, int stride) {
       auto dims = t.dimensions();
-
-      if (!check_valid_params<4>(extents, stride, dims)) {
-
-        throw std::invalid_argument("Invalid pooling dimensions");
-      }
 
       DeviceTensor<Device_, Tuple<Index, Scalar>, 2> local_pool(dims[0], dims[1]);
       
