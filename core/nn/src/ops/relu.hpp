@@ -26,9 +26,11 @@ namespace EigenSinn {
     DeviceTensor<Device_, Scalar, Rank, Layout> mask(t.dimensions());
     DeviceTensor<Device_, Scalar, Rank, Layout> output(t.dimensions());
     
+    Scalar zero = 0;
+
     output = t;
-    pos_mask.view() = (*output >= static_cast<Scalar>(0)).cast<Scalar>();
-    neg_mask.view() = (*output < static_cast<Scalar>(0)).cast<Scalar>();
+    pos_mask.view() = (*output >= zero).template cast<Scalar>();
+    neg_mask.view() = (*output < zero).template cast<Scalar>();
     
     neg_mask *= threshold;
     mask = neg_mask + pos_mask;
