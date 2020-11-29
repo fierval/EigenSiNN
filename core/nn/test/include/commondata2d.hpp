@@ -78,10 +78,7 @@ namespace EigenSinnTest {
       dbias.resize(array<Index, 1>({ out_dims[1] }));
       dbias.setValues({ 0.66265798, 1.62600470, 1.67406428, 1.05092955 });
 
-      target.setZero();
-      (*target)(0, 1) = 1;
-      (*target)(1, 3) = 1;
-      (*target)(2, 2) = 1;
+      target.setValues({ {0, 1, 0, 0}, {0, 0, 0, 1}, {0, 0, 1, 0} });
     }
 
     const array<Index, 2> dims = { 3, 8 }, out_dims = { 3, 4 }, weight_dims = { 4, 8 }, weights_dim_shuffled = { 8, 4 };

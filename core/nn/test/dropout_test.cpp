@@ -18,7 +18,7 @@ namespace EigenSinnTest {
       cd.init();
     }
 
-    CommonData2d cd;
+    CommonData2d<DefaultDevice> cd;
   };
 
   TEST_F(Dropout, Forward) {
@@ -29,6 +29,7 @@ namespace EigenSinnTest {
     EigenSinn::Dropout<float, 2> dropout;
     dropout.forward(input);
 
+    auto linearInput = cd.linearInput.to_host();
     Tensor<float, 2> output = DeviceTensor<DefaultDevice, float, 2>(dropout.get_output()).to_host();
 
     Tensor<float, 2> zeros = DeviceTensor<DefaultDevice, float, 2>(output.dimensions()).to_host();
@@ -45,7 +46,7 @@ namespace EigenSinnTest {
 
     for (Index i = 0; i < output.dimension(0); i++) {
       for (Index j = 0; j < output.dimension(1); j++) {
-        EXPECT_TRUE(output(i, j) == 0. || output(i, j) == 2. * cd.linearInput(i, j));
+        EXPECT_TRUE(output(i, j) == 0. || output(i, j) == 2. * linearInput(i, j));
       }
     }
   }
@@ -54,6 +55,8 @@ namespace EigenSinnTest {
 
     Input<float, 2> input;
     input.set_input(cd.linearInput);
+    auto linearLoss = cd.linearLoss.to_host();
+
 
     EigenSinn::Dropout<float, 2> dropout;
     dropout.forward(input);
@@ -71,7 +74,7 @@ namespace EigenSinnTest {
 
     for (Index i = 0; i < dinput.dimension(0); i++) {
       for (Index j = 0; j < dinput.dimension(1); j++) {
-        EXPECT_TRUE(dinput(i, j) == 0. || dinput(i, j) == 2. * cd.linearLoss(i, j));
+        EXPECT_TRUE(dinput(i, j) == 0. || dinput(i, j) == 2. * linearLoss(i, j));
       }
     }
   }
