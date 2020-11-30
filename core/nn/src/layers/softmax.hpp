@@ -7,16 +7,16 @@ using namespace  Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
+  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
   class Softmax : public LayerBase<Scalar> {
   public:
-    Softmax(Dispatcher<Device_>& _device =  LayerBase::default_dispatcher) :
-      LayerBase(_device)
-      , inited(false)
+    Softmax() 
+      : inited(false)
     {
       for (Index i = 0; i < Rank - 1; i++) {
           reduction_axes[i] = i + 1;
           reshape_dims[i] = 1;
+          ones_dims[i] = 1;
       }
 
       reshape_dims[Rank - 1] = 1;
@@ -24,8 +24,7 @@ namespace EigenSinn {
 
     void forward(LayerBase<Scalar>& prev_layer_any) override {
 
-      set_dims(prev_layer_any);
-      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_any.get_output(), vector2array<Rank>(in_dims));
+      DeviceTensor<Device_, Scalar, Rank, Layout> prev_layer(prev_layer_any.get_output());
       
       // we have never initialized or switched from train to test
       // initialize the "1" tensor used for sigmoid backprop
@@ -35,52 +34,49 @@ namespace EigenSinn {
       }
 
       // reliable softmax
-      Tensor<Scalar, 0> layer_max;
-      layer_max.device(dispatcher.get_device()) = prev_layer.maximum();
+      DeviceTensor<Device_, Scalar, Rank, Layout> layer_max(prev_layer.dimensions());
+      layer_max.view() = prev_layer->maximum().reshape(ones_dims).broadcast(prev_layer.dimensions());
 
-      Tensor<Scalar, Rank> layer_max_broadcast(prev_layer.dimensions());
-      layer_max_broadcast.setConstant(layer_max(0));
+      exp_all.view() = (prev_layer - layer_max)->exp();
 
-      exp_all.device(dispatcher.get_device()) = (prev_layer - layer_max_broadcast).exp();
+      exp_sum.view() = exp_all->sum(reduction_axes);
+      exp_sum_broadcast.view() = exp_sum->reshape(reshape_dims).broadcast(broadcast_dims);
 
-      exp_sum.device(dispatcher.get_device()) = exp_all.sum(reduction_axes);
-      exp_sum_broadcast.device(dispatcher.get_device()) = exp_sum.reshape(reshape_dims).broadcast(broadcast_dims);
-
-      layer_output.device(dispatcher.get_device()) = exp_all / exp_sum_broadcast;
+      layer_output = exp_all / exp_sum_broadcast;
     }
 
-    void backward(LayerBase<Scalar>& prev_layer_any, Scalar * next_layer_grad_any) override {
+    void backward(LayerBase<Scalar>& prev_layer_any, std::any next_layer_grad_any) override {
       
-      TensorMap<Tensor<Scalar, Rank>> dout(next_layer_grad_any, vector2array<Rank>(out_dims));
+      DeviceTensor<Device_, Scalar, Rank, Layout> dout(next_layer_grad_any);
 
-      Tensor<Scalar, Rank> d_mul_exp(dims);
-      d_mul_exp.device(dispatcher.get_device()) = dout / exp_sum_broadcast;
+      DeviceTensor<Device_, Scalar, Rank, Layout> d_mul_exp(dims);
+      d_mul_exp = dout / exp_sum_broadcast;
 
-      Tensor<Scalar, 1> d_mul_inv_x(dims[0]);
-      d_mul_inv_x.device(dispatcher.get_device()) = (exp_all * dout).sum(reduction_axes);
+      DeviceTensor<Device_, Scalar, 1, Layout> d_mul_inv_x(dims[0]);
+      d_mul_inv_x.view() = (exp_all * dout)->sum(reduction_axes);
 
-      Tensor<Scalar, 1> d_inv(dims[0]);
-      d_inv.device(dispatcher.get_device()) = -1. / exp_sum.pow(2) * d_mul_inv_x;
+      DeviceTensor<Device_, Scalar, 1, Layout> d_inv(dims[0]);
+      d_inv.view() = -1. / exp_sum->pow(2) * *d_mul_inv_x;
 
-      Tensor<Scalar, Rank> d_sum_exp(dims);
-      d_sum_exp.device(dispatcher.get_device()) = d_inv.reshape(reshape_dims).broadcast(broadcast_dims);
+      DeviceTensor<Device_, Scalar, Rank, Layout> d_sum_exp(dims);
+      d_sum_exp.view() = d_inv->reshape(reshape_dims).broadcast(broadcast_dims);
 
-      Tensor<Scalar, Rank> d_exp(dims);
-      d_exp.device(dispatcher.get_device()) = d_mul_exp + d_sum_exp;
+      DeviceTensor<Device_, Scalar, Rank, Layout> d_exp(dims);
+      d_exp = d_mul_exp + d_sum_exp;
 
-      layer_grad.device(dispatcher.get_device()) = exp_all * d_exp;
+      layer_grad = exp_all * d_exp;
     }
 
-    Scalar* get_output() override {
-      return layer_output.data();
+    std::any get_output() override {
+      return layer_output;
     };
 
-    Scalar* get_loss_by_input_derivative() override {
-      return layer_grad.data();
+    std::any get_loss_by_input_derivative() override {
+      return layer_grad;
     };
 
   private:
-    void init_cached(const Eigen::Tensor<Scalar, Rank>& prev_layer)
+    void init_cached(const DeviceTensor<Device_, Scalar, Rank, Layout>& prev_layer)
     {
       layer_output.resize(prev_layer.dimensions());
       layer_grad.resize(prev_layer.dimensions());
@@ -97,10 +93,10 @@ namespace EigenSinn {
     }
 
     bool inited;
-    Tensor<Scalar, Rank> layer_output, layer_grad, exp_all, exp_sum_broadcast;
-    Tensor<Scalar, 1> exp_sum;
+    DeviceTensor<Device_, Scalar, Rank, Layout> layer_output, layer_grad, exp_all, exp_sum_broadcast;
+    DeviceTensor<Device_, Scalar, 1, Layout> exp_sum;
     array<Index, Rank - 1> reduction_axes;
-    array<Index, Rank> broadcast_dims, reshape_dims, dims;
+    array<Index, Rank> broadcast_dims, reshape_dims, dims, ones_dims;
   };
 
 

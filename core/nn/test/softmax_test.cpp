@@ -35,20 +35,20 @@ namespace EigenSinnTest {
            0.01421760, -0.03682784,  0.02758209} });
     }
 
-    CommonData2d cd;
-    Tensor<float, 2> output, dinput;
+    CommonData2d<DefaultDevice> cd;
+    DeviceTensor<DefaultDevice, float, 2> output, dinput;
 
   };
 
   TEST_F(Softmax, Backward) {
 
-    Input<float, 2> input(cd.dims);
-    input.set_input(cd.linearInput.data());
+    Input<float, 2> input;
+    input.set_input(cd.linearInput);
 
     EigenSinn::Softmax<float, 2> softmax;
     softmax.init();
     softmax.forward(input);
-    softmax.backward(input, cd.linearLoss.data());
+    softmax.backward(input, cd.linearLoss);
 
     EXPECT_TRUE(is_elementwise_approx_eq(softmax.get_output(), output));
     EXPECT_TRUE(is_elementwise_approx_eq(softmax.get_loss_by_input_derivative(), dinput));
