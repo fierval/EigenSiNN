@@ -96,4 +96,27 @@ namespace EigenSinn {
     size_t final_size = t.size() * sizeof(Scalar);
     device.memcpyHostToDevice(t.data(), vals.data(), final_size);
   }
+
+  template<Index Rank, int Layout = ColMajor>
+  inline Index compute_flat_dim(const array<Index, Rank> source_dim, const array<Index, Rank> offsets) {
+
+    Index res = 0;
+    if (Layout == ColMajor) {
+      res = source_dim[Rank - 2] * offsets[Rank - 1];
+      for (int i = Rank - 2; i >= 0; i--) {
+        res += offsets[i + 1];
+        res *= source_dim[i];
+      }
+      res += offsets[0];
+    }
+    else {
+      res = source_dim[1] * offsets[0];
+      for (int i = 2; i < Rank; i++) {
+        res += offsets[i - 1];
+        res *= source_dim[i];
+      }
+      res += offsets[Rank];
+    }
+    return res;
+  }
 }

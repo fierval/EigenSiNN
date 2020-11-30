@@ -34,20 +34,20 @@ namespace EigenSinnTest {
           0.12362586, 0.04290103, 0.12061017}});
     }
 
-    CommonData2d cd;
-    Tensor<float, 2> output, dinput;
+    CommonData2d<ThreadPoolDevice> cd;
+    DeviceTensor<ThreadPoolDevice, float, 2> output, dinput;
 
   };
 
   TEST_F(Sigmoid, Backward) {
 
-    Input<float, 2> input(cd.dims);
-    input.set_input(cd.linearInput.data());
+    Input<float, 2, 0, ThreadPoolDevice> input;
+    input.set_input(cd.linearInput);
 
-    EigenSinn::Sigmoid<float, 2> sg;
+    EigenSinn::Sigmoid<float, 2, 0, ThreadPoolDevice> sg;
     sg.init();
     sg.forward(input);
-    sg.backward(input, cd.linearLoss.data());
+    sg.backward(input, cd.linearLoss);
 
     EXPECT_TRUE(is_elementwise_approx_eq(sg.get_output(), output));
     EXPECT_TRUE(is_elementwise_approx_eq(sg.get_loss_by_input_derivative(), dinput));
