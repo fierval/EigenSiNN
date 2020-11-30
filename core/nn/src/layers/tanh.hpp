@@ -7,19 +7,16 @@ using namespace  Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
+  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
   class Tanh : public LayerBase<Scalar> {
   public:
     // leaky relu if necessary
-    Tanh(Dispatcher<Device_>& _device =  LayerBase::default_dispatcher) :
-      LayerBase(_device)
-      , inited(false)
-    {}
+    Tanh() 
+      : inited(false)  {}
 
     void forward(LayerBase<Scalar>& prev_layer_any) override {
 
-      set_dims(prev_layer_any);
-      TensorMap<Tensor<Scalar, Rank>> prev_layer(prev_layer_any.get_output(), vector2array< Rank>(in_dims));
+      DeviceTensor<Device_, Scalar, Rank, Layout> prev_layer(prev_layer_any.get_output());
 
       // we have never initialized or switched from train to test
       // initialize the "1" tensor used for sigmoid backprop
@@ -28,28 +25,28 @@ namespace EigenSinn {
         init_cached(prev_layer);
       }
 
-      layer_output.device(dispatcher.get_device()) = prev_layer.tanh();
+      layer_output.view() = prev_layer->tanh();
     }
 
 
-    void backward(LayerBase<Scalar>& prev_layer_any, Scalar * next_layer_grad_any) override {
+    void backward(LayerBase<Scalar>& prev_layer_any, std::any next_layer_grad_any) override {
 
-      TensorMap<Tensor<Scalar, Rank>> next_layer_grad(next_layer_grad_any, vector2array< Rank>(out_dims));
+      DeviceTensor<Device_, Scalar, Rank, Layout> next_layer_grad(next_layer_grad_any);
 
-      layer_grad.device(dispatcher.get_device()) = next_layer_grad * (ones - layer_output.pow(2.));
+      layer_grad.view() = *next_layer_grad * (*ones - layer_output->pow(2.));
     }
 
-    Scalar* get_output() override {
-      return layer_output.data();
+    std::any get_output() override {
+      return layer_output;
     };
 
-    Scalar* get_loss_by_input_derivative() override {
-      return layer_grad.data();
+    std::any get_loss_by_input_derivative() override {
+      return layer_grad;
     };
 
 
   private:
-    void init_cached(const Eigen::Tensor<Scalar, Rank>& prev_layer)
+    void init_cached(const DeviceTensor<Device_, Scalar, Rank, Layout>& prev_layer)
     {
       ones.resize(prev_layer.dimensions());
       ones.setConstant(1);
@@ -59,8 +56,7 @@ namespace EigenSinn {
     }
 
     bool inited;
-    Tensor<Scalar, Rank> layer_output, layer_grad;
-    Tensor<Scalar, Rank> ones;
+    DeviceTensor<Device_, Scalar, Rank, Layout> ones, layer_output, layer_grad;
   };
 
 
