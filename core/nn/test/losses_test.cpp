@@ -19,25 +19,23 @@ namespace EigenSinnTest {
       cd.init();
       dloss.resize(cd.out_dims);
 
-      inp = new Input<float, 2>(cd.dims);
-      inp->set_input(cd.linearInput.data());
+      inp.set_input(cd.linearInput);
 
       fc = new Linear<float>(cd.dims[1], cd.out_dims[1]);
 
       fc->init(cd.weights);
-      fc->forward(*inp);
+      fc->forward(inp);
     }
 
     void TearDown() {
       delete fc;
-      delete inp;
     }
 
     float loss;
-    Tensor<float, 2> dloss;
+    DeviceTensor<Device_, float, 2> dloss;
     CommonData2d<DefaultDevice> cd;
     Linear<float>* fc;
-    Input<float, 2> * inp;
+    Input<float, 2> inp;
   };
 
   TEST_F(Loss, MSE) {
