@@ -51,6 +51,12 @@ namespace EigenSinn
       tensor_view.reset(new TensorView<Scalar, Rank, Layout>(data, dims));
     }
 
+    explicit DeviceTensor(TensorView<Scalar, Rank, Layout>& tv)
+      : DeviceTensor() {
+
+      tensor_view = tv;
+    }
+
 
     /// <summary>
     /// Conversion from any

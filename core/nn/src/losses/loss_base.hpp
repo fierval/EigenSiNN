@@ -2,12 +2,13 @@
 
 #include <any>
 #include <unsupported/Eigen/CXX11/Tensor>
+#include <device/device_tensor.hpp>
 
 using namespace Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, typename Actual, Index Rank>
+  template <typename Scalar, typename Actual, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
   class LossBase {
 
   public:
@@ -18,37 +19,61 @@ namespace EigenSinn {
       return loss;
     }
 
-    virtual Scalar * get_loss_derivative_by_input() {
-      return dloss.data();
+    virtual std::any get_loss_derivative_by_input() {
+      return dloss;
     }
 
     const array<Index, Rank>& get_dims() { return orig_dims; }
 
   protected:
+    // Initializes all sorts of auxiliary dimension values
+    inline void initialize(const DeviceTensor<Device_, Scalar, Rank, Layout>& predicted, const DeviceTensor<Device_, Actual, Rank, Layout> actual) {
 
-    inline void initialize(const Tensor<Scalar, Rank>& predicted, const Tensor<Actual, Rank> actual) {
+      if (is_initialized) { return; }
 
       array<Index, Rank> predicted_dims = predicted.dimensions();
       array<Index, Rank> actual_dims = actual.dimensions();
 
-      if (!is_dim_set) {
-        orig_dims = actual.dimensions();
-        spread_grad.resize(orig_dims);
-        // TODO: rewrite for Rank > 2
-        spread_grad.setConstant(1. / (orig_dims[0] * orig_dims[1]));
-        is_dim_set = true;
+      dloss.resize(actual_dims);
+
+      // once we reduce only batch dimension is left
+      reduced_dims[0] = predicted_dims[0];
+
+      // dimensions reduced by all except batch dimension
+      for (int i = 0; i < Rank - 1; i++) { 
+        reduction_dims[i] = dims[i + 1]; 
+      }
+
+      reshape_dims[0] = orig_dims[0];
+      broadcast_dims[0] = 1;
+      for (int i = 1; i < Rank; i++) {
+        reshape_dims[i] = 1;
+        broadcast_dims[i] = orig_dims[i];
+      }
+
+      orig_dims = actual.dimensions();
+      spread_grad.resize(orig_dims);
+
+      spread_grad.setConstant(1.);
+      for (int i = 0; i < Rank; i++) {
+        spread_grad /= orig_dims[i];
       }
 
       for (int i = 0; i < Rank; i++) {
         assert(predicted_dims[i] == orig_dims[i]);
       }
+      is_initialized = true;
     }
 
     array<Index, Rank> orig_dims;
-    Scalar loss;
-    bool is_dim_set;
+    array<Index, 1>, reduced_dims; // batch dimension only
+    array<Index, Rank> reshape_dims; // reshape: first is batch dimension, rest is 1
+    array<Index, Rank - 1> reduction_dims; // dimensions, along which we reduce
+    array<Index, Rank> broadcast_dims; // broadcast dimensions: same as orig_dims except 1 for batch dimension
 
-    Tensor<Scalar, Rank> dloss;
-    Tensor<Scalar, Rank> spread_grad;
+    Scalar loss;
+    bool is_initialized = false;
+
+    DeviceTensor<Device_, Scalar, Rank, Layout> dloss, spread_grad;
   };
 }

@@ -5,50 +5,58 @@
 
 namespace EigenSinn {
 
-  template<typename Scalar, typename Actual, Index Rank>
-  class CrossEntropyLoss : public LossBase<Scalar, Actual, Rank> {
+  // TODO: Add support for any rank
+  template<typename Scalar, typename Actual, Index Rank = 2, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  class CrossEntropyLoss : public LossBase<Scalar, Actual, Rank, Layout, Device_> {
 
   public:
     CrossEntropyLoss() : is_cache_set(false) {
-      is_dim_set = false;
     }
 
-    void initialize(const Tensor<Scalar, Rank>& predicted, const Tensor<Actual, Rank> actual) {
+    void initialize(const DeviceTensor<Device_, Scalar, Rank, Layout>& predicted, const DeviceTensor<Device_, Actual, Rank, Layout> actual) {
 
-      if (!is_cache_set) {
-        LossBase::initialize(predicted, actual);
-
-        dsum.resize(orig_dims[0]);
-        dsum.setConstant(1. / orig_dims[0]);
-
-        broadcast_dims[1] = orig_dims[1];
-        is_cache_set = true;
+      if (is_initialized) {
+        return;
       }
+
+      LossBase::initialize(predicted, actual);
+
+
+      dsum.resize(reduced_dims);
+
+      Scalar cnst = 1;
+      for (int i = 0; i < reduced_dims.size(); i++) {
+        cnst /= reduced_dims[i];
+      }
+      dsum.setConstant(cnst);
     }
 
-    void step(const Tensor<Scalar, Rank>& predicted, const Tensor<Actual, Rank>& actual) override {
+    void step(const DeviceTensor<Device_, Scalar, Rank, Layout>& predicted, const DeviceTensor<Device_, Actual, Rank, Layout>& actual) override {
 
       initialize(predicted, actual);
-      Tensor<Scalar, Rank> act_scalar = actual.cast<Scalar>();
+
+      DeviceTensor<Device_, Scalar, Rank, Layout> act_scalar(orig_dims);
+      act_scalar.view() = actual->cast<Scalar>();
 
       // memoize these for the backward pass
-      Tensor<Scalar, Rank> exp_all = predicted.exp();
-      Tensor<Scalar, 1> exp_sum = exp_all.sum(reduction_dims);
+      DeviceTensor<Device_, Scalar, Rank, Layout> exp_all(orig_dims);
+      exp_all.view() = predicted->exp();
 
-      Tensor<Scalar, 0> loss_t = ((-predicted * act_scalar).sum(reduction_dims) + exp_sum.log()).mean();
-      loss = loss_t(0);
-      
+      DeviceTensor<Device_, Scalar, Rank - 1, Layout> exp_sum(reduced_dims);
+      exp_sum.view() = exp_all->sum(reduction_dims);
+
+      DeviceTensor<Device_, Scalar, 1, Layout> loss_t(1);
+      loss_t.view() = ((-predicted * act_scalar)->sum(reduction_dims) + exp_sum->log()).mean();
+      loss = loss_t.to_host()(0);
+
       // backward step
-      Tensor<Scalar, Rank> dlog = (1. / exp_sum * dsum).reshape(array<Index, 2>{orig_dims[0], 1}).eval().broadcast(broadcast_dims);
+      DeviceTensor<Device_, Scalar, Rank, Layout> dlog(orig_dims);
+      dlog.view() = (1. / exp_sum * dsum)->reshape(reshape_dims).eval().broadcast(broadcast_dims);
       dloss = -1. / orig_dims[0] * act_scalar + exp_all * dlog;
     }
 
   private:
 
-    Tensor<Scalar, 1> dsum;
-    bool is_cache_set;
-    array<Index, 2> broadcast_dims = { 1, 0 };
-    array<Index, 1> reduction_dims = { 1 };
-
+    DeviceTensor<Device_, Scalar, Rank - 1, Layout> dsum;
   };
 }

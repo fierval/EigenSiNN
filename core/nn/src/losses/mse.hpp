@@ -5,21 +5,22 @@
 
 namespace EigenSinn {
 
-  template<typename Scalar, typename Actual, Index Rank>
-  class MseLoss : public LossBase<Scalar, Actual, Rank> {
+  template<typename Scalar, typename Actual, Index Rank = 2, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  class MseLoss : public LossBase<Scalar, Actual, Rank, Layout, Device_> {
   
   public:
-    MseLoss() {
-      is_dim_set = false;
-    }
+    MseLoss() {}
 
-    void step(const Tensor<Scalar, Rank>& predicted, const Tensor<Actual, Rank>& actual) override {
+    void step(const DeviceTensor<Device_, Scalar, Rank, Layout>& predicted, const DeviceTensor<Device_, Actual, Rank, Layout>& actual) override {
       
       initialize(predicted, actual);
 
-      Tensor<float, Rank> predicted_actual_diff = predicted - actual.cast<Scalar>();
-      Tensor<Scalar, 0> loss_t = predicted_actual_diff.pow(2).mean();
-      loss = *loss_t.data();
+      DeviceTensor<Device_, Scalar, Rank, Layout> predicted_actual_diff(orig_dims);
+      predicted_actual_diff.view() = *predicted - actual->cast<Scalar>();
+
+      DeviceTensor<Device_, Scalar, Rank - 1, Layout> loss_t(1);
+      loss_t = predicted_actual_diff->pow(2).mean();
+      loss = loss_t.to_host()(0);
 
       //backward step
       dloss = 2. * spread_grad * predicted_actual_diff;

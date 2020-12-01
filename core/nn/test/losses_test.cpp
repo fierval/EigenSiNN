@@ -35,7 +35,7 @@ namespace EigenSinnTest {
 
     float loss;
     Tensor<float, 2> dloss;
-    CommonData2d cd;
+    CommonData2d<DefaultDevice> cd;
     Linear<float>* fc;
     Input<float, 2> * inp;
   };
@@ -48,9 +48,9 @@ namespace EigenSinnTest {
       { 0.04065431, -0.21157818, -0.09260463, -0.06111295},
       {-0.12644342,  0.00961572, -0.17200474,  0.19923662} });
 
-    TensorMap<Tensor<float, 2>> output(fc->get_output(), vector2array<2>(fc->get_out_dims()));
+    DeviceTensor<DefaultDevice, float, 2> output(fc->get_output(), vector2array<2>(fc->get_out_dims()));
 
-    MseLoss<float, float, 2> loss_func;
+    MseLoss<float, float, 2, 0, DefaultDevice> loss_func;
     loss_func.step(output, cd.target);
 
     EXPECT_EQ(loss, loss_func.get_output());
@@ -65,9 +65,9 @@ namespace EigenSinnTest {
               { 0.10596204,  0.02332874,  0.04763307, -0.17692387},
               { 0.02690827,  0.06087292, -0.27768427,  0.18990307} });
 
-    TensorMap<Tensor<float, 2>> output(fc->get_output(), vector2array<2>(fc->get_out_dims()));
+    DeviceTensor<DefaultDevice, float, 2> output(fc->get_output(), vector2array<2>(fc->get_out_dims()));
 
-    CrossEntropyLoss<float, float, 2> loss_func;
+    CrossEntropyLoss<float, float, 2, 0, DefaultDevice> loss_func;
     loss_func.step(output, cd.target);
 
     EXPECT_EQ(loss, loss_func.get_output());
