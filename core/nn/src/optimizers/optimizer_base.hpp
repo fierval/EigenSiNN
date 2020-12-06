@@ -8,26 +8,21 @@ using namespace Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, typename Device_ = DefaultDevice>
+  template <typename Scalar>
   class OptimizerBase {
 
   public:
-    OptimizerBase(Scalar _lr, Dispatcher<Device_>& _dispatcher) 
+    OptimizerBase(Scalar _lr) 
       : param_set(false)
-    , lr(_lr)
-    , dispatcher(_dispatcher) {
+    , lr(_lr) {
 
     }
     virtual std::tuple<Scalar *, Scalar *> step(LayerBase<Scalar>& layer) = 0;
-
-    inline static Dispatcher<DefaultDevice> default_dispatcher = Dispatcher<DefaultDevice>();
 
   protected:
     // learing rate
     Scalar lr;
     bool param_set;
-
-    Dispatcher<Device_>& dispatcher;
 
   };
 }
