@@ -17,7 +17,7 @@ namespace EigenSinn {
     , lr(_lr) {
 
     }
-    virtual std::tuple<Scalar *, Scalar *> step(LayerBase<Scalar>& layer) = 0;
+    virtual std::tuple<std::any, std::any> step(LayerBase<Scalar>& layer) = 0;
 
   protected:
     // learing rate
