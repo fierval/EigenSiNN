@@ -19,7 +19,7 @@ namespace EigenSinn {
       predicted_actual_diff.view() = *predicted - actual->cast<Scalar>();
 
       DeviceTensor<Device_, Scalar, Rank - 1, Layout> loss_t(1);
-      loss_t = predicted_actual_diff->pow(2).mean();
+      loss_t.view() = predicted_actual_diff->pow(2).mean();
       loss = loss_t.to_host()(0);
 
       //backward step

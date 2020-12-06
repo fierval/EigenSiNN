@@ -359,7 +359,7 @@ namespace EigenSinn
     }
 
     // Operators with device const
-    DeviceTensor& operator+=(Scalar& rhs) {
+    DeviceTensor& operator+=(Scalar rhs) {
       tensor_view->device(device_) = *tensor_view + rhs;
       return *this;
     }
@@ -369,7 +369,7 @@ namespace EigenSinn
       return lhs;
     }
 
-    DeviceTensor& operator-=(Scalar& rhs) {
+    DeviceTensor& operator-=(Scalar rhs) {
       tensor_view->device(device_) = *tensor_view - rhs;
       return *this;
     }
@@ -379,7 +379,7 @@ namespace EigenSinn
       return lhs;
     }
 
-    DeviceTensor& operator*=(Scalar& rhs) {
+    DeviceTensor& operator*=(Scalar rhs) {
       tensor_view->device(device_) = *tensor_view * rhs;
       return *this;
     }
@@ -389,7 +389,7 @@ namespace EigenSinn
       return lhs;
     }
 
-    DeviceTensor& operator/=(Scalar& rhs) {
+    DeviceTensor& operator/=(Scalar rhs) {
       tensor_view->device(device_) = *tensor_view / rhs;
       return *this;
     }
@@ -399,7 +399,7 @@ namespace EigenSinn
       return lhs;
     }
 
-    friend DeviceTensor operator/(Scalar& lhs, DeviceTensor rhs) {
+    friend DeviceTensor operator/(Scalar lhs, DeviceTensor rhs) {
 
       DeviceTensor<Device_, Scalar, Rank, Layout> res(rhs.dimensions());
       res->device(rhs.device_) = lhs / rhs;

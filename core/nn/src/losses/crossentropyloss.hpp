@@ -10,7 +10,7 @@ namespace EigenSinn {
   class CrossEntropyLoss : public LossBase<Scalar, Actual, Rank, Layout, Device_> {
 
   public:
-    CrossEntropyLoss() : is_cache_set(false) {
+    CrossEntropyLoss() {
     }
 
     void initialize(const DeviceTensor<Device_, Scalar, Rank, Layout>& predicted, const DeviceTensor<Device_, Actual, Rank, Layout> actual) {
@@ -46,12 +46,12 @@ namespace EigenSinn {
       exp_sum.view() = exp_all->sum(reduction_dims);
 
       DeviceTensor<Device_, Scalar, 1, Layout> loss_t(1);
-      loss_t.view() = ((-predicted * act_scalar)->sum(reduction_dims) + exp_sum->log()).mean();
+      loss_t.view() = ((-*predicted * *act_scalar).sum(reduction_dims) + exp_sum->log()).mean();
       loss = loss_t.to_host()(0);
 
       // backward step
       DeviceTensor<Device_, Scalar, Rank, Layout> dlog(orig_dims);
-      dlog.view() = (1. / exp_sum * dsum)->reshape(reshape_dims).eval().broadcast(broadcast_dims);
+      dlog.view() = (1. / *exp_sum * *dsum).reshape(reshape_dims).eval().broadcast(broadcast_dims);
       dloss = -1. / orig_dims[0] * act_scalar + exp_all * dlog;
     }
 

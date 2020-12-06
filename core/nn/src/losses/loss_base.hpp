@@ -13,7 +13,7 @@ namespace EigenSinn {
 
   public:
 
-    virtual void step(const Tensor<Scalar, Rank>& predictions_any, const Tensor<Actual, Rank>& actual_any) = 0;
+    virtual void step(const DeviceTensor<Device_, Scalar, Rank, Layout>& predictions_any, const DeviceTensor<Device_, Actual, Rank, Layout>& actual_any) = 0;
 
     virtual Scalar get_output() {
       return loss;
@@ -34,6 +34,7 @@ namespace EigenSinn {
       array<Index, Rank> predicted_dims = predicted.dimensions();
       array<Index, Rank> actual_dims = actual.dimensions();
 
+      orig_dims = actual.dimensions();
       dloss.resize(actual_dims);
 
       // once we reduce only batch dimension is left
@@ -41,7 +42,7 @@ namespace EigenSinn {
 
       // dimensions reduced by all except batch dimension
       for (int i = 0; i < Rank - 1; i++) { 
-        reduction_dims[i] = dims[i + 1]; 
+        reduction_dims[i] = predicted_dims[i + 1]; 
       }
 
       reshape_dims[0] = orig_dims[0];
@@ -51,12 +52,11 @@ namespace EigenSinn {
         broadcast_dims[i] = orig_dims[i];
       }
 
-      orig_dims = actual.dimensions();
       spread_grad.resize(orig_dims);
 
       spread_grad.setConstant(1.);
       for (int i = 0; i < Rank; i++) {
-        spread_grad /= orig_dims[i];
+        spread_grad /= static_cast<Scalar>(orig_dims[i]);
       }
 
       for (int i = 0; i < Rank; i++) {
@@ -66,7 +66,7 @@ namespace EigenSinn {
     }
 
     array<Index, Rank> orig_dims;
-    array<Index, 1>, reduced_dims; // batch dimension only
+    array<Index, 1> reduced_dims; // batch dimension only
     array<Index, Rank> reshape_dims; // reshape: first is batch dimension, rest is 1
     array<Index, Rank - 1> reduction_dims; // dimensions, along which we reduce
     array<Index, Rank> broadcast_dims; // broadcast dimensions: same as orig_dims except 1 for batch dimension
