@@ -14,6 +14,10 @@ namespace EigenSinn
     explicit DeviceTensor()
       : dispatcher(Dispatcher<Device_>::create())
       , device_(dispatcher.get_device()) {
+
+      if (Rank == 0) {
+        tensor_view = create_device_ptr<Device_, Scalar, Rank, Layout>(DSizes<Index, Rank>(), device_);
+      }
     }
 
     explicit DeviceTensor(const DSizes<Index, Rank> dims)

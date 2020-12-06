@@ -45,7 +45,7 @@ namespace EigenSinn {
       DeviceTensor<Device_, Scalar, Rank - 1, Layout> exp_sum(reduced_dims);
       exp_sum.view() = exp_all->sum(reduction_dims);
 
-      DeviceTensor<Device_, Scalar, 1, Layout> loss_t(1);
+      DeviceTensor<Device_, Scalar, 0, Layout> loss_t;
       loss_t.view() = ((-*predicted * *act_scalar).sum(reduction_dims) + exp_sum->log()).mean();
       loss = loss_t.to_host()(0);
 

@@ -41,8 +41,8 @@ namespace EigenSinn {
       reduced_dims[0] = predicted_dims[0];
 
       // dimensions reduced by all except batch dimension
-      for (int i = 0; i < Rank - 1; i++) { 
-        reduction_dims[i] = predicted_dims[i + 1]; 
+      for (int i = 1; i < Rank; i++) { 
+        reduction_dims[i - 1] = i; 
       }
 
       reshape_dims[0] = orig_dims[0];
