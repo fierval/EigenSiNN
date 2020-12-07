@@ -18,21 +18,22 @@ namespace EigenSinnTest {
       cd.init();
       lr = 0.001;
       new_bias.resize(cd.out_dims[1]);
+      new_weights.resize(cd.weights_dim_shuffled);
     }
 
     auto PropagateGradient(int epochs) {
 
       // collect weights and biases and perform the GD step
-      float* weights_auto;
-      float* bias_auto;
+      DeviceTensor<DefaultDevice, float, 2> weights_auto;
+      DeviceTensor<DefaultDevice, float, 1> bias_auto;
 
       // input layer
-      Input<float, 2> input(cd.dims);
-      input.set_input(cd.linearInput.data());
+      Input<float, 2> input;
+      input.set_input(cd.linearInput);
 
       // create fully connected layer
       Linear<float> linear(cd.dims[1], cd.out_dims[1]);
-      linear.init(cd.weights);
+      linear.init(cd.weights.to_host());
 
       // create loss function
       CrossEntropyLoss<float, float, 2> loss_func;
@@ -45,36 +46,36 @@ namespace EigenSinnTest {
         // propagate forward through the model
         linear.forward(input);
 
-        TensorMap<Tensor<float, 2>> output(linear.get_output(), vector2array<2>(linear.get_out_dims()));
+        DeviceTensor<DefaultDevice, float, 2> output(linear.get_output());
 
         // compute loss
         loss_func.step(output, cd.target);
-        TensorMap<Tensor<float, 2>> dloss(loss_func.get_loss_derivative_by_input(), loss_func.get_dims());
-
-        std::cout << "LOSS:" << std::endl << dloss << std::endl;
+        DeviceTensor<DefaultDevice, float, 2> dloss(loss_func.get_loss_derivative_by_input());
 
         // propagate back through the fc layer
         // compute dL/dw, dL/db, dL/dx
-        linear.backward(input, dloss.data());
+        linear.backward(input, dloss);
 
         //std::any new_weights, new_bias;
         std::tie(weights_auto, bias_auto) = adam.step(linear);
+        linear.set_bias(bias_auto);
+        linear.set_weights(weights_auto);
       }
 
       EXPECT_TRUE(is_elementwise_approx_eq(new_weights, weights_auto));
       EXPECT_TRUE(is_elementwise_approx_eq(new_bias, bias_auto));
     }
 
-    Tensor<float, 2> new_weights;
-    Tensor<float, 1> new_bias;
-    CommonData2d cd;
+    DeviceTensor<DefaultDevice, float, 2> new_weights;
+    DeviceTensor<DefaultDevice, float, 1> new_bias;
+    CommonData2d<DefaultDevice> cd;
     float lr;
   };
 
 
   TEST_F(Adam, OneStep) {
 
-    Tensor<float, 2> tmp(cd.weight_dims);
+    DeviceTensor<DefaultDevice, float, 2> tmp(cd.weight_dims);
     tmp.setValues({ { 0.30941489,  0.16201581,  0.06012393,  0.32472005, -0.00491815,
          -0.07433553,  0.16475038, -0.35374174},
         { 0.19189887, -0.24621475,  0.27166173, -0.00426837, -0.18301390,
@@ -84,7 +85,7 @@ namespace EigenSinnTest {
         {-0.28225577, -0.15681732, -0.32588497, -0.08420141, -0.27585772,
          -0.02888693,  0.18839149,  0.32116404} });
 
-    new_weights = tmp.shuffle(array<Index, 2>{1, 0});
+    new_weights.view() = tmp->shuffle(array<Index, 2>{1, 0});
     new_bias.setValues({ -0.00100000,  0.00100000,  0.00100000, -0.00100000 });
 
     PropagateGradient(1);
@@ -92,7 +93,7 @@ namespace EigenSinnTest {
 
   TEST_F(Adam, TwoSteps) {
 
-    Tensor<float, 2> tmp(cd.weight_dims);
+    DeviceTensor<DefaultDevice, float, 2> tmp(cd.weight_dims);
     tmp.setValues({ { 0.31041464,  0.16101657,  0.06112371,  0.32372031, -0.00391832,
          -0.07533528,  0.16575015, -0.35474178},
         { 0.19289874, -0.24721453,  0.27266166, -0.00326850, -0.18201400,
@@ -102,7 +103,7 @@ namespace EigenSinnTest {
         {-0.28325558, -0.15581743, -0.32688382, -0.08320152, -0.27485764,
          -0.02788713,  0.18939233,  0.32016420} });
 
-    new_weights = tmp.shuffle(array<Index, 2>{1, 0});
+    new_weights.view() = tmp->shuffle(array<Index, 2>{1, 0});
     new_bias.setValues({ -0.00199981,  0.00199963,  0.00199995, -0.00199998 });
     
     PropagateGradient(2);

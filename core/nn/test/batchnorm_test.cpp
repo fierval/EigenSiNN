@@ -46,10 +46,10 @@ namespace EigenSinnTest {
 
   TEST_F(Batchnorm1dTest, Backward) {
 
-    Input<float, 2, ThreadPoolDevice> input_layer;
+    Input<float, 2, 0, ThreadPoolDevice> input_layer;
     input_layer.set_input(input);
 
-    BatchNormalizationLayer<float, 2, ThreadPoolDevice> bn(cols, eps, momentum);
+    BatchNormalizationLayer<float, 2, 0, ThreadPoolDevice> bn(cols, eps, momentum);
 
     DeviceTensor<ThreadPoolDevice, float, 2> expected_derivative(batch_size, cols);
     DeviceTensor<ThreadPoolDevice, float, 1> exp_dbeta(cols), exp_dgamma(cols);

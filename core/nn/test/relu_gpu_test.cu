@@ -10,7 +10,7 @@ using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
-  class ReLU2d : public ::testing::Test {
+  class ReLU2dGpu : public ::testing::Test {
 
   protected:
 
@@ -60,7 +60,7 @@ namespace EigenSinnTest {
 
   };
 
-  TEST_F(ReLU2d, Backward) {
+  TEST_F(ReLU2dGpu, Backward) {
     
     Input<float, 2, 0, GpuDevice> input;
     input.set_input(cd.linearInput);
@@ -73,7 +73,7 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(rl.get_loss_by_input_derivative(), dinput, 3e-5));
   }
 
-  TEST_F(ReLU2d, LeakyBackward) {
+  TEST_F(ReLU2dGpu, LeakyBackward) {
 
     Input<float, 2, 0, GpuDevice> input;
     input.set_input(cd.linearInput);

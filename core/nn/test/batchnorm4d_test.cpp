@@ -95,11 +95,11 @@ namespace EigenSinnTest {
 
      //void TearDown() override {}
 
-      DeviceTensor<DefaultDevice, float, 4> input, loss, dinput, output;
+      DeviceTensor<ThreadPoolDevice, float, 4> input, loss, dinput, output;
       Tensor<float, 1> beta, gamma;
       const float eps = 1e-5, momentum = 0.9;
 
-      CommonData4d cd;
+      CommonData4d<ThreadPoolDevice> cd;
 
       // channel first
       const float prec = 1e-5;
@@ -107,15 +107,15 @@ namespace EigenSinnTest {
 
     TEST_F(Batchnorm4dTest, Backward) {
 
-      Input<float, 4> input_layer;
+      Input<float, 4, 0, ThreadPoolDevice> input_layer;
       input_layer.set_input(input);
 
-      BatchNormalizationLayer<float, 4> bn(3);
+      BatchNormalizationLayer<float, 4, 0, ThreadPoolDevice> bn(3);
       bn.init(beta, gamma);
       bn.forward(input_layer);
       bn.backward(input_layer, loss);
 
-      DeviceTensor<DefaultDevice, float, 1> dbeta(cd.dims[1]), dgamma(cd.dims[1]);
+      DeviceTensor<ThreadPoolDevice, float, 1> dbeta(cd.dims[1]), dgamma(cd.dims[1]);
       dbeta.setValues({ 15.55493259, 17.75424004, 14.48464108 });
       dgamma.setValues({ 0.19619252, -0.61846262,  2.08176923 });
 

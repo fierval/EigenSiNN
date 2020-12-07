@@ -5,12 +5,12 @@
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
-  class Adam : public OptimizerBase<Scalar, Device_> {
+  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  class Adam : public OptimizerBase<Scalar, Rank, Layout, Device_> {
 
   public:
-    Adam(Scalar _lr, float _beta1 = 0.9, float _beta2 = 0.999, float _eps = 1e-8, Dispatcher<Device_>& _device = OptimizerBase::default_dispatcher)
-      : OptimizerBase(_lr, _device)
+    Adam(Scalar _lr, float _beta1 = 0.9, float _beta2 = 0.999, float _eps = 1e-8)
+      : OptimizerBase(_lr)
       , beta1(_beta1)
       , beta2(_beta2)
       , eps(_eps)
@@ -22,13 +22,10 @@ namespace EigenSinn {
     }
 
     // Computation: https://towardsdatascience.com/adam-latest-trends-in-deep-learning-optimization-6be9a291375c
-    std::tuple<Scalar *, Scalar *> step(LayerBase<Scalar>& layer) override {
+    DeviceWeightBiasTuple step(LayerBase<Scalar>& layer) override {
 
-      array<Index, Rank> dims = vector2array<Rank>(layer.get_weight_dims());
-      array<Index, 1> dims_bias = vector2array<1>(layer.get_bias_dims());
-
-      TensorMap<Tensor<Scalar, Rank>> weights(layer.get_weights(), dims), dweights(layer.get_loss_by_weights_derivative(), dims);
-      TensorMap<Tensor<Scalar, 1>> bias(layer.get_bias(), dims_bias), dbias(layer.get_loss_by_bias_derivative(), dims_bias);
+     DeviceTensor<Device_, Scalar, Rank, Layout> weights(layer.get_weights()), dweights(layer.get_loss_by_weights_derivative());
+     DeviceTensor<Device_, Scalar, 1, Layout> bias(layer.get_bias()), dbias(layer.get_loss_by_bias_derivative());
 
       if (!param_set) {
         param_set = true;
@@ -47,33 +44,33 @@ namespace EigenSinn {
       }
 
       // compute Mt and Vt
-      momentum_weights.device(dispatcher.get_device()) = beta1 * momentum_weights + (1 - beta1) * dweights;
-      velocity_weights.device(dispatcher.get_device()) = beta2 * velocity_weights + (1 - beta2) * dweights.pow(2.);
+      momentum_weights = beta1 * momentum_weights + (1 - beta1) * dweights;
+      velocity_weights.view() = beta2 * *velocity_weights + (1 - beta2) * dweights->pow(2.);
 
-      momentum_bias.device(dispatcher.get_device()) = beta1 * momentum_bias + (1 - beta1) * dbias;
-      velocity_bias.device(dispatcher.get_device()) = beta2 * velocity_bias + (1 - beta2) * dbias.pow(2.);
+      momentum_bias = beta1 * momentum_bias + (1 - beta1) * dbias;
+      velocity_bias.view() = beta2 * *velocity_bias + (1 - beta2) * dbias->pow(2.);
 
       cur_beta1 *= beta1;
       cur_beta2 *= beta2;
 
-      Tensor<Scalar, Rank> denom_weights(velocity_weights.dimensions());
-      denom_weights.device(dispatcher.get_device()) = velocity_weights.sqrt() / sqrt(1 - cur_beta2) + eps;
+      DeviceTensor<Device_, Scalar, Rank, Layout> denom_weights(velocity_weights.dimensions());
+      denom_weights.view() = velocity_weights->sqrt() / sqrt(1 - cur_beta2) + eps;
 
-      Tensor<Scalar, 1> denom_bias(velocity_bias.dimensions());
-      denom_bias.device(dispatcher.get_device()) = velocity_bias.sqrt() / sqrt(1 - cur_beta2) + eps;
+      DeviceTensor<Device_, Scalar, 1, Layout> denom_bias(velocity_bias.dimensions());
+      denom_bias.view() = velocity_bias->sqrt() / sqrt(1 - cur_beta2) + eps;
 
       Scalar step_size = lr / (1 - cur_beta1);
 
-      weights.device(dispatcher.get_device()) -= step_size * momentum_weights / denom_weights;
-      bias.device(dispatcher.get_device()) -= step_size * momentum_bias / denom_bias;
+      weights -= step_size * momentum_weights / denom_weights;
+      bias -= step_size * momentum_bias / denom_bias;
 
-      return std::make_tuple(weights.data(), bias.data());
+      return std::make_tuple(weights, bias);
     }
 
   private:
     const Scalar beta1, beta2, eps;
     Scalar cur_beta1, cur_beta2;
-    Tensor<Scalar, Rank> velocity_weights, momentum_weights;
-    Tensor<Scalar, 1> velocity_bias, momentum_bias;
+    DeviceTensor<Device_, Scalar, Rank, Layout> velocity_weights, momentum_weights;
+    DeviceTensor<Device_, Scalar, 1, Layout> velocity_bias, momentum_bias;
   };
 }
