@@ -124,6 +124,14 @@ namespace EigenSinn {
       return bias;
     }
 
+    void set_weights(const DeviceTensor<Device_, Scalar, 2, Layout>& v) {
+      weights = v;
+    }
+
+    void set_bias(const DeviceTensor<Device_, Scalar, 1, Layout>& v) {
+      bias = v;
+    }
+
   private:
 
     DeviceTensor<Device_, Scalar, 2, Layout> weights;

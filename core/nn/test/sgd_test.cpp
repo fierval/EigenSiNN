@@ -59,7 +59,8 @@ namespace EigenSinnTest {
 
         //std::any new_weights, new_bias;
         std::tie(weights_auto, bias_auto) = sgd.step(linear);
-
+        linear.set_weights(weights_auto);
+        linear.set_bias(bias_auto);
       }
 
       EXPECT_TRUE(is_elementwise_approx_eq(new_weights, weights_auto));

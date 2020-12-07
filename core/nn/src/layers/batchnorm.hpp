@@ -176,6 +176,14 @@ namespace EigenSinn {
       return beta;
     }
 
+    void set_weights(const DeviceTensor<Device_, Scalar, 1, Layout>& v) {
+      gamma = v;
+    }
+
+    void set_bias(const DeviceTensor<Device_, Scalar, 1, Layout>& v) {
+      beta = v;
+    }
+
   private:
     DeviceTensor<Device_, Scalar, Rank> layer_output, layer_gradient, xhat;
 
