@@ -5,12 +5,12 @@
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, typename Device_ = DefaultDevice>
+  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
   class SGD : public OptimizerBase<Scalar, Device_> {
 
   public:
-    SGD(Scalar _lr, Scalar _momentum = 0, bool _nesterov = false, Dispatcher<Device_>& _device = OptimizerBase::default_dispatcher)
-      : OptimizerBase(_lr, _device)
+    SGD(Scalar _lr, Scalar _momentum = 0, bool _nesterov = false)
+      : OptimizerBase(_lr)
       , nesterov(_nesterov)
       , momentum(_momentum)
       {
@@ -21,13 +21,10 @@ namespace EigenSinn {
     }
 
     // PyTorch computation of SGD: https://pytorch.org/docs/stable/_modules/torch/optim/sgd.html#SGD
-    std::tuple<Scalar*, Scalar*> step(LayerBase<Scalar>& layer) override {
+    DeviceWeightBiasTuple step(LayerBase<Scalar>& layer) override {
       
-      array<Index, Rank> dims = vector2array< Rank>(layer.get_weight_dims());
-      array<Index, 1> dims_bias = vector2array< 1>(layer.get_bias_dims());
-
-      TensorMap<Tensor<Scalar, Rank>> weights(layer.get_weights(), dims), dweights(layer.get_loss_by_weights_derivative(), dims);
-      TensorMap<Tensor<Scalar, 1>> bias(layer.get_bias(), dims_bias), dbias(layer.get_loss_by_bias_derivative(), dims_bias);
+      DeviceTensor<Device_, Scalar, Rank, Layout> weights(layer.get_weights()), dweights(layer.get_loss_by_weights_derivative());
+      DeviceTensor<Device_, Scalar, 1, Layout> bias(layer.get_bias()), dbias(layer.get_loss_by_bias_derivative());
 
       if (momentum != 0.0) {
         if (!param_set) {
@@ -52,13 +49,13 @@ namespace EigenSinn {
 
       weights -= lr * dweights;
       bias -= lr * dbias;
-      return std::make_tuple(weights.data(), bias.data());
+      return std::make_tuple(weights, bias);
     }
 
   private:
     const Scalar momentum;
-    Tensor<Scalar, Rank> velocity_weights;
-    Tensor<Scalar, 1> velocity_bias;
+    DeviceTensor<Device_, Scalar, Rank, Layout> velocity_weights;
+    DeviceTensor<Device_, Scalar, 1, Layout> velocity_bias;
     const bool nesterov;
   };
 }
