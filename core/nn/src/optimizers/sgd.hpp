@@ -6,7 +6,7 @@
 namespace EigenSinn {
 
   template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
-  class SGD : public OptimizerBase<Scalar, Device_> {
+  class SGD : public OptimizerBase<Scalar, Rank, Layout, Device_> {
 
   public:
     SGD(Scalar _lr, Scalar _momentum = 0, bool _nesterov = false)
@@ -33,8 +33,8 @@ namespace EigenSinn {
           velocity_bias = dbias;
         }
         else {
-          velocity_weights = velocity_weights * momentum + dweights;
-          velocity_bias = velocity_bias * momentum + dbias;
+          velocity_weights = momentum * velocity_weights + dweights;
+          velocity_bias = momentum * velocity_bias + dbias;
         }
 
         if (nesterov) {

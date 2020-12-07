@@ -9,18 +9,18 @@ using namespace Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, int Layer = ColMajor, typename Device_ = DefaultDevice>
+  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
   class OptimizerBase {
-    
+
   public:
-    typedef std::tuple<DeviceTensor<Device_, Scalar, Index, Rank, Layout>, DeviceTensor<Device_, Scalar, Index, 1, Layout>> DeviceWeightBiasTuple;
+    typedef std::tuple<DeviceTensor<Device_, Scalar, Rank, Layout>, DeviceTensor<Device_, Scalar, 1, Layout>> DeviceWeightBiasTuple;
 
     OptimizerBase(Scalar _lr) 
       : param_set(false)
     , lr(_lr) {
 
     }
-    virtual DeviceTensorTuple step(LayerBase<Scalar>& layer) = 0;
+    virtual DeviceWeightBiasTuple step(LayerBase<Scalar>& layer) = 0;
 
   protected:
     // learing rate
