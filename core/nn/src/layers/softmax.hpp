@@ -19,6 +19,7 @@ namespace EigenSinn {
           ones_dims[i] = 1;
       }
 
+      ones_dims[Rank - 1] = 1;
       reshape_dims[Rank - 1] = 1;
     }
 
@@ -35,7 +36,7 @@ namespace EigenSinn {
 
       // reliable softmax
       DeviceTensor<Device_, Scalar, Rank, Layout> layer_max(prev_layer.dimensions());
-      layer_max.view() = prev_layer->maximum().reshape(ones_dims).broadcast(prev_layer.dimensions());
+      layer_max.view() = prev_layer->maximum().reshape(ones_dims).broadcast(dims);
 
       exp_all.view() = (prev_layer - layer_max)->exp();
 
