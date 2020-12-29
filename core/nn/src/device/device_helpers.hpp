@@ -97,26 +97,69 @@ namespace EigenSinn {
     device.memcpyHostToDevice(t.data(), vals.data(), final_size);
   }
 
+  /// <summary>
+  /// Given tensor dimensions and an offset, compute the offset flat index
+  /// </summary>
+  /// <param name="source_dim">Original dimension</param>
+  /// <param name="offsets">Offset</param>
+  /// <returns>Flat index</returns>
   template<Index Rank, int Layout = ColMajor>
-  inline Index compute_flat_dim(const array<Index, Rank> source_dim, const array<Index, Rank> offsets) {
+  inline Index to_flat_dim(const array<Index, Rank> source_dim, const array<Index, Rank> offsets) {
+
+    for (Index i = 0; i < Rank; i++) {
+      if (offsets[i] >= source_dim[i] || offsets[i] < 0 || source_dim[i] < 1) {
+        throw std::invalid_argument("Wrong range for dimensions and/or offsets: dimension " + std::to_string(i));
+      }
+    }
 
     Index res = 0;
     if (Layout == ColMajor) {
-      res = source_dim[Rank - 2] * offsets[Rank - 1];
-      for (int i = Rank - 2; i >= 0; i--) {
-        res += offsets[i + 1];
+      res = offsets[Rank - 1];
+      for (Index i = Rank - 2; i >= 0; i--) {
         res *= source_dim[i];
+        res += offsets[i];
       }
-      res += offsets[0];
     }
     else {
-      res = source_dim[1] * offsets[0];
-      for (int i = 2; i < Rank; i++) {
-        res += offsets[i - 1];
+      res = offsets[0];
+      for (Index i = 1; i < Rank; i++) {
         res *= source_dim[i];
+        res += offsets[i];
       }
-      res += offsets[Rank];
     }
     return res;
   }
+}
+
+/// <summary>
+/// Given a flat index into dimensions, return offsets along each dimension
+/// </summary>
+/// <param name="source_dim">Original dimensions</param>
+/// <param name="idx">Flat index</param>
+/// <returns>Offset along each dimension</returns>
+template<Index Rank, int Layout = ColMajor>
+inline array<Index, Rank> from_flat_dim(const array<Index, Rank> source_dim, Index idx) {
+
+  for (Index i = 0, p = 1; i < Rank; i++) {
+    if (((p *= source_dim[i]) > idx && i != Rank - 1) || (i == Rank - 1 && p <= idx)) {
+      throw std::invalid_argument("Wrong offset into the source dimension at dimension " + std::to_string(i));
+    }
+  }
+
+  array<Index, Rank> out;
+  Index offset = idx;
+
+  if (Layout == ColMajor) {
+    for (Index i = 0; i < Rank; i++) {
+      out[i] = offset % source_dim[i];
+      offset /= source_dim[i];
+    }
+  }
+  else {
+    for (Index i = Rank - 1; i >= 0; i--) {
+      out[i] = offset % source_dim[i];
+      offset /= source_dim[i];
+    }
+  }
+  return out;
 }

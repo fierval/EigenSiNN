@@ -271,7 +271,7 @@ namespace EigenSinn {
 #if defined(__CUDACC__) && defined(EIGEN_USE_GPU)
   template <typename Scalar>
   struct ConvolveConversions<Scalar, ColMajor, GpuDevice> {
-    inline auto col2im(const DeviceTensor<Device_, Scalar, 2, ColMajor>& col,
+    inline auto col2im(const DeviceTensor<GpuDevice, Scalar, 2, ColMajor>& col,
       const array<Index, 4>& kernel_dims,
       const array<Index, 4>& orig_dims,
       const Padding2D& padding,
@@ -284,14 +284,14 @@ namespace EigenSinn {
         batch_size = orig_dims[0];
 
       array<Index, 2> col_dims = col.dimensions();
-      DeviceTensor<Device_, Scalar, 4, ColMajor> out(batch_size, channels, height, width);
+      DeviceTensor<GpuDevice, Scalar, 4, ColMajor> out(batch_size, channels, height, width);
       out.setZero();
 
       Index out_w = 0, out_h = 0;
       array<Index, 2> slice_starts = { 0, 0 };
       array<Index, 2> slice_offsets = { col.dimension(0), batch_size };
       array<Index, 4> rev_shape = { kernel_dims[3], kernel_dims[2], kernel_dims[1], batch_size };
-      DeviceTensor<Device_, Scalar, 4, ColMajor> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[3]);
+      DeviceTensor<GpuDevice, Scalar, 4, ColMajor> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[3]);
 
       // loop over col's batch size at a time
         // figure where it goes into the output
@@ -322,7 +322,7 @@ namespace EigenSinn {
       //unpad
       array<Index, 4> unpad_starts = { 0, 0, padding.first, padding.second };
       array<Index, 4> unpad_offsets = { out.dimension(0), out.dimension(1), orig_dims[2], orig_dims[3] };
-      DeviceTensor<Device_, Scalar, 4, ColMajor> output(unpad_offsets);
+      DeviceTensor<GpuDevice, Scalar, 4, ColMajor> output(unpad_offsets);
       output.view() = out->slice(unpad_starts, unpad_offsets);
       return output;
     }

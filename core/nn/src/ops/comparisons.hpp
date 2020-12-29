@@ -2,6 +2,7 @@
 
 #include "opsbase.hpp"
 #include "conversions.hpp"
+#include "device/device_tensor.hpp"
 
 using namespace Eigen;
 
