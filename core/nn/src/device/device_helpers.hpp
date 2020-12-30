@@ -25,7 +25,7 @@ namespace EigenSinn {
   /// <param name="dims"></param>
   /// <returns></returns>
   template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
-  inline TensorView<Scalar, Rank, Layout> create_device_view(const DSizes<Index, Rank>& dims, Device_& device)  {
+  inline TensorView<Scalar, Rank, Layout> create_device_view(const DSizes<Index, Rank>& dims, Device_& device) {
 
     size_t alloc_size = dims.TotalSize() * sizeof(Scalar);
     Scalar* ptr = static_cast<Scalar*>(device.allocate(alloc_size));
@@ -41,7 +41,7 @@ namespace EigenSinn {
   }
 
   template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
-  inline void move_to(TensorView<Scalar, Rank, Layout>& dest, const Scalar * src, Device_& device) {
+  inline void move_to(TensorView<Scalar, Rank, Layout>& dest, const Scalar* src, Device_& device) {
 
     device.memcpyHostToDevice(dest.data(), src, dest.dimensions().TotalSize() * sizeof(Scalar));
   }
@@ -98,68 +98,35 @@ namespace EigenSinn {
   }
 
   /// <summary>
-  /// Given tensor dimensions and an offset, compute the offset flat index
+  /// Given a flat index into dimensions, return offsets along each dimension
   /// </summary>
-  /// <param name="source_dim">Original dimension</param>
-  /// <param name="offsets">Offset</param>
-  /// <returns>Flat index</returns>
+  /// <param name="source_dim">Original dimensions</param>
+  /// <param name="idx">Flat index</param>
+  /// <returns>Offset along each dimension</returns>
   template<Index Rank, int Layout = ColMajor>
-  EIGEN_DEVICE_FUNC inline Index to_flat_dim(const array<Index, Rank> source_dim, const array<Index, Rank> offsets) {
+  EIGEN_DEVICE_FUNC inline array<Index, Rank> from_flat_dim(const array<Index, Rank> source_dim, Index idx) {
 
-    for (Index i = 0; i < Rank; i++) {
-      if (offsets[i] >= source_dim[i] || offsets[i] < 0 || source_dim[i] < 1) {
-        throw std::invalid_argument("Wrong range for dimensions and/or offsets: dimension " + std::to_string(i));
+    for (Index i = 0, p = 1; i < Rank; i++) {
+      if (((p *= source_dim[i]) > idx && i != Rank - 1) || (i == Rank - 1 && p <= idx)) {
+        throw std::invalid_argument("Wrong offset into the source dimension at dimension " + std::to_string(i));
       }
     }
 
-    Index res = 0;
+    array<Index, Rank> out;
+    Index offset = idx;
+
     if (Layout == ColMajor) {
-      res = offsets[Rank - 1];
-      for (Index i = Rank - 2; i >= 0; i--) {
-        res *= source_dim[i];
-        res += offsets[i];
+      for (Index i = 0; i < Rank; i++) {
+        out[i] = offset % source_dim[i];
+        offset /= source_dim[i];
       }
     }
     else {
-      res = offsets[0];
-      for (Index i = 1; i < Rank; i++) {
-        res *= source_dim[i];
-        res += offsets[i];
+      for (Index i = Rank - 1; i >= 0; i--) {
+        out[i] = offset % source_dim[i];
+        offset /= source_dim[i];
       }
     }
-    return res;
+    return out;
   }
-}
-
-/// <summary>
-/// Given a flat index into dimensions, return offsets along each dimension
-/// </summary>
-/// <param name="source_dim">Original dimensions</param>
-/// <param name="idx">Flat index</param>
-/// <returns>Offset along each dimension</returns>
-template<Index Rank, int Layout = ColMajor>
-EIGEN_DEVICE_FUNC inline array<Index, Rank> from_flat_dim(const array<Index, Rank> source_dim, Index idx) {
-
-  for (Index i = 0, p = 1; i < Rank; i++) {
-    if (((p *= source_dim[i]) > idx && i != Rank - 1) || (i == Rank - 1 && p <= idx)) {
-      throw std::invalid_argument("Wrong offset into the source dimension at dimension " + std::to_string(i));
-    }
-  }
-
-  array<Index, Rank> out;
-  Index offset = idx;
-
-  if (Layout == ColMajor) {
-    for (Index i = 0; i < Rank; i++) {
-      out[i] = offset % source_dim[i];
-      offset /= source_dim[i];
-    }
-  }
-  else {
-    for (Index i = Rank - 1; i >= 0; i--) {
-      out[i] = offset % source_dim[i];
-      offset /= source_dim[i];
-    }
-  }
-  return out;
 }
