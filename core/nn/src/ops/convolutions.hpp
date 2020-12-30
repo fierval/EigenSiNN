@@ -196,139 +196,66 @@ namespace EigenSinn {
     return out;
   }
 
-  template <typename Scalar, int Layout, typename Device_>
-  struct ConvolveConversions {};
-
   // NOT the reverse of im2col.
   // Used to fold the backward pass result of dX/dL. 
   // We still slide the kernel window over the 2d representation, 
   // Adding contributions of each folded slice to the result
   // Non-GPU version
-  template <typename Scalar, typename Device_>
-  struct ConvolveConversions<Scalar, ColMajor, Device_> {
-    inline auto col2im(const DeviceTensor<Device_, Scalar, 2, ColMajor>& col,
-      const array<Index, 4>& kernel_dims,
-      const array<Index, 4>& orig_dims,
-      const Padding2D& padding,
-      int stride = 1) {
+  template <typename Scalar, int Layout, typename Device_>
+  inline auto col2im(const DeviceTensor<Device_, Scalar, 2, Layout>& col,
+    const array<Index, 4>& kernel_dims,
+    const array<Index, 4>& orig_dims,
+    const Padding2D& padding,
+    int stride = 1) {
 
-      // intermediate output: original dimensions padded
-      Index channels = kernel_dims[1],
-        height = orig_dims[2] + 2 * padding.first,
-        width = orig_dims[3] + 2 * padding.second,
-        batch_size = orig_dims[0];
+    // intermediate output: original dimensions padded
+    Index channels = kernel_dims[1],
+      height = orig_dims[2] + 2 * padding.first,
+      width = orig_dims[3] + 2 * padding.second,
+      batch_size = orig_dims[0];
 
-      array<Index, 2> col_dims = col.dimensions();
-      DeviceTensor<Device_, Scalar, 4, ColMajor> out(batch_size, channels, height, width);
-      out.setZero();
+    array<Index, 2> col_dims = col.dimensions();
+    DeviceTensor<Device_, Scalar, 4, ColMajor> out(batch_size, channels, height, width);
+    out.setZero();
 
-      Index out_w = 0, out_h = 0;
-      array<Index, 2> slice_starts = { 0, 0 };
-      array<Index, 2> slice_offsets = { col.dimension(0), batch_size };
-      array<Index, 4> rev_shape = { kernel_dims[3], kernel_dims[2], kernel_dims[1], batch_size };
-      DeviceTensor<Device_, Scalar, 4, ColMajor> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[3]);
+    Index out_w = 0, out_h = 0;
+    array<Index, 2> slice_starts = { 0, 0 };
+    array<Index, 2> slice_offsets = { col.dimension(0), batch_size };
+    array<Index, 4> rev_shape = { kernel_dims[3], kernel_dims[2], kernel_dims[1], batch_size };
+    DeviceTensor<Device_, Scalar, 4, ColMajor> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[3]);
 
-      // loop over col's batch size at a time
-        // figure where it goes into the output
-        // memcpy with setValues
-      // shuffle dims to batch_size, channels, height, width
-      // unpad with slice
-      for (Index i = 0; i < col_dims[1] / batch_size; i++, slice_starts[1] += batch_size) {
+    // loop over col's batch size at a time
+      // figure where it goes into the output
+      // memcpy with setValues
+    // shuffle dims to batch_size, channels, height, width
+    // unpad with slice
+    for (Index i = 0; i < col_dims[1] / batch_size; i++, slice_starts[1] += batch_size) {
 
-        slice.view() = col->slice(slice_starts, slice_offsets).eval().reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
+      // move to the next slice
+      out_w = (stride * i) % (width - kernel_dims[3] + 1);
+      out_h = (stride * i) / (width - kernel_dims[3] + 1);
 
-        for (Index b = 0; b < batch_size; b++) {
-          for (Index c = 0; c < channels; c++) {
-            for (Index h = 0; h < kernel_dims[2]; h++) {
-              for (Index w = 0; w < kernel_dims[3]; w++) {
-                out->operator()(b, c, h + out_h, w + out_w) += slice->operator()(b, c, h, w);
-              }
+      slice.view() = col->slice(slice_starts, slice_offsets).eval().reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
+
+      for (Index b = 0; b < batch_size; b++) {
+        for (Index c = 0; c < channels; c++) {
+          for (Index h = 0; h < kernel_dims[2]; h++) {
+            for (Index w = 0; w < kernel_dims[3]; w++) {
+              out->operator()(b, c, h + out_h, w + out_w) += slice->operator()(b, c, h, w);
             }
           }
         }
-        // move to the next slice
-        out_w += stride;
-        if (out_w + kernel_dims[3] > width) {
-          out_w = 0;
-          out_h += stride;
-        }
       }
-
-      //unpad
-      array<Index, 4> unpad_starts = { 0, 0, padding.first, padding.second };
-      array<Index, 4> unpad_offsets = { out.dimension(0), out.dimension(1), orig_dims[2], orig_dims[3] };
-      DeviceTensor<Device_, Scalar, 4, ColMajor> output(unpad_offsets);
-      output.view() = out->slice(unpad_starts, unpad_offsets);
-      return output;
     }
-  };
 
-#ifdef __INTELLISENSE__
-#define __CUDACC__
-#define EIGEN_USE_GPU
-#endif
+    //unpad
+    array<Index, 4> unpad_starts = { 0, 0, padding.first, padding.second };
+    array<Index, 4> unpad_offsets = { out.dimension(0), out.dimension(1), orig_dims[2], orig_dims[3] };
+    DeviceTensor<Device_, Scalar, 4, ColMajor> output(unpad_offsets);
+    output.view() = out->slice(unpad_starts, unpad_offsets);
+    return output;
+  }
 
-#if defined(__CUDACC__) && defined(EIGEN_USE_GPU)
-  template <typename Scalar>
-  struct ConvolveConversions<Scalar, ColMajor, GpuDevice> {
-    inline auto col2im(const DeviceTensor<GpuDevice, Scalar, 2, ColMajor>& col,
-      const array<Index, 4>& kernel_dims,
-      const array<Index, 4>& orig_dims,
-      const Padding2D& padding,
-      int stride = 1) {
-
-      // intermediate output: original dimensions padded
-      Index channels = kernel_dims[1],
-        height = orig_dims[2] + 2 * padding.first,
-        width = orig_dims[3] + 2 * padding.second,
-        batch_size = orig_dims[0];
-
-      array<Index, 2> col_dims = col.dimensions();
-      DeviceTensor<GpuDevice, Scalar, 4, ColMajor> out(batch_size, channels, height, width);
-      out.setZero();
-
-      Index out_w = 0, out_h = 0;
-      array<Index, 2> slice_starts = { 0, 0 };
-      array<Index, 2> slice_offsets = { col.dimension(0), batch_size };
-      array<Index, 4> rev_shape = { kernel_dims[3], kernel_dims[2], kernel_dims[1], batch_size };
-      DeviceTensor<GpuDevice, Scalar, 4, ColMajor> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[3]);
-
-      // loop over col's batch size at a time
-        // figure where it goes into the output
-        // memcpy with setValues
-      // shuffle dims to batch_size, channels, height, width
-      // unpad with slice
-      for (Index i = 0; i < col_dims[1] / batch_size; i++, slice_starts[1] += batch_size) {
-
-        slice.view() = col->slice(slice_starts, slice_offsets).eval().reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
-
-        for (Index b = 0; b < batch_size; b++) {
-          for (Index c = 0; c < channels; c++) {
-            for (Index h = 0; h < kernel_dims[2]; h++) {
-              for (Index w = 0; w < kernel_dims[3]; w++) {
-                out->operator()(b, c, h + out_h, w + out_w) += slice->operator()(b, c, h, w);
-              }
-            }
-          }
-        }
-        // move to the next slice
-        out_w += stride;
-        if (out_w + kernel_dims[3] > width) {
-          out_w = 0;
-          out_h += stride;
-        }
-      }
-
-      //unpad
-      array<Index, 4> unpad_starts = { 0, 0, padding.first, padding.second };
-      array<Index, 4> unpad_offsets = { out.dimension(0), out.dimension(1), orig_dims[2], orig_dims[3] };
-      DeviceTensor<GpuDevice, Scalar, 4, ColMajor> output(unpad_offsets);
-      output.view() = out->slice(unpad_starts, unpad_offsets);
-      return output;
-    }
-  };
-
-#endif
   // pad unevenly in case of k % 2 == 1:
   // more zero's goes upfront
   template <typename Scalar, Index Rank = 4>

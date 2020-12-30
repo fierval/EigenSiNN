@@ -74,7 +74,7 @@ namespace EigenSinn {
       DeviceTensor<Device_, Scalar, 2, Layout>  dW_col(dout.dimension(0), x_col.dimension(0));
       dW_col.view() = dout->contract(*x_col, prod_dims);
 
-      dX = conv_conversions.col2im(dX_col, kernel.dimensions(), prev_layer.dimensions(), padding, stride);
+      dX = col2im(dX_col, kernel.dimensions(), prev_layer.dimensions(), padding, stride);
       dW = fold_kernel(dW_col, kernel.dimensions());
 
       //bias
@@ -125,7 +125,5 @@ namespace EigenSinn {
     const Index stride;
     const Padding2D padding;
     array<Index, 4> bias_broadcast;
-
-    ConvolveConversions<Scalar, Layout, Device_> conv_conversions;
   };
 }
