@@ -104,7 +104,7 @@ namespace EigenSinn {
   /// <param name="offsets">Offset</param>
   /// <returns>Flat index</returns>
   template<Index Rank, int Layout = ColMajor>
-  inline Index to_flat_dim(const array<Index, Rank> source_dim, const array<Index, Rank> offsets) {
+  EIGEN_DEVICE_FUNC inline Index to_flat_dim(const array<Index, Rank> source_dim, const array<Index, Rank> offsets) {
 
     for (Index i = 0; i < Rank; i++) {
       if (offsets[i] >= source_dim[i] || offsets[i] < 0 || source_dim[i] < 1) {
@@ -138,7 +138,7 @@ namespace EigenSinn {
 /// <param name="idx">Flat index</param>
 /// <returns>Offset along each dimension</returns>
 template<Index Rank, int Layout = ColMajor>
-inline array<Index, Rank> from_flat_dim(const array<Index, Rank> source_dim, Index idx) {
+EIGEN_DEVICE_FUNC inline array<Index, Rank> from_flat_dim(const array<Index, Rank> source_dim, Index idx) {
 
   for (Index i = 0, p = 1; i < Rank; i++) {
     if (((p *= source_dim[i]) > idx && i != Rank - 1) || (i == Rank - 1 && p <= idx)) {

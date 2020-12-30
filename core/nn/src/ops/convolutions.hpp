@@ -235,6 +235,10 @@ namespace EigenSinn {
       // unpad with slice
       for (Index i = 0; i < col_dims[1] / batch_size; i++, slice_starts[1] += batch_size) {
 
+        // move to the next slice
+        out_w = (stride * i) % (width - kernel_dims[3] + 1);
+        out_h = (stride * i) / (width - kernel_dims[3] + 1);
+
         slice.view() = col->slice(slice_starts, slice_offsets).eval().reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
 
         for (Index b = 0; b < batch_size; b++) {
@@ -245,12 +249,6 @@ namespace EigenSinn {
               }
             }
           }
-        }
-        // move to the next slice
-        out_w += stride;
-        if (out_w + kernel_dims[3] > width) {
-          out_w = 0;
-          out_h += stride;
         }
       }
 
@@ -263,12 +261,50 @@ namespace EigenSinn {
     }
   };
 
+#ifndef __CUDACC__
+  dim3 threadIdx, blockDim, blockIdx;
+#endif
+
 #ifdef __INTELLISENSE__
 #define __CUDACC__
 #define EIGEN_USE_GPU
 #endif
 
 #if defined(__CUDACC__) && defined(EIGEN_USE_GPU)
+  template<typename Scalar>
+  __global__ void wrap_kernel(int col_dim0, int col_dim1, int kernel_dim0, int kernel_dim1, int kernel_dim2, int kernel_dim3, int batch_size, int stride, int width, int height, Scalar * dcol, Scalar * dout) {
+
+    int i = threadIdx.x + blockIdx.x * blockDim.x;
+    if (i < col_dim1 / batch_size) {
+
+      int out_w = stride * (i % (width - kernel_dim3 + 1));
+      int out_h = stride * (i / (width - kernel_dim3 + 1));
+      array<Index, 4> out_dim{ batch_size, kernel_dim1, height, width };
+      array<Index, 4> kernel_dim{ kernel_dim0, kernel_dim1, kernel_dim2, kernel_dim3 };
+
+      array<Index, 2> slice_starts = { 0, 0 };
+      array<Index, 2> slice_offsets = { col_dim0, batch_size };
+      array<Index, 4> rev_shape = { kernel_dim3, kernel_dim2, kernel_dim1, batch_size };
+      TensorMap<Tensor<Scalar, 2, ColMajor>> col(dcol, col_dim0, col_dim1);
+
+      Tensor<Scalar, 4, ColMajor> slice = col.slice(slice_starts, slice_offsets).eval().reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
+
+      for (Index b = 0; b < batch_size; b++) {
+        for (Index c = 0; c < kernel_dim1; c++) {
+          for (Index h = 0; h < kernel_dim2; h++) {
+            for (Index w = 0; w < kernel_dim3; w++) {
+
+              int out_offset = to_flat_dim(out_dim, array<Index, 4>{b, c, h + out_h, w + out_w});
+              int in_val = slice(b, c, h, w);
+              __syncthreads();
+              atomicAdd(dout[out_offset], in_val);
+            }
+          }
+        }
+      }
+    }
+  }
+
   template <typename Scalar>
   struct ConvolveConversions<Scalar, ColMajor, GpuDevice> {
     inline auto col2im(const DeviceTensor<GpuDevice, Scalar, 2, ColMajor>& col,
@@ -287,37 +323,7 @@ namespace EigenSinn {
       DeviceTensor<GpuDevice, Scalar, 4, ColMajor> out(batch_size, channels, height, width);
       out.setZero();
 
-      Index out_w = 0, out_h = 0;
-      array<Index, 2> slice_starts = { 0, 0 };
-      array<Index, 2> slice_offsets = { col.dimension(0), batch_size };
-      array<Index, 4> rev_shape = { kernel_dims[3], kernel_dims[2], kernel_dims[1], batch_size };
-      DeviceTensor<GpuDevice, Scalar, 4, ColMajor> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[3]);
-
-      // loop over col's batch size at a time
-        // figure where it goes into the output
-        // memcpy with setValues
-      // shuffle dims to batch_size, channels, height, width
-      // unpad with slice
-      for (Index i = 0; i < col_dims[1] / batch_size; i++, slice_starts[1] += batch_size) {
-
-        slice.view() = col->slice(slice_starts, slice_offsets).eval().reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
-
-        for (Index b = 0; b < batch_size; b++) {
-          for (Index c = 0; c < channels; c++) {
-            for (Index h = 0; h < kernel_dims[2]; h++) {
-              for (Index w = 0; w < kernel_dims[3]; w++) {
-                out->operator()(b, c, h + out_h, w + out_w) += slice->operator()(b, c, h, w);
-              }
-            }
-          }
-        }
-        // move to the next slice
-        out_w += stride;
-        if (out_w + kernel_dims[3] > width) {
-          out_w = 0;
-          out_h += stride;
-        }
-      }
+      wrap_kernel <<<1, col_dims[1] / batch_size >>><Scalar>(col_dims[0], col_dims[1], kernel_dims[0], kernel_dims[1], kernel_dims[2], kernel_dims[3], batch_size, stride, width, height, col->data(), out->data());
 
       //unpad
       array<Index, 4> unpad_starts = { 0, 0, padding.first, padding.second };
