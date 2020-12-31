@@ -139,6 +139,11 @@ namespace EigenSinn {
   __global__ void add_and_set_kernel(Scalar* dest, Scalar* src) {
     *dest += *src;
   }
+
+  template<typename Scalar>
+  __global__ void set_kernel(Scalar* dest, Scalar* src) {
+    *dest = *src;
+  }
 #endif
 
   template<typename Scalar, Index Rank, int Layout, typename Device_>
@@ -165,4 +170,9 @@ namespace EigenSinn {
 #endif
   }
 
+  template<typename Scalar, Index Rank, int Layout, typename Device_>
+  void set_element(TensorView<Scalar, Rank, Layout>& dest, const array<Index, Rank>& dest_offset,
+    const TensorView<Scalar, Rank, Layout>& src, const array<Index, Rank>& src_offset, const Device_& device) {
+
+  }
 }

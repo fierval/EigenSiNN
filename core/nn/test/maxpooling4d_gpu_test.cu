@@ -10,7 +10,7 @@ using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
-  class Pool4d : public ::testing::Test {
+  class Pool4dGpu : public ::testing::Test {
 
   protected:
 
@@ -102,7 +102,7 @@ namespace EigenSinnTest {
 
   };
 
-  TEST_F(Pool4d, Validate) {
+  TEST_F(Pool4dGpu, Validate) {
 
     DeviceTensor<GpuDevice, float, 4> t(1, 3, 4, 4);
     t.setConstant(1);
@@ -116,7 +116,7 @@ namespace EigenSinnTest {
     EXPECT_TRUE(res);
   }
 
-  TEST_F(Pool4d, BadExtent) {
+  TEST_F(Pool4dGpu, BadExtent) {
 
     DeviceTensor<GpuDevice, float, 2> t(4, 4);
     t.setConstant(1);
@@ -130,7 +130,7 @@ namespace EigenSinnTest {
     EXPECT_FALSE(res);
   }
 
-  TEST_F(Pool4d, BadStride4d) {
+  TEST_F(Pool4dGpu, BadStride4d) {
 
     DeviceTensor<GpuDevice, float, 4> t(3, 4, 10, 10);
     t.setConstant(1);
@@ -144,7 +144,7 @@ namespace EigenSinnTest {
     EXPECT_FALSE(res);
   }
 
-  TEST_F(Pool4d, Backward) {
+  TEST_F(Pool4dGpu, Backward) {
 
     Input<float, 4, 0, GpuDevice> input;
     input.set_input(cd.convInput);
