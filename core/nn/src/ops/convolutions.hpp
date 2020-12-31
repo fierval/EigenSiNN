@@ -224,6 +224,8 @@ namespace EigenSinn {
     array<Index, 4> rev_shape = { kernel_dims[3], kernel_dims[2], kernel_dims[1], batch_size };
     DeviceTensor<Device_, Scalar, 4, ColMajor> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[3]);
 
+    Device_ device = out.get_device();
+
     // loop over col's batch size at a time
       // figure where it goes into the output
       // memcpy with setValues
@@ -241,7 +243,7 @@ namespace EigenSinn {
         for (Index c = 0; c < channels; c++) {
           for (Index h = 0; h < kernel_dims[2]; h++) {
             for (Index w = 0; w < kernel_dims[3]; w++) {
-              out->operator()(b, c, h + out_h, w + out_w) += slice->operator()(b, c, h, w);
+              add_and_set(*out, array<Index, 4>{ b, c, h + out_h, w + out_w }, * slice, array<Index, 4>{ b, c, h, w}, device);
             }
           }
         }
