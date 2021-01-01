@@ -61,6 +61,7 @@ namespace EigenSinn {
       array<Index, 2> output_starts({ 0, 0 });
 
       DeviceTensor <Device_, Tuple<Index, Scalar>, 2> index_tuples(lengths);
+      Device_ device = output.get_device();
 
       for (starts[1] = 0, output_starts[1] = 0; starts[1] + extents[0] <= dims[1]; starts[1] += stride, output_starts[1]++) {
 
@@ -71,9 +72,8 @@ namespace EigenSinn {
         // split the tuple into its arrays: value and index of the input where
         // gradient will be propagated relative to the current slice
         for (int k = 0; k < local_pool.dimension(0); k++) {
-          
-          output->operator()(k, output_starts[1]) = (*local_pool)(k).second;
-          mask->operator()(k, output_starts[1]) = (*local_pool)(k).first;
+          // set mask and output from the reducer results          
+          set_from_tuple<Index, Scalar, 2, ColMajor, Device_>(*mask, *output, array<Index, 2> {k, output_starts[1]}, * local_pool, array<Index, 1>{k}, device);
         }
       }
 
@@ -97,7 +97,7 @@ namespace EigenSinn {
         for (int k = 0; k < original_dims[0]; k++) {
 
           Index idx_flat = (*mask)(k, grad_starts[1]);
-          Index idx_col = (idx_flat - k) / lengths[0] % lengths[1];
+          Index idx_col = from_flat_dim<2, ColMajor>(lengths, idx_flat)[1];
 
           // index has been unrolled during the forward operation
           (*output)(starts[0] + k, starts[1] + idx_col) += (*grads)(k, grad_starts[1]);
@@ -126,6 +126,7 @@ namespace EigenSinn {
 
       // get index tuples in order to use tuple reducer
       DeviceTensor<Device_, Tuple<Index, Scalar>, 4> index_tuples(lengths);
+      Device_ device = index_tuples.get_device();
 
       for (starts[2] = 0, output_starts[2] = 0; starts[2] + extents[0] <= dims[2]; starts[2] += stride, output_starts[2]++) {
         for (starts[3] = 0, output_starts[3] = 0; starts[3] + extents[1] <= dims[3]; starts[3] += stride, output_starts[3]++) {
@@ -139,8 +140,11 @@ namespace EigenSinn {
           for (int k = 0; k < local_pool.dimension(0); k++) {
             for (int j = 0; j < local_pool.dimension(1); j++) {
 
-              (*mask)(k, j, output_starts[2], output_starts[3]) = (*local_pool)(k, j).first;
-              (*output)(k, j, output_starts[2], output_starts[3]) = (*local_pool)(k, j).second;
+              set_from_tuple<Index, Scalar, 4, ColMajor, Device_>(*mask, *output, 
+                array<Index, 4>{k, j, output_starts[2], output_starts[3]}, *local_pool, array<Index, 2>{k, j}, device);
+
+              //(*mask)(k, j, output_starts[2], output_starts[3]) = (*local_pool)(k, j).first;
+              //(*output)(k, j, output_starts[2], output_starts[3]) = (*local_pool)(k, j).second;
             }
           }
         }
@@ -166,15 +170,11 @@ namespace EigenSinn {
           for (int k = 0; k < original_dims[0]; k++) {
             for (int j = 0; j < original_dims[1]; j++) {
 
-              // index has been unrolled during the forward operation
+              // index has been flattened during the forward operation, unroll it
               Index idx_flat = (*mask)(k, j, grad_starts[2], grad_starts[3]);
+              array<Index, 4> unrolled_dim = from_flat_dim<4, ColMajor>(lengths, idx_flat);
 
-              // extract column-major order based on: https://en.wikipedia.org/wiki/Row-_and_column-major_order
-              Index idx_plane = ((idx_flat - k) / lengths[0] - j) / lengths[1];
-              Index idx_row = idx_plane % lengths[2];
-              Index idx_col = (idx_plane - idx_row) / lengths[2];
-
-              (*output)(k, j, starts[2] + idx_row, starts[3] + idx_col) += (*grads)(k, j, grad_starts[2], grad_starts[3]);
+              (*output)(k, j, starts[2] + unrolled_dim[2], starts[3] + unrolled_dim[3]) += (*grads)(k, j, grad_starts[2], grad_starts[3]);
             }
           }
         }
