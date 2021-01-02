@@ -1,4 +1,11 @@
-import tstcommon.commondata4d as cd
+import sys, os
+
+dir = os.path.join(os.path.dirname(__file__), 'tstcommon')
+
+sys.path.insert(0, dir)
+
+import commondata4d as cd
+from utils import to_cpp
 import torch
 import torch.nn as nn
 

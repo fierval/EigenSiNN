@@ -177,7 +177,7 @@ EIGEN_DEVICE_FUNC inline array<Index, Rank> from_flat_dim(const array<Index, Ran
       //// launch kernel
       auto idx_dest_offset = Layout == ColMajor ? dest1.dimensions().IndexOfColMajor(dest_offset) : dest1.dimensions().IndexOfRowMajor(dest_offset);
       auto idx_src_offset = Layout == ColMajor ? src.dimensions().IndexOfColMajor(src_offset) : src.dimensions().IndexOfRowMajor(src_offset);
-
+      
       Tuple<Scalar1, Scalar2>* ptr_src = &src.data()[idx_src_offset];
       Scalar1* ptr_dest1 = &dest1.data()[idx_dest_offset];
       Scalar2* ptr_dest2 = &dest2.data()[idx_dest_offset];
