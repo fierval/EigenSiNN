@@ -184,13 +184,15 @@ namespace EigenSinn {
       if (std::is_same<Device_, GpuDevice>::value) {
         static dim3 block(MAXPOOL_BLOCK_SIZE, MAXPOOL_BLOCK_SIZE);
         static dim3 grid((original_dims[0] + block.x - 1) / block.x, (original_dims[1] + block.y - 1) / block.y);
-        static dim3 out_size(mask.dimension(original_dims[3]), mask.dimension(original_dims[2]));
+        static dim3 out_size(original_dims[3], original_dims[2]);
         static dim3 extents(pool_window_dims[3], pool_window_dims[2]);
-
+        static dim3 grad_dims(grads.dimension(3), grads.dimension(2));
+        static dim3 in_size(mask.dimension(3), mask.dimension(2));
         dim3 grad_starts_2d(grad_starts[3], grad_starts[2]);
         dim3 out_pos_2d(starts[3], starts[2]);
 
-        maxpool_dinput_kernel4d<Scalar, ColMajor> << <grid, block >> > (output->data(), grads->data(), mask->data(), original_dims[0], original_dims[1], out_size, grad_starts_2d, extents, out_pos_2d);
+        maxpool_dinput_kernel4d<Scalar, ColMajor> << <grid, block >> > (output->data(), grads->data(), mask->data(), 
+          original_dims[0], original_dims[1], in_size, out_size, grad_starts_2d, extents, out_pos_2d);
 
       }
       else {

@@ -13,20 +13,22 @@ namespace EigenSinn {
   }
 
   template<typename Scalar, int Layout = ColMajor>
-  __global__ void maxpool_dinput_kernel4d(Scalar* output, Scalar* dout, Index* mask, Index batches, Index channels, dim3 out_size, dim3 grad_starts, dim3 extents, dim3 output_pos) {
+  __global__ void maxpool_dinput_kernel4d(Scalar* output, Scalar* dout, Index* mask, Index batches, Index channels,
+    dim3 in_size, dim3 out_size, dim3 grad_starts, dim3 extents, dim3 output_pos) {
 
     Index batch = threadIdx.x + blockIdx.x * blockDim.x;
     Index channel = threadIdx.y + blockIdx.y * blockDim.y;
     
     if (batch < batches && channel < channels) {
-      array<Index, 4> mask_dims{ batches, channels, out_size.y, out_size.x };
+      array<Index, 4> mask_dims{ batches, channels, in_size.y, in_size.x };
       array<Index, 4> pool_window_dims{ batches, channels, extents.y, extents.x };
+      array<Index, 4> out_gradient_dims{ batches, channels, out_size.y, out_size.x };
 
       Index idx_flat = mask[to_flat_dim<4, Layout>(mask_dims, array<Index, 4>{batch, channel, grad_starts.y, grad_starts.x})];
       array<Index, 4> unrolled_dim = from_flat_dim<4, ColMajor>(pool_window_dims, idx_flat);
 
       Index idx_output = to_flat_dim<4, Layout>(mask_dims, array<Index, 4>{batch, channel, output_pos.y + unrolled_dim[2], output_pos.x + unrolled_dim[3]});
-      Index idx_grad = to_flat_dim<4, Layout>(mask_dims, array<Index, 4>{batch, channel, grad_starts.y, grad_starts.x});
+      Index idx_grad = to_flat_dim<4, Layout>(out_gradient_dims, array<Index, 4>{batch, channel, grad_starts.y, grad_starts.x});
 
       output[idx_output] += dout[idx_grad];
     }
