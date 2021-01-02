@@ -18,7 +18,7 @@ namespace EigenSinn {
 
     Index batch = threadIdx.x + blockIdx.x * blockDim.x;
     Index channel = threadIdx.y + blockIdx.y * blockDim.y;
-    
+
     if (batch < batches && channel < channels) {
       array<Index, 4> mask_dims{ batches, channels, in_size.y, in_size.x };
       array<Index, 4> pool_window_dims{ batches, channels, extents.y, extents.x };
@@ -32,6 +32,24 @@ namespace EigenSinn {
 
       output[idx_output] += dout[idx_grad];
     }
+  }
+
+    template<typename Scalar, int Layout = ColMajor>
+    __global__ void maxpool_dinput_tensor_kernel4d(TensorView<Scalar, 4, Layout> output, TensorView<Scalar, 4, Layout> dout, TensorView<Index, 4, Layout> mask, dim3 grad_starts, dim3 extents, dim3 output_pos) {
+
+      Index batch = threadIdx.x + blockIdx.x * blockDim.x;
+      Index channel = threadIdx.y + blockIdx.y * blockDim.y;
+
+      Index batches = dout.dimension(0), channels = dout.dimension(1);
+      if (batch < batches && channel < channels) {
+
+        array<Index, 4> pool_window_dims{ batches, channels, extents.y, extents.x };
+
+        Index idx_flat = mask(batch, channel, grad_starts.y, grad_starts.x);
+        array<Index, 4> unrolled_dim = from_flat_dim<4, ColMajor>(pool_window_dims, idx_flat);
+
+        output(batch, channel, output_pos.y + unrolled_dim[2], output_pos.x + unrolled_dim[3]) += dout(batch, channel, grad_starts.y, grad_starts.x);
+      }
 
   }
 #endif  

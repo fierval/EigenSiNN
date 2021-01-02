@@ -191,8 +191,10 @@ namespace EigenSinn {
         dim3 grad_starts_2d(grad_starts[3], grad_starts[2]);
         dim3 out_pos_2d(starts[3], starts[2]);
 
-        maxpool_dinput_kernel4d<Scalar, ColMajor> << <grid, block >> > (output->data(), grads->data(), mask->data(), 
-          original_dims[0], original_dims[1], in_size, out_size, grad_starts_2d, extents, out_pos_2d);
+        //maxpool_dinput_kernel4d<Scalar, ColMajor> << <grid, block >> > (output->data(), grads->data(), mask->data(), 
+        //  original_dims[0], original_dims[1], in_size, out_size, grad_starts_2d, extents, out_pos_2d);
+
+        maxpool_dinput_tensor_kernel4d<Scalar, ColMajor> << <grid, block >> > (*output, *grads, *mask, grad_starts_2d, extents, out_pos_2d);
 
       }
       else {
