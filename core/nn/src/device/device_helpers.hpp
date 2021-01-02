@@ -103,7 +103,7 @@ namespace EigenSinn {
   /// <param name="idx">Flat index</param>
   /// <returns>Offset along each dimension</returns>
   template<Index Rank, int Layout = ColMajor>
-EIGEN_DEVICE_FUNC inline array<Index, Rank> from_flat_dim(const array<Index, Rank> source_dim, Index idx) {
+  EIGEN_DEVICE_FUNC inline array<Index, Rank> from_flat_dim(const array<Index, Rank> source_dim, Index idx) {
 
     array<Index, Rank> out;
     Index offset = idx;
@@ -121,6 +121,41 @@ EIGEN_DEVICE_FUNC inline array<Index, Rank> from_flat_dim(const array<Index, Ran
       }
     }
     return out;
+  }
+
+  /// <summary>
+  /// Given tensor dimensions and an offset, compute the offset flat index
+  /// </summary>
+  /// <param name="source_dim">Original dimension</param>
+  /// <param name="offsets">Offset</param>
+  /// <returns>Flat index</returns>
+  template<Index Rank, int Layout = ColMajor>
+  EIGEN_DEVICE_FUNC inline Index to_flat_dim(const array<Index, Rank> source_dim, const array<Index, Rank> offsets) {
+
+#ifndef __CUDA_ARCH__
+    for (Index i = 0; i < Rank; i++) {
+      if (offsets[i] >= source_dim[i] || offsets[i] < 0 || source_dim[i] < 1) {
+        throw std::invalid_argument("Wrong range for dimensions and/or offsets: dimension " + std::to_string(i));
+      }
+    }
+#endif
+
+    Index res = 0;
+    if (Layout == ColMajor) {
+      res = offsets[Rank - 1];
+      for (Index i = Rank - 2; i >= 0; i--) {
+        res *= source_dim[i];
+        res += offsets[i];
+      }
+    }
+    else {
+      res = offsets[0];
+      for (Index i = 1; i < Rank; i++) {
+        res *= source_dim[i];
+        res += offsets[i];
+      }
+    }
+    return res;
   }
 
 #ifdef __INTELLISENSE__
@@ -147,7 +182,7 @@ EIGEN_DEVICE_FUNC inline array<Index, Rank> from_flat_dim(const array<Index, Ran
       Scalar* ptr_src = &src.data()[idx_src_offset];
       Scalar* ptr_dest = &dest.data()[idx_dest_offset];
 
-      add_and_set_kernel<Scalar><<<1, 1>>>(ptr_dest, ptr_src);
+      add_and_set_kernel<Scalar> << <1, 1 >> > (ptr_dest, ptr_src);
       cudaDeviceSynchronize();
     }
     else {

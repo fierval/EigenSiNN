@@ -164,22 +164,50 @@ namespace EigenSinn {
 
       for (starts[2] = 0, grad_starts[2] = 0; starts[2] + extents[0] <= original_dims[2]; starts[2] += stride, grad_starts[2]++) {
         for (starts[3] = 0, grad_starts[3] = 0; starts[3] + extents[1] <= original_dims[3]; starts[3] += stride, grad_starts[3]++) {
-          // unroll the index of the gradient being passed
-          for (int k = 0; k < original_dims[0]; k++) {
-            for (int j = 0; j < original_dims[1]; j++) {
-
-              // index has been flattened during the forward operation, unroll it
-              Index idx_flat = (*mask)(k, j, grad_starts[2], grad_starts[3]);
-              array<Index, 4> unrolled_dim = from_flat_dim<4, ColMajor>(lengths, idx_flat);
-
-              (*output)(k, j, starts[2] + unrolled_dim[2], starts[3] + unrolled_dim[3]) += (*grads)(k, j, grad_starts[2], grad_starts[3]);
-            }
-          }
+          
+          // carve the pooling window and set the gradient inside it
+          SetDInput(original_dims, mask, grad_starts, lengths, output, starts, grads);
         }
       }
       return output;
     }
 
+    void SetDInput(const array<Index, 4>& original_dims, 
+      const DeviceTensor<Device_, Index, 4>& mask, 
+      array<Index, 4>& grad_starts, 
+      const array<Index, 4>& pool_window_dims, 
+      DeviceTensor<Device_, Scalar, 4>& output, 
+      array<Index, 4>& starts, 
+      const DeviceTensor<Device_, Scalar, 4>& grads)
+    {
+#ifdef __CUDACC__
+      if (std::is_same<Device_, GpuDevice>::value) {
+        static dim3 block(MAXPOOL_BLOCK_SIZE, MAXPOOL_BLOCK_SIZE);
+        static dim3 grid((original_dims[0] + block.x - 1) / block.x, (original_dims[1] + block.y - 1) / block.y);
+        static dim3 out_size(mask.dimension(original_dims[3]), mask.dimension(original_dims[2]));
+        static dim3 extents(pool_window_dims[3], pool_window_dims[2]);
 
+        dim3 grad_starts_2d(grad_starts[3], grad_starts[2]);
+        dim3 out_pos_2d(starts[3], starts[2]);
+
+        maxpool_dinput_kernel4d<Scalar, ColMajor> << <grid, block >> > (output->data(), grads->data(), mask->data(), original_dims[0], original_dims[1], out_size, grad_starts_2d, extents, out_pos_2d);
+
+      }
+      else {
+#endif
+        for (int k = 0; k < original_dims[0]; k++) {
+          for (int j = 0; j < original_dims[1]; j++) {
+
+            // index has been flattened during the forward operation, unroll it
+            Index idx_flat = (*mask)(k, j, grad_starts[2], grad_starts[3]);
+            array<Index, 4> unrolled_dim = from_flat_dim<4, ColMajor>(pool_window_dims, idx_flat);
+
+            (*output)(k, j, starts[2] + unrolled_dim[2], starts[3] + unrolled_dim[3]) += (*grads)(k, j, grad_starts[2], grad_starts[3]);
+          }
+        }
+#ifdef __CUDACC__
+      }
+#endif
+    }
   };
 }
