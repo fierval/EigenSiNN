@@ -2,6 +2,7 @@
 
 #include "opsbase.hpp"
 #include <device/device_tensor.hpp>
+#include <device/device_maxpool.hpp>
 
 namespace EigenSinn {
 
@@ -142,9 +143,6 @@ namespace EigenSinn {
 
               set_from_tuple<Index, Scalar, 4, ColMajor, Device_>(*mask, *output, 
                 array<Index, 4>{k, j, output_starts[2], output_starts[3]}, *local_pool, array<Index, 2>{k, j}, device);
-
-              //(*mask)(k, j, output_starts[2], output_starts[3]) = (*local_pool)(k, j).first;
-              //(*output)(k, j, output_starts[2], output_starts[3]) = (*local_pool)(k, j).second;
             }
           }
         }
