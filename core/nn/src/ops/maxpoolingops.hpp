@@ -72,14 +72,34 @@ namespace EigenSinn {
         local_pool.view() = index_tuples->reduce(reduce_dims, internal::ArgMaxTupleReducer<Tuple<Index, Scalar>>());
         // split the tuple into its arrays: value and index of the input where
         // gradient will be propagated relative to the current slice
-        for (int k = 0; k < local_pool.dimension(0); k++) {
-          // set mask and output from the reducer results          
-          set_from_tuple<Index, Scalar, 2, ColMajor, Device_>(*mask, *output, {k, output_starts[1]}, * local_pool, {k}, device);
-        }
+        SetIdxAndValue(local_pool, mask, output, output_starts, device);
       }
 
       return Tuple(output, mask);
 
+    }
+
+    inline void SetIdxAndValue(DeviceTensor<Device_, Tuple<Index, Scalar>, 1>& local_pool, DeviceTensor<Device_, Index, 2>& mask,
+      DeviceTensor<Device_, Scalar, 2>& output, array<Index, 2>& output_starts, Device_& device) {
+#ifdef __CUDACC__
+      if (std::is_same<Device_, GpuDevice>::value) {
+
+        static long block(MAXPOOL_BLOCK_SIZE * MAXPOOL_BLOCK_SIZE);
+        static long grid((local_pool.dimension(0) + block - 1) / block);
+
+        maxpool_set_values_kernel2d<Scalar, ColMajor> << <grid, block >> > (*output, *mask, *local_pool, local_pool.dimension(0), output_starts[1]);
+        cudaDeviceSynchronize();
+      }
+      else {
+#endif
+        for (int k = 0; k < local_pool.dimension(0); k++) {
+
+            (*mask)(k, output_starts[1]) = (*local_pool)(k).first;
+            (*output)(k, output_starts[1]) = (*local_pool)(k).second;
+        }
+#ifdef __CUDACC__
+      }
+#endif
     }
 
     inline DeviceTensor<Device_, Scalar, 2, ColMajor> do_max_pool_backward(const DeviceTensor<Device_, Scalar, 2>& grads, const DeviceTensor<Device_, Index, 2>& mask,
@@ -100,7 +120,7 @@ namespace EigenSinn {
       return output;
     }
 
-    void SetDInput(const array<Index, 2>& original_dims, const DeviceTensor<Device_, Index, 2>& mask, array<Index, 2>& grad_starts, const array<Index, 2>& pool_window,
+    inline void SetDInput(const array<Index, 2>& original_dims, const DeviceTensor<Device_, Index, 2>& mask, array<Index, 2>& grad_starts, const array<Index, 2>& pool_window,
       DeviceTensor<Device_, Scalar, 2, 0>& output, array<Index, 2>& starts, const DeviceTensor<Device_, Scalar, 2, 0>& grads) {
 
 #ifdef __CUDACC__
@@ -108,7 +128,7 @@ namespace EigenSinn {
         static int block(MAXPOOL_BLOCK_SIZE * MAXPOOL_BLOCK_SIZE);
         static int grid((original_dims[0] + block - 1) / block);
 
-        maxpool_dinput_tensor_kernel2d<Scalar, ColMajor> << <grid, block >> > (*output, *grads, *mask, original_dims[0], grad_starts[1], pool_window[1], starts[1]);
+        maxpool_dinput_kernel2d<Scalar, ColMajor> << <grid, block >> > (*output, *grads, *mask, original_dims[0], grad_starts[1], pool_window[1], starts[1]);
         cudaDeviceSynchronize();
 
       }
@@ -165,11 +185,19 @@ namespace EigenSinn {
       return Tuple(output, mask);
     }
 
-    void SetIdxAndValue(DeviceTensor<Device_, Tuple<Index, Scalar>, 2>& local_pool, DeviceTensor<Device_, Index, 4>& mask,
+    inline void SetIdxAndValue(DeviceTensor<Device_, Tuple<Index, Scalar>, 2>& local_pool, DeviceTensor<Device_, Index, 4>& mask,
       DeviceTensor<Device_, Scalar, 4>& output, array<Index, 4>& output_starts, Device_& device) {
 #ifdef __CUDACC__
       if (std::is_same<Device_, GpuDevice>::value) {
 
+        static dim3 in_size(local_pool.dimension(0), local_pool.dimension(1));
+
+        static dim3 block(MAXPOOL_BLOCK_SIZE, MAXPOOL_BLOCK_SIZE);
+        static dim3 grid((in_size.x + block.x - 1) / block.x, (in_size.y + block.y - 1) / block.y);
+        dim3 output_starts_2d(output_starts[3], output_starts[2]);
+
+        maxpool_set_values_kernel4d<Scalar, ColMajor> << <grid, block >> > (*output, *mask, *local_pool, in_size, output_starts_2d);
+        cudaDeviceSynchronize();
       }
       else {
 #endif
@@ -208,13 +236,9 @@ namespace EigenSinn {
       return output;
     }
 
-    void SetDInput(const array<Index, 4>& original_dims,
-      const DeviceTensor<Device_, Index, 4>& mask,
-      array<Index, 4>& grad_starts,
-      const array<Index, 4>& pool_window_dims,
-      DeviceTensor<Device_, Scalar, 4>& output,
-      array<Index, 4>& starts,
-      const DeviceTensor<Device_, Scalar, 4>& grads)
+    void SetDInput(const array<Index, 4>& original_dims, const DeviceTensor<Device_, Index, 4>& mask,
+      array<Index, 4>& grad_starts, const array<Index, 4>& pool_window_dims, DeviceTensor<Device_, Scalar, 4>& output,
+      array<Index, 4>& starts, const DeviceTensor<Device_, Scalar, 4>& grads)
     {
 #ifdef __CUDACC__
       if (std::is_same<Device_, GpuDevice>::value) {
@@ -224,7 +248,7 @@ namespace EigenSinn {
         dim3 grad_starts_2d(grad_starts[3], grad_starts[2]);
         dim3 out_pos_2d(starts[3], starts[2]);
 
-        maxpool_dinput_tensor_kernel4d<Scalar, ColMajor> << <grid, block >> > (*output, *grads, *mask, original_dims[0], original_dims[1], grad_starts_2d, extents, out_pos_2d);
+        maxpool_dinput_kernel4d<Scalar, ColMajor> << <grid, block >> > (*output, *grads, *mask, original_dims[0], original_dims[1], grad_starts_2d, extents, out_pos_2d);
         cudaDeviceSynchronize();
 
       }

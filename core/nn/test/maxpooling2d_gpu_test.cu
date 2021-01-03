@@ -9,7 +9,7 @@ using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
-  class Pool2d : public ::testing::Test {
+  class Pool2dGpu : public ::testing::Test {
 
   protected:
 
