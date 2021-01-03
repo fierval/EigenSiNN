@@ -98,6 +98,10 @@ namespace EigenSinn {
   };
 #endif
 
+#ifdef __INTELLISENSE__
+#define EIGEN_USE_GPU
+#endif
+
 #ifdef EIGEN_USE_GPU
   template <>
   class Dispatcher<GpuDevice> {

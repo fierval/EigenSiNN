@@ -98,7 +98,7 @@ namespace EigenSinn {
         for (int k = 0; k < original_dims[0]; k++) {
 
           Index idx_flat = (*mask)(k, grad_starts[1]);
-          Index idx_col = from_flat_dim<2, ColMajor>(lengths, idx_flat)[1];
+          Index idx_col = from_flat_dim<Index, 2, ColMajor>(lengths, idx_flat)[1];
 
           // index has been unrolled during the forward operation
           (*output)(starts[0] + k, starts[1] + idx_col) += (*grads)(k, grad_starts[1]);
@@ -191,10 +191,8 @@ namespace EigenSinn {
         dim3 grad_starts_2d(grad_starts[3], grad_starts[2]);
         dim3 out_pos_2d(starts[3], starts[2]);
 
-        //maxpool_dinput_kernel4d<Scalar, ColMajor> << <grid, block >> > (output->data(), grads->data(), mask->data(), 
-        //  original_dims[0], original_dims[1], in_size, out_size, grad_starts_2d, extents, out_pos_2d);
-
-        maxpool_dinput_tensor_kernel4d<Scalar, ColMajor> << <grid, block >> > (*output, *grads, *mask, grad_starts_2d, extents, out_pos_2d);
+        maxpool_dinput_tensor_kernel4d<Scalar, ColMajor> << <grid, block >> > (*output, *grads, *mask, original_dims[0], original_dims[1], grad_starts_2d, extents, out_pos_2d);
+        cudaDeviceSynchronize();
 
       }
       else {
@@ -204,7 +202,7 @@ namespace EigenSinn {
 
             // index has been flattened during the forward operation, unroll it
             Index idx_flat = (*mask)(k, j, grad_starts[2], grad_starts[3]);
-            array<Index, 4> unrolled_dim = from_flat_dim<4, ColMajor>(pool_window_dims, idx_flat);
+            array<Index, 4> unrolled_dim = from_flat_dim<Index, 4, ColMajor>(pool_window_dims, idx_flat);
 
             (*output)(k, j, starts[2] + unrolled_dim[2], starts[3] + unrolled_dim[3]) += (*grads)(k, j, grad_starts[2], grad_starts[3]);
           }

@@ -102,48 +102,6 @@ namespace EigenSinnTest {
 
   };
 
-  TEST_F(Pool4dGpu, Validate) {
-
-    DeviceTensor<GpuDevice, float, 4> t(1, 3, 4, 4);
-    t.setConstant(1);
-
-    auto dims = t.dimensions();
-    array<Index, 2> extents({ 2, 2 });
-    int stride = 2;
-
-    bool res = check_valid_params<4>(extents, stride, dims);
-
-    EXPECT_TRUE(res);
-  }
-
-  TEST_F(Pool4dGpu, BadExtent) {
-
-    DeviceTensor<GpuDevice, float, 2> t(4, 4);
-    t.setConstant(1);
-
-    auto dims = t.dimensions();
-    array<Index, 1> extents({ 5 });
-    int stride = 2;
-
-    bool res = check_valid_params<2>(extents, stride, dims);
-
-    EXPECT_FALSE(res);
-  }
-
-  TEST_F(Pool4dGpu, BadStride4d) {
-
-    DeviceTensor<GpuDevice, float, 4> t(3, 4, 10, 10);
-    t.setConstant(1);
-
-    auto dims = t.dimensions();
-    array<Index, 2> extents({ 3, 3 });
-    int stride = 2;
-
-    bool res = check_valid_params<4>(extents, stride, dims);
-
-    EXPECT_FALSE(res);
-  }
-
   TEST_F(Pool4dGpu, Backward) {
 
     Input<float, 4, 0, GpuDevice> input;
