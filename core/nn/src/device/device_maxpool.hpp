@@ -45,6 +45,39 @@ namespace EigenSinn {
       }
 
   }
+
+    template<typename Scalar, int Layout = ColMajor>
+    __global__ void maxpool_dinput_tensor_kernel2d(
+      TensorView<Scalar, 2, Layout> output, TensorView<Scalar, 2, Layout> dout, TensorView<Index, 2, Layout> mask
+      , long batches, long grad_starts, long extents, long output_pos) {
+
+      int batch = threadIdx.x + blockIdx.x * blockDim.x;
+
+      if (batch < batches) {
+
+        array<long, 2> pool_window_dims{ batches, (long)extents};
+
+        // TODO: for some reason creating Index-type (long long) arrays crashes the kernel
+        // so convering everything to "long"
+        auto dims = mask.dimensions();
+        auto mask_dims = array<long, 2>{(long)dims[0], (long)dims[1]};
+
+        dims = output.dimensions();
+        auto out_dims = array<long, 2>{(long)dims[0], (long)dims[1]};
+
+        auto idx = to_flat_dim<long, 2, Layout>(mask_dims, { batch, (long)grad_starts});
+        auto idx_flat = mask.data()[idx];
+
+        auto idx_col = from_flat_dim<long, 2, ColMajor>(pool_window_dims, idx_flat)[1];
+
+        long idx_output = to_flat_dim<long, 2, Layout>(out_dims, { batch, (long)output_pos + idx_col});
+        long idx_grad = to_flat_dim<long, 2, Layout>(mask_dims, { batch, (long)grad_starts});
+
+        output.data()[idx_output] += dout.data()[idx_grad];
+      }
+
+    }
+
 #endif  
 
   template<typename Scalar1, typename Scalar2, int Rank, int Layout, typename Device_>

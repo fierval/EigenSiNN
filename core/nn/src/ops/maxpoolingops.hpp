@@ -107,11 +107,8 @@ namespace EigenSinn {
       if (std::is_same<Device_, GpuDevice>::value) {
         static int block(MAXPOOL_BLOCK_SIZE * MAXPOOL_BLOCK_SIZE);
         static int grid((original_dims[0] + block - 1) / block);
-        static dim3 extents(pool_window_dims[0], pool_window_dims[1]);
-        dim3 grad_starts_2d(grad_starts[0], grad_starts[1]);
-        dim3 out_pos_2d(starts[0], starts[1]);
 
-        maxpool_dinput_tensor_kernel2d<Scalar, ColMajor> << <grid, block >> > (*output, *grads, *mask, original_dims[0], grad_starts_2d, extents, out_pos_2d);
+        maxpool_dinput_tensor_kernel2d<Scalar, ColMajor> << <grid, block >> > (*output, *grads, *mask, original_dims[0], grad_starts[1], pool_window[1], starts[1]);
         cudaDeviceSynchronize();
 
       }
@@ -123,7 +120,7 @@ namespace EigenSinn {
           Index idx_col = from_flat_dim<Index, 2, ColMajor>(pool_window, idx_flat)[1];
 
           // index has been unrolled during the forward operation
-          (*output)(starts[0] + k, starts[1] + idx_col) += (*grads)(k, grad_starts[1]);
+          (*output)(k, starts[1] + idx_col) += (*grads)(k, grad_starts[1]);
         }
 #ifdef __CUDACC__
       }
