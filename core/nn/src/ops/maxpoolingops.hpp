@@ -159,16 +159,31 @@ namespace EigenSinn {
           local_pool.view() = index_tuples->reduce(reduce_dims, internal::ArgMaxTupleReducer<Tuple<Index, Scalar>>());
 
           // unchain indices. TODO: unwinding them in the backward pass will be harder than 2 dims
-          for (int k = 0; k < local_pool.dimension(0); k++) {
-            for (int j = 0; j < local_pool.dimension(1); j++) {
-
-              set_from_tuple<Index, Scalar, 4, ColMajor, Device_>(*mask, *output,
-                {k, j, output_starts[2], output_starts[3]}, * local_pool, {k, j}, device);
-            }
-          }
+          SetIdxAndValue(local_pool, mask, output, output_starts, device);
         }
       }
       return Tuple(output, mask);
+    }
+
+    void SetIdxAndValue(DeviceTensor<Device_, Tuple<Index, Scalar>, 2>& local_pool, DeviceTensor<Device_, Index, 4>& mask,
+      DeviceTensor<Device_, Scalar, 4>& output, array<Index, 4>& output_starts, Device_& device) {
+#ifdef __CUDACC__
+      if (std::is_same<Device_, GpuDevice>::value) {
+
+      }
+      else {
+#endif
+        for (int k = 0; k < local_pool.dimension(0); k++) {
+          for (int j = 0; j < local_pool.dimension(1); j++) {
+
+            (*mask)(k, j, output_starts[2], output_starts[3]) = (*local_pool)(k, j).first;
+            (*output)(k, j, output_starts[2], output_starts[3]) = (*local_pool)(k, j).second;
+
+          }
+        }
+#ifdef __CUDACC__
+      }
+#endif
     }
 
     inline DeviceTensor<Device_, Scalar, 4> do_max_pool_backward(const DeviceTensor<Device_, Scalar, 4>& grads, const DeviceTensor<Device_, Index, 4>& mask,
