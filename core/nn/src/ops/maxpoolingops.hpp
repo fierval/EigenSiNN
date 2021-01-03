@@ -74,7 +74,7 @@ namespace EigenSinn {
         // gradient will be propagated relative to the current slice
         for (int k = 0; k < local_pool.dimension(0); k++) {
           // set mask and output from the reducer results          
-          set_from_tuple<Index, Scalar, 2, ColMajor, Device_>(*mask, *output, array<Index, 2> {k, output_starts[1]}, * local_pool, array<Index, 1>{k}, device);
+          set_from_tuple<Index, Scalar, 2, ColMajor, Device_>(*mask, *output, {k, output_starts[1]}, * local_pool, {k}, device);
         }
       }
 
@@ -163,7 +163,7 @@ namespace EigenSinn {
             for (int j = 0; j < local_pool.dimension(1); j++) {
 
               set_from_tuple<Index, Scalar, 4, ColMajor, Device_>(*mask, *output,
-                array<Index, 4>{k, j, output_starts[2], output_starts[3]}, * local_pool, array<Index, 2>{k, j}, device);
+                {k, j, output_starts[2], output_starts[3]}, * local_pool, {k, j}, device);
             }
           }
         }
