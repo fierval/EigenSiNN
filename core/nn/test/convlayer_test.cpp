@@ -25,30 +25,6 @@ namespace EigenSinnTest {
   };
 
   
-  TEST_F(Convolution, ForwardIm2Col) {
-
-    Input<float, 4> input;
-    input.set_input(cd.convInput);
-
-    Conv2d<float> conv2d(cd.kernelDims);
-
-    conv2d.init(cd.convWeights.to_host());
-    conv2d.forward(input);
-    auto convolved = conv2d.get_output();
-
-    // perform convolutiion with GEMM using im2col
-    auto col_inputs = im2col<float>(cd.convInput, cd.convWeights.dimensions(), padding);
-    auto unf_kernel = unfold_kernel<float>(cd.convWeights);
-
-    ProductDims prod_dims = { IndexPair<int>(1, 0) };
-    DeviceTensor<DefaultDevice, float, 2> res(unf_kernel.dimension(0), col_inputs.dimension(1));
-    res.view() = unf_kernel->contract(*col_inputs, prod_dims);
-
-    //auto col2im_res = col2im<float>(res, convWeights.dimensions(), convInput.dimensions(), { 0, 0 });
-    auto conv_res = fold_conv_res(res, cd.convOutDims);
-    EXPECT_TRUE(is_elementwise_approx_eq(conv_res, convolved));
-  }
-
   TEST_F(Convolution, Backward) {
 
     Input<float, 4> input;

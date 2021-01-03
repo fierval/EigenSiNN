@@ -61,35 +61,6 @@ namespace EigenSinn {
     return get_output_dimensions(input, kernel.dimensions(), padding, stride);
   }
 
-  // NCHW format
-  //TODO: support stride
-  template <typename Scalar, Index Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
-  inline DeviceTensor<Device_, Scalar, 4, Layout> convolve(const DeviceTensor<Device_, Scalar, 4, Layout>& input,
-    DeviceTensor<Device_, Scalar, 4, Layout>& kernel, const Padding2D& padding, Index stride = 1) {
-
-    //dimensions involved in the convolution. Channel dimension is also involved.
-    array<Index, 3> dims({ (int)ImageDims::channel, (int)ImageDims::height, (int)ImageDims::width });
-
-    assert(input.dimension((int)ImageDims::channel) == kernel.dimension((int)ImageDims::channel));
-
-    // Pad if apropriate
-    auto padded_dims = get_padded_input_dims(*input, padding);
-    DeviceTensor<Device_, Scalar, 4, Layout> padded(padded_dims);
-    padded.view() = input->pad(pad2dim(padding));
-
-    // output dimensions
-    DSizes<Index, Rank> out_dims = get_output_dimensions(*input, *kernel, padding, stride);
-
-    // NCHW output tensor
-    DeviceTensor<Device_, Scalar, 4, Layout> output(out_dims);
-
-    for (int i = 0; i < kernel.dimension((int)ImageDims::batch); i++) {
-      // convolve on 3 dimensions and set the channel dimension of the entire batch
-      output->chip(i, (int)ImageDims::channel).device(output.get_device()) = padded->convolve(kernel->chip(i, (int)ImageDims::batch), dims).chip(0, (int)ImageDims::channel);
-    }
-
-    return output;
-  }
 
   // NCHW format
   template <typename Scalar, int Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
@@ -255,6 +226,40 @@ namespace EigenSinn {
     array<Index, 4> unpad_offsets = { out.dimension(0), out.dimension(1), orig_dims[2], orig_dims[3] };
     DeviceTensor<Device_, Scalar, 4, ColMajor> output(unpad_offsets);
     output.view() = out->slice(unpad_starts, unpad_offsets);
+    return output;
+  }
+
+  // NCHW format
+  //TODO: support stride
+  template <typename Scalar, Index Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  inline DeviceTensor<Device_, Scalar, 4, Layout> convolve(const DeviceTensor<Device_, Scalar, 4, Layout>& input,
+    DeviceTensor<Device_, Scalar, 4, Layout>& kernel, const Padding2D& padding, Index stride = 1) {
+
+    //dimensions involved in the convolution. Channel dimension is also involved.
+    array<Index, 3> dims({ (int)ImageDims::channel, (int)ImageDims::height, (int)ImageDims::width });
+
+    assert(input.dimension((int)ImageDims::channel) == kernel.dimension((int)ImageDims::channel));
+
+    // Pad if apropriate
+    auto padded_dims = get_padded_input_dims(*input, padding);
+    DeviceTensor<Device_, Scalar, 4, Layout> padded(padded_dims);
+    padded.view() = input->pad(pad2dim(padding));
+
+    // output dimensions
+    DSizes<Index, Rank> out_dims = get_output_dimensions(*input, *kernel, padding, stride);
+
+    // perform convolutiion with GEMM using im2col
+    auto col_inputs = im2col<Scalar, Rank, Layout, Device_>(input, kernel.dimensions(), padding);
+    auto unf_kernel = unfold_kernel<Scalar>(kernel);
+
+    ProductDims prod_dims = { IndexPair<int>(1, 0) };
+    DeviceTensor<Device_, float, 2> res(unf_kernel.dimension(0), col_inputs.dimension(1));
+    res.view() = unf_kernel->contract(*col_inputs, prod_dims);
+
+    // NCHW output tensor
+    DeviceTensor<Device_, Scalar, 4, Layout> output(out_dims);
+    output = fold_conv_res(res, out_dims);
+
     return output;
   }
 

@@ -10,7 +10,7 @@ using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
-  class Convolution : public ::testing::Test {
+  class ConvolutionGpu : public ::testing::Test {
 
   protected:
     void SetUp() {
@@ -25,31 +25,7 @@ namespace EigenSinnTest {
   };
 
   
-  TEST_F(Convolution, ForwardIm2Col) {
-
-    Input<float, 4, ColMajor, GpuDevice> input;
-    input.set_input(cd.convInput);
-
-    Conv2d<float, ColMajor, GpuDevice> conv2d(cd.kernelDims);
-
-    conv2d.init(cd.convWeights.to_host());
-    conv2d.forward(input);
-    auto convolved = conv2d.get_output();
-
-    // perform convolutiion with GEMM using im2col
-    auto col_inputs = im2col<float, 4, ColMajor, GpuDevice>(cd.convInput, cd.convWeights.dimensions(), padding);
-    auto unf_kernel = unfold_kernel<float, ColMajor, GpuDevice>(cd.convWeights);
-
-    ProductDims prod_dims = { IndexPair<int>(1, 0) };
-    DeviceTensor<GpuDevice, float, 2> res(unf_kernel.dimension(0), col_inputs.dimension(1));
-    res.view() = unf_kernel->contract(*col_inputs, prod_dims);
-
-    //auto col2im_res = col2im<float>(res, convWeights.dimensions(), convInput.dimensions(), { 0, 0 });
-    auto conv_res = fold_conv_res(res, cd.convOutDims);
-    EXPECT_TRUE(is_elementwise_approx_eq(conv_res, convolved));
-  }
-
-  TEST_F(Convolution, Backward) {
+  TEST_F(ConvolutionGpu, Backward) {
 
     Input<float, 4, ColMajor, GpuDevice> input;
     input.set_input(cd.convInput);
@@ -68,7 +44,7 @@ namespace EigenSinnTest {
   }
 
 
-  TEST_F(Convolution, Initialization) {
+  TEST_F(ConvolutionGpu, Initialization) {
 
     array<Index, 4> kdims = { 1, 512, 3, 3 };
     Conv2d<float, ColMajor, GpuDevice> conv2d(kdims);
@@ -86,7 +62,7 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(var_expected, var, 1e-4));
   }
 
-  TEST_F(Convolution, unfold_kernel) {
+  TEST_F(ConvolutionGpu, unfold_kernel) {
 
     auto unf_kernel = unfold_kernel<float, 0, GpuDevice>(cd.convWeights);
     auto folded_kernel = fold_kernel<float, 0, GpuDevice>(unf_kernel, cd.kernelDims);
@@ -94,7 +70,7 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(folded_kernel, cd.convWeights));
   }
 
-  TEST_F(Convolution, Backward1Padding) {
+  TEST_F(ConvolutionGpu, Backward1Padding) {
 
     Input<float, 4, 0, GpuDevice> input;
     input.set_input(cd.convInput);
@@ -110,7 +86,7 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(cd1p.dweight, conv2d.get_loss_by_weights_derivative()));
   }
 
-  TEST_F(Convolution, FoldUnfold) {
+  TEST_F(ConvolutionGpu, FoldUnfold) {
     auto output = DeviceTensor<GpuDevice, float, 4>(cd.output);
     auto unf_fold = fold_conv_res(unfold_conv_res(output), output.dimensions());
 
