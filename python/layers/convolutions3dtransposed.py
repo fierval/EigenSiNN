@@ -6,22 +6,22 @@ from im2col import im2col_indices, col2im_indices
 import torch
 import torch.nn as nn
 
-inp = cd.inp.clone()
-out_channels = 5
+output = cd.output.clone()
+out_channels = 3
 kernel_size = 3
-padding = 0
-batch_size = inp.shape[0]
+padding = 1
+batch_size = output.shape[0]
 
 # Same convolution
-conv = nn.Conv2d(cd.inp.shape[1], out_channels, kernel_size,
- padding=padding, bias=True)
+conv = nn.ConvTranspose2d(cd.inp.shape[1], out_channels, kernel_size,
+padding=padding, dilation=2, bias=True)
 
 conv.weight.data = cd.convweights
 conv.bias.data = torch.zeros(out_channels)
 
-output = conv(cd.inp)
+inp = conv(output)
 
-output.backward(cd.convloss if padding == 0 else cd.convlossPad1)
+inp.backward(cd.convlossTrans)
 
 print(f"output {to_cpp(output)}")
 print(f"dinput {to_cpp(cd.inp.grad)}")
