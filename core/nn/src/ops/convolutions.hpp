@@ -230,7 +230,6 @@ namespace EigenSinn {
   }
 
   // NCHW format
-  //TODO: support stride
   template <typename Scalar, Index Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
   inline DeviceTensor<Device_, Scalar, 4, Layout> convolve(const DeviceTensor<Device_, Scalar, 4, Layout>& input,
     DeviceTensor<Device_, Scalar, 4, Layout>& kernel, const Padding2D& padding, Index stride = 1) {
@@ -240,17 +239,12 @@ namespace EigenSinn {
 
     assert(input.dimension((int)ImageDims::channel) == kernel.dimension((int)ImageDims::channel));
 
-    // Pad if apropriate
-    auto padded_dims = get_padded_input_dims(*input, padding);
-    DeviceTensor<Device_, Scalar, 4, Layout> padded(padded_dims);
-    padded.view() = input->pad(pad2dim(padding));
-
     // output dimensions
     DSizes<Index, Rank> out_dims = get_output_dimensions(*input, *kernel, padding, stride);
 
     // perform convolutiion with GEMM using im2col
-    auto col_inputs = im2col<Scalar, Rank, Layout, Device_>(input, kernel.dimensions(), padding);
-    auto unf_kernel = unfold_kernel<Scalar>(kernel);
+    auto col_inputs = im2col<Scalar, Rank, Layout, Device_>(input, kernel.dimensions(), padding, stride);
+    auto unf_kernel = unfold_kernel<Scalar, Layout, Device_>(kernel);
 
     ProductDims prod_dims = { IndexPair<int>(1, 0) };
     DeviceTensor<Device_, float, 2> res(unf_kernel.dimension(0), col_inputs.dimension(1));
@@ -258,7 +252,7 @@ namespace EigenSinn {
 
     // NCHW output tensor
     DeviceTensor<Device_, Scalar, 4, Layout> output(out_dims);
-    output = fold_conv_res(res, out_dims);
+    output = fold_conv_res<Scalar, Layout, Device_>(res, out_dims);
 
     return output;
   }
