@@ -6,11 +6,11 @@ from im2col import im2col_indices, col2im_indices
 import torch
 import torch.nn as nn
 
-output = cd.output.clone()
+inp = cd.output
 out_channels = 3
 kernel_size = 3
 padding = 1
-batch_size = output.shape[0]
+batch_size = inp.shape[0]
 
 # Same convolution
 conv = nn.ConvTranspose2d(cd.inp.shape[1], out_channels, kernel_size,
@@ -19,14 +19,14 @@ padding=padding, dilation=2, bias=True)
 conv.weight.data = cd.convweights
 conv.bias.data = torch.zeros(out_channels)
 
-inp = conv(output)
-
-inp.backward(cd.convlossTrans)
+output = conv(inp)
+output.backward(cd.convlossTrans)
 
 print(f"output {to_cpp(output)}")
-print(f"dinput {to_cpp(cd.inp.grad)}")
+print(f"dinput {to_cpp(inp.grad)}")
 print (f"weights {to_cpp(conv.weight)}")
 print(f"dweights {to_cpp(conv.weight.grad)}")
+
 
 # now with im2col
 
