@@ -31,24 +31,31 @@ namespace EigenSinn {
   }
 
   template <typename Scalar, Index Rank = 4, int Layout = ColMajor>
-  inline auto get_output_dimensions(const TensorView<Scalar, Rank, Layout>& input, const array<Index, Rank> kernel_dims, const Padding2D& padding, const Index stride = 1) {
+  inline auto get_output_dimensions(const TensorView<Scalar, Rank, Layout>& input, const array<Index, Rank> kernel_dims, const Padding2D& padding, const Index stride, const Index dialation, bool is_transposed = false) {
 
     assert(kernel_dims[(int)ImageDims::channel] == input.dimension((int)ImageDims::channel));
     assert(kernel_dims[(int)ImageDims::height] > 0 && kernel_dims[(int)ImageDims::width] > 0);
 
     DSizes<Index, Rank> out_dims;
 
-    Index pad_height = 2 * padding.first;
-    Index pad_width = 2 * padding.second;
-
-    assert((input.dimension((int)ImageDims::height) + 2 * pad_height - kernel_dims[(int)ImageDims::height]) % stride == 0);
-    assert((input.dimension((int)ImageDims::width) + 2 * pad_width - kernel_dims[(int)ImageDims::width]) % stride == 0);
+    int conv_multiplyier = is_transposed ? -1 : 1;
+    Index pad_height = conv_multiplyier * 2 * padding.first;
+    Index pad_width = conv_multiplyier * 2 * padding.second;
 
     out_dims[(int)ImageDims::batch] = input.dimension((int)ImageDims::batch);
-    out_dims[(int)ImageDims::height] = (input.dimension((int)ImageDims::height) + pad_height - kernel_dims[(int)ImageDims::height]) / stride + 1;
-    out_dims[(int)ImageDims::width] = (input.dimension((int)ImageDims::width) + pad_width - kernel_dims[(int)ImageDims::width]) / stride + 1;
     out_dims[(int)ImageDims::channel] = kernel_dims[(int)ImageDims::batch];
 
+    if (!is_transposed) {
+      // see https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html
+      out_dims[(int)ImageDims::height] = (input.dimension((int)ImageDims::height) + pad_height - dialation * (kernel_dims[(int)ImageDims::height] - 1) - 1) / stride + 1;
+      out_dims[(int)ImageDims::width] = (input.dimension((int)ImageDims::width) + pad_width - dialation * (kernel_dims[(int)ImageDims::width] - 1) - 1) / stride + 1;
+    }
+    // see https://pytorch.org/docs/stable/generated/torch.nn.ConvTranspose2d.html
+    else {
+      out_dims[(int)ImageDims::height] = input.dimension((int)ImageDims::height) * stride + pad_height - dialation * (kernel_dims[(int)ImageDims::height] - 1)  + 1;
+      out_dims[(int)ImageDims::width] = input.dimension((int)ImageDims::width) * stride + pad_width - dialation * (kernel_dims[(int)ImageDims::width] - 1)  + 1;
+
+    }
     return out_dims;
 
 
@@ -56,27 +63,30 @@ namespace EigenSinn {
 
   // output dimensions for a convolution with constant padding
   template <typename Scalar, Index Rank = 4, int Layout = ColMajor>
-  inline auto get_output_dimensions(const TensorView<Scalar, Rank, Layout>& input, const TensorView<Scalar, Rank, Layout>& kernel, const Padding2D& padding, const Index stride = 1) {
+  inline auto get_output_dimensions(const TensorView<Scalar, Rank, Layout>& input, const TensorView<Scalar, Rank, Layout>& kernel, const Padding2D& padding, const Index stride,const Index dialation, bool is_transposed = false) {
 
-    return get_output_dimensions(input, kernel.dimensions(), padding, stride);
+    return get_output_dimensions(input, kernel.dimensions(), padding, stride, dialation, is_transposed);
   }
 
 
   // NCHW format
   template <typename Scalar, int Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
-  inline auto im2col(const DeviceTensor<Device_, Scalar, Rank, Layout>& input, const DSizes<Index, Rank>& kernel_dims, const Padding2D& padding, Index stride = 1) {
+  inline auto im2col(const DeviceTensor<Device_, Scalar, Rank, Layout>& input, const DSizes<Index, Rank>& kernel_dims, const Padding2D& padding, Index stride, Index dialation ) {
 
-    auto out_dims = get_output_dimensions(*input, kernel_dims, padding, stride);
+    auto out_dims = get_output_dimensions(*input, kernel_dims, padding, dialation, stride);
     // pad the tensor before we convolve
 
     auto padded_dims = get_padded_input_dims(*input, padding);
     DeviceTensor<Device_, Scalar, 4, Layout> padded(padded_dims);
     padded.view() = input->pad(pad2dim(padding));
 
-    Index col_dim = kernel_dims[1] * kernel_dims[2] * kernel_dims[3];
+    Index kernel_height = dialation * (kernel_dims[2] - 1) + 1;
+    Index kernel_width = dialation * (kernel_dims[3] - 1) + 1;
+
+    Index col_dim = kernel_dims[1] * kernel_height * kernel_width;
     array<Index, Rank> starts = { 0, 0, 0, 0 };
-    array<Index, Rank> offsets = { padded.dimension(0), kernel_dims[1], kernel_dims[2], kernel_dims[3] };
-    array<Index, Rank> slice_dims = { kernel_dims[3], kernel_dims[2], kernel_dims[1], padded.dimension(0) };
+    array<Index, Rank> offsets = { padded.dimension(0), kernel_dims[1], kernel_height, kernel_width };
+    array<Index, Rank> slice_dims = { kernel_width, kernel_height, kernel_dims[1], padded.dimension(0) };
 
     array<int, 4> shuffle_dims = { 3, 2, 1, 0 };
     // output second dimension is 
@@ -106,6 +116,31 @@ namespace EigenSinn {
 
     }
     return output;
+  }
+
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  inline auto dialate_kernel(DeviceTensor<Device_, Scalar, 4, Layout>& kernel, Index dialation) {
+
+    if (dialation == 1) { return kernel; }
+
+    auto dims = kernel.dimensions();
+    Index kernel_height = dialation * (dims[2] - 1) + 1;
+    Index kernel_width = dialation * (dims[3] - 1) + 1;
+
+    DeviceTensor<Device_, Scalar, 4, Layout> dialated(dims[0], dims[1], dims[2], dims[3]);
+    dialated.setZero();
+
+    // TODO: CUDA kernel for dialation
+    for (Index b = 0; b < dims[0]; b++) {
+      for (Index c = 0; c < dims[1]; c++) {
+        for (Index h = 0; c < dims[2]; h++) {
+          for (Index w = 0; c < dims[3]; w++) {
+            (*dialated)(b, c, dialation * h, dialation * w) = (*kernel)(b, c, h, w);
+          }
+        }
+      }
+    }
+    return dialated;
   }
 
   // return kernel representation for GEMM with 
@@ -232,7 +267,7 @@ namespace EigenSinn {
   // NCHW format
   template <typename Scalar, Index Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
   inline DeviceTensor<Device_, Scalar, 4, Layout> convolve(const DeviceTensor<Device_, Scalar, 4, Layout>& input,
-    DeviceTensor<Device_, Scalar, 4, Layout>& kernel, const Padding2D& padding, Index stride = 1) {
+    DeviceTensor<Device_, Scalar, 4, Layout>& kernel, const Padding2D& padding, Index stride, Index dialation) {
 
     //dimensions involved in the convolution. Channel dimension is also involved.
     array<Index, 3> dims({ (int)ImageDims::channel, (int)ImageDims::height, (int)ImageDims::width });
@@ -240,11 +275,12 @@ namespace EigenSinn {
     assert(input.dimension((int)ImageDims::channel) == kernel.dimension((int)ImageDims::channel));
 
     // output dimensions
-    DSizes<Index, Rank> out_dims = get_output_dimensions(*input, *kernel, padding, stride);
+    DSizes<Index, Rank> out_dims = get_output_dimensions(*input, *kernel, padding, stride, dialation);
 
     // perform convolutiion with GEMM using im2col
-    auto col_inputs = im2col<Scalar, Rank, Layout, Device_>(input, kernel.dimensions(), padding, stride);
-    auto unf_kernel = unfold_kernel<Scalar, Layout, Device_>(kernel);
+    auto col_inputs = im2col<Scalar, Rank, Layout, Device_>(input, kernel.dimensions(), padding, stride, dialation);
+    auto dialated = dialate_kernel<Scalar, Layout, Device_>(kernel, dialation);
+    auto unf_kernel = unfold_kernel<Scalar, Layout, Device_>(dialated);
 
     ProductDims prod_dims = { IndexPair<int>(1, 0) };
     DeviceTensor<Device_, float, 2> res(unf_kernel.dimension(0), col_inputs.dimension(1));
@@ -260,29 +296,29 @@ namespace EigenSinn {
   // pad unevenly in case of k % 2 == 1:
   // more zero's goes upfront
   template <typename Scalar, Index Rank = 4>
-  inline Tensor<Scalar, Rank> convolve_same(Tensor<Scalar, Rank>& input, Tensor<Scalar, Rank>& kernel) {
+  inline Tensor<Scalar, Rank> convolve_same(Tensor<Scalar, Rank>& input, Tensor<Scalar, Rank>& kernel, Index stride, Index dialation) {
     int dim1 = kernel.dimension((int)ImageDims::height) - 1;
     int dim2 = kernel.dimension((int)ImageDims::width) - 1;
 
     assert(dim1 & 0x1 == 0);
     assert(dim2 & 0x1 == 0);
 
-    Tensor<Scalar, Rank> output = convolve(input, kernel, { dim1 / 2, dim2 / 2 });
+    Tensor<Scalar, Rank> output = convolve(input, kernel, { dim1 / 2, dim2 / 2 }, stride, dialation);
     return output;
   }
 
   template <typename Scalar, Index Rank = 4>
-  inline Tensor<Scalar, Rank> convolve_valid(Tensor<Scalar, Rank>& input, Tensor<Scalar, Rank>& kernel) {
-    Tensor<Scalar, Rank> output = convolve(input, kernel, { 0, 0 });
+  inline Tensor<Scalar, Rank> convolve_valid(Tensor<Scalar, Rank>& input, Tensor<Scalar, Rank>& kernel, Index stride, Index dialation) {
+    Tensor<Scalar, Rank> output = convolve(input, kernel, { 0, 0 }, stride, dialation);
     return output;
   }
 
   template <typename Scalar, Index Rank = 4>
-  inline Tensor<Scalar, Rank> convolve_full(Tensor<Scalar, Rank>& input, Tensor<Scalar, Rank>& kernel) {
+  inline Tensor<Scalar, Rank> convolve_full(Tensor<Scalar, Rank>& input, Tensor<Scalar, Rank>& kernel, Index stride, Index dialation) {
     int dim1 = kernel.dimension((int)ImageDims::height) - 1;
     int dim2 = kernel.dimension((int)ImageDims::width) - 1;
 
-    Tensor<Scalar, Rank> output = convolve(input, kernel, { dim1, dim2 });
+    Tensor<Scalar, Rank> output = convolve(input, kernel, { dim1, dim2 }, stride, dialation);
     return output;
   }
 } // namespace EigenSinn

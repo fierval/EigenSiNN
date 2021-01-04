@@ -13,10 +13,11 @@ namespace EigenSinn {
 
   public:
 
-    Conv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const Index _stride = 1)
+    Conv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const Index _stride = 1, const Index _dialation = 1)
       : kernel(kernelDims)
       , padding(_padding)
       , stride(_stride)
+      , dialation(_dialation)
       , bias(kernelDims[0])
       , bias_broadcast({ 0, 0, 0, 0 })
       , loss_by_bias_derivative(kernelDims[0])
@@ -42,7 +43,7 @@ namespace EigenSinn {
 
       DeviceTensor<Device_, Scalar, 4, Layout> prev_layer(prev_layer_any.get_output());
 
-      layer_output = convolve<Scalar, 4, Layout, Device_>(prev_layer, kernel, padding, stride);
+      layer_output = convolve<Scalar, 4, Layout, Device_>(prev_layer, kernel, padding, stride, dialation);
 
       //add bias to each channel
       auto dims = layer_output.dimensions();
@@ -62,7 +63,7 @@ namespace EigenSinn {
 
       // flatten weights and kernel
       DeviceTensor<Device_, Scalar, 2, Layout> unf_kernel = unfold_kernel(kernel);
-      DeviceTensor<Device_, Scalar, 2, Layout> x_col = im2col<Scalar, 4, Layout, Device_>(prev_layer, kernel.dimensions(), padding, stride);
+      DeviceTensor<Device_, Scalar, 2, Layout> x_col = im2col<Scalar, 4, Layout, Device_>(prev_layer, kernel.dimensions(), padding, stride, dialation);
 
       // dX: kernel.T * dout
       ProductDims prod_dims = { IndexPair<int>(0, 0) };
@@ -122,7 +123,7 @@ namespace EigenSinn {
     DeviceTensor<Device_, Scalar, 4, Layout> kernel, layer_output, dX, dW;
     DeviceTensor<Device_, Scalar, 1, Layout> bias, loss_by_bias_derivative;
 
-    const Index stride;
+    const Index stride, dialation;
     const Padding2D padding;
     array<Index, 4> bias_broadcast;
   };
