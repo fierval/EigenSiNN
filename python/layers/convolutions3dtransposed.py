@@ -30,32 +30,34 @@ print(f"dweights {to_cpp(conv.weight.grad)}")
 
 ########################## now with im2col ####################################################
 
+### Forward Pass
 # dilate the kernel
 dilated_size = dilation * (kernel_size - 1) + 1
 dilated = np.zeros((cd.convweights.shape[0], out_channels, dilated_size, dilated_size))
 
 kernel = conv.weight.data.detach().numpy()
 
-w_dilated = [dilation * w for w in range(kernel_size)]
-h_dilated = [dilation * h for h in range(kernel_size)]
-dilated[:, :, h_dilated, w_dilated] = kernel[:, :, range(kernel_size), range(kernel_size)]
+for h in range(kernel_size):
+  for w in range(kernel_size):
+    dilated[:, :, dilation * h, dilation * w] = kernel[:, :, h, w]
 
 # forward pass with transposed kernel
-n_filter = cd.convweights.shape[0]
-inp_reshaped = inp.detach().numpy().transpose(1, 2, 3, 0).reshape(n_filter, -1)
-W_reshape = dilated.reshape(n_filter, -1)
+n_filters = cd.convweights.shape[0]
+inp_reshaped = inp.detach().numpy().transpose(1, 2, 3, 0).reshape(n_filters, -1)
+W_reshape = dilated.reshape(n_filters, -1)
 
 out_col = W_reshape.T @ inp_reshaped
+
 # image is recovered through col2im
 out_image = col2im_indices(out_col, cd.inp.shape, dilated_size, dilated_size, padding=padding)
 
-# x_col = im2col_indices(inp.detach().numpy(), kernel_size, dilated_size, padding=padding)
-# W_reshape = cd.convweights.detach().numpy().reshape(n_filter, -1)
+################################################################################################
+### Backward Pass
+dout_col = im2col_indices(cd.convlossTrans.detach().numpy(), dilated_size, dilated_size, padding=padding)
+#dout_reshaped = cd.convlossTrans.detach().numpy().transpose(1, 2, 3, 0).reshape(n_filter, -1)
+dX_col = W_reshape @ dout_col
+c, _, h, w = inp.shape
+dX = dX_col.reshape(n_filters, h, w, c).transpose(3, 0, 1, 2)
 
-# dout_reshaped = cd.convloss.detach().numpy().transpose(1, 2, 3, 0).reshape(n_filter, -1)
-# if(padding == 1):
-#   dout_reshaped = cd.convlossTrans.detach().numpy().transpose(1, 2, 3, 0).reshape(n_filter, -1)
-
-# dX_col = W_reshape.T @ dout_reshaped
-
-# dX = col2im_indices(dX_col, cd.inp.shape, kernel_size, kernel_size, padding=padding)
+dW = dout_col @ inp_reshaped.T
+dW = dW.reshape(dilated.shape)

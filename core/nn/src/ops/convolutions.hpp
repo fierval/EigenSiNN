@@ -80,8 +80,8 @@ namespace EigenSinn {
     DeviceTensor<Device_, Scalar, 4, Layout> padded(padded_dims);
     padded.view() = input->pad(pad2dim(padding));
 
-    Index kernel_height = dilation * (kernel_dims[2] - 1) + 1;
-    Index kernel_width = dilation * (kernel_dims[3] - 1) + 1;
+    Index kernel_height = kernel_dims[2];
+    Index kernel_width = kernel_dims[3];
 
     Index col_dim = kernel_dims[1] * kernel_height * kernel_width;
     array<Index, Rank> starts = { 0, 0, 0, 0 };
