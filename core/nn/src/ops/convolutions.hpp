@@ -38,7 +38,7 @@ namespace EigenSinn {
 
     DSizes<Index, Rank> out_dims;
 
-    int conv_multiplyier = is_transposed ? -1 : 1;
+    Index conv_multiplyier = is_transposed ? -1 : 1;
     Index pad_height = conv_multiplyier * 2 * padding.first;
     Index pad_width = conv_multiplyier * 2 * padding.second;
 
@@ -85,8 +85,7 @@ namespace EigenSinn {
 
     Index col_dim = kernel_dims[1] * kernel_height * kernel_width;
     array<Index, Rank> starts = { 0, 0, 0, 0 };
-    array<Index, Rank> offsets = { padded.dimension(0), kernel_dims[1], kernel_height * dilation, kernel_width * dilation };
-    array<Index, Rank> slice_dims = { kernel_width, kernel_height, kernel_dims[1], padded.dimension(0) };
+    array<Index, Rank> offsets = { padded.dimension(0), kernel_dims[1], (kernel_height - 1) * dilation + 1, (kernel_width - 1) * dilation + 1 };
 
     array<int, 4> shuffle_dims = { 3, 2, 1, 0 };
     // output second dimension is 
@@ -102,10 +101,9 @@ namespace EigenSinn {
     for (starts[2] = 0; starts[2] + offsets[2] <= padded.dimension(2); starts[2] += stride) {
       for (starts[3] = 0; starts[3] + offsets[3] <= padded.dimension(3); converted_portion++, starts[3] += stride) {
 
-        // TODO: need to account for dilation!
-        DeviceTensor<Device_, Scalar, 4, Layout> cur_slice(slice_dims);
+        DeviceTensor<Device_, Scalar, 4, Layout> cur_slice(offsets);
         cur_slice.view() = padded->slice(starts, offsets);
-        int shift = converted_portion * col_dim;
+        int shift = converted_portion * padded.dimension(0);
 
         // for the dilation 1 case we don't have to do anything special for the GPU
         if (dilation == 1) {
@@ -119,10 +117,10 @@ namespace EigenSinn {
         else {
           for (Index i = shift; i < shift + input.dimension(0); i++) {
             for (Index r = 0; r < output.dimension(0); r++) {
-              for (Index b = 0; b < slice_dims[3]; b++) {
-                for (Index c = 0; c < slice_dims[2]; c++) {
-                  for (Index h = 0; h < slice_dims[1]; h += dilation) {
-                    for (Index w = 0; w < slice_dims[2]; w += dilation) {
+              for (Index b = 0; b < offsets[0]; b++) {
+                for (Index c = 0; c < offsets[1]; c++) {
+                  for (Index h = 0; h < offsets[2]; h += dilation) {
+                    for (Index w = 0; w < offsets[3]; w += dilation) {
                       (*output)(r, c) = (*cur_slice)(w, h, c, b);
                     }
                   }
@@ -230,7 +228,7 @@ namespace EigenSinn {
     const array<Index, 4>& kernel_dims,
     const array<Index, 4>& orig_dims,
     const Padding2D& padding,
-    int stride = 1) {
+    int stride = 1, int dilation = 1) {
 
     // intermediate output: original dimensions padded
     Index channels = kernel_dims[1],
@@ -258,15 +256,15 @@ namespace EigenSinn {
     for (Index i = 0; i < col_dims[1] / batch_size; i++, slice_starts[1] += batch_size) {
 
       // move to the next slice
-      out_w = (stride * i) % (width - kernel_dims[3] + 1);
-      out_h = (stride * i) / (width - kernel_dims[3] + 1);
+      out_w = dilation * (stride * i) % (width - kernel_dims[3] + 1);
+      out_h = dilation * (stride * i) / (width - kernel_dims[3] + 1);
 
       slice.view() = col->slice(slice_starts, slice_offsets).eval().reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
 
       for (Index b = 0; b < batch_size; b++) {
         for (Index c = 0; c < channels; c++) {
-          for (Index h = 0; h < kernel_dims[2]; h++) {
-            for (Index w = 0; w < kernel_dims[3]; w++) {
+          for (Index h = 0; h < kernel_dims[2]; h += dilation) {
+            for (Index w = 0; w < kernel_dims[3]; w += dilation) {
               add_and_set(*out, array<Index, 4>{ b, c, h + out_h, w + out_w }, * slice, array<Index, 4>{ b, c, h, w}, device);
             }
           }
@@ -297,8 +295,7 @@ namespace EigenSinn {
 
     // perform convolutiion with GEMM using im2col
     auto col_inputs = im2col<Scalar, Rank, Layout, Device_>(input, kernel.dimensions(), padding, stride, dilation);
-    auto dilated = dilate_kernel<Scalar, Layout, Device_>(kernel, dilation);
-    auto unf_kernel = unfold_kernel<Scalar, Layout, Device_>(dilated);
+    auto unf_kernel = unfold_kernel<Scalar, Layout, Device_>(kernel);
 
     ProductDims prod_dims = { IndexPair<int>(1, 0) };
     DeviceTensor<Device_, float, 2> res(unf_kernel.dimension(0), col_inputs.dimension(1));

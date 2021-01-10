@@ -1,5 +1,4 @@
 import torch
-import torch.nn as nn
 
 device = torch.device("cpu")
 torch.set_printoptions(precision=8)

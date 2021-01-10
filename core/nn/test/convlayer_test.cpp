@@ -92,4 +92,22 @@ namespace EigenSinnTest {
 
     EXPECT_TRUE(is_elementwise_approx_eq(output, unf_fold));
   }
+
+  TEST_F(Convolution, Backward1Padding2Dilated) {
+    Input<float, 4> input;
+    input.set_input(cd.convInput);
+
+    Conv2d<float> conv2d(cd.kernelDims, { 1, 1 }, 1, 2);
+
+    conv2d.init(cd.convWeights.to_host());
+    conv2d.forward(input);
+    DeviceTensor<DefaultDevice, float, 4> conv2dout(conv2d.get_output());
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.outputDilated2Padded1, conv2dout));
+
+    conv2d.backward(input, cd1p.convLoss);
+
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.dinputDilated2Padded1, conv2d.get_loss_by_input_derivative()));
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.dweightsDilated2Padded1, conv2d.get_loss_by_weights_derivative()));
+
+  }
 }
