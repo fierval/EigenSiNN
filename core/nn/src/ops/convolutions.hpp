@@ -52,8 +52,8 @@ namespace EigenSinn {
     }
     // see https://pytorch.org/docs/stable/generated/torch.nn.ConvTranspose2d.html
     else {
-      out_dims[(int)ImageDims::height] = input.dimension((int)ImageDims::height) * stride + pad_height - dilation * (kernel_dims[(int)ImageDims::height] - 1)  + 1;
-      out_dims[(int)ImageDims::width] = input.dimension((int)ImageDims::width) * stride + pad_width - dilation * (kernel_dims[(int)ImageDims::width] - 1)  + 1;
+      out_dims[(int)ImageDims::height] = input.dimension((int)ImageDims::height) * stride + pad_height - dilation * (kernel_dims[(int)ImageDims::height] - 1) + 1;
+      out_dims[(int)ImageDims::width] = input.dimension((int)ImageDims::width) * stride + pad_width - dilation * (kernel_dims[(int)ImageDims::width] - 1) + 1;
 
     }
     return out_dims;
@@ -63,7 +63,7 @@ namespace EigenSinn {
 
   // output dimensions for a convolution with constant padding
   template <typename Scalar, Index Rank = 4, int Layout = ColMajor>
-  inline auto get_output_dimensions(const TensorView<Scalar, Rank, Layout>& input, const TensorView<Scalar, Rank, Layout>& kernel, const Padding2D& padding, const Index stride,const Index dilation, bool is_transposed = false) {
+  inline auto get_output_dimensions(const TensorView<Scalar, Rank, Layout>& input, const TensorView<Scalar, Rank, Layout>& kernel, const Padding2D& padding, const Index stride, const Index dilation, bool is_transposed = false) {
 
     return get_output_dimensions(input, kernel.dimensions(), padding, stride, dilation, is_transposed);
   }
@@ -71,7 +71,7 @@ namespace EigenSinn {
 
   // NCHW format
   template <typename Scalar, int Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
-  inline auto im2col(const DeviceTensor<Device_, Scalar, Rank, Layout>& input, const DSizes<Index, Rank>& kernel_dims, const Padding2D& padding, Index stride, Index dilation ) {
+  inline auto im2col(const DeviceTensor<Device_, Scalar, Rank, Layout>& input, const DSizes<Index, Rank>& kernel_dims, const Padding2D& padding, Index stride, Index dilation) {
 
     auto out_dims = get_output_dimensions(*input, kernel_dims, padding, dilation, stride);
     // pad the tensor before we convolve
@@ -85,7 +85,7 @@ namespace EigenSinn {
 
     Index col_dim = kernel_dims[1] * kernel_height * kernel_width;
     array<Index, Rank> starts = { 0, 0, 0, 0 };
-    array<Index, Rank> offsets = { padded.dimension(0), kernel_dims[1], kernel_height, kernel_width };
+    array<Index, Rank> offsets = { padded.dimension(0), kernel_dims[1], kernel_height * dilation, kernel_width * dilation };
     array<Index, Rank> slice_dims = { kernel_width, kernel_height, kernel_dims[1], padded.dimension(0) };
 
     array<int, 4> shuffle_dims = { 3, 2, 1, 0 };
@@ -94,6 +94,7 @@ namespace EigenSinn {
     int conv_locations = out_dims[3] * out_dims[2];
 
     DeviceTensor<Device_, Scalar, 2, Layout> output(col_dim, input.dimension(0) * conv_locations);
+    Device_ device = output.get_device();
 
     // "move" along axis 1 (columns) and append converted portions.
     // each converted portion is a a batch of would-be convolution operations
@@ -101,19 +102,36 @@ namespace EigenSinn {
     for (starts[2] = 0; starts[2] + offsets[2] <= padded.dimension(2); starts[2] += stride) {
       for (starts[3] = 0; starts[3] + offsets[3] <= padded.dimension(3); converted_portion++, starts[3] += stride) {
 
+        // TODO: need to account for dilation!
         DeviceTensor<Device_, Scalar, 4, Layout> cur_slice(slice_dims);
-        cur_slice.view() = padded->slice(starts, offsets).eval().shuffle(shuffle_dims);
+        cur_slice.view() = padded->slice(starts, offsets);
+        int shift = converted_portion * col_dim;
 
-        DeviceTensor<Device_, Scalar, 2, Layout> flat_slice(col_dim, padded.dimension(0));
-        flat_slice.view() = cur_slice->reshape(DSizes<Index, 2>{ col_dim, padded.dimension(0) });
+        // for the dilation 1 case we don't have to do anything special for the GPU
+        if (dilation == 1) {
+          DeviceTensor<Device_, Scalar, 2, Layout> flat_slice(col_dim, padded.dimension(0));
+          flat_slice.view() = cur_slice->shuffle(shuffle_dims).eval().reshape(DSizes<Index, 2>{ col_dim, padded.dimension(0) });
 
-        int shift = converted_portion * flat_slice.dimension(1);
-        for (Index i = 0; i < flat_slice.dimension(1); i++) {
-          // REVIEW: This needs to be properly expressed through the DeviceTensor object
-          output->chip(shift + i, 1).device(output.get_device()) = flat_slice->chip(i, 1);
+          for (Index i = 0; i < flat_slice.dimension(1); i++) {
+            output->chip(shift + i, 1).device(device) = flat_slice->chip(i, 1);
+          }
+        }
+        else {
+          for (Index i = shift; i < shift + input.dimension(0); i++) {
+            for (Index r = 0; r < output.dimension(0); r++) {
+              for (Index b = 0; b < slice_dims[3]; b++) {
+                for (Index c = 0; c < slice_dims[2]; c++) {
+                  for (Index h = 0; h < slice_dims[1]; h += dilation) {
+                    for (Index w = 0; w < slice_dims[2]; w += dilation) {
+                      (*output)(r, c) = (*cur_slice)(w, h, c, b);
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
-
     }
     return output;
   }
