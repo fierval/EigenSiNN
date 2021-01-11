@@ -216,13 +216,12 @@ namespace EigenSinn {
     int stride = 1, int dilation = 1) {
 
     // intermediate output: original dimensions padded
-    Index channels = kernel_dims[1],
-      height = orig_dims[2] + 2 * padding.first,
-      width = orig_dims[3] + 2 * padding.second,
+    Index channels = kernel_dims[1], 
+      width = orig_dims[3] + 2 * padding.second, 
       batch_size = orig_dims[0];
 
     array<Index, 2> col_dims = col.dimensions();
-    DeviceTensor<Device_, Scalar, 4, ColMajor> out(batch_size, channels, height, width);
+    DeviceTensor<Device_, Scalar, 4, ColMajor> out(orig_dims);
     out.setZero();
 
     Index out_w = 0, out_h = 0;
@@ -241,28 +240,29 @@ namespace EigenSinn {
     for (Index i = 0; i < col_dims[1] / batch_size; i++, slice_starts[1] += batch_size) {
 
       // move to the next slice
-      out_w = dilation * (stride * i) % (width - kernel_dims[3] + 1);
-      out_h = dilation * (stride * i) / (width - kernel_dims[3] + 1);
+      out_w = dilation * (stride * i) % (width - kernel_dims[3] + 1) - padding.second;
+      out_h = dilation * (stride * i) / (width - kernel_dims[3] + 1) - padding.first;
 
       slice.view() = col->slice(slice_starts, slice_offsets).eval().reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
 
       for (Index b = 0; b < batch_size; b++) {
         for (Index c = 0; c < channels; c++) {
-          for (Index h = 0; h < kernel_dims[2]; h += dilation) {
-            for (Index w = 0; w < kernel_dims[3]; w += dilation) {
-              add_and_set(*out, array<Index, 4>{ b, c, h + out_h, w + out_w }, * slice, array<Index, 4>{ b, c, h, w}, device);
+          for (Index h = 0; h < kernel_dims[2]; h++) {
+            for (Index w = 0; w < kernel_dims[3]; w++) {
+              
+              Index height_offset = h + out_h;
+              Index width_offset = w + out_w;
+
+              if (height_offset >= 0 && height_offset < out.dimension(2) && width_offset >= 0 && width_offset < out.dimension(3)) {
+                add_and_set(*out, array<Index, 4>{ b, c, height_offset, width_offset }, *slice, array<Index, 4>{ b, c, h, w}, device);
+              }
             }
           }
         }
       }
     }
 
-    //unpad
-    array<Index, 4> unpad_starts = { 0, 0, padding.first, padding.second };
-    array<Index, 4> unpad_offsets = { out.dimension(0), out.dimension(1), orig_dims[2], orig_dims[3] };
-    DeviceTensor<Device_, Scalar, 4, ColMajor> output(unpad_offsets);
-    output.view() = out->slice(unpad_starts, unpad_offsets);
-    return output;
+    return out;
   }
 
   // NCHW format

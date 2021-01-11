@@ -62,7 +62,8 @@ namespace EigenSinn {
       DeviceTensor<Device_, Scalar, 2, Layout> dout = unfold_conv_res<Scalar, Layout, Device_>(next_layer_grad);
 
       // flatten weights and kernel
-      DeviceTensor<Device_, Scalar, 2, Layout> unf_kernel = unfold_kernel(kernel);
+      DeviceTensor<Device_, Scalar, 4, Layout> dilated = dilate_kernel(kernel, dilation);
+      DeviceTensor<Device_, Scalar, 2, Layout> unf_kernel = unfold_kernel(dilated);
       DeviceTensor<Device_, Scalar, 2, Layout> x_col = im2col<Scalar, 4, Layout, Device_>(prev_layer, kernel.dimensions(), padding, stride, dilation);
 
       // dX: kernel.T * dout
@@ -75,7 +76,7 @@ namespace EigenSinn {
       DeviceTensor<Device_, Scalar, 2, Layout>  dW_col(dout.dimension(0), x_col.dimension(0));
       dW_col.view() = dout->contract(*x_col, prod_dims);
 
-      dX = col2im(dX_col, kernel.dimensions(), prev_layer.dimensions(), padding, stride);
+      dX = col2im(dX_col, kernel.dimensions(), prev_layer.dimensions(), padding, stride, dilation);
       dW = fold_kernel(dW_col, kernel.dimensions());
 
       //bias
