@@ -11,9 +11,10 @@ out_channels = 5
 kernel_size = 3
 padding = 1
 batch_size = cd.inp.shape[0]
+dilation = 2
 
 # Same convolution
-conv = nn.Conv2d(cd.inp.shape[1], out_channels, kernel_size, padding=padding, bias=False, dilation=2)
+conv = nn.Conv2d(cd.inp.shape[1], out_channels, kernel_size, padding=padding, bias=False, dilation=dilation)
 
 conv.weight.data = cd.convweights
 

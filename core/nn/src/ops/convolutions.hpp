@@ -240,8 +240,8 @@ namespace EigenSinn {
     for (Index i = 0; i < col_dims[1] / batch_size; i++, slice_starts[1] += batch_size) {
 
       // move to the next slice
-      out_w = dilation * (stride * i) % (width - kernel_dims[3] + 1) - padding.second;
-      out_h = dilation * (stride * i) / (width - kernel_dims[3] + 1) - padding.first;
+      out_w = (stride * i) % (width - kernel_dims[3] + 1) - padding.second;
+      out_h = (stride * i) / (width - kernel_dims[3] + 1) - padding.first;
 
       slice.view() = col->slice(slice_starts, slice_offsets).eval().reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
 
