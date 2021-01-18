@@ -62,8 +62,7 @@ namespace EigenSinn {
       DeviceTensor<Device_, Scalar, 2, Layout> dout = unfold_conv_res<Scalar, Layout, Device_>(next_layer_grad);
 
       // flatten weights and kernel
-      DeviceTensor<Device_, Scalar, 4, Layout> dilated = dilate_kernel(kernel, dilation);
-      DeviceTensor<Device_, Scalar, 2, Layout> unf_kernel = unfold_kernel(dilated);
+      DeviceTensor<Device_, Scalar, 2, Layout> unf_kernel = unfold_kernel(kernel);
       DeviceTensor<Device_, Scalar, 2, Layout> x_col = im2col<Scalar, 4, Layout, Device_>(prev_layer, kernel.dimensions(), padding, stride, dilation);
 
       // dX: kernel.T * dout

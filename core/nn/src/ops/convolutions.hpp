@@ -73,7 +73,7 @@ namespace EigenSinn {
   template <typename Scalar, int Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
   inline auto im2col(const DeviceTensor<Device_, Scalar, Rank, Layout>& input, const DSizes<Index, Rank>& kernel_dims, const Padding2D& padding, Index stride, Index dilation) {
 
-    auto out_dims = get_output_dimensions(*input, kernel_dims, padding, dilation, stride);
+    auto out_dims = get_output_dimensions(*input, kernel_dims, padding, stride, dilation);
     // pad the tensor before we convolve
 
     auto padded_dims = get_padded_input_dims(*input, padding);
@@ -82,13 +82,12 @@ namespace EigenSinn {
 
     Index kernel_height = dilation * (kernel_dims[2] - 1) + 1;
     Index kernel_width = dilation * (kernel_dims[3] - 1) + 1;
+    Index channels = kernel_dims[1];
+    Index batches = padded.dimension(0);
 
-    Index col_dim = kernel_dims[1] * kernel_height * kernel_width;
-    array<Index, Rank> starts = { 0, 0, 0, 0 };
-    array<Index, Rank> offsets = { padded.dimension(0), kernel_dims[1], kernel_height, kernel_width };
-    array<Index, Rank> slice_dims = { kernel_width, kernel_height,  kernel_dims[1], padded.dimension(0) };
+    Index col_dim = channels * kernel_dims[2] * kernel_dims[3];
+    array<Index, Rank> slice_dims = { batches, channels, kernel_height, kernel_width };
 
-    array<int, 4> shuffle_dims = { 3, 2, 1, 0 };
     // output second dimension is 
     // batch_size (input dim[0]) * how_many_convolution_locations there are
     int conv_locations = out_dims[3] * out_dims[2];
@@ -99,22 +98,26 @@ namespace EigenSinn {
     // "move" along axis 1 (columns) and append converted portions.
     // each converted portion is a a batch of would-be convolution operations
     Index converted_portion = 0;
-    for (starts[2] = 0; starts[2] + offsets[2] <= padded.dimension(2); starts[2] += stride) {
-      for (starts[3] = 0; starts[3] + offsets[3] <= padded.dimension(3); converted_portion++, starts[3] += stride) {
+    for (Index h_im = 0; h_im + kernel_height <= padded_dims[2]; h_im += stride) {
+      for (Index w_im = 0; w_im + kernel_width <= padded_dims[3]; converted_portion++, w_im += stride) {
 
-        DeviceTensor<Device_, Scalar, 4, Layout> cur_slice(slice_dims);
-        cur_slice.view() = padded->slice(starts, offsets).eval().shuffle(shuffle_dims);
-        int shift = converted_portion * padded.dimension(0);
+        Index shift = converted_portion * batches;
+        for (Index b = 0; b < batches; b++) {
+          Index col = 0;
+          Index col_batch = shift + b;
 
-        // for the dilation 1 case we don't have to do anything special for the GPU
-        DeviceTensor<Device_, Scalar, 2, Layout> flat_slice(col_dim, padded.dimension(0));
-        flat_slice.view() = cur_slice->reshape(DSizes<Index, 2>{ col_dim, padded.dimension(0) });
+          for (Index c = 0; c < channels; c++) {
+            for (Index h_kernel = h_im; h_kernel < h_im + kernel_height; h_kernel += dilation) {
+              for (Index w_kernel = w_im; w_kernel < w_im + kernel_width; w_kernel += dilation, col++) {
 
-        for (Index i = 0; i < flat_slice.dimension(1); i++) {
-          // REVIEW: This needs to be properly expressed through the DeviceTensor object
-          output->chip(shift + i, 1).device(device) = flat_slice->chip(i, 1);
+                (*output)(col, col_batch) = (*padded)(b, c, h_kernel, w_kernel);
+
+              }
+            }
+          }
         }
       }
+
     }
     return output;
   }
@@ -216,8 +219,8 @@ namespace EigenSinn {
     int stride = 1, int dilation = 1) {
 
     // intermediate output: original dimensions padded
-    Index channels = kernel_dims[1], 
-      width = orig_dims[3] + 2 * padding.second, 
+    Index channels = kernel_dims[1],
+      width = orig_dims[3] + 2 * padding.second,
       batch_size = orig_dims[0];
 
     array<Index, 2> col_dims = col.dimensions();
@@ -249,12 +252,12 @@ namespace EigenSinn {
         for (Index c = 0; c < channels; c++) {
           for (Index h = 0; h < kernel_dims[2]; h++) {
             for (Index w = 0; w < kernel_dims[3]; w++) {
-              
+
               Index height_offset = h + out_h;
               Index width_offset = w + out_w;
 
               if (height_offset >= 0 && height_offset < out.dimension(2) && width_offset >= 0 && width_offset < out.dimension(3)) {
-                add_and_set(*out, array<Index, 4>{ b, c, height_offset, width_offset }, *slice, array<Index, 4>{ b, c, h, w}, device);
+                add_and_set(*out, array<Index, 4>{ b, c, height_offset, width_offset }, * slice, array<Index, 4>{ b, c, h, w}, device);
               }
             }
           }
@@ -280,8 +283,7 @@ namespace EigenSinn {
 
     // perform convolutiion with GEMM using im2col
     auto col_inputs = im2col<Scalar, Rank, Layout, Device_>(input, kernel.dimensions(), padding, stride, dilation);
-    auto dilated = dilate_kernel<Scalar, Layout, Device_>(kernel, dilation);
-    auto unf_kernel = unfold_kernel<Scalar, Layout, Device_>(dilated);
+    auto unf_kernel = unfold_kernel<Scalar, Layout, Device_>(kernel);
 
     ProductDims prod_dims = { IndexPair<int>(1, 0) };
     DeviceTensor<Device_, float, 2> res(unf_kernel.dimension(0), col_inputs.dimension(1));

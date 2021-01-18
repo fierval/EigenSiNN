@@ -16,6 +16,8 @@ find_package(Boost REQUIRED COMPONENTS graph)
 # build test exe
 add_executable(${TEST_EXE} ${TEST_SOURCES})
 
+set( MSVC_INCREMENTAL_YES_FLAG "/INCREMENTAL:NO" )
+
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
 message(STATUS "CUDA Flags: ${CMAKE_CUDA_FLAGS}")
 
