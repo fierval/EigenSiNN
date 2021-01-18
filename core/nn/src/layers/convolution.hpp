@@ -75,8 +75,8 @@ namespace EigenSinn {
       DeviceTensor<Device_, Scalar, 2, Layout>  dW_col(dout.dimension(0), x_col.dimension(0));
       dW_col.view() = dout->contract(*x_col, prod_dims);
 
-      dX = col2im(dX_col, dilated.dimensions(), prev_layer.dimensions(), padding, stride, dilation);
-      dW = fold_kernel(dW_col, dilated.dimensions());
+      dX = col2im(dX_col, kernel.dimensions(), prev_layer.dimensions(), padding, stride, dilation);
+      dW = fold_kernel(dW_col, kernel.dimensions());
 
       //bias
       if (!loss_by_bias_derivative) {

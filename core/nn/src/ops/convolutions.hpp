@@ -253,8 +253,8 @@ namespace EigenSinn {
           for (Index h = 0; h < kernel_dims[2]; h++) {
             for (Index w = 0; w < kernel_dims[3]; w++) {
 
-              Index height_offset = h + out_h;
-              Index width_offset = w + out_w;
+              Index height_offset = h * dilation + out_h;
+              Index width_offset = w * dilation + out_w;
 
               if (height_offset >= 0 && height_offset < out.dimension(2) && width_offset >= 0 && width_offset < out.dimension(3)) {
                 add_and_set(*out, array<Index, 4>{ b, c, height_offset, width_offset }, * slice, array<Index, 4>{ b, c, h, w}, device);
