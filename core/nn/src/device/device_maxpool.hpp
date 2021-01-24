@@ -1,7 +1,6 @@
 #pragma once
 
 #include "device_helpers.hpp"
-#define MAXPOOL_BLOCK_SIZE 16
 
 namespace EigenSinn {
 

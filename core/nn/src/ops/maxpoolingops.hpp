@@ -84,7 +84,7 @@ namespace EigenSinn {
 #ifdef __CUDACC__
       if (std::is_same<Device_, GpuDevice>::value) {
 
-        static long block(MAXPOOL_BLOCK_SIZE * MAXPOOL_BLOCK_SIZE);
+        static long block(BLOCK_SIZE * BLOCK_SIZE);
         static long grid((local_pool.dimension(0) + block - 1) / block);
 
         maxpool_set_values_kernel2d<Scalar, ColMajor> << <grid, block >> > (*output, *mask, *local_pool, local_pool.dimension(0), output_starts[1]);
@@ -125,7 +125,7 @@ namespace EigenSinn {
 
 #ifdef __CUDACC__
       if (std::is_same<Device_, GpuDevice>::value) {
-        static int block(MAXPOOL_BLOCK_SIZE * MAXPOOL_BLOCK_SIZE);
+        static int block(BLOCK_SIZE * BLOCK_SIZE);
         static int grid(getGridSize(original_dims[0], block));
 
         maxpool_dinput_kernel2d<Scalar, ColMajor> << <grid, block >> > (*output, *grads, *mask, original_dims[0], grad_starts[1], pool_window[1], starts[1]);
@@ -192,7 +192,7 @@ namespace EigenSinn {
 
         static dim3 in_size(local_pool.dimension(0), local_pool.dimension(1));
 
-        static dim3 block(MAXPOOL_BLOCK_SIZE, MAXPOOL_BLOCK_SIZE);
+        static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
         static dim3 grid((in_size.x + block.x - 1) / block.x, (in_size.y + block.y - 1) / block.y);
         dim3 output_starts_2d(output_starts[3], output_starts[2]);
 
@@ -242,7 +242,7 @@ namespace EigenSinn {
     {
 #ifdef __CUDACC__
       if (std::is_same<Device_, GpuDevice>::value) {
-        static dim3 block(MAXPOOL_BLOCK_SIZE, MAXPOOL_BLOCK_SIZE);
+        static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
         static dim3 grid((original_dims[0] + block.x - 1) / block.x, (original_dims[1] + block.y - 1) / block.y);
         static dim3 extents(pool_window_dims[3], pool_window_dims[2]);
         dim3 grad_starts_2d(grad_starts[3], grad_starts[2]);

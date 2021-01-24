@@ -103,34 +103,47 @@ namespace EigenSinn {
       for (Index w_im = 0; w_im + kernel_width <= padded_dims[3]; converted_portion++, w_im += stride) {
 
         Index shift = converted_portion * batches;
-        SetColFromSlice(batches, shift, channels, h_im, kernel_height, dilation, w_im, kernel_width, output, padded);
+        setColFromSlice(batches, shift, channels, h_im, kernel_height, dilation, w_im, kernel_width, output, padded);
       }
     }
     return output;
   }
 
   template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
-  inline auto dilate_kernel(DeviceTensor<Device_, Scalar, 4, Layout>& kernel, Index dilation) {
+  inline auto dilate_tensor(DeviceTensor<Device_, Scalar, 4, Layout>& tensor, Index dilation) {
 
-    if (dilation == 1) { return kernel; }
+    if (dilation == 1) { return tensor; }
 
-    auto dims = kernel.dimensions();
-    Index kernel_height = dilation * (dims[2] - 1) + 1;
-    Index kernel_width = dilation * (dims[3] - 1) + 1;
+    auto dims = tensor.dimensions();
+    Index tensor_height = dilation * (dims[2] - 1) + 1;
+    Index tensor_width = dilation * (dims[3] - 1) + 1;
 
-    DeviceTensor<Device_, Scalar, 4, Layout> dilated(dims[0], dims[1], kernel_height, kernel_width);
+    DeviceTensor<Device_, Scalar, 4, Layout> dilated(dims[0], dims[1], tensor_height, tensor_width);
     dilated.setZero();
 
-    // TODO: CUDA kernel for dilation
-    for (Index b = 0; b < dims[0]; b++) {
-      for (Index c = 0; c < dims[1]; c++) {
-        for (Index h = 0; h < dims[2]; h++) {
-          for (Index w = 0; w < dims[3]; w++) {
-            (*dilated)(b, c, h * dilation, w * dilation) = (*kernel)(b, c, h, w);
+#ifdef __CUDACC__
+    if (std::is_same<Device_, GpuDevice>::value) {
+      static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
+      static dim3 grid(getGridSize(dims[0], block.x), getGridSize(dims[1], block.y));
+      
+      dilate_tensor_kernel<Scalar, ColMajor> << grid, block >> (dims[0], dims[1], dims[2], dims[3], dilation, *dilated, *tensor);
+      cudaDeviceSynchronize();
+    }
+    else {
+#endif
+      // TODO: CUDA kernel for dilation
+      for (Index b = 0; b < dims[0]; b++) {
+        for (Index c = 0; c < dims[1]; c++) {
+          for (Index h = 0; h < dims[2]; h++) {
+            for (Index w = 0; w < dims[3]; w++) {
+              (*dilated)(b, c, h * dilation, w * dilation) = (*tensor)(b, c, h, w);
+            }
           }
         }
       }
+#ifdef __CUDACC__
     }
+#endif
     return dilated;
   }
 
@@ -237,22 +250,7 @@ namespace EigenSinn {
       out_h = (stride * i) / (width - kernel_width + 1) - padding.second;
 
       slice.view() = col->slice(slice_starts, slice_offsets).eval().reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
-
-      for (Index b = 0; b < batch_size; b++) {
-        for (Index c = 0; c < channels; c++) {
-          for (Index h = 0; h < kernel_height; h+=dilation) {
-            for (Index w = 0; w < kernel_width; w+=dilation) {
-
-              Index height_offset = h  + out_h;
-              Index width_offset = w + out_w;
-
-              if (height_offset >= 0 && height_offset < out.dimension(2) && width_offset >= 0 && width_offset < out.dimension(3)) {
-                add_and_set(*out, array<Index, 4>{ b, c, height_offset, width_offset }, * slice, array<Index, 4>{ b, c, h, w}, device);
-              }
-            }
-          }
-        }
-      }
+      addAndSet<Scalar, Layout, Device_>(batch_size, channels, kernel_height, dilation, kernel_width, out_h, out_w, out, slice, device);
     }
 
     return out;
@@ -275,7 +273,7 @@ namespace EigenSinn {
     auto col_inputs = im2col<Scalar, Rank, Layout, Device_>(input, kernel.dimensions(), padding, stride, dilation);
     auto unf_kernel = unfold_kernel<Scalar, Layout, Device_>(kernel);
 
-    ProductDims prod_dims = { IndexPair<int>( transpose_dims.first ? 0 : 1, transpose_dims.second ? 1 : 0) };
+    ProductDims prod_dims = { IndexPair<int>(transpose_dims.first ? 0 : 1, transpose_dims.second ? 1 : 0) };
     DeviceTensor<Device_, float, 2> res(unf_kernel.dimension(0), col_inputs.dimension(1));
     res.view() = unf_kernel->contract(*col_inputs, prod_dims);
 

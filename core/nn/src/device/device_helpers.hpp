@@ -5,6 +5,9 @@ using namespace Eigen;
 using std::unique_ptr;
 using std::make_unique;
 
+// block size for CUDA operations
+#define BLOCK_SIZE 16
+
 namespace EigenSinn {
 
   template<typename Device_, typename Scalar, Index Rank>

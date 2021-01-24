@@ -1,7 +1,6 @@
 #pragma once
 
 #include "device_tensor.hpp"
-#define CONV_BLOCK_SIZE 16
 
 #ifdef __INTELLISENSE__
 #define __CUDACC__
@@ -9,9 +8,28 @@
 
 namespace EigenSinn {
 
+#ifdef __CUDACC__
+  template<typename Scalar, int Layout = ColMajor>
+  __global__ void dilate_tensor_kernel(long batches, long channels, long height, long width, long dilation,
+    TensorView<Scalar, 4, Layout> dilated, TensorView<Scalar, 4, Layout> tensor) {
+
+    // batch
+    int b = threadIdx.x + blockIdx.x * blockDim.x;
+    // channel
+    int c = threadIdx.y + blockIdx.y * blockDim.y;
+
+    if (b < batches && c < channels) {
+      for (long h = 0; h < height; h++) {
+        for (long w = 0; w < width; w++) {
+          dilated(b, c, h * dilation, w * dilation) = tensor(b, c, h, w);
+        }
+      }
+    }
+  }
+
   template<typename Scalar, int Layout = ColMajor>
   __global__ void set_col_kernel(TensorView<Scalar, 4, Layout> padded, TensorView<Scalar, 2, Layout> output,
-          long shift, long batches, long channels, long dilation, long kernel_width, long kernel_height) {
+    long shift, long batches, long channels, long dilation, long kernel_width, long kernel_height) {
 
     // batch
     int b = threadIdx.x + blockIdx.x * blockDim.x;
@@ -32,8 +50,33 @@ namespace EigenSinn {
     }
   }
 
+  template<typename Scalar, int Layout = ColMajor>
+  __global__ void add_and_set_kernel(TensorView<Scalar, 4, Layout> out, TensorView<Scalar, 4, Layout> slice,
+    long batches, long channels, long kernel_height, long kernel_width, long out_h, long out_w) {
+
+    // batch
+    int b = threadIdx.x + blockIdx.x * blockDim.x;
+    // channel
+    int c = threadIdx.y + blockIdx.y * blockDim.y;
+
+    if (b < batches && c < channels) {
+      for (Index h = 0; h < kernel_height; h += dilation) {
+        for (Index w = 0; w < kernel_width; w += dilation) {
+
+          Index height_offset = h + out_h;
+          Index width_offset = w + out_w;
+
+          if (height_offset >= 0 && height_offset < out.dimension(2) && width_offset >= 0 && width_offset < out.dimension(3)) {
+            out(b, c, height_offset, width_offset) += slice(b, c, h, w);
+          }
+        }
+      }
+    }
+  }
+#endif
+
   template<typename Scalar, int Layout = ColMajor, typename Device_>
-  void SetColFromSlice(Index batches, Index shift, const Index& channels, const Index& h_im,
+  void setColFromSlice(Index batches, Index shift, const Index& channels, const Index& h_im,
     const Index& kernel_height, const Index& dilation,
     const Index& w_im, const Index& kernel_width,
     DeviceTensor<Device_, Scalar, 2, Layout>& output,
@@ -42,10 +85,10 @@ namespace EigenSinn {
 #ifdef __CUDACC__
     if (std::is_same<Device_, GpuDevice>::value) {
 
-      static dim3 block(CONV_BLOCK_SIZE, CONV_BLOCK_SIZE);
+      static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
       static dim3 grid(getGridSize(batches, block.x), getGridSize(channels, block.y));
 
-      set_col_kernel<Scalar, ColMajor> << <grid, block >> > (*padded, *output, shift, 
+      set_col_kernel<Scalar, ColMajor> << <grid, block >> > (*padded, *output, shift,
         batches, channels, dilation, kernel_width, kernel_height);
 
       cudaDeviceSynchronize();
@@ -71,35 +114,42 @@ namespace EigenSinn {
 #endif
   }
 
-#ifdef __CUDACC__
-  template<typename Scalar>
-  __global__ void add_and_set_kernel(Scalar* dest, Scalar* src) {
-    *dest += *src;
-  }
-#endif
-
-  template<typename Scalar, Index Rank, int Layout, typename Device_>
-  inline void add_and_set(TensorView<Scalar, Rank, Layout>& dest, const array<Index, Rank>& dest_offset,
-    const TensorView<Scalar, Rank, Layout>& src, const array<Index, Rank>& src_offset, const Device_& device) {
+  template<typename Scalar, int Layout, typename Device_>
+  void addAndSet(const Index& batch_size, const Index& channels, const Index& kernel_height,
+    int dilation, const Index& kernel_width, const Index& out_h, const Index& out_w,
+    DeviceTensor<Device_, Scalar, 4, Layout>& out, DeviceTensor<Device_, Scalar, 4, Layout>& slice,
+    Device_& device) {
 
 #ifdef __CUDACC__
     if (std::is_same<Device_, GpuDevice>::value) {
-      // launch kernel
-      auto idx_dest_offset = Layout == ColMajor ? dest.dimensions().IndexOfColMajor(dest_offset) : dest.dimensions().IndexOfRowMajor(dest_offset);
-      auto idx_src_offset = Layout == ColMajor ? src.dimensions().IndexOfColMajor(src_offset) : src.dimensions().IndexOfRowMajor(src_offset);
+      static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
+      static dim3 grid(getGridSize(batches, block.x), getGridSize(channels, block.y));
 
-      Scalar* ptr_src = &src.data()[idx_src_offset];
-      Scalar* ptr_dest = &dest.data()[idx_dest_offset];
+      add_and_set_kernel<Scalar, ColMajor> << <grid, block >> > (*out, *slice, batch_size, channels, kernel_height, kernel_width, out_h, out_w);
 
-      add_and_set_kernel<Scalar> << <1, 1 >> > (ptr_dest, ptr_src);
       cudaDeviceSynchronize();
+
     }
     else {
 #endif
-      dest(dest_offset) += src(src_offset);
+      for (Index b = 0; b < batch_size; b++) {
+        for (Index c = 0; c < channels; c++) {
+          for (Index h = 0; h < kernel_height; h += dilation) {
+            for (Index w = 0; w < kernel_width; w += dilation) {
+
+              Index height_offset = h + out_h;
+              Index width_offset = w + out_w;
+
+              if (height_offset >= 0 && height_offset < out.dimension(2) && width_offset >= 0 && width_offset < out.dimension(3)) {
+                (*out)(b, c, height_offset, width_offset) += (*slice)(b, c, h, w);
+              }
+            }
+          }
+        }
+      }
+
 #ifdef __CUDACC__
     }
 #endif
   }
-
 } // EigenSinn

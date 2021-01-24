@@ -66,7 +66,7 @@ namespace EigenSinn {
       DeviceTensor<Device_, Scalar, 2, Layout> x_col = im2col<Scalar, 4, Layout, Device_>(prev_layer, kernel.dimensions(), padding, stride, dilation);
 
       // dX: kernel.T * dout
-      DeviceTensor<Device_, Scalar, 4, Layout> dilated = dilate_kernel(kernel, dilation);
+      DeviceTensor<Device_, Scalar, 4, Layout> dilated = dilate_tensor(kernel, dilation);
       DeviceTensor<Device_, Scalar, 2, Layout> unf_dilated = unfold_kernel(dilated);
       ProductDims prod_dims = { IndexPair<int>(0, 0) };
       DeviceTensor<Device_, Scalar, 2, Layout>  dX_col(unf_dilated.dimension(1), dout.dimension(1));
