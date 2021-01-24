@@ -1,6 +1,7 @@
 #pragma once
 
 #include "device/device_tensor.hpp"
+#include "device/device_convolutions.hpp"
 
 #define MAX_PAD 1e6
 using namespace Eigen;
@@ -102,22 +103,8 @@ namespace EigenSinn {
       for (Index w_im = 0; w_im + kernel_width <= padded_dims[3]; converted_portion++, w_im += stride) {
 
         Index shift = converted_portion * batches;
-        for (Index b = 0; b < batches; b++) {
-          Index col = 0;
-          Index col_batch = shift + b;
-
-          for (Index c = 0; c < channels; c++) {
-            for (Index h_kernel = h_im; h_kernel < h_im + kernel_height; h_kernel += dilation) {
-              for (Index w_kernel = w_im; w_kernel < w_im + kernel_width; w_kernel += dilation, col++) {
-
-                (*output)(col, col_batch) = (*padded)(b, c, h_kernel, w_kernel);
-
-              }
-            }
-          }
-        }
+        SetColFromSlice(batches, shift, channels, h_im, kernel_height, dilation, w_im, kernel_width, output, padded);
       }
-
     }
     return output;
   }

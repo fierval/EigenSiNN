@@ -158,38 +158,8 @@ namespace EigenSinn {
     return res;
   }
 
-#ifdef __INTELLISENSE__
-#define __CUDACC__
-#endif
-
-#ifdef __CUDACC__
-  template<typename Scalar>
-  __global__ void add_and_set_kernel(Scalar* dest, Scalar* src) {
-    *dest += *src;
+  inline size_t getGridSize(size_t total, size_t block_size) {
+    assert(total > 0 && block_size > 0);
+    return (total + block_size - 1) / block_size;
   }
-#endif
-
-  template<typename Scalar, Index Rank, int Layout, typename Device_>
-  void add_and_set(TensorView<Scalar, Rank, Layout>& dest, const array<Index, Rank>& dest_offset,
-    const TensorView<Scalar, Rank, Layout>& src, const array<Index, Rank>& src_offset, const Device_& device) {
-
-#ifdef __CUDACC__
-    if (std::is_same<Device_, GpuDevice>::value) {
-      // launch kernel
-      auto idx_dest_offset = Layout == ColMajor ? dest.dimensions().IndexOfColMajor(dest_offset) : dest.dimensions().IndexOfRowMajor(dest_offset);
-      auto idx_src_offset = Layout == ColMajor ? src.dimensions().IndexOfColMajor(src_offset) : src.dimensions().IndexOfRowMajor(src_offset);
-
-      Scalar* ptr_src = &src.data()[idx_src_offset];
-      Scalar* ptr_dest = &dest.data()[idx_dest_offset];
-
-      add_and_set_kernel<Scalar> << <1, 1 >> > (ptr_dest, ptr_src);
-      cudaDeviceSynchronize();
-    }
-    else {
-#endif
-      dest(dest_offset) += src(src_offset);
-#ifdef __CUDACC__
-    }
-#endif
-  }
-}
+} // EigenSinn

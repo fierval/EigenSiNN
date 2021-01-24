@@ -126,7 +126,7 @@ namespace EigenSinn {
 #ifdef __CUDACC__
       if (std::is_same<Device_, GpuDevice>::value) {
         static int block(MAXPOOL_BLOCK_SIZE * MAXPOOL_BLOCK_SIZE);
-        static int grid((original_dims[0] + block - 1) / block);
+        static int grid(getGridSize(original_dims[0], block));
 
         maxpool_dinput_kernel2d<Scalar, ColMajor> << <grid, block >> > (*output, *grads, *mask, original_dims[0], grad_starts[1], pool_window[1], starts[1]);
         cudaDeviceSynchronize();
