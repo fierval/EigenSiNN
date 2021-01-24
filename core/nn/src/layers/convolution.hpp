@@ -66,16 +66,18 @@ namespace EigenSinn {
       DeviceTensor<Device_, Scalar, 2, Layout> x_col = im2col<Scalar, 4, Layout, Device_>(prev_layer, kernel.dimensions(), padding, stride, dilation);
 
       // dX: kernel.T * dout
+      DeviceTensor<Device_, Scalar, 4, Layout> dilated = dilate_kernel(kernel, dilation);
+      DeviceTensor<Device_, Scalar, 2, Layout> unf_dilated = unfold_kernel(dilated);
       ProductDims prod_dims = { IndexPair<int>(0, 0) };
-      DeviceTensor<Device_, Scalar, 2, Layout>  dX_col(unf_kernel.dimension(1), dout.dimension(1));
-      dX_col.view() = unf_kernel->contract(*dout, prod_dims);
+      DeviceTensor<Device_, Scalar, 2, Layout>  dX_col(unf_dilated.dimension(1), dout.dimension(1));
+      dX_col.view() = unf_dilated->contract(*dout, prod_dims);
 
       // dW: dout * x_col.T
       prod_dims = { IndexPair<int>(1, 1) };
       DeviceTensor<Device_, Scalar, 2, Layout>  dW_col(dout.dimension(0), x_col.dimension(0));
       dW_col.view() = dout->contract(*x_col, prod_dims);
 
-      dX = col2im(dX_col, kernel.dimensions(), prev_layer.dimensions(), padding, stride, dilation);
+      dX = col2im(dX_col, dilated.dimensions(), prev_layer.dimensions(), padding, stride);
       dW = fold_kernel(dW_col, kernel.dimensions());
 
       //bias
