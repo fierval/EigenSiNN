@@ -24,7 +24,39 @@ namespace EigenSinnTest {
     const Padding2D padding = { 0, 0 };
   };
 
-  
+
+  TEST_F(ConvolutionGpu, Forward) {
+
+    Input<float, 4, ColMajor, GpuDevice> input;
+    input.set_input(cd.convInput);
+
+    Conv2d<float, ColMajor, GpuDevice> conv2d(cd.kernelDims);
+
+    conv2d.init(cd.convWeights.to_host());
+    conv2d.forward(input);
+
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.output, conv2d.get_output()));
+
+  }
+
+  TEST_F(ConvolutionGpu, Backward1Padding2Dilated) {
+    Input<float, 4, ColMajor, GpuDevice> input;
+    input.set_input(cd.convInput);
+
+    Conv2d<float, ColMajor, GpuDevice> conv2d(cd.kernelDims, { 1, 1 }, 1, 2);
+
+    conv2d.init(cd.convWeights.to_host());
+    conv2d.forward(input);
+    DeviceTensor<GpuDevice, float, 4> conv2dout(conv2d.get_output());
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.outputDilated2Padded1, conv2dout));
+
+    conv2d.backward(input, cd.convLoss);
+
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.dinputDilated2Padded1, conv2d.get_loss_by_input_derivative()));
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.dweightsDilated2Padded1, conv2d.get_loss_by_weights_derivative()));
+
+  }
+
   TEST_F(ConvolutionGpu, Backward) {
 
     Input<float, 4, ColMajor, GpuDevice> input;

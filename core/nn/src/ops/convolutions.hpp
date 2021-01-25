@@ -259,7 +259,7 @@ namespace EigenSinn {
   // NCHW format
   template <typename Scalar, Index Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
   inline DeviceTensor<Device_, Scalar, 4, Layout> convolve(const DeviceTensor<Device_, Scalar, 4, Layout>& input,
-    DeviceTensor<Device_, Scalar, 4, Layout>& kernel, const Padding2D& padding, Index stride, Index dilation, IndexPair<bool> transpose_dims = { false, false }) {
+    DeviceTensor<Device_, Scalar, 4, Layout>& kernel, const Padding2D& padding, Index stride, Index dilation) {
 
     //dimensions involved in the convolution. Channel dimension is also involved.
     array<Index, 3> dims({ (int)ImageDims::channel, (int)ImageDims::height, (int)ImageDims::width });
@@ -273,7 +273,7 @@ namespace EigenSinn {
     auto col_inputs = im2col<Scalar, Rank, Layout, Device_>(input, kernel.dimensions(), padding, stride, dilation);
     auto unf_kernel = unfold_kernel<Scalar, Layout, Device_>(kernel);
 
-    ProductDims prod_dims = { IndexPair<int>(transpose_dims.first ? 0 : 1, transpose_dims.second ? 1 : 0) };
+    ProductDims prod_dims = { IndexPair<int>(1,0) };
     DeviceTensor<Device_, float, 2> res(unf_kernel.dimension(0), col_inputs.dimension(1));
     res.view() = unf_kernel->contract(*col_inputs, prod_dims);
 

@@ -44,10 +44,16 @@ namespace EigenSinn {
     long c = threadIdx.y + blockIdx.y * blockDim.y;
 
     if (b < batches && c < channels) {
+
       auto flat_out_dims = dimensions_cast<long>(output.dimensions());
       auto flat_inp_dims = dimensions_cast<long>(padded.dimensions());
 
-      long col = 0;
+      // need to recover the actual kernel width & height
+      // in order to figure out exactly where in the output the input value belongs
+      long undilated_width = (kernel_width - 1) / dilation + 1;
+      long undilated_height = (kernel_height - 1) / dilation + 1;
+      
+      long col = c * undilated_height * undilated_width;
       long col_batch = shift + b;
 
       for (long h_kernel = h_im; h_kernel < h_im + kernel_height; h_kernel += dilation) {
