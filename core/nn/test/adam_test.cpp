@@ -5,7 +5,7 @@
 #include "ops/comparisons.hpp"
 #include "ops/conversions.hpp"
 #include "optimizers/adam.hpp"
-#include <losses\crossentropyloss.hpp>
+#include <losses/crossentropyloss.hpp>
 #include "layers/input.hpp"
 
 using namespace EigenSinn;
