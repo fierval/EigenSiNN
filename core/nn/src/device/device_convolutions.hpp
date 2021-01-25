@@ -21,7 +21,14 @@ namespace EigenSinn {
     if (b < batches && c < channels) {
       for (long h = 0; h < height; h++) {
         for (long w = 0; w < width; w++) {
-          dilated(b, c, h * dilation, w * dilation) = tensor(b, c, h, w);
+
+          auto flat_out_dims = dimensions_cast<long>(dilated.dimensions());
+          auto flat_inp_dims = dimensions_cast<long>(tensor.dimensions());
+
+          long idx_output = to_flat_dim<long, 4, Layout>(flat_out_dims, { b, c, h * dilation, w * dilation });
+          long idx_inp = to_flat_dim<long, 4, Layout>(flat_inp_dims, { b, c, h, w });
+
+          dilated.data()[idx_output] = tensor.data()[idx_inp];
         }
       }
     }
@@ -29,21 +36,28 @@ namespace EigenSinn {
 
   template<typename Scalar, int Layout = ColMajor>
   __global__ void set_col_kernel(TensorView<Scalar, 4, Layout> padded, TensorView<Scalar, 2, Layout> output,
-    long shift, long batches, long channels, long dilation, long kernel_width, long kernel_height) {
+    long shift, long batches, long channels, long dilation, long kernel_width, long kernel_height, long h_im, long w_im) {
 
     // batch
-    int b = threadIdx.x + blockIdx.x * blockDim.x;
+    long b = threadIdx.x + blockIdx.x * blockDim.x;
     // channel
-    int c = threadIdx.y + blockIdx.y * blockDim.y;
+    long c = threadIdx.y + blockIdx.y * blockDim.y;
 
     if (b < batches && c < channels) {
+      auto flat_out_dims = dimensions_cast<long>(output.dimensions());
+      auto flat_inp_dims = dimensions_cast<long>(padded.dimensions());
+
       long col = 0;
       long col_batch = shift + b;
 
       for (long h_kernel = h_im; h_kernel < h_im + kernel_height; h_kernel += dilation) {
         for (long w_kernel = w_im; w_kernel < w_im + kernel_width; w_kernel += dilation, col++) {
 
-          output(col, col_batch) = padded(b, c, h_kernel, w_kernel);
+          
+          long idx_output = to_flat_dim<long, 2, Layout>(flat_out_dims, {col, col_batch});
+          long idx_inp = to_flat_dim<long, 4, Layout>(flat_inp_dims, { b, c, h_kernel, w_kernel});
+
+          output.data()[idx_output] = padded.data()[idx_inp];
         }
       }
 
@@ -52,22 +66,29 @@ namespace EigenSinn {
 
   template<typename Scalar, int Layout = ColMajor>
   __global__ void add_and_set_kernel(TensorView<Scalar, 4, Layout> out, TensorView<Scalar, 4, Layout> slice,
-    long batches, long channels, long kernel_height, long kernel_width, long out_h, long out_w) {
+    long batches, long channels, long kernel_height, long kernel_width, long out_h, long out_w, long dilation) {
 
     // batch
-    int b = threadIdx.x + blockIdx.x * blockDim.x;
+    long b = threadIdx.x + blockIdx.x * blockDim.x;
     // channel
-    int c = threadIdx.y + blockIdx.y * blockDim.y;
+    long c = threadIdx.y + blockIdx.y * blockDim.y;
 
     if (b < batches && c < channels) {
-      for (Index h = 0; h < kernel_height; h += dilation) {
-        for (Index w = 0; w < kernel_width; w += dilation) {
 
-          Index height_offset = h + out_h;
-          Index width_offset = w + out_w;
+      for (long h = 0; h < kernel_height; h += dilation) {
+        for (long w = 0; w < kernel_width; w += dilation) {
+
+          long height_offset = h + out_h;
+          long width_offset = w + out_w;
 
           if (height_offset >= 0 && height_offset < out.dimension(2) && width_offset >= 0 && width_offset < out.dimension(3)) {
-            out(b, c, height_offset, width_offset) += slice(b, c, h, w);
+            auto flat_out_dims = dimensions_cast<long>(out.dimensions());
+            auto flat_inp_dims = dimensions_cast<long>(slice.dimensions());
+
+            long idx_output = to_flat_dim<long, 4, Layout>(flat_out_dims, { b, c, height_offset, width_offset });
+            long idx_inp = to_flat_dim<long, 4, Layout>(flat_inp_dims, { b, c, h, w });
+
+            out.data()[idx_output] += slice.data()[idx_inp];
           }
         }
       }
@@ -89,7 +110,7 @@ namespace EigenSinn {
       static dim3 grid(getGridSize(batches, block.x), getGridSize(channels, block.y));
 
       set_col_kernel<Scalar, ColMajor> << <grid, block >> > (*padded, *output, shift,
-        batches, channels, dilation, kernel_width, kernel_height);
+        batches, channels, dilation, kernel_width, kernel_height, h_im, w_im);
 
       cudaDeviceSynchronize();
     }
@@ -123,9 +144,10 @@ namespace EigenSinn {
 #ifdef __CUDACC__
     if (std::is_same<Device_, GpuDevice>::value) {
       static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
-      static dim3 grid(getGridSize(batches, block.x), getGridSize(channels, block.y));
+      static dim3 grid(getGridSize(batch_size, block.x), getGridSize(channels, block.y));
 
-      add_and_set_kernel<Scalar, ColMajor> << <grid, block >> > (*out, *slice, batch_size, channels, kernel_height, kernel_width, out_h, out_w);
+      add_and_set_kernel<Scalar, ColMajor> << <grid, block >> > (*out, *slice, 
+        batch_size, channels, kernel_height, kernel_width, out_h, out_w, dilation);
 
       cudaDeviceSynchronize();
 

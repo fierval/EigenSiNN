@@ -8,6 +8,10 @@ using std::make_unique;
 // block size for CUDA operations
 #define BLOCK_SIZE 16
 
+#ifdef __INTELLISENSE__
+#define __CUDACC__
+#endif
+
 namespace EigenSinn {
 
   template<typename Device_, typename Scalar, Index Rank>
@@ -161,6 +165,23 @@ namespace EigenSinn {
     return res;
   }
 
+  template<typename ToIndex, long Rank>
+  EIGEN_DEVICE_FUNC inline array<ToIndex, Rank> dimensions_cast(DSizes<Index, Rank> from) {
+
+    array<ToIndex, Rank> out;
+    for (long i = 0; i < Rank; i++) {
+      out[i] = from[i];
+    }
+    return out;
+  }
+
+  /// <summary>
+  /// Given the size of a dimension and a block size
+  /// figure out the grid dimension size
+  /// </summary>
+  /// <param name="total"></param>
+  /// <param name="block_size"></param>
+  /// <returns></returns>
   inline size_t getGridSize(size_t total, size_t block_size) {
     assert(total > 0 && block_size > 0);
     return (total + block_size - 1) / block_size;
