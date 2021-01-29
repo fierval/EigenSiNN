@@ -49,10 +49,10 @@ namespace EigenSinn {
       DeviceTensor<Device_, Scalar, 2, Layout> unf_dilated = unfold_kernel(dilated);
 
       ProductDims prod_dims = { IndexPair<int>(0, 0) };
-      DeviceTensor<Device_, Scalar, 2, Layout>  X_col(unf_dilated.dimension(1), dout.dimension(1));
+      DeviceTensor<Device_, Scalar, 2, Layout>  X_col(unf_dilated.dimension(1), inp_reshaped.dimension(1));
       X_col.view() = unf_dilated->contract(*inp_reshaped, prod_dims);
       
-      DSizes<Index, 4> out_dims = get_output_dimensions(input, kernel, padding, stride, 1, true);
+      DSizes<Index, 4> out_dims = get_output_dimensions(*input, kernel.dimensions(), padding, stride, 1, true);
 
       layer_output = col2im(X_col, dilated.dimensions(), out_dims, padding, stride);
       //add bias to each channel

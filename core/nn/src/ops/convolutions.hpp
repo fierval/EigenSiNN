@@ -62,14 +62,6 @@ namespace EigenSinn {
 
   }
 
-  // output dimensions for a convolution with constant padding
-  template <typename Scalar, Index Rank = 4, int Layout = ColMajor>
-  inline auto get_output_dimensions(const TensorView<Scalar, Rank, Layout>& input, const TensorView<Scalar, Rank, Layout>& kernel, const Padding2D& padding, const Index stride, const Index dilation, bool is_transposed = false) {
-
-    return get_output_dimensions(input, kernel.dimensions(), padding, stride, dilation, is_transposed);
-  }
-
-
   // NCHW format
   template <typename Scalar, int Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
   inline auto im2col(const DeviceTensor<Device_, Scalar, Rank, Layout>& input, const DSizes<Index, Rank>& kernel_dims, const Padding2D& padding, Index stride, Index dilation) {
