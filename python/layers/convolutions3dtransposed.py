@@ -1,6 +1,6 @@
 import numpy as np
 import commondata4d as cd
-from utils import to_cpp
+from utils import to_cpp, is_eq
 from im2col import im2col_indices, col2im_indices
 
 import torch
@@ -50,6 +50,7 @@ out_col = W_reshape.T @ inp_reshaped
 
 # image is recovered through col2im
 out_image = col2im_indices(out_col, cd.inp.shape, dilated_size, dilated_size, padding=padding)
+is_eq(output, out_image)
 
 ################################################################################################
 ### Backward Pass
@@ -58,6 +59,7 @@ dout_col = im2col_indices(cd.convlossTrans.detach().numpy(), dilated_size, dilat
 dX_col = W_reshape @ dout_col
 c, _, h, w = inp.shape
 dX = dX_col.reshape(n_filters, h, w, c).transpose(3, 0, 1, 2)
+is_eq(dX, inp.grad)
 
 dW = dout_col @ inp_reshaped.T
 dW = dW.reshape(dilated.shape)
