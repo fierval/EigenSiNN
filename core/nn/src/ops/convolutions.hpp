@@ -34,17 +34,22 @@ namespace EigenSinn {
   template <typename Scalar, Index Rank = 4, int Layout = ColMajor>
   inline auto get_output_dimensions(const TensorView<Scalar, Rank, Layout>& input, const array<Index, Rank> kernel_dims, const Padding2D& padding, const Index stride, const Index dilation, bool is_transposed = false) {
 
-    assert(kernel_dims[(int)ImageDims::channel] == input.dimension((int)ImageDims::channel));
+    if (!is_transposed) {
+      assert(kernel_dims[(int)ImageDims::channel] == input.dimension((int)ImageDims::channel));
+    }
+    else {
+      assert(kernel_dims[(int)ImageDims::batch] == input.dimension((int)ImageDims::channel));
+    }
+
     assert(kernel_dims[(int)ImageDims::height] > 0 && kernel_dims[(int)ImageDims::width] > 0);
 
     DSizes<Index, Rank> out_dims;
 
-    Index conv_multiplyier = is_transposed ? -1 : 1;
-    Index pad_height = conv_multiplyier * 2 * padding.first;
-    Index pad_width = conv_multiplyier * 2 * padding.second;
+    Index pad_height = 2 * padding.first;
+    Index pad_width = 2 * padding.second;
 
     out_dims[(int)ImageDims::batch] = input.dimension((int)ImageDims::batch);
-    out_dims[(int)ImageDims::channel] = kernel_dims[(int)ImageDims::batch];
+    out_dims[(int)ImageDims::channel] = !is_transposed ? kernel_dims[(int)ImageDims::batch] : kernel_dims[(int)ImageDims::channel];
 
     if (!is_transposed) {
       // see https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html
@@ -53,8 +58,8 @@ namespace EigenSinn {
     }
     // see https://pytorch.org/docs/stable/generated/torch.nn.ConvTranspose2d.html
     else {
-      out_dims[(int)ImageDims::height] = input.dimension((int)ImageDims::height) * stride + pad_height - dilation * (kernel_dims[(int)ImageDims::height] - 1) + 1;
-      out_dims[(int)ImageDims::width] = input.dimension((int)ImageDims::width) * stride + pad_width - dilation * (kernel_dims[(int)ImageDims::width] - 1) + 1;
+      out_dims[(int)ImageDims::height] = (input.dimension((int)ImageDims::height) - 1) * stride - pad_height + dilation * (kernel_dims[(int)ImageDims::height] - 1) + 1;
+      out_dims[(int)ImageDims::width] = (input.dimension((int)ImageDims::width) - 1) * stride - pad_width + dilation * (kernel_dims[(int)ImageDims::width] - 1) + 1;
 
     }
     return out_dims;

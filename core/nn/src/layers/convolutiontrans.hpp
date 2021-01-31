@@ -18,7 +18,7 @@ namespace EigenSinn {
       , padding(_padding)
       , stride(_stride)
       , dilation(_dilation)
-      , bias(kernelDims[0])
+      , bias(kernelDims[1])
       , bias_broadcast({ 0, 0, 0, 0 })
       , loss_by_bias_derivative(kernelDims[0])
     {}
@@ -52,15 +52,15 @@ namespace EigenSinn {
       DeviceTensor<Device_, Scalar, 2, Layout>  X_col(unf_dilated.dimension(1), inp_reshaped.dimension(1));
       X_col.view() = unf_dilated->contract(*inp_reshaped, prod_dims);
       
-      DSizes<Index, 4> out_dims = get_output_dimensions(*input, kernel.dimensions(), padding, stride, 1, true);
+      DSizes<Index, 4> out_dims = get_output_dimensions(*input, kernel.dimensions(), padding, stride, dilation, true);
 
       layer_output = col2im(X_col, dilated.dimensions(), out_dims, padding, stride);
       //add bias to each channel
       auto dims = layer_output.dimensions();
-      bias_broadcast = { dims[0], 1, dims[2], dims[3] };
+      bias_broadcast = { out_dims[0], 1, out_dims[2], out_dims[3] };
 
       // one bias per filter
-      layer_output.view() += bias->reshape(array<Index, 4>{ 1, kernel.dimension(0), 1, 1 }).broadcast(bias_broadcast);
+      layer_output.view() += bias->reshape(array<Index, 4>{ 1, kernel.dimension(1), 1, 1 }).broadcast(bias_broadcast);
 
     }
 
