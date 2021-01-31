@@ -17,7 +17,8 @@ conv = nn.Conv2d(cd.inp.shape[1], out_channels, kernel_size,
  padding=padding, bias=True)
 
 conv.weight.data = cd.convweights
-conv.bias.data = torch.zeros(out_channels)
+#conv.bias.data = torch.zeros(out_channels)
+conv.bias.data = ({ 0.84739649, -0.12377239,  0.26775572,  1.46730196, -0.84922099})
 
 output = conv(cd.inp)
 

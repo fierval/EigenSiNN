@@ -43,6 +43,26 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dweight, conv2d.get_loss_by_weights_derivative()));
   }
 
+  TEST_F(Convolution, BackwardBias) {
+
+    cd.init_with_bias();
+
+    Input<float, 4> input;
+    input.set_input(cd.convInput);
+
+    Conv2d<float> conv2d(cd.kernelDims);
+
+    conv2d.init(cd.convWeights.to_host(), cd.bias.to_host());
+    conv2d.forward(input);
+
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.output, conv2d.get_output()));
+
+    conv2d.backward(input, cd.convLoss);
+
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.dinput, conv2d.get_loss_by_input_derivative()));
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.dweight, conv2d.get_loss_by_weights_derivative()));
+  }
+
 
   TEST_F(Convolution, Initialization) {
 
@@ -122,5 +142,4 @@ namespace EigenSinnTest {
     DeviceTensor<DefaultDevice, float, 4> conv2dout(conv2d.get_output());
     EXPECT_TRUE(is_elementwise_approx_eq(cd.outputDilated2Padded1, conv2dout));
   }
-
 }

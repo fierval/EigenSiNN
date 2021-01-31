@@ -75,6 +75,25 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dweight, conv2d.get_loss_by_weights_derivative()));
   }
 
+  TEST_F(ConvolutionGpu, BackwardBias) {
+
+    cd.init_with_bias();
+
+    Input<float, 4, ColMajor, GpuDevice> input;
+    input.set_input(cd.convInput);
+
+    Conv2d<float, ColMajor, GpuDevice> conv2d(cd.kernelDims);
+
+    conv2d.init(cd.convWeights.to_host(), cd.bias.to_host());
+    conv2d.forward(input);
+
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.output, conv2d.get_output()));
+
+    conv2d.backward(input, cd.convLoss);
+
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.dinput, conv2d.get_loss_by_input_derivative()));
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.dweight, conv2d.get_loss_by_weights_derivative()));
+  }
 
   TEST_F(ConvolutionGpu, Initialization) {
 

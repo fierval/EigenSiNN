@@ -39,6 +39,11 @@ namespace EigenSinn {
       kernel = _weights;
     }
 
+    void init(const Tensor<Scalar, 4, Layout>& _weights, const Tensor<Scalar, 1, Layout>& _bias) {
+      init(_weights);
+      bias = _bias;
+    }
+
     void forward(LayerBase<Scalar>& prev_layer_any) override {
 
       DeviceTensor<Device_, Scalar, 4, Layout> prev_layer(prev_layer_any.get_output());
