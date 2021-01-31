@@ -264,7 +264,7 @@ namespace EigenSinn {
     assert(input.dimension((int)ImageDims::channel) == kernel.dimension((int)ImageDims::channel));
 
     // output dimensions
-    DSizes<Index, Rank> out_dims = get_output_dimensions(*input, *kernel, padding, stride, dilation);
+    DSizes<Index, Rank> out_dims = get_output_dimensions(*input, kernel.dimensions(), padding, stride, dilation);
 
     // perform convolutiion with GEMM using im2col
     auto col_inputs = im2col<Scalar, Rank, Layout, Device_>(input, kernel.dimensions(), padding, stride, dilation);

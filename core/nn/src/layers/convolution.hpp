@@ -81,10 +81,6 @@ namespace EigenSinn {
       dW = fold_kernel(dW_col, kernel.dimensions());
 
       //bias
-      if (!loss_by_bias_derivative) {
-        loss_by_bias_derivative.resize(next_layer_grad.dimension(1));
-      }
-
       loss_by_bias_derivative.view() = next_layer_grad->sum(array<Index, 3>{0, 2, 3});
     }
 

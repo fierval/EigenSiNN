@@ -20,7 +20,7 @@ namespace EigenSinn {
       , dilation(_dilation)
       , bias(kernelDims[1])
       , bias_broadcast({ 0, 0, 0, 0 })
-      , loss_by_bias_derivative(kernelDims[0])
+      , loss_by_bias_derivative(kernelDims[1])
     {}
 
 
@@ -70,31 +70,29 @@ namespace EigenSinn {
       DeviceTensor<Device_, Scalar, 4, Layout> prev_layer(prev_layer_any.get_output());
       DeviceTensor<Device_, Scalar, 4, Layout> next_layer_grad(next_layer_grad_any);
 
-      // flatten weights and kernel
-      DeviceTensor<Device_, Scalar, 2, Layout> unf_kernel = unfold_kernel(dilate_tensor(kernel, dilation));
-      DeviceTensor<Device_, Scalar, 2, Layout> dout = im2col<Scalar, 4, Layout, Device_>(next_layer_grad, kernel.dimensions(), padding, stride, dilation);
+      dX = convolve<Scalar, 4, Layout, Device_>(next_layer_grad, kernel, padding, stride, dilation);
 
-      // dX: (kernel.T).T * dout = kernel * dout
-      DeviceTensor<Device_, Scalar, 4, Layout> dilated = dilate_tensor(kernel, dilation);
-      DeviceTensor<Device_, Scalar, 2, Layout> unf_dilated = unfold_kernel(dilated);
-      ProductDims prod_dims = { IndexPair<int>(1, 0) };
-      DeviceTensor<Device_, Scalar, 2, Layout>  dX_col(unf_dilated.dimension(0), dout.dimension(1));
-      dX_col.view() = unf_dilated->contract(*dout, prod_dims);
+      // flatten weights and kernel
+      //DeviceTensor<Device_, Scalar, 4, Layout> dilated_kernel = dilate_tensor(kernel, dilation);
+      //DeviceTensor<Device_, Scalar, 2, Layout> unf_dilated = unfold_kernel(dilated_kernel);
+      //DeviceTensor<Device_, Scalar, 2, Layout> dout = im2col<Scalar, 4, Layout, Device_>(next_layer_grad, dilated_kernel.dimensions(), padding, stride);
+
+      //// dX: (kernel.T).T * dout = kernel * dout
+      //ProductDims prod_dims = { IndexPair<int>(1, 0) };
+      //DeviceTensor<Device_, Scalar, 2, Layout>  dX_col(unf_dilated.dimension(0), dout.dimension(1));
+      //dX_col.view() = unf_dilated->contract(*dout, prod_dims);
 
       // dW: dout * x_col.T
-      DeviceTensor<Device_, Scalar, 2, Layout> inp_reshaped = unfold_conv_res<Scalar, Layout, Device_>(prev_layer);
-      prod_dims = { IndexPair<int>(1, 1) };
-      DeviceTensor<Device_, Scalar, 2, Layout>  dW_col(dout.dimension(0), inp_reshaped.dimension(0));
-      dW_col.view() = dout->contract(*inp_reshaped, prod_dims);
+      //DeviceTensor<Device_, Scalar, 2, Layout> inp_reshaped = unfold_conv_res<Scalar, Layout, Device_>(prev_layer);
+      //prod_dims = { IndexPair<int>(1, 1) };
+      //DeviceTensor<Device_, Scalar, 2, Layout>  dW_col(dout.dimension(0), inp_reshaped.dimension(0));
+      //dW_col.view() = dout->contract(*inp_reshaped, prod_dims);
 
-      dX = fold_conv_res(dX_col, prev_layer.dimensions());
-      dW = fold_kernel(dW_col, kernel.dimensions());
+      //dW = fold_kernel(dW_col, kernel.dimensions());
+
+      //dX = fold_conv_res(dX_col, prev_layer.dimensions());
 
       //bias
-      if (!loss_by_bias_derivative) {
-        loss_by_bias_derivative.resize(next_layer_grad.dimension(1));
-      }
-
       loss_by_bias_derivative.view() = next_layer_grad->sum(array<Index, 3>{0, 2, 3});
     }
 
