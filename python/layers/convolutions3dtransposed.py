@@ -7,14 +7,16 @@ import torch
 import torch.nn as nn
 
 inp = cd.output
-out_channels = 3
+# out and in channels are transposed vs ordinary convolution
+out_channels = cd.convweights.shape[1]
+in_channels = cd.convweights.shape[0]
 kernel_size = 3
 padding = 1
 batch_size = inp.shape[0]
 dilation = 2
 
 # Same convolution
-conv = nn.ConvTranspose2d(cd.inp.shape[1], out_channels, kernel_size,
+conv = nn.ConvTranspose2d(in_channels, cd.convweights.shape[0], kernel_size,
 padding=padding, dilation=dilation, bias=True)
 
 conv.weight.data = cd.convweights
