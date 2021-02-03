@@ -72,16 +72,11 @@ namespace EigenSinn {
   inline auto im2col(const DeviceTensor<Device_, Scalar, Rank, Layout>& input, const DSizes<Index, Rank>& kernel_dims, const Padding2D& padding, Index stride, Index dilation) {
 
     auto out_dims = get_output_dimensions(*input, kernel_dims, padding, stride, dilation);
-    // pad the tensor before we convolve
-
-    auto padded_dims = get_padded_input_dims(*input, padding);
-    DeviceTensor<Device_, Scalar, 4, Layout> padded(padded_dims);
-    padded.view() = input->pad(pad2dim(padding));
 
     Index kernel_height = dilation * (kernel_dims[2] - 1) + 1;
     Index kernel_width = dilation * (kernel_dims[3] - 1) + 1;
     Index channels = kernel_dims[1];
-    Index batches = padded.dimension(0);
+    Index batches = input.dimension(0);
 
     Index col_dim = channels * kernel_dims[2] * kernel_dims[3];
     array<Index, Rank> slice_dims = { batches, channels, kernel_height, kernel_width };
@@ -96,11 +91,11 @@ namespace EigenSinn {
     // "move" along axis 1 (columns) and append converted portions.
     // each converted portion is a a batch of would-be convolution operations
     Index converted_portion = 0;
-    for (Index h_im = 0; h_im + kernel_height <= padded_dims[2]; h_im += stride) {
-      for (Index w_im = 0; w_im + kernel_width <= padded_dims[3]; converted_portion++, w_im += stride) {
+    for (Index h_im = -padding.first; h_im + kernel_height <= input.dimension(2) + padding.first; h_im += stride) {
+      for (Index w_im = -padding.second; w_im + kernel_width <= input.dimension(3) + padding.second; converted_portion++, w_im += stride) {
 
         Index shift = converted_portion * batches;
-        setColFromSlice(batches, shift, channels, h_im, kernel_height, dilation, w_im, kernel_width, output, padded);
+        setColFromSlice(batches, shift, channels, h_im, kernel_height, dilation, w_im, kernel_width, output, input);
       }
     }
     return output;

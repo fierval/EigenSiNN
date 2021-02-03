@@ -35,7 +35,7 @@ namespace EigenSinn {
   }
 
   template<typename Scalar, int Layout = ColMajor>
-  __global__ void set_col_kernel(TensorView<Scalar, 4, Layout> padded, TensorView<Scalar, 2, Layout> output,
+  __global__ void set_col_kernel(TensorView<Scalar, 4, Layout> input, TensorView<Scalar, 2, Layout> output,
     long shift, long batches, long channels, long dilation, long kernel_width, long kernel_height, long h_im, long w_im) {
 
     // batch
@@ -46,7 +46,7 @@ namespace EigenSinn {
     if (b < batches && c < channels) {
 
       auto flat_out_dims = dimensions_cast<long>(output.dimensions());
-      auto flat_inp_dims = dimensions_cast<long>(padded.dimensions());
+      auto flat_inp_dims = dimensions_cast<long>(input.dimensions());
 
       // need to recover the actual kernel width & height
       // in order to figure out exactly where in the output the input value belongs
@@ -59,11 +59,16 @@ namespace EigenSinn {
       for (long h_kernel = h_im; h_kernel < h_im + kernel_height; h_kernel += dilation) {
         for (long w_kernel = w_im; w_kernel < w_im + kernel_width; w_kernel += dilation, col++) {
 
-          
           long idx_output = to_flat_dim<long, 2, Layout>(flat_out_dims, {col, col_batch});
-          long idx_inp = to_flat_dim<long, 4, Layout>(flat_inp_dims, { b, c, h_kernel, w_kernel});
 
-          output.data()[idx_output] = padded.data()[idx_inp];
+          if (h_kernel >= 0 && w_kernel >= 0 && h_kernel < flat_inp_dims[2] && w_kernel < flat_inp_dims[3]) {
+
+            long idx_inp = to_flat_dim<long, 4, Layout>(flat_inp_dims, { b, c, h_kernel, w_kernel});
+            output.data()[idx_output] = input.data()[idx_inp];
+          }
+          else {
+            output.data()[idx_output] = Scalar(0);
+          }
         }
       }
 
@@ -107,7 +112,7 @@ namespace EigenSinn {
     const Index& kernel_height, const Index& dilation,
     const Index& w_im, const Index& kernel_width,
     DeviceTensor<Device_, Scalar, 2, Layout>& output,
-    DeviceTensor<Device_, Scalar, 4, Layout>& padded) {
+    const DeviceTensor<Device_, Scalar, 4, Layout>& input) {
 
 #ifdef __CUDACC__
     if (std::is_same<Device_, GpuDevice>::value) {
@@ -115,7 +120,7 @@ namespace EigenSinn {
       static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
       static dim3 grid(getGridSize(batches, block.x), getGridSize(channels, block.y));
 
-      set_col_kernel<Scalar, ColMajor> << <grid, block >> > (*padded, *output, shift,
+      set_col_kernel<Scalar, ColMajor> << <grid, block >> > (*input, *output, shift,
         batches, channels, dilation, kernel_width, kernel_height, h_im, w_im);
 
       cudaDeviceSynchronize();
@@ -130,8 +135,13 @@ namespace EigenSinn {
         for (Index c = 0; c < channels; c++) {
           for (Index h_kernel = h_im; h_kernel < h_im + kernel_height; h_kernel += dilation) {
             for (Index w_kernel = w_im; w_kernel < w_im + kernel_width; w_kernel += dilation, col++) {
-
-              (*output)(col, col_batch) = (*padded)(b, c, h_kernel, w_kernel);
+              
+              if (h_kernel >= 0 && w_kernel >= 0 && h_kernel < input.dimension(2) && w_kernel < input.dimension(3)) {
+                (*output)(col, col_batch) = (*input)(b, c, h_kernel, w_kernel);
+              }
+              else {
+                (*output)(col, col_batch) = Scalar(0);
+              }
             }
           }
         }
