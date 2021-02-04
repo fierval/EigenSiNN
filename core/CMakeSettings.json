@@ -16,6 +16,11 @@
                     "name": "CMAKE_TOOLCHAIN_FILE",
                     "value": "C:/git/NN/vcpkg/scripts/buildsystems/vcpkg.cmake",
                     "type": "FILEPATH"
+                },
+                {
+                    "name": "CMAKE_CUDA_ARCHITECTURES",
+                    "value": "70",
+                    "type": "STRING"
                 }
             ]
         },

@@ -11,7 +11,7 @@ file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "test/*.cu")
 
 message(STATUS "Sources: ${TEST_SOURCES}")
 message(STATUS "CUDA Include: ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
-find_package(Boost REQUIRED COMPONENTS graph)
+find_package(Boost REQUIRED COMPONENTS graph system serialization)
 
 # build test exe
 add_executable(${TEST_EXE} ${TEST_SOURCES})
@@ -25,13 +25,13 @@ set_property(TARGET ${TEST_EXE}
              PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 
 set_property(TARGET ${TEST_EXE} 
-             PROPERTY CMAKE_CUDA_ARCHITECTURES 70)
+             PROPERTY CMAKE_CUDA_ARCHITECTURES 52)
 
 # allow threadpool device
 target_compile_definitions(${TEST_EXE} PRIVATE EIGEN_USE_THREADS EIGEN_USE_GPU EIGEN_HAS_C99_MATH)
 
 target_include_directories(${TEST_EXE} PRIVATE "src" ${EIGEN_PATH} ${Boost_INCLUDE_DIRS} ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
-target_link_libraries(${TEST_EXE} PUBLIC gtest_main )
+target_link_libraries(${TEST_EXE} PUBLIC gtest_main  ${Boost_LIBRARIES} )
 
 # gtest specific
 set(gtest_force_shared_crt ON)
