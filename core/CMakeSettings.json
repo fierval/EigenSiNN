@@ -38,7 +38,12 @@
             "variables": [
                 {
                     "name": "VCPKG_TARGET_TRIPLET",
-                    "value": "x64-windows-static",
+                    "value": "x64-windows",
+                    "type": "STRING"
+                },
+                {
+                    "name": "CMAKE_CUDA_ARCHITECTURES",
+                    "value": "70",
                     "type": "STRING"
                 }
             ],
