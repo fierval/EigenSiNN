@@ -16,28 +16,16 @@ find_package(Boost REQUIRED COMPONENTS graph system serialization)
 # build test exe
 add_executable(${TEST_EXE} ${TEST_SOURCES})
 
-#set( MSVC_INCREMENTAL_YES_FLAG "/INCREMENTAL:NO" )
-
-if (WIN32)
-  # disable autolinking in boost
-  add_definitions( -DBOOST_ALL_NO_LIB )
-
-  # force all boost libraries to dynamic link (we already disabled
-  # autolinking, so I don't know why we need this, but we do!)
-  add_definitions( -DBOOST_ALL_DYN_LINK )
-endif()
-
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
 message(STATUS "CUDA Flags: ${CMAKE_CUDA_FLAGS}")
 
 set_property(TARGET ${TEST_EXE} 
              PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 
-set_property(TARGET ${TEST_EXE} 
-             PROPERTY CMAKE_CUDA_ARCHITECTURES 52)
+set(CMAKE_CUDA_ARCHITECTURES 70 CACHE STRING "CUDA Arches" FORCE)
 
-#set_property(TARGET ${TEST_EXE} PROPERTY
-#  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+set_property(TARGET ${TEST_EXE} 
+             PROPERTY CMAKE_CUDA_ARCHITECTURES $CMAKE_CUDA_ARCHITECTURES)
 
 # allow threadpool device
 target_compile_definitions(${TEST_EXE} PRIVATE EIGEN_USE_THREADS EIGEN_USE_GPU EIGEN_HAS_C99_MATH)
