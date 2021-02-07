@@ -3,8 +3,8 @@
 #include <sstream>
 #include  <iostream>
 #include <boost/serialization/map.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/vector.hpp>
 
 namespace EigenSinnTest {
@@ -19,11 +19,12 @@ namespace EigenSinnTest {
   TEST_F(Serialization, Simple) {
     std::map<int, int> map = { {1,2}, {2,1} };
     std::stringstream ss;
-    boost::archive::text_oarchive oarch(ss);
+    boost::archive::binary_oarchive oarch(ss);
     oarch << map;
     std::map<int, int> new_map;
-    boost::archive::text_iarchive iarch(ss);
+    boost::archive::binary_iarchive iarch(ss);
     iarch >> new_map;
-    std::cout << (map == new_map) << std::endl;
+    
+    EXPECT_EQ(new_map[1], map[1]);
   }
 }

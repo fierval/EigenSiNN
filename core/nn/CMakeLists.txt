@@ -7,7 +7,6 @@ set(TEST_EXE eigentest)
 
 # discover test sources
 file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "test/*.cu")
-#set(TEST_SOURCES "test/convlayer_trans_test.cpp" "test/convlayer_trans_gpu_test.cu")
 
 message(STATUS "Sources: ${TEST_SOURCES}")
 message(STATUS "CUDA Include: ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
@@ -27,7 +26,7 @@ set(CMAKE_CUDA_ARCHITECTURES 70 CACHE STRING "CUDA Arches" FORCE)
 set_property(TARGET ${TEST_EXE} 
              PROPERTY CMAKE_CUDA_ARCHITECTURES $CMAKE_CUDA_ARCHITECTURES)
 
-# allow threadpool device
+# allow threadpool and GPU devices
 target_compile_definitions(${TEST_EXE} PRIVATE EIGEN_USE_THREADS EIGEN_USE_GPU EIGEN_HAS_C99_MATH)
 
 target_include_directories(${TEST_EXE} PRIVATE "src" ${EIGEN_PATH} ${Boost_INCLUDE_DIRS} ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
