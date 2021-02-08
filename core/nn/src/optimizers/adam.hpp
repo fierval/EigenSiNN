@@ -6,7 +6,7 @@
 namespace EigenSinn {
 
   template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
-  class Adam : public OptimizerBase<Scalar, Rank, Layout, Device_> {
+  class Adam : public OptimizerBase<Scalar, Layout, Device_> {
 
   public:
     Adam(Scalar _lr, float _beta1 = 0.9, float _beta2 = 0.999, float _eps = 1e-8)
@@ -15,14 +15,14 @@ namespace EigenSinn {
       , beta2(_beta2)
       , eps(_eps)
       , cur_beta1(1)
-      , cur_beta2(1)
-       {
+      , cur_beta2(1) {
+
       assert(beta1 > 0.0);
       assert(beta2 > 0.0);
     }
 
     // Computation: https://towardsdatascience.com/adam-latest-trends-in-deep-learning-optimization-6be9a291375c
-    DeviceWeightBiasTuple step(LayerBase<Scalar>& layer) override {
+    inline DeviceWeightBiasTuple step(LayerBase<Scalar>& layer) override {
 
      DeviceTensor<Device_, Scalar, Rank, Layout> weights(layer.get_weights()), dweights(layer.get_loss_by_weights_derivative());
      DeviceTensor<Device_, Scalar, 1, Layout> bias(layer.get_bias()), dbias(layer.get_loss_by_bias_derivative());

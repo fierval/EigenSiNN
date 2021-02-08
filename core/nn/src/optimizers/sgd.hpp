@@ -6,7 +6,7 @@
 namespace EigenSinn {
 
   template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
-  class SGD : public OptimizerBase<Scalar, Rank, Layout, Device_> {
+  class SGD : public OptimizerBase<Scalar, Layout, Device_> {
 
   public:
     SGD(Scalar _lr, Scalar _momentum = 0, bool _nesterov = false)
@@ -21,7 +21,7 @@ namespace EigenSinn {
     }
 
     // PyTorch computation of SGD: https://pytorch.org/docs/stable/_modules/torch/optim/sgd.html#SGD
-    DeviceWeightBiasTuple step(LayerBase<Scalar>& layer) override {
+    inline DeviceWeightBiasTuple step(LayerBase<Scalar>& layer) override {
       
       DeviceTensor<Device_, Scalar, Rank, Layout> weights(layer.get_weights()), dweights(layer.get_loss_by_weights_derivative());
       DeviceTensor<Device_, Scalar, 1, Layout> bias(layer.get_bias()), dbias(layer.get_loss_by_bias_derivative());

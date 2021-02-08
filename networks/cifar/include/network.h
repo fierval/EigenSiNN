@@ -19,24 +19,33 @@ using namespace EigenSinn;
 template <typename Device_= DefaultDevice>
 struct NetworkNode {
   LayerBase<float> * layer;
-  OptimizerBase<float, 2, 0, Device_>* optimizer;
+  OptimizerBase<float, 2, 0, Device_> * optimizer2;
+  OptimizerBase<float, 4, 0, Device_> * optimizer4;
+
   NetworkNode() : layer(nullptr), optimizer(nullptr) {}
 
   ~NetworkNode() {
     if (layer) delete layer;
-    if (optimizer) delete optimizer;
+    if (optimizer2) delete optimizer2;
+    if (optimizer4) delete optimizer4;
   }
 
   NetworkNode(NetworkNode<Device_>&& other)  noexcept : NetworkNode<Device_>() {
-    layer = other.layer;
-    optimizer = other.optimizer;
+    if (*this != other)
+    {
+      layer = other.layer;
+      optimizer2 = other.optimizer2;
+      optimizer4 = other.optimizer4;
 
-    other.layer = nullptr;
-    other.optimizer = nullptr;
+      other.layer = nullptr;
+      other.optimizer2 = nullptr;
+      other.optimizer4 = nullptr;
+    }
   }
 
-  NetworkNode(LayerBase<float, Device_>* _layer, OptimizerBase<float, Device_, int Rank>* _optimizer) : layer(_layer), optimizer(_optimizer) {}
-  NetworkNode(LayerBase<float, Device_>* _layer) : layer(_layer), optimizer(nullptr) {}
+  NetworkNode(LayerBase<float, Device_>* _layer, OptimizerBase<float, 2, 0, Device_>* _optimizer) : layer(_layer), optimizer2(_optimizer), optimizer4(nullptr) {}
+  NetworkNode(LayerBase<float, Device_>* _layer, OptimizerBase<float, 4, 0, Device_>* _optimizer) : layer(_layer), optimizer4(_optimizer), optimizer2(nullptr) {}
+  NetworkNode(LayerBase<float, Device_>* _layer) : layer(_layer), optimizer2(nullptr), optimizer4(nullptr) {}
 };
 
 

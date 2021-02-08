@@ -56,10 +56,14 @@ namespace EigenSinnTest {
         // compute dL/dw, dL/db, dL/dx
         linear.backward(input, dloss);
 
-        //std::any new_weights, new_bias;
-        std::tie(weights_auto, bias_auto) = adam.step(linear);
-        linear.set_bias(bias_auto);
+        std::any weights_any, bias_any;
+        std::tie(weights_any, bias_any) = adam.step(linear);
+
+        bias_auto = DeviceTensor<DefaultDevice, float, 1, 0>(bias_any);
+        weights_auto = DeviceTensor<DefaultDevice, float, 2, 0>(weights_any);
+
         linear.set_weights(weights_auto);
+        linear.set_bias(bias_auto);
       }
 
       EXPECT_TRUE(is_elementwise_approx_eq(new_weights, weights_auto));
