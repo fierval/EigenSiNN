@@ -4,7 +4,6 @@ project(cifar LANGUAGES CXX)
 #set( CMAKE_TOOLCHAIN_FILE "C:/git/NN/vcpkg/scripts/buildsystems/vcpkg.cmake" )
 
 find_package(OpenCV REQUIRED)
-find_package(Eigen3 REQUIRED)
 
 # CIFAR10 reader 
 # Clone https://github.com/wichtounet/cifar-10
@@ -12,7 +11,7 @@ find_package(Eigen3 REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-
+get_filename_component(EIGEN3_INCLUDE_DIRS "../../core/eigen" ABSOLUTE)
 get_filename_component(EIGENSINN_INCLUDE_DIR "../../core/nn/src" ABSOLUTE)
 get_filename_component(CUR_INCLUDE_DIR "include" ABSOLUTE)
 

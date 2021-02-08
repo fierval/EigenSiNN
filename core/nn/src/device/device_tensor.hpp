@@ -144,14 +144,17 @@ namespace EigenSinn
     }
 
     // copy constructor: deep copy
-    DeviceTensor(const DeviceTensor& d)
-      : DeviceTensor() {
-      size_t alloc_size = sizeof(Scalar) * d.tensor_view->dimensions().TotalSize();
-      Scalar* data = static_cast<Scalar*>(device_.allocate(alloc_size));
+    DeviceTensor(const DeviceTensor& d) : DeviceTensor() {
 
-      device_.memcpy(data, d.tensor_view->data(), alloc_size);
+      bool is_null_copy = d.tensor_view.get() == nullptr;
+      if (!is_null_copy) {
 
-      tensor_view.reset(new TensorView<Scalar, Rank, Layout>(data, d.tensor_view->dimensions()));
+        size_t alloc_size = sizeof(Scalar) * d.tensor_view->dimensions().TotalSize();
+        Scalar* data = static_cast<Scalar*>(device_.allocate(alloc_size));
+
+        device_.memcpy(data, d.tensor_view->data(), alloc_size);
+        tensor_view.reset(new TensorView<Scalar, Rank, Layout>(data, d.tensor_view->dimensions()));
+      }
     }
 
     // copy assignment

@@ -2,7 +2,8 @@
 #include <gtest/gtest.h>
 #include "include/commondata4d.hpp"
 #include "ops/comparisons.hpp"
-
+#include "layers/linear.hpp"
+#include "layers/convolution.hpp"
 
 using namespace EigenSinn;
 
@@ -54,6 +55,15 @@ namespace EigenSinnTest {
     array<Index, 4> actual = from_flat_dim<Index, 4, RowMajor>(cd.convInput.dimensions(), idx);
     EXPECT_EQ(offsets, actual);
 
+  }
+
+  TEST_F(Memory, AssignmentLayer) {
+
+    Linear<float> l1(5, 7);
+    Linear<float> l2 = l1;
+
+    Conv2d<float> c1({ 5, 3, 2, 4 });
+    Conv2d<float> c2 = c1;
   }
 
 }
