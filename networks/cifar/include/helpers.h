@@ -69,7 +69,7 @@ inline Tensor<Scalar, Rank> read_tensor_csv(const std::string& file_path, const 
   parse_stream(str, tensor_vec, separator);
 
   // convert tensor to col_major format
-  TensorMap<Tensor<Scalar, Rank, RowMajor>> out_rows(tensor_vec.data(), dims);
+  TensorView<Scalar, Rank, RowMajor> out_rows(tensor_vec.data(), dims);
   Tensor<Scalar, Rank> col_major = out_rows.swap_layout().shuffle(rev_dims);
 
   return col_major;

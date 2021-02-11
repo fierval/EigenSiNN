@@ -1,7 +1,7 @@
 #include "dataset.h"
 
 #include <losses/crossentropyloss.hpp>
-#include <ops/threadingdevice.hpp>
+#include <device/device_tensor.hpp>
 #include <chrono>
 #include <vector>
 #include <string>
@@ -34,9 +34,7 @@ int main(int argc, char* argv[]) {
   ImageContainer next_images;
   LabelContainer next_labels;
 
-  Dispatcher<ThreadPoolDevice> dispatcher;
-
-  auto network = create_network(array<Index, 4>{(Index)batch_size, channels, side, side}, num_classes, learning_rate, dispatcher);
+  auto network = create_network(array<Index, 4>{(Index)batch_size, channels, side, side}, num_classes, learning_rate);
   init(network, debug_init);
 
   auto start = std::chrono::high_resolution_clock::now();
@@ -57,7 +55,7 @@ int main(int argc, char* argv[]) {
       Tensor<uint8_t, 2> label_tensor = create_2d_label_tensor<uint8_t>(dataset.training_labels, step - 1, batch_size, num_classes);
 
       // forward
-      dynamic_cast<Input<float, 4, ThreadPoolDevice>*>(network[0].layer)->set_input(batch_tensor.data());
+      dynamic_cast<Input<float, 4, ColMajor, ThreadPoolDevice>*>(network[0].layer)->set_input(batch_tensor);
 
       forward(network);
 

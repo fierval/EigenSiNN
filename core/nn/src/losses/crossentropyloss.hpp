@@ -13,7 +13,7 @@ namespace EigenSinn {
     CrossEntropyLoss() {
     }
 
-    void initialize(const DeviceTensor<Device_, Scalar, Rank, Layout>& predicted, const DeviceTensor<Device_, Actual, Rank, Layout> actual) {
+    void initialize(DeviceTensor<Device_, Scalar, Rank, Layout>& predicted, DeviceTensor<Device_, Actual, Rank, Layout> actual) {
 
       if (is_initialized) {
         return;
@@ -31,7 +31,7 @@ namespace EigenSinn {
       dsum.setConstant(cnst);
     }
 
-    void step(const DeviceTensor<Device_, Scalar, Rank, Layout>& predicted, const DeviceTensor<Device_, Actual, Rank, Layout>& actual) override {
+    void step(DeviceTensor<Device_, Scalar, Rank, Layout>& predicted, DeviceTensor<Device_, Actual, Rank, Layout>& actual) override {
 
       initialize(predicted, actual);
 

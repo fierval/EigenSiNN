@@ -13,7 +13,7 @@ namespace EigenSinn {
 
   public:
 
-    virtual void step(const DeviceTensor<Device_, Scalar, Rank, Layout>& predictions_any, const DeviceTensor<Device_, Actual, Rank, Layout>& actual_any) = 0;
+    virtual void step(DeviceTensor<Device_, Scalar, Rank, Layout>& predictions_any, DeviceTensor<Device_, Actual, Rank, Layout>& actual_any) = 0;
 
     virtual Scalar get_output() {
       return loss;
@@ -27,7 +27,7 @@ namespace EigenSinn {
 
   protected:
     // Initializes all sorts of auxiliary dimension values
-    inline void initialize(const DeviceTensor<Device_, Scalar, Rank, Layout>& predicted, const DeviceTensor<Device_, Actual, Rank, Layout> actual) {
+    inline void initialize(DeviceTensor<Device_, Scalar, Rank, Layout>& predicted, DeviceTensor<Device_, Actual, Rank, Layout> actual) {
 
       if (is_initialized) { return; }
 
