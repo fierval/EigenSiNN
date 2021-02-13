@@ -34,12 +34,12 @@ namespace EigenSinn {
 
     virtual  std::any get_loss_by_bias_derivative() { return std::any(); }
     virtual  std::any get_bias() { return std::any(); }
+    virtual ~LayerBase() = default;
 
   protected:
     // rule of zero: https://en.cppreference.com/w/cpp/language/rule_of_three
     // since the class is polymorphic (virtual functions) avoid slicing
     // by explicity prohibiting copying
-    virtual ~LayerBase() = default;
     //LayerBase(const LayerBase&) = delete;
     //LayerBase(LayerBase&&) = delete;
     //LayerBase& operator=(const LayerBase&) = delete;

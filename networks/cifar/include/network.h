@@ -25,22 +25,19 @@ struct NetworkNode {
 
   ~NetworkNode() {
     if (layer) delete layer;
-    if (optimizer4) delete optimizer;
+    if (optimizer) delete optimizer;
   }
 
   NetworkNode(NetworkNode<Device_>&& other)  noexcept : NetworkNode<Device_>() {
-    if (*this != other)
-    {
       layer = other.layer;
       optimizer = other.optimizer;
 
       other.layer = nullptr;
       other.optimizer = nullptr;
-    }
   }
 
-  NetworkNode(LayerBase<float, Device_>* _layer, OptimizerBase<float, 0, Device_>* _optimizer) : layer(_layer), optimizer(_optimizer) {}
-  NetworkNode(LayerBase<float, Device_>* _layer) : layer(_layer), optimizer(nullptr) {}
+  NetworkNode(LayerBase<float>* _layer, OptimizerBase<float, 0, Device_>* _optimizer) : layer(_layer), optimizer(_optimizer) {}
+  NetworkNode(LayerBase<float>* _layer) : layer(_layer), optimizer(nullptr) {}
 };
 
 
@@ -95,7 +92,7 @@ inline void init(const Network& network, bool debug = false) {
   }
 }
 
-inline void backward(const Network& network, float * loss_derivative) {
+inline void backward(const Network& network, std::any loss_derivative) {
 
   for (auto rit = network.rbegin(); rit != network.rend() - 1; rit++) {
 

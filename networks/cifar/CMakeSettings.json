@@ -11,6 +11,7 @@
             "buildCommandArgs": "",
             "ctestCommandArgs": "",
             "cmakeToolchain": "C:/git/NN/vcpkg/scripts/buildsystems/vcpkg.cmake",
+            "cmakeExecutable": "C:\\Program Files\\CMake\\bin\\cmake.exe",
             "variables": [
                 {
                     "name": "OpenCV_DIR",
@@ -21,11 +22,6 @@
                     "name": "VCPKG_TARGET_TRIPLET",
                     "value": "x64-windows",
                     "type": "STRING"
-                },
-                {
-                    "name": "Eigen3_DIR",
-                    "value": "C:/git/NN/vcpkg/installed/x64-windows/share/eigen3",
-                    "type": "PATH"
                 }
             ]
         },
@@ -39,6 +35,7 @@
             "buildCommandArgs": "",
             "ctestCommandArgs": "",
             "cmakeToolchain": "C:/git/NN/vcpkg/scripts/buildsystems/vcpkg.cmake",
+            "cmakeExecutable": "C:\\Program Files\\CMake\\bin\\cmake.exe",
             "inheritEnvironments": [ "msvc_x64_x64" ],
             "variables": [
                 {
@@ -50,11 +47,6 @@
                     "name": "VCPKG_TARGET_TRIPLET",
                     "value": "x64-windows",
                     "type": "STRING"
-                },
-                {
-                    "name": "Eigen3_DIR",
-                    "value": "C:/git/NN/vcpkg/installed/x64-windows/share/eigen3",
-                    "type": "PATH"
                 }
             ]
         }

@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
   int channels = 3;
   float learning_rate = 0.001;
   
-  CrossEntropyLoss<float, uint8_t, 2> loss;
+  CrossEntropyLoss<float, uint8_t, 2, ColMajor, ThreadPoolDevice> loss;
 
   std::vector<std::string> classes = { "plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck" };
   int num_classes = classes.size();
@@ -51,8 +51,8 @@ int main(int argc, char* argv[]) {
 
     for (int step = 1; step <= dataset.training_images.size() / batch_size; step++) {
 
-      Tensor<float, 4> batch_tensor = create_batch_tensor(dataset.training_images, step - 1, batch_size);
-      Tensor<uint8_t, 2> label_tensor = create_2d_label_tensor<uint8_t>(dataset.training_labels, step - 1, batch_size, num_classes);
+      auto batch_tensor = DeviceTensor<ThreadPoolDevice, float, 4>(create_batch_tensor(dataset.training_images, step - 1, batch_size));
+      auto label_tensor = DeviceTensor<ThreadPoolDevice, uint8_t, 2>(create_2d_label_tensor<uint8_t>(dataset.training_labels, step - 1, batch_size, num_classes));
 
       // forward
       dynamic_cast<Input<float, 4, ColMajor, ThreadPoolDevice>*>(network[0].layer)->set_input(batch_tensor);
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
       forward(network);
 
       // loss
-      TensorMap<Tensor<float, 2>> output(network.rbegin()->layer->get_output(), label_tensor.dimensions());
+      DeviceTensor<ThreadPoolDevice, float, 2> output(network.rbegin()->layer->get_output());
       loss.step(output, label_tensor);
 
       // std::cout << "Step: " << step << ". Loss: " << std::any_cast<float>(loss.get_output()) << std::endl;
@@ -94,15 +94,19 @@ int main(int argc, char* argv[]) {
   auto batch_tensor = create_batch_tensor(dataset.test_images, 0, dataset.test_images.size());
   Tensor<int, 1> label_tensor = create_1d_label_tensor(dataset.test_labels).cast<int>();
 
-  auto inp_layer = dynamic_cast<Input<float, 4, ThreadPoolDevice>*>(network[0].layer);
-  inp_layer->set_dims(array2vector(batch_tensor.dimensions()), array2vector(batch_tensor.dimensions()));
-  inp_layer->set_input(batch_tensor.data());
+  auto inp_layer = dynamic_cast<Input<float, 4, ColMajor, ThreadPoolDevice>*>(network[0].layer);
+  inp_layer->set_input(batch_tensor);
 
   forward(network);
 
-  TensorMap<Tensor<float, 2>> test_output(network.rbegin()->layer->get_output(), vector2array<2>(network.rbegin()->layer->get_out_dims()));
-  Tensor<Tuple<Index, float>, 2> test_index_tuples = test_output.index_tuples();
-  Tensor<Tuple<Index, float>, 1> pred_res = test_index_tuples.reduce(array<Index, 1> {1}, internal::ArgMaxTupleReducer<Tuple<Index, float>>());
+  DeviceTensor<ThreadPoolDevice, float, 2> test_output(network.rbegin()->layer->get_output());
+  DeviceTensor<ThreadPoolDevice, Tuple<Index, float>, 2> test_index_tuples(test_output.dimensions().TotalSize());
+  test_index_tuples.view() = test_output->index_tuples();
+
+  DeviceTensor<ThreadPoolDevice, Tuple<Index, float>, 1> pred_res(test_output.dimension(0));
+  pred_res.view() = test_index_tuples->reduce(array<Index, 1> {1}, internal::ArgMaxTupleReducer<Tuple<Index, float>>());
+  Tensor< Tuple<Index, float>, 1> h_pred_res = pred_res.to_host();
+
   Tensor<int, 1> predictions(pred_res.dimension(0));
 
   Tensor<float, 1> n_correct(num_classes), n_samples(num_classes), accuracy(num_classes);
@@ -111,7 +115,7 @@ int main(int argc, char* argv[]) {
 
   // recover actual index value by unrolling the col-major stored index
   for (Index i = 0; i < pred_res.dimension(0); i++) {
-    predictions(i) = (pred_res(i).first - i) / pred_res.dimension(0) % num_classes;
+    predictions(i) = (h_pred_res(i).first - i) / pred_res.dimension(0) % num_classes;
     int label = label_tensor(i);
     if (predictions(i) == label) {
       n_correct(label)++;
