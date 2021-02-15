@@ -60,15 +60,12 @@ namespace EigenSinnTest {
         std::any weights_any, bias_any;
         std::tie(weights_any, bias_any) = sgd.step(linear);
 
-        bias_auto = DeviceTensor<DefaultDevice, float, 1, 0>(bias_any);
-        weights_auto = DeviceTensor<DefaultDevice, float, 2, 0>(weights_any);
-
-        linear.set_weights(weights_auto);
-        linear.set_bias(bias_auto);
+        linear.set_weights(weights_any);
+        linear.set_bias(bias_any);
       }
 
-      EXPECT_TRUE(is_elementwise_approx_eq(new_weights, weights_auto));
-      EXPECT_TRUE(is_elementwise_approx_eq(new_bias, bias_auto));
+      EXPECT_TRUE(is_elementwise_approx_eq(new_weights, linear.get_weights()));
+      EXPECT_TRUE(is_elementwise_approx_eq(new_bias, linear.get_bias()));
 
     }
 

@@ -34,6 +34,10 @@ namespace EigenSinn {
 
     virtual  std::any get_loss_by_bias_derivative() { return std::any(); }
     virtual  std::any get_bias() { return std::any(); }
+
+    virtual void set_weights(std::any&) {}
+    virtual void set_bias(std::any&) {}
+
     virtual ~LayerBase() = default;
 
   protected:

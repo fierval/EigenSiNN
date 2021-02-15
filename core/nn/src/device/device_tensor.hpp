@@ -58,28 +58,9 @@ namespace EigenSinn
     explicit DeviceTensor(TensorView<Scalar, Rank, Layout>& tv)
       : DeviceTensor() {
 
-      tensor_view = tv;
+      tensor_view.reset(new TensorView<Scalar, Rank, Layout>(tv.data(), tv.dimensions()));
     }
 
-
-    /// <summary>
-    /// Conversion from any
-    /// </summary>
-    /// <typeparam name="Device_"></typeparam>
-    /// <typeparam name="Scalar"></typeparam>
-    DeviceTensor& operator=(const std::any& any) {
-      DeviceTensor d = from_any(any);
-
-      if (&d == this) {
-        return *this;
-      }
-
-      release();
-
-      tensor_view = d.tensor_view;
-      return *this;
-    }
-      
     explicit DeviceTensor(std::any any) 
       : DeviceTensor(from_any(any)) {
       
@@ -205,7 +186,7 @@ namespace EigenSinn
     }
 
     DeviceTensor& resize(Index dim) {
-      resize(DSizes<Index, 1>(dim));
+      resize(DSizes<Index, 1>{dim});
       return *this;
     }
 

@@ -124,12 +124,12 @@ namespace EigenSinn {
       return bias;
     }
 
-    void set_weights(const DeviceTensor<Device_, Scalar, 2, Layout>& v) {
-      weights = v;
+    void set_weights(std::any& v) override {
+      weights = DeviceTensor<Device_, Scalar, 2, Layout>(v);
     }
 
-    void set_bias(const DeviceTensor<Device_, Scalar, 1, Layout>& v) {
-      bias = v;
+    void set_bias(std::any& v) override{
+      bias = DeviceTensor<Device_, Scalar, 1, Layout>(v);
     }
 
   private:

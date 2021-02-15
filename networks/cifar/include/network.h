@@ -108,12 +108,15 @@ inline void backward(const Network& network, std::any loss_derivative) {
 
 inline void optimizer(const Network& network) {
 
+  static std::any weights_any, bias_any;
   for (auto optit = network.rbegin(); optit != network.rend(); optit++) {
-    if (optit->optimizer) {
+    if (optit->optimizer == nullptr) {
       continue;
     }
 
-    optit->optimizer->step(*(optit->layer));
+    std::tie(weights_any, bias_any) = optit->optimizer->step(*(optit->layer));
+    optit->layer->set_weights(weights_any);
+    optit->layer->set_bias(bias_any);
   }
 
 }

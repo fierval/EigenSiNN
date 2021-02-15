@@ -114,12 +114,12 @@ namespace EigenSinn {
       return loss_by_bias_derivative;
     }
 
-    void set_weights(const DeviceTensor<Device_, Scalar, 4, Layout>& v) {
-      kernel = v;
+    void set_weights(std::any& v) override {
+      kernel = DeviceTensor<Device_, Scalar, 4, Layout>(v);
     }
 
-    void set_bias(const DeviceTensor<Device_, Scalar, 1, Layout>& v) {
-      bias = v;
+    void set_bias(std::any& v) override {
+      bias = DeviceTensor<Device_, Scalar, 1, Layout>(v);
     }
 
   private:
