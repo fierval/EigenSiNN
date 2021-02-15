@@ -76,7 +76,7 @@ inline void init(const Network& network, bool debug = false) {
 
       if (i < 7) {
         DeviceTensor<ThreadPoolDevice, float, 4> init_tensor(read_tensor_csv<float, 4>(full_path));
-        dynamic_cast<Conv2d<float, 0, ThreadPoolDevice>*>(network[i].layer)->init(*init_tensor);
+        dynamic_cast<Conv2d<float, 0, ThreadPoolDevice>*>(network[i].layer)->init(init_tensor.to_host());
       }
       else {
         DeviceTensor<ThreadPoolDevice, float, 2> init_tensor(read_tensor_csv<float, 2>(full_path));
