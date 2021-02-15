@@ -101,7 +101,6 @@ inline void shuffle(ImageContainer& images, LabelContainer& labels, bool should_
 // explore the dataset
 inline void explore(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3>, uint8_t>& dataset, bool should_explore = false) {
 
-#ifndef _DEBUG
   if (!should_explore) {
     return;
   };
@@ -130,5 +129,4 @@ inline void explore(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3>, uint8_
       break;
     }
   }
-#endif
 }

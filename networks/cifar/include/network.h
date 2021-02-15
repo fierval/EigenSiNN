@@ -75,15 +75,16 @@ inline void init(const Network& network, bool debug = false) {
       j++;
 
       if (i < 7) {
-        Tensor<float, 4> init_tensor = read_tensor_csv<float, 4>(full_path);
-        dynamic_cast<Conv2d<float>*>(network[i].layer)->init(init_tensor);
+        DeviceTensor<ThreadPoolDevice, float, 4> init_tensor(read_tensor_csv<float, 4>(full_path));
+        dynamic_cast<Conv2d<float, 0, ThreadPoolDevice>*>(network[i].layer)->init(*init_tensor);
       }
       else {
-        Tensor<float, 2> init_tensor = read_tensor_csv<float, 2>(full_path);
+        DeviceTensor<ThreadPoolDevice, float, 2> init_tensor(read_tensor_csv<float, 2>(full_path));
         // pytorch returns a transposed weight matrix
-        Tensor<float, 2> transposed = init_tensor.shuffle(array<Index, 2>{1, 0});
+        DeviceTensor<ThreadPoolDevice, float, 2> transposed(init_tensor.dimensions());
+        transposed.view() = init_tensor->shuffle(array<Index, 2>{1, 0});
 
-        dynamic_cast<Linear<float>*>(network[i].layer)->init(transposed);
+        dynamic_cast<Linear<float, 0, ThreadPoolDevice>*>(network[i].layer)->init(*transposed);
       }
 
       continue;
