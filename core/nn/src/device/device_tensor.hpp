@@ -61,9 +61,12 @@ namespace EigenSinn
       tensor_view.reset(new TensorView<Scalar, Rank, Layout>(tv.data(), tv.dimensions()));
     }
 
-    explicit DeviceTensor(std::any any) 
-      : DeviceTensor(from_any(any)) {
-      
+    DeviceTensor(std::any& any) 
+      : DeviceTensor() {
+
+      auto d = from_any(any);
+
+      tensor_view = std::move(d.tensor_view);
     }
 
     /// <summary>
