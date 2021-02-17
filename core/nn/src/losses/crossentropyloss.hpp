@@ -13,7 +13,7 @@ namespace EigenSinn {
     CrossEntropyLoss() {
     }
 
-    void initialize(DeviceTensor<Device_, Scalar, Rank, Layout>& predicted, DeviceTensor<Device_, Actual, Rank, Layout> actual) {
+    void initialize(DeviceTensor<Device_, Scalar, Rank, Layout>& predicted, DeviceTensor<Device_, Actual, Rank, Layout>& actual) {
 
       if (is_initialized) {
         return;

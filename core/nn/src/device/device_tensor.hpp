@@ -64,9 +64,13 @@ namespace EigenSinn
     DeviceTensor(std::any& any) 
       : DeviceTensor() {
 
-      auto d = from_any(any);
+      auto& d = std::any_cast<DeviceTensor<Device_, Scalar, Rank, Layout>&>(any);
 
       tensor_view = std::move(d.tensor_view);
+    }
+
+    DeviceTensor<Device_, Scalar, Rank, Layout> from_any(std::any t) {
+      return std::any_cast<DeviceTensor<Device_, Scalar, Rank, Layout>&>(t);
     }
 
     /// <summary>
@@ -458,10 +462,5 @@ namespace EigenSinn
     PtrTensorView<Scalar, Rank, Layout> tensor_view;
     Dispatcher<Device_>& dispatcher;
     Device_& device_;
-
-    DeviceTensor<Device_, Scalar, Rank, Layout> from_any(std::any t) {
-      return std::any_cast<DeviceTensor<Device_, Scalar, Rank, Layout>&>(t);
-    }
-
   };
 }
