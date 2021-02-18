@@ -78,8 +78,8 @@ namespace EigenSinn {
       // variance
       variance.view() = (x - mu_broadcasted)->pow(2.).mean(reduction_dims);
 
-      new_running_mean.view() = momentum * *running_mean + (1.0 - momentum) * *mu;
-      new_running_var.view() = momentum * *running_var + (1.0 - momentum) * *variance;
+      new_running_mean = momentum * running_mean + (1.0 - momentum) * mu;
+      new_running_var = momentum * running_var + (1.0 - momentum) * variance;
       
       std.view() = (*variance + eps).sqrt();
       mean_broadcasted = broadcast_as_last_dim(mu, broadcast_dims);
@@ -88,8 +88,8 @@ namespace EigenSinn {
       std.view() = (*running_var + eps).sqrt();
       mean_broadcasted = broadcast_as_last_dim(running_mean, broadcast_dims);
 
-      new_running_mean.view() = *running_mean;
-      new_running_var.view() = *running_var;
+      new_running_mean = running_mean;
+      new_running_var = running_var;
 
     }
     std_broadcasted = broadcast_as_last_dim(std, broadcast_dims);
@@ -98,8 +98,8 @@ namespace EigenSinn {
     DeviceTensor<Device_, Scalar, Rank, Layout> gamma_broadcasted(broadcast_as_last_dim(gamma, broadcast_dims));
     DeviceTensor<Device_, Scalar, Rank, Layout> beta_broadcasted(broadcast_as_last_dim(beta, broadcast_dims)) ;
 
-    x_hat.view() = (*x - *mean_broadcasted) / *std_broadcasted;
-    x_out.view() = *gamma_broadcasted * *x_hat + *beta_broadcasted;
+    x_hat = (x - mean_broadcasted) / std_broadcasted;
+    x_out = gamma_broadcasted * x_hat + beta_broadcasted;
 
     return std::make_tuple(x_out, x_hat, new_running_mean, new_running_var, mu, variance);
   }

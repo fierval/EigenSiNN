@@ -88,7 +88,7 @@ namespace EigenSinn {
       DeviceTensor<Device_, Scalar, Rank, Layout> broadcast_var = broadcast_as_last_dim(var, broadcast_dims);
       DeviceTensor<Device_, Scalar, Rank, Layout> xmu(prev_layer.dimensions());
 
-      xmu.view() = *prev_layer - *broadcast_mean;
+      xmu = prev_layer - broadcast_mean;
 
       // Step 9
       // dbeta = sum(dout, reduced by all dims except channel)
@@ -100,7 +100,7 @@ namespace EigenSinn {
       // dgamma = sum (dout * y, reduced by all dims except channel)
       DeviceTensor<Device_, Scalar, Rank, Layout> gamma_broad(broadcast_as_last_dim(gamma, broadcast_dims));
       DeviceTensor<Device_, Scalar, Rank, Layout> dxhat(dout.dimensions());
-      dxhat.view() = *dout * *gamma_broad;
+      dxhat = dout * gamma_broad;
       dgamma.view() = (dout * xhat)->sum(reduction_dims);
 
       // Step 7
@@ -120,15 +120,15 @@ namespace EigenSinn {
       DeviceTensor<Device_, Scalar, Rank, Layout> d_var_broadcast = broadcast_as_last_dim(d_var, broadcast_dims);
       DeviceTensor<Device_, Scalar, Rank, Layout> d_sq(dout.dimensions());
 
-      d_sq.view() = 1. / total_channel * *d_var_broadcast;
+      d_sq = 1. / total_channel * d_var_broadcast;
 
       // Step 3
       DeviceTensor<Device_, Scalar, Rank, Layout> dxmu2(d_sq.dimensions());
-      dxmu2.view() = 2 * *xmu * *d_sq;
+      dxmu2 = 2 * xmu * d_sq;
 
       // step 2
       DeviceTensor<Device_, Scalar, Rank, Layout> dx1(dxmu1.dimensions());
-      dx1.view() = *dxmu1 + *dxmu2;
+      dx1 = dxmu1 + dxmu2;
 
       DeviceTensor<Device_, Scalar, 1> dmu(dout->dimension(1));
       dmu.view() = -dx1->sum(reduction_dims);
@@ -137,10 +137,10 @@ namespace EigenSinn {
       DeviceTensor<Device_, Scalar, Rank, Layout> dx2(dout.dimensions());
       DeviceTensor<Device_, Scalar, Rank, Layout> dmu_broadcast = broadcast_as_last_dim(dmu, broadcast_dims);
 
-      dx2.view() = 1. / total_channel * *dmu_broadcast;
+      dx2 = 1. / total_channel * dmu_broadcast;
 
       // step 0
-      layer_gradient.view() = *dx1 + *dx2;
+      layer_gradient = dx1 + dx2;
     }
 
     std::any get_output() {

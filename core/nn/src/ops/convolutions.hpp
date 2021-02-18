@@ -123,6 +123,7 @@ namespace EigenSinn {
     }
     else {
 #endif
+      // TODO: CUDA kernel for dilation
       for (Index b = 0; b < dims[0]; b++) {
         for (Index c = 0; c < dims[1]; c++) {
           for (Index h = 0; h < dims[2]; h++) {
