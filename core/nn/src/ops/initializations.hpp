@@ -49,7 +49,7 @@ namespace EigenSinn {
     }
 
     DeviceTensor<Device_, Scalar, Rank, Layout> weights(layer_dims);
-    weights->template setRandom<::internal::NormalRandomGenerator<Scalar>>();
+    weights.template setRandom<::internal::NormalRandomGenerator<Scalar>>();
 
     weights.view() = std * *weights;
     return weights;
