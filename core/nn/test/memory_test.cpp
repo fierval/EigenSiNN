@@ -16,7 +16,7 @@ namespace EigenSinnTest {
       cd.init();
     }
 
-    CommonData4d<DefaultDevice> cd;
+    CommonData4d<ThreadPoolDevice> cd;
   };
 
   TEST_F(Memory, FlatColMajor) {

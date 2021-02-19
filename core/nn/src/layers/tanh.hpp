@@ -7,7 +7,7 @@ using namespace  Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
   class Tanh : public LayerBase<Scalar> {
   public:
     // leaky relu if necessary

@@ -16,7 +16,7 @@ _in_dim - input dimension (D)
 namespace EigenSinn {
 
 
-  template<typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  template<typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
   class Linear : public LayerBase<Scalar> {
 
   public:

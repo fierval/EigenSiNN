@@ -7,7 +7,7 @@
 namespace EigenSinn {
 
   // flatten convolution layer
-  template<typename Scalar, int Layout = ColMajor, typename Device_= DefaultDevice>
+  template<typename Scalar, int Layout = ColMajor, typename Device_= ThreadPoolDevice>
   class Flatten : public LayerBase<Scalar> {
 
   public:

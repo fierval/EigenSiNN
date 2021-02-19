@@ -18,8 +18,8 @@ namespace EigenSinnTest {
       cd1p.init();
     }
 
-    CommonData4d<DefaultDevice> cd;
-    ConvDataWith1Padding<DefaultDevice> cd1p;
+    CommonData4d<ThreadPoolDevice> cd;
+    ConvDataWith1Padding<ThreadPoolDevice> cd1p;
 
     const Padding2D padding = { 0, 0 };
   };

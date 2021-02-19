@@ -17,7 +17,7 @@ namespace EigenSinnTest {
       cd1p.init();
     }
 
-    ConvDataWith1Padding<DefaultDevice> cd1p;
+    ConvDataWith1Padding<ThreadPoolDevice> cd1p;
 
     const Padding2D padding = { 1, 1 };
     const int stride = 1;

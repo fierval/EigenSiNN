@@ -7,7 +7,7 @@ using std::unique_ptr;
 
 namespace EigenSinn {
 
-  template<typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  template<typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
   class Input : public LayerBase<Scalar> {
 
   public:

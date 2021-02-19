@@ -7,7 +7,7 @@ using namespace  Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
   class LeakyReLU : public LayerBase<Scalar> {
   public:
     // leaky relu if necessary
@@ -47,7 +47,7 @@ namespace EigenSinn {
     DeviceTensor<Device_, Scalar, Rank, Layout> layer_output, layer_grad;
   };
 
-  template<typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  template<typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
   class ReLU : public LeakyReLU<Scalar, Rank, Layout, Device_> {
   public:
     ReLU() : LeakyReLU(0) {}

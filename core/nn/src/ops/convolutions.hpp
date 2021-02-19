@@ -68,7 +68,7 @@ namespace EigenSinn {
   }
 
   // NCHW format
-  template <typename Scalar, int Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  template <typename Scalar, int Rank = 4, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
   inline auto im2col(const DeviceTensor<Device_, Scalar, Rank, Layout>& input, const DSizes<Index, Rank>& kernel_dims, const Padding2D& padding, Index stride, Index dilation) {
 
     auto out_dims = get_output_dimensions(*input, kernel_dims, padding, stride, dilation);
@@ -101,7 +101,7 @@ namespace EigenSinn {
     return output;
   }
 
-  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
   inline auto dilate_tensor(DeviceTensor<Device_, Scalar, 4, Layout>& tensor, Index dilation) {
 
     if (dilation == 1) { return tensor; }
@@ -140,7 +140,7 @@ namespace EigenSinn {
 
   // return kernel representation for GEMM with 
   // im2col representation of the conv layer
-  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
   inline auto unfold_kernel(DeviceTensor<Device_, Scalar, 4, Layout>& kernel) {
 
     auto dims = kernel.dimensions();
@@ -152,7 +152,7 @@ namespace EigenSinn {
   }
 
   // convert back to the [b, c, h, w] kernel representation
-  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
   inline auto fold_kernel(DeviceTensor<Device_, Scalar, 2, Layout>& kernel_col, const array<Index, 4>& expected_dims) {
 
     assert(expected_dims[0] == kernel_col.dimension(0));
@@ -170,7 +170,7 @@ namespace EigenSinn {
   // final dimensions should be the same as those of FX in col form:
   // F: [Bf x C * Hf * Wf], X: [C * Hf * Wf x B * Ho * Wo] -> [Bf X B * Ho * Wo], 
   // Resulting unrolled dimensions: [B, Bf, Ho, Wo], Bf = new C
-  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
   inline auto unfold_conv_res(const DeviceTensor<Device_, Scalar, 4, Layout>& layer) {
 
     auto dims = layer.dimensions();
@@ -186,7 +186,7 @@ namespace EigenSinn {
   // assuming we have just performed a convolution operation.
   // e.g. t (*) k = r, t: [2, 3, 4, 4], k: [5, 3, 3, 3], r: [2, 5, 2, 2]
   // r in im2col form will be [5, 8]
-  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
   inline auto fold_conv_res(const DeviceTensor<Device_, Scalar, 2, Layout>& conv_res, const array<Index, 4>& expected_dims) {
 
     assert(expected_dims[1] == conv_res.dimension(0));
@@ -248,7 +248,7 @@ namespace EigenSinn {
   }
 
   // NCHW format
-  template <typename Scalar, Index Rank = 4, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  template <typename Scalar, Index Rank = 4, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
   inline DeviceTensor<Device_, Scalar, 4, Layout> convolve(const DeviceTensor<Device_, Scalar, 4, Layout>& input,
     DeviceTensor<Device_, Scalar, 4, Layout>& kernel, const Padding2D& padding, Index stride, Index dilation) {
 

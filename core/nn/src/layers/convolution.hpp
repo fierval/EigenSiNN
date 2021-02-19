@@ -8,7 +8,7 @@ namespace EigenSinn {
 
   // REVIEW: Not implementing bias for now
   // Batch normalization layers can take care of bias
-  template <typename Scalar, int Layout = ColMajor, typename Device_ = DefaultDevice>
+  template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
   class Conv2d : public LayerBase<Scalar> {
 
   public:
