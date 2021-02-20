@@ -28,11 +28,6 @@ namespace EigenSinn {
   }
 
   template<typename Scalar>
-  inline Scalar from_any_scalar(std::any t) {
-    return std::any_cast<Scalar&>(t);
-  }
-
-  template<typename Scalar>
   inline auto from_binary_to_category(const Tensor<Scalar, 2>& inp) {
 
     Tensor<Scalar, 1> cat(inp.dimension(0));
@@ -51,50 +46,4 @@ namespace EigenSinn {
 
     return cat;
   }
-
-  template<Index Rank>
-  inline array<Index, Rank> vector2array(std::vector<Index>& v) {
-
-    array<Index, Rank> out;
-    // TODO: NVCCC doesn't like this: std::copy_n(v.begin(), Rank, out.begin());
-    for (int i = 0; i < v.size(); i++) {
-      out[i] = v[i];
-    }
-    return out;
-  }
-
-  template<Index Rank>
-  inline DSizes<Index, Rank> vector2Dsizes(std::vector<Index>& v) {
-
-    DSizes<Index, Rank> out;
-    // TODO: NVCCC doesn't like this: std::copy_n(v.begin(), Rank, out.begin());
-    for (int i = 0; i < v.size(); i++) {
-      out[i] = v[i];
-    }
-    return out;
-  }
-
-  template<Index Rank>
-  inline std::vector<Index> array2vector(array<Index, Rank>& a) {
-
-    std::vector<Index> out(Rank);
-    // TODO: NVCCC doesn't like this:  std::copy_n(a.begin(), Rank, out.begin());
-    for (int i = 0; i < a.size(); i++) {
-      out[i] = a[i];
-    }
-    return out;
-  }
-
-  template<Index Rank>
-  inline std::vector<Index> array2vector(const DSizes<Index, Rank>& a) {
-
-    std::vector<Index> out(Rank);
-    // TODO: NVCCC doesn't like this:   std::copy_n(a.begin(), Rank, out.begin());
-    for (int i = 0; i < a.size(); i++) {
-      out[i] = a[i];
-    }
-    return out;
-  }
-
-
 }

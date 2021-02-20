@@ -32,7 +32,7 @@ namespace EigenSinn {
   }
 
   template <typename Scalar, Index Rank = 4, int Layout = ColMajor>
-  inline auto get_output_dimensions(const TensorView<Scalar, Rank, Layout>& input, const array<Index, Rank> kernel_dims, const Padding2D& padding, const Index stride, const Index dilation, bool is_transposed = false) {
+  inline DSizes<Index, Rank> get_output_dimensions(const TensorView<Scalar, Rank, Layout>& input, const array<Index, Rank> kernel_dims, const Padding2D& padding, const Index stride, const Index dilation, bool is_transposed = false) {
 
     if (!is_transposed) {
       assert(kernel_dims[(int)ImageDims::channel] == input.dimension((int)ImageDims::channel));
@@ -69,7 +69,7 @@ namespace EigenSinn {
 
   // NCHW format
   template <typename Scalar, int Rank = 4, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
-  inline auto im2col(const DeviceTensor<Device_, Scalar, Rank, Layout>& input, const DSizes<Index, Rank>& kernel_dims, const Padding2D& padding, Index stride, Index dilation) {
+  inline DeviceTensor<Device_, Scalar, 2, Layout> im2col(const DeviceTensor<Device_, Scalar, Rank, Layout>& input, const DSizes<Index, Rank>& kernel_dims, const Padding2D& padding, Index stride, Index dilation) {
 
     auto out_dims = get_output_dimensions(*input, kernel_dims, padding, stride, dilation);
 
@@ -86,7 +86,6 @@ namespace EigenSinn {
     int conv_locations = out_dims[3] * out_dims[2];
 
     DeviceTensor<Device_, Scalar, 2, Layout> output(col_dim, input.dimension(0) * conv_locations);
-    Device_ device = output.get_device();
 
     // "move" along axis 1 (columns) and append converted portions.
     // each converted portion is a a batch of would-be convolution operations
@@ -141,7 +140,7 @@ namespace EigenSinn {
   // return kernel representation for GEMM with 
   // im2col representation of the conv layer
   template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
-  inline auto unfold_kernel(DeviceTensor<Device_, Scalar, 4, Layout>& kernel) {
+  inline DeviceTensor<Device_, Scalar, 2, Layout> unfold_kernel(DeviceTensor<Device_, Scalar, 4, Layout>& kernel) {
 
     auto dims = kernel.dimensions();
     Index col_channels = dims[1] * dims[2] * dims[3];

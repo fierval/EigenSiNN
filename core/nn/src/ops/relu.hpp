@@ -33,9 +33,9 @@ namespace EigenSinn {
     neg_mask.view() = (*output < zero).template cast<Scalar>();
     
     neg_mask *= threshold;
-    mask = neg_mask + pos_mask;
+    mask.view() = *neg_mask + *pos_mask;
 
-    output = mask * t;
+    output.view() = *mask * *t;
     return Tuple(mask, output);
   }
 
@@ -44,7 +44,7 @@ namespace EigenSinn {
 
     DeviceTensor<Device_, Scalar, Rank, Layout> output(next_layer_grad.dimensions());
 
-    output = next_layer_grad * mask;
+    output.view() = *next_layer_grad * *mask;
     return output;
   }
 
