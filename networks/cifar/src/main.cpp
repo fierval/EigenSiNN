@@ -58,6 +58,9 @@ int main(int argc, char* argv[]) {
       dynamic_cast<Input<float, 4, ColMajor, ThreadPoolDevice>*>(network[0].layer)->set_input(batch_tensor);
 
       forward(network);
+#if defined(_DEBUG)
+      break;
+#endif
 
       // loss
       DeviceTensor<ThreadPoolDevice, float, 2> output(network.rbegin()->layer->get_output());
@@ -87,12 +90,16 @@ int main(int argc, char* argv[]) {
     double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() / 1000.;
 
     std::cout << "Epoch: " << i + 1 << ". Time: " << elapsed << " sec." << std::endl;
+#if defined(_DEBUG)
+    break;
+#endif
   } 
   
   // Test
   std::cout << "Starting test..." << std::endl;
-  auto batch_tensor = create_batch_tensor(dataset.test_images, 0, dataset.test_images.size());
-  Tensor<int, 1> label_tensor = create_1d_label_tensor(dataset.test_labels).cast<int>();
+  DeviceTensor<ThreadPoolDevice, float, 4> batch_tensor(create_batch_tensor(dataset.test_images, 0, dataset.test_images.size()));
+  //DeviceTensor<ThreadPoolDevice, float, 4> batch_tensor(create_batch_tensor(dataset.test_images, 0, 100));
+  Tensor<int, 1> label_tensor = create_1d_label_tensor(dataset.test_labels).cast<int>(); // .slice(array<Index, 1>{ 0 }, array<Index, 1>{ 100 });
 
   auto inp_layer = dynamic_cast<Input<float, 4, ColMajor, ThreadPoolDevice>*>(network[0].layer);
   inp_layer->set_input(batch_tensor);
@@ -100,7 +107,7 @@ int main(int argc, char* argv[]) {
   forward(network);
 
   DeviceTensor<ThreadPoolDevice, float, 2> test_output(network.rbegin()->layer->get_output());
-  DeviceTensor<ThreadPoolDevice, Tuple<Index, float>, 2> test_index_tuples(test_output.dimensions().TotalSize());
+  DeviceTensor<ThreadPoolDevice, Tuple<Index, float>, 2> test_index_tuples(test_output.dimensions());
   test_index_tuples.view() = test_output->index_tuples();
 
   DeviceTensor<ThreadPoolDevice, Tuple<Index, float>, 1> pred_res(test_output.dimension(0));

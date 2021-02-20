@@ -26,7 +26,7 @@ namespace EigenSinn {
       loss_by_bias_derivative(_out_dim),
       in_dim(_in_dim),
       out_dim(_out_dim),
-      broadcast_bias_dim({ 1, 1 }),
+      broadcast_bias_dim({ 0, 1 }),
       bias(_out_dim) {
 
     }
@@ -36,10 +36,11 @@ namespace EigenSinn {
 
       DeviceTensor<Device_, Scalar, 2, Layout > prev_layer_tensor(prev_layer.get_output());
 
-      int batch_size = broadcast_bias_dim[0] = prev_layer_tensor->dimension(0);
+      int batch_size = prev_layer_tensor->dimension(0);
 
       // resize the inputs for the right dimensions
-      if (!layer_output) {
+      if (!layer_output || broadcast_bias_dim[0] != batch_size) {
+        broadcast_bias_dim[0] = batch_size;
         layer_output.resize(batch_size, out_dim);
         layer_grad_loss_by_input.resize(batch_size, in_dim);
       }
