@@ -43,7 +43,7 @@ namespace EigenSinn {
       exp_sum.view() = exp_all->sum(reduction_axes);
       exp_sum_broadcast.view() = exp_sum->reshape(reshape_dims).broadcast(broadcast_dims);
 
-      layer_output = exp_all / exp_sum_broadcast;
+      layer_output.view() = *exp_all / *exp_sum_broadcast;
     }
 
     void backward(LayerBase<Scalar>& prev_layer_any, std::any next_layer_grad_any) override {
@@ -51,7 +51,7 @@ namespace EigenSinn {
       DeviceTensor<Device_, Scalar, Rank, Layout> dout(next_layer_grad_any);
 
       DeviceTensor<Device_, Scalar, Rank, Layout> d_mul_exp(dims);
-      d_mul_exp = dout / exp_sum_broadcast;
+      d_mul_exp.view() = *dout / *exp_sum_broadcast;
 
       DeviceTensor<Device_, Scalar, 1, Layout> d_mul_inv_x(dims[0]);
       d_mul_inv_x.view() = (exp_all * dout)->sum(reduction_axes);
@@ -63,9 +63,9 @@ namespace EigenSinn {
       d_sum_exp.view() = d_inv->reshape(reshape_dims).broadcast(broadcast_dims);
 
       DeviceTensor<Device_, Scalar, Rank, Layout> d_exp(dims);
-      d_exp = d_mul_exp + d_sum_exp;
+      d_exp.view() = *d_mul_exp + *d_sum_exp;
 
-      layer_grad = exp_all * d_exp;
+      layer_grad.view() = *exp_all * *d_exp;
     }
 
     std::any get_output() override {

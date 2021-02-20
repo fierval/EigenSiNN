@@ -52,7 +52,7 @@ namespace EigenSinn {
       // backward step
       DeviceTensor<Device_, Scalar, Rank, Layout> dlog(orig_dims);
       dlog.view() = (1. / *exp_sum * *dsum).reshape(reshape_dims).eval().broadcast(broadcast_dims);
-      dloss = -1. / orig_dims[0] * act_scalar + exp_all * dlog;
+      dloss.view() = -1. / orig_dims[0] * *act_scalar + *exp_all * *dlog;
     }
 
   private:

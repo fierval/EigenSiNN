@@ -23,7 +23,7 @@ namespace EigenSinn {
       loss = loss_t.to_host()(0);
 
       //backward step
-      dloss = 2. * spread_grad * predicted_actual_diff;
+      dloss.view() = 2. * *spread_grad * *predicted_actual_diff;
     }
   };
 }

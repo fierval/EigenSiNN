@@ -60,7 +60,7 @@ namespace EigenSinn {
       if_tensor.view() = *rands >= *prob_tensor;
       mask.view() = if_tensor->select(*then_tensor, *else_tensor);
 
-      layer_output = mask * x;
+      layer_output.view() = *mask * *x;
     }
 
     // for derivations
@@ -70,7 +70,7 @@ namespace EigenSinn {
 
       if (!is_training) { return; }
 
-      layer_gradient = mask * next_layer_grad;
+      layer_gradient.view() = *mask * *next_layer_grad;
     }
 
     std::any get_output() override {

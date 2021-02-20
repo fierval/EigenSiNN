@@ -44,10 +44,10 @@ namespace EigenSinn {
       }
 
       // compute Mt and Vt
-      momentum_weights = beta1 * momentum_weights + (1 - beta1) * dweights;
+      momentum_weights.view() = beta1 * *momentum_weights + (1 - beta1) * *dweights;
       velocity_weights.view() = beta2 * *velocity_weights + (1 - beta2) * dweights->pow(2.);
 
-      momentum_bias = beta1 * momentum_bias + (1 - beta1) * dbias;
+      momentum_bias.view() = beta1 * *momentum_bias + (1 - beta1) * *dbias;
       velocity_bias.view() = beta2 * *velocity_bias + (1 - beta2) * dbias->pow(2.);
 
       cur_beta1 *= beta1;

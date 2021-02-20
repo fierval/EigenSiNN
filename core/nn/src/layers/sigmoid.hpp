@@ -34,7 +34,7 @@ namespace EigenSinn {
 
       DeviceTensor<Device_, Scalar, Rank, Layout> next_layer_grad(next_layer_grad_any);
 
-      layer_grad = next_layer_grad * layer_output * (ones - layer_output);
+      layer_grad.view() = *next_layer_grad * *layer_output * (*ones - *layer_output);
     }
 
     std::any get_output() override {
