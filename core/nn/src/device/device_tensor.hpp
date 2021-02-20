@@ -69,7 +69,7 @@ namespace EigenSinn
       tensor_view = std::move(d.tensor_view);
     }
 
-    DeviceTensor<Device_, Scalar, Rank, Layout> from_any(std::any t) {
+    DeviceTensor<Device_, Scalar, Rank, Layout> from_any(std::any& t) {
       return std::any_cast<DeviceTensor<Device_, Scalar, Rank, Layout>&>(t);
     }
 
