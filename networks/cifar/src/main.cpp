@@ -58,9 +58,7 @@ int main(int argc, char* argv[]) {
       dynamic_cast<Input<float, 4, ColMajor, ThreadPoolDevice>*>(network[0].layer)->set_input(batch_tensor);
 
       forward(network);
-#if defined(_DEBUG)
-      break;
-#endif
+      assert(_CrtCheckMemory());
 
       // loss
       DeviceTensor<ThreadPoolDevice, float, 2> output(network.rbegin()->layer->get_output());
@@ -70,9 +68,11 @@ int main(int argc, char* argv[]) {
 
       // backward
       backward(network, loss.get_loss_derivative_by_input());
+      assert(_CrtCheckMemory());
 
       // optimizer
       optimizer(network);
+      assert(_CrtCheckMemory());
 
       if (step % 1000 == 0) {
         stop = std::chrono::high_resolution_clock::now();
@@ -90,16 +90,12 @@ int main(int argc, char* argv[]) {
     double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() / 1000.;
 
     std::cout << "Epoch: " << i + 1 << ". Time: " << elapsed << " sec." << std::endl;
-#if defined(_DEBUG)
-    break;
-#endif
   } 
   
   // Test
   std::cout << "Starting test..." << std::endl;
   DeviceTensor<ThreadPoolDevice, float, 4> batch_tensor(create_batch_tensor(dataset.test_images, 0, dataset.test_images.size()));
-  //DeviceTensor<ThreadPoolDevice, float, 4> batch_tensor(create_batch_tensor(dataset.test_images, 0, 100));
-  Tensor<int, 1> label_tensor = create_1d_label_tensor(dataset.test_labels).cast<int>(); // .slice(array<Index, 1>{ 0 }, array<Index, 1>{ 100 });
+  Tensor<int, 1> label_tensor = create_1d_label_tensor(dataset.test_labels).cast<int>();
 
   auto inp_layer = dynamic_cast<Input<float, 4, ColMajor, ThreadPoolDevice>*>(network[0].layer);
   inp_layer->set_input(batch_tensor);
