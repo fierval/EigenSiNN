@@ -97,7 +97,7 @@ namespace EigenSinn {
         setColFromSlice(batches, shift, channels, h_im, kernel_height, dilation, w_im, kernel_width, output, input);
       }
     }
-    return output;
+    return std::move(output);
   }
 
   template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
@@ -115,7 +115,7 @@ namespace EigenSinn {
 #ifdef __CUDACC__
     if (std::is_same<Device_, GpuDevice>::value) {
       static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
-      static dim3 grid(getGridSize(dims[0], block.x), getGridSize(dims[1], block.y));
+      dim3 grid(getGridSize(dims[0], block.x), getGridSize(dims[1], block.y));
       
       dilate_tensor_kernel<Scalar, ColMajor> <<< grid, block >>> (dims[0], dims[1], dims[2], dims[3], dilation, *dilated, *tensor);
       cudaDeviceSynchronize();
@@ -147,7 +147,7 @@ namespace EigenSinn {
 
     DeviceTensor<Device_, Scalar, 2, Layout> flat_kernel(dims[0], col_channels);
     flat_kernel.view() = kernel->shuffle(array<Index, 4>{ 0, 3, 2, 1 }).reshape(array<Index, 2>{dims[0], col_channels});
-    return flat_kernel;
+    return std::move(flat_kernel);
   }
 
   // convert back to the [b, c, h, w] kernel representation
@@ -161,7 +161,7 @@ namespace EigenSinn {
     out.view() = kernel_col->reshape(array<Index, 4>{ expected_dims[0], expected_dims[3], expected_dims[2], expected_dims[1] })
       .shuffle(array<Index, 4>{0, 3, 2, 1});;
 
-    return out;
+    return std::move(out);
   }
 
   // return output layer representation for GEMM with 
@@ -177,7 +177,7 @@ namespace EigenSinn {
 
     DeviceTensor<Device_, Scalar, 2, Layout> flat_layer(dims[1], col_channels);
     flat_layer.view() = layer->shuffle(array<Index, 4>{1, 0, 3, 2}).reshape(array<Index, 2>{dims[1], col_channels});
-    return flat_layer;
+    return std::move(flat_layer);
   }
 
 
@@ -193,7 +193,7 @@ namespace EigenSinn {
 
     DeviceTensor<Device_, Scalar, 4, Layout> out(expected_dims);
     out.view() = conv_res->reshape(array<Index, 4>{ expected_dims[1], expected_dims[0], expected_dims[3], expected_dims[2] }).shuffle(array<Index, 4>{1, 0, 3, 2});
-    return out;
+    return std::move(out);
   }
 
   // NOT the reverse of im2col.
@@ -243,7 +243,7 @@ namespace EigenSinn {
       addAndSet<Scalar, Layout, Device_>(batch_size, channels, kernel_height, dilation, kernel_width, out_h, out_w, out, slice, device);
     }
 
-    return out;
+    return std::move(out);
   }
 
   // NCHW format
@@ -268,10 +268,7 @@ namespace EigenSinn {
     res.view() = unf_kernel->contract(*col_inputs, prod_dims);
 
     // NCHW output tensor
-    DeviceTensor<Device_, Scalar, 4, Layout> output(out_dims);
-    output = fold_conv_res<Scalar, Layout, Device_>(res, out_dims);
-
-    return output;
+    return std::move(fold_conv_res<Scalar, Layout, Device_>(res, out_dims));
   }
 
   // pad unevenly in case of k % 2 == 1:
@@ -285,13 +282,13 @@ namespace EigenSinn {
     assert(dim2 & 0x1 == 0);
 
     Tensor<Scalar, Rank> output = convolve(input, kernel, { dim1 / 2, dim2 / 2 }, stride, dilation);
-    return output;
+    return std::move(output);
   }
 
   template <typename Scalar, Index Rank = 4>
   inline Tensor<Scalar, Rank> convolve_valid(Tensor<Scalar, Rank>& input, Tensor<Scalar, Rank>& kernel, Index stride, Index dilation) {
     Tensor<Scalar, Rank> output = convolve(input, kernel, { 0, 0 }, stride, dilation);
-    return output;
+    return std::move(output);
   }
 
   template <typename Scalar, Index Rank = 4>
@@ -300,6 +297,6 @@ namespace EigenSinn {
     int dim2 = kernel.dimension((int)ImageDims::width) - 1;
 
     Tensor<Scalar, Rank> output = convolve(input, kernel, { dim1, dim2 }, stride, dilation);
-    return output;
+    return std::move(output);
   }
 } // namespace EigenSinn

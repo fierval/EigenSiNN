@@ -118,7 +118,7 @@ namespace EigenSinn {
     if (std::is_same<Device_, GpuDevice>::value) {
 
       static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
-      static dim3 grid(getGridSize(batches, block.x), getGridSize(channels, block.y));
+      dim3 grid(getGridSize(batches, block.x), getGridSize(channels, block.y));
 
       set_col_kernel<Scalar, ColMajor> << <grid, block >> > (*input, *output, shift,
         batches, channels, dilation, kernel_width, kernel_height, h_im, w_im);
@@ -160,7 +160,7 @@ namespace EigenSinn {
 #ifdef __CUDACC__
     if (std::is_same<Device_, GpuDevice>::value) {
       static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
-      static dim3 grid(getGridSize(batch_size, block.x), getGridSize(channels, block.y));
+      dim3 grid(getGridSize(batch_size, block.x), getGridSize(channels, block.y));
 
       add_and_set_kernel<Scalar, ColMajor> << <grid, block >> > (*out, *slice, 
         batch_size, channels, kernel_height, kernel_width, out_h, out_w, dilation);

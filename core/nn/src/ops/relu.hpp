@@ -36,7 +36,7 @@ namespace EigenSinn {
     mask.view() = *neg_mask + *pos_mask;
 
     output.view() = *mask * *t;
-    return Tuple(mask, output);
+    return Tuple(std::move(mask), std::move(output));
   }
 
   template<typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
@@ -45,7 +45,7 @@ namespace EigenSinn {
     DeviceTensor<Device_, Scalar, Rank, Layout> output(next_layer_grad.dimensions());
 
     output.view() = *next_layer_grad * *mask;
-    return output;
+    return std::move(output);
   }
 
 }

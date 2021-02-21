@@ -46,7 +46,7 @@ namespace EigenSinn {
     DeviceTensor<Device_, Scalar, Rank, Layout> broadcasted(original_dims);
 
     broadcasted.view() = t->reshape(reshaped_dims).broadcast(broadcast_dims);
-    return broadcasted;
+    return std::move(broadcasted);
   }
 
   // NHWC format
