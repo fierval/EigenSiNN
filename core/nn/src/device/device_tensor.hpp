@@ -262,7 +262,7 @@ namespace EigenSinn
       return tensor_view->dimensions().TotalSize();
     }
 
-    DSizes<Index, Rank>& dimensions() const {
+    const DSizes<Index, Rank>& dimensions() const {
       return tensor_view->dimensions();
     }
 

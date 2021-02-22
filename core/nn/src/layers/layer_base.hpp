@@ -4,7 +4,6 @@
 #include <ops/opsbase.hpp>
 #include <ops/conversions.hpp>
 #include <device/device_tensor.hpp>
-#include <device/device_portable.hpp>
 
 using namespace Eigen;
 
@@ -26,18 +25,18 @@ namespace EigenSinn {
 
     virtual void backward(LayerBase<Scalar>& prev_layer, std::any next_layer_grad_any) = 0;
 
-    virtual  PortableTensor get_output() = 0;
+    virtual  std::any get_output() = 0;
 
-    virtual  PortalbeTensor get_loss_by_input_derivative() = 0;
+    virtual  std::any get_loss_by_input_derivative() = 0;
 
-    virtual  PortableTensor get_loss_by_weights_derivative() { return PortableTensor; };
-    virtual  PortableTensor get_weights() { return PortableTensor; };
-             
-    virtual  PortableTensor get_loss_by_bias_derivative() { return PortableTensor; }
-    virtual  PortableTensor get_bias() { return PortableTensor; }
+    virtual  std::any get_loss_by_weights_derivative() { return std::any(); };
+    virtual  std::any get_weights() { return std::any(); };
 
-    virtual void set_weights(PortableTensor&) {}
-    virtual void set_bias(PortableTensor&) {}
+    virtual  std::any get_loss_by_bias_derivative() { return std::any(); }
+    virtual  std::any get_bias() { return std::any(); }
+
+    virtual void set_weights(std::any&) {}
+    virtual void set_bias(std::any&) {}
 
     virtual ~LayerBase() = default;
 
