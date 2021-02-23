@@ -7,7 +7,7 @@ using namespace  Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class LeakyReLU : public LayerBase<Scalar> {
   public:
     // leaky relu if necessary
@@ -18,7 +18,7 @@ namespace EigenSinn {
 
     void forward(LayerBase<Scalar>& prev_layer) override {
 
-      DeviceTensor<Device_, Scalar, Rank, Layout> x(prev_layer.get_output());
+      DeviceTensor<Scalar, Rank, Device_, Layout> x(prev_layer.get_output());
       auto res = leaky_relu<Scalar, Rank, Layout, Device_>(x, thresh);
 
       layer_output = res.second;
@@ -27,7 +27,7 @@ namespace EigenSinn {
 
     void backward(LayerBase<Scalar>& prev_layer, std::any next_layer_grad) override {
 
-      DeviceTensor<Device_, Scalar, Rank, Layout> x(next_layer_grad);
+      DeviceTensor<Scalar, Rank, Device_, Layout> x(next_layer_grad);
 
       layer_grad = leaky_relu_back<Scalar, Rank, Layout, Device_>(x, mask);
     }
@@ -43,8 +43,8 @@ namespace EigenSinn {
 
   private:
     float thresh;
-    DeviceTensor<Device_, Scalar, Rank, Layout> mask;
-    DeviceTensor<Device_, Scalar, Rank, Layout> layer_output, layer_grad;
+    DeviceTensor<Scalar, Rank, Device_, Layout> mask;
+    DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_grad;
   };
 
   template<typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>

@@ -7,7 +7,7 @@ using namespace  Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class Softmax : public LayerBase<Scalar> {
   public:
     Softmax() 
@@ -25,7 +25,7 @@ namespace EigenSinn {
 
     void forward(LayerBase<Scalar>& prev_layer_any) override {
 
-      DeviceTensor<Device_, Scalar, Rank, Layout> prev_layer(prev_layer_any.get_output());
+      DeviceTensor<Scalar, Rank, Device_, Layout> prev_layer(prev_layer_any.get_output());
       
       // we have never initialized or switched from train to test
       // initialize the "1" tensor used for sigmoid backprop
@@ -35,7 +35,7 @@ namespace EigenSinn {
       }
 
       // reliable softmax
-      DeviceTensor<Device_, Scalar, Rank, Layout> layer_max(prev_layer.dimensions());
+      DeviceTensor<Scalar, Rank, Device_, Layout> layer_max(prev_layer.dimensions());
       layer_max.view() = prev_layer->maximum().reshape(ones_dims).broadcast(dims);
 
       exp_all.view() = (prev_layer - layer_max)->exp();
@@ -48,21 +48,21 @@ namespace EigenSinn {
 
     void backward(LayerBase<Scalar>& prev_layer_any, std::any next_layer_grad_any) override {
       
-      DeviceTensor<Device_, Scalar, Rank, Layout> dout(next_layer_grad_any);
+      DeviceTensor<Scalar, Rank, Device_, Layout> dout(next_layer_grad_any);
 
-      DeviceTensor<Device_, Scalar, Rank, Layout> d_mul_exp(dims);
+      DeviceTensor<Scalar, Rank, Device_, Layout> d_mul_exp(dims);
       d_mul_exp.view() = *dout / *exp_sum_broadcast;
 
-      DeviceTensor<Device_, Scalar, 1, Layout> d_mul_inv_x(dims[0]);
+      DeviceTensor<Scalar, 1, Device_, Layout> d_mul_inv_x(dims[0]);
       d_mul_inv_x.view() = (exp_all * dout)->sum(reduction_axes);
 
-      DeviceTensor<Device_, Scalar, 1, Layout> d_inv(dims[0]);
+      DeviceTensor<Scalar, 1, Device_, Layout> d_inv(dims[0]);
       d_inv.view() = -1. / exp_sum->pow(2) * *d_mul_inv_x;
 
-      DeviceTensor<Device_, Scalar, Rank, Layout> d_sum_exp(dims);
+      DeviceTensor<Scalar, Rank, Device_, Layout> d_sum_exp(dims);
       d_sum_exp.view() = d_inv->reshape(reshape_dims).broadcast(broadcast_dims);
 
-      DeviceTensor<Device_, Scalar, Rank, Layout> d_exp(dims);
+      DeviceTensor<Scalar, Rank, Device_, Layout> d_exp(dims);
       d_exp.view() = *d_mul_exp + *d_sum_exp;
 
       layer_grad.view() = *exp_all * *d_exp;
@@ -77,7 +77,7 @@ namespace EigenSinn {
     };
 
   private:
-    void init_cached(const DeviceTensor<Device_, Scalar, Rank, Layout>& prev_layer)
+    void init_cached(const DeviceTensor<Scalar, Rank, Device_, Layout>& prev_layer)
     {
       layer_output.resize(prev_layer.dimensions());
       layer_grad.resize(prev_layer.dimensions());
@@ -94,8 +94,8 @@ namespace EigenSinn {
     }
 
     bool inited;
-    DeviceTensor<Device_, Scalar, Rank, Layout> layer_output, layer_grad, exp_all, exp_sum_broadcast;
-    DeviceTensor<Device_, Scalar, 1, Layout> exp_sum;
+    DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_grad, exp_all, exp_sum_broadcast;
+    DeviceTensor<Scalar, 1, Device_, Layout> exp_sum;
     array<Index, Rank - 1> reduction_axes;
     array<Index, Rank> broadcast_dims, reshape_dims, dims, ones_dims;
   };

@@ -112,8 +112,8 @@ namespace EigenSinn {
   void setColFromSlice(Index batches, Index shift, const Index& channels, const Index& h_im,
     const Index& kernel_height, const Index& dilation,
     const Index& w_im, const Index& kernel_width,
-    DeviceTensor<Device_, Scalar, 2, Layout>& output,
-    const DeviceTensor<Device_, Scalar, 4, Layout>& input) {
+    DeviceTensor<Scalar, 2, Device_, Layout>& output,
+    const DeviceTensor<Scalar, 4, Device_, Layout>& input) {
 
 #ifdef __CUDACC__
     if (std::is_same<Device_, GpuDevice>::value) {
@@ -155,7 +155,7 @@ namespace EigenSinn {
   template<typename Scalar, int Layout, typename Device_>
   void addAndSet(const Index& batch_size, const Index& channels, const Index& kernel_height,
     int dilation, const Index& kernel_width, const Index& out_h, const Index& out_w,
-    DeviceTensor<Device_, Scalar, 4, Layout>& out, DeviceTensor<Device_, Scalar, 4, Layout>& slice,
+    DeviceTensor<Scalar, 4, Device_, Layout>& out, DeviceTensor<Scalar, 4, Device_, Layout>& slice,
     Device_& device) {
 
 #ifdef __CUDACC__
@@ -200,7 +200,7 @@ namespace EigenSinn {
   template<typename Scalar, int Layout, typename Device_>
   void addAndSet_CPU(const Index& batch_size, const Index& channels, const Index& kernel_height,
     int dilation, const Index& kernel_width, const Index& out_h, const Index& out_w,
-    DeviceTensor<Device_, Scalar, 4, Layout>& out, DeviceTensor<Device_, Scalar, 4, Layout>& slice,
+    DeviceTensor<Scalar, 4, Device_, Layout>& out, DeviceTensor<Scalar, 4, Device_, Layout>& slice,
     Device_& device) {
 
     if (!std::is_same<Device_, ThreadPoolDevice>::value && !std::is_same<Device_, DefaultDevice>::value) {

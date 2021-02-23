@@ -12,7 +12,7 @@ namespace EigenSinn {
   // For Linear (fully connected) layers: (N, C)
   // N - batch size
   // C - number of channels (1 for fully connected layers)
-  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class MaxPooling : public LayerBase<Scalar> {
   public:
 
@@ -29,7 +29,7 @@ namespace EigenSinn {
 
     void forward(LayerBase<Scalar>& prev_layer) override {
 
-      DeviceTensor<Device_, Scalar, Rank, Layout> x(prev_layer.get_output());
+      DeviceTensor<Scalar, Rank, Device_, Layout> x(prev_layer.get_output());
       auto res = max_pooler.do_max_pool(x, extents, stride);
 
       original_dimensions = x.dimensions();
@@ -41,7 +41,7 @@ namespace EigenSinn {
     // for derivations
     void backward(LayerBase<Scalar>& prev_layer, std::any next_layer_grad) override {
 
-      DeviceTensor<Device_, Scalar, Rank, Layout> x(next_layer_grad);
+      DeviceTensor<Scalar, Rank, Device_, Layout> x(next_layer_grad);
 
       layer_gradient = max_pooler.do_max_pool_backward(x, mask, original_dimensions, extents, stride);
     }
@@ -56,7 +56,7 @@ namespace EigenSinn {
 
 
   private:
-    DeviceTensor<Device_, Scalar, Rank, Layout> layer_output, layer_gradient;
+    DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_gradient;
     DeviceTensor<Device_, Index, Rank, Layout> mask;
 
     Index stride;

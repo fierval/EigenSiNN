@@ -14,7 +14,7 @@ namespace EigenSinn {
   // For Linear (fully connected) layers: (N, C)
   // N - batch size
   // C - number of channels (1 for fully connected layers)
-  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class BatchNormalizationLayer : public LayerBase<Scalar> {
   public:
 
@@ -49,7 +49,7 @@ namespace EigenSinn {
 
     void forward(LayerBase<Scalar>& prev_layer_base) override {
 
-      DeviceTensor<Device_, Scalar, Rank, Layout> prev_layer(prev_layer_base.get_output());
+      DeviceTensor<Scalar, Rank, Device_, Layout> prev_layer(prev_layer_base.get_output());
 
       if (!xhat) {
         DSizes<Index, Rank> dims = prev_layer.dimensions();
@@ -67,8 +67,8 @@ namespace EigenSinn {
     // for derivations
     void backward(LayerBase<Scalar>& prev_layer_any, std::any next_layer_grad_any) override {
 
-      DeviceTensor<Device_, Scalar, Rank, Layout> prev_layer(prev_layer_any.get_output());
-      DeviceTensor<Device_, Scalar, Rank, Layout> dout(next_layer_grad_any);
+      DeviceTensor<Scalar, Rank, Device_, Layout> prev_layer(prev_layer_any.get_output());
+      DeviceTensor<Scalar, Rank, Device_, Layout> dout(next_layer_grad_any);
 
       DSizes<Index, Rank - 1> reduction_dims;
       DSizes<Index, Rank> broadcast_dims;
@@ -84,9 +84,9 @@ namespace EigenSinn {
       std::tie(reduction_dims, broadcast_dims) = get_broadcast_and_reduction_dims<Scalar, Rank>(*dout);
 
       //broadcast values
-      DeviceTensor<Device_, Scalar, Rank, Layout> broadcast_mean = broadcast_as_last_dim(mu, broadcast_dims);
-      DeviceTensor<Device_, Scalar, Rank, Layout> broadcast_var = broadcast_as_last_dim(var, broadcast_dims);
-      DeviceTensor<Device_, Scalar, Rank, Layout> xmu(prev_layer.dimensions());
+      DeviceTensor<Scalar, Rank, Device_, Layout> broadcast_mean = broadcast_as_last_dim(mu, broadcast_dims);
+      DeviceTensor<Scalar, Rank, Device_, Layout> broadcast_var = broadcast_as_last_dim(var, broadcast_dims);
+      DeviceTensor<Scalar, Rank, Device_, Layout> xmu(prev_layer.dimensions());
 
       xmu.view() = *prev_layer - *broadcast_mean;
 
@@ -98,44 +98,44 @@ namespace EigenSinn {
 
       // Step 8
       // dgamma = sum (dout * y, reduced by all dims except channel)
-      DeviceTensor<Device_, Scalar, Rank, Layout> gamma_broad(broadcast_as_last_dim(gamma, broadcast_dims));
-      DeviceTensor<Device_, Scalar, Rank, Layout> dxhat(dout.dimensions());
+      DeviceTensor<Scalar, Rank, Device_, Layout> gamma_broad(broadcast_as_last_dim(gamma, broadcast_dims));
+      DeviceTensor<Scalar, Rank, Device_, Layout> dxhat(dout.dimensions());
       dxhat.view() = *dout * *gamma_broad;
       dgamma.view() = (dout * xhat)->sum(reduction_dims);
 
       // Step 7
       // d_inv_std
       //TensorSingleDim d_inv_std = (dxhat * xmu).sum(reduction_dims);
-      DeviceTensor<Device_, Scalar, Rank, Layout> dxmu1(dxhat.dimensions());
+      DeviceTensor<Scalar, Rank, Device_, Layout> dxmu1(dxhat.dimensions());
       dxmu1.view() = *dxhat * (1. / (*broadcast_var + eps).sqrt());
 
       // Step 6
       // TensorSingleDim d_std = -d_inv_std / (running_var + eps);
 
       // Step 5
-      DeviceTensor<Device_, Scalar, 1> d_var(var.dimensions());
+      DeviceTensor<Scalar, 1, Device_> d_var(var.dimensions());
       d_var.view() = -0.5 * (dxhat * xmu)->sum(reduction_dims) / (*var + eps).pow(3. / 2.);
 
       // Step 4
-      DeviceTensor<Device_, Scalar, Rank, Layout> d_var_broadcast = broadcast_as_last_dim(d_var, broadcast_dims);
-      DeviceTensor<Device_, Scalar, Rank, Layout> d_sq(dout.dimensions());
+      DeviceTensor<Scalar, Rank, Device_, Layout> d_var_broadcast = broadcast_as_last_dim(d_var, broadcast_dims);
+      DeviceTensor<Scalar, Rank, Device_, Layout> d_sq(dout.dimensions());
 
       d_sq.view() = 1. / total_channel * *d_var_broadcast;
 
       // Step 3
-      DeviceTensor<Device_, Scalar, Rank, Layout> dxmu2(d_sq.dimensions());
+      DeviceTensor<Scalar, Rank, Device_, Layout> dxmu2(d_sq.dimensions());
       dxmu2.view() = 2 * *xmu * *d_sq;
 
       // step 2
-      DeviceTensor<Device_, Scalar, Rank, Layout> dx1(dxmu1.dimensions());
+      DeviceTensor<Scalar, Rank, Device_, Layout> dx1(dxmu1.dimensions());
       dx1.view() = *dxmu1 + *dxmu2;
 
-      DeviceTensor<Device_, Scalar, 1> dmu(dout->dimension(1));
+      DeviceTensor<Scalar, 1, Device_> dmu(dout->dimension(1));
       dmu.view() = -dx1->sum(reduction_dims);
 
       // step 1
-      DeviceTensor<Device_, Scalar, Rank, Layout> dx2(dout.dimensions());
-      DeviceTensor<Device_, Scalar, Rank, Layout> dmu_broadcast = broadcast_as_last_dim(dmu, broadcast_dims);
+      DeviceTensor<Scalar, Rank, Device_, Layout> dx2(dout.dimensions());
+      DeviceTensor<Scalar, Rank, Device_, Layout> dmu_broadcast = broadcast_as_last_dim(dmu, broadcast_dims);
 
       dx2.view() = 1. / total_channel * *dmu_broadcast;
 
@@ -176,19 +176,19 @@ namespace EigenSinn {
       return beta;
     }
 
-    void set_weights(const DeviceTensor<Device_, Scalar, 1, Layout>& v) {
+    void set_weights(const DeviceTensor<Scalar, 1, Device_, Layout>& v) {
       gamma = v;
     }
 
-    void set_bias(const DeviceTensor<Device_, Scalar, 1, Layout>& v) {
+    void set_bias(const DeviceTensor<Scalar, 1, Device_, Layout>& v) {
       beta = v;
     }
 
   private:
     DeviceTensor<Device_, Scalar, Rank> layer_output, layer_gradient, xhat;
 
-    DeviceTensor<Device_, Scalar, 1> gamma, beta, running_mean, running_variance, mu, var;
-    DeviceTensor<Device_, Scalar, 1> dbeta, dgamma;
+    DeviceTensor<Scalar, 1, Device_> gamma, beta, running_mean, running_variance, mu, var;
+    DeviceTensor<Scalar, 1, Device_> dbeta, dgamma;
     float momentum, eps;
     bool is_training;
 

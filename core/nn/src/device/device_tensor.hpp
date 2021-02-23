@@ -5,7 +5,7 @@
 
 namespace EigenSinn
 {
-  template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Device_= ThreadPoolDevice, int Layout = ColMajor>
   class DeviceTensor {
 
   public:
@@ -70,7 +70,7 @@ namespace EigenSinn
     }
 
     DeviceTensor<Device_, Scalar, Rank, Layout> from_any(std::any& t) {
-      return std::any_cast<DeviceTensor<Device_, Scalar, Rank, Layout>&>(t);
+      return std::any_cast<DeviceTensor<Scalar, Rank, Device_, Layout>&>(t);
     }
 
     /// <summary>
@@ -317,38 +317,38 @@ namespace EigenSinn
       return lhs;
     }
 
-    friend DeviceTensor<Device_, bool, Rank, Layout> operator==(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
-      DeviceTensor<Device_, bool, Rank, Layout> out(lhs.dimensions());
+    friend DeviceTensor<bool, Rank, Device_, Layout> operator==(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
+      DeviceTensor<bool, Rank, Device_, Layout> out(lhs.dimensions());
       out.view() = (lhs == v);
       return out;
     }
 
-    friend DeviceTensor<Device_, bool, Rank, Layout> operator!=(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
-      DeviceTensor<Device_, bool, Rank, Layout> out(lhs.dimensions());
+    friend DeviceTensor<bool, Rank, Device_, Layout> operator!=(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
+      DeviceTensor<bool, Rank, Device_, Layout> out(lhs.dimensions());
       out.view() = (lhs != v);
       return out;
     }
 
-    friend DeviceTensor<Device_, bool, Rank, Layout> operator<=(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
-      DeviceTensor<Device_, bool, Rank, Layout> out(lhs.dimensions());
+    friend DeviceTensor<bool, Rank, Device_, Layout> operator<=(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
+      DeviceTensor<bool, Rank, Device_, Layout> out(lhs.dimensions());
       out.view() = (lhs <= v);
       return out;
     }
 
-    friend DeviceTensor<Device_, bool, Rank, Layout> operator>=(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
-      DeviceTensor<Device_, bool, Rank, Layout> out(lhs.dimensions());
+    friend DeviceTensor<bool, Rank, Device_, Layout> operator>=(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
+      DeviceTensor<bool, Rank, Device_, Layout> out(lhs.dimensions());
       out.view() = (lhs >= v);
       return out;
     }
 
-    friend DeviceTensor<Device_, bool, Rank, Layout> operator<(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
-      DeviceTensor<Device_, bool, Rank, Layout> out(lhs.dimensions());
+    friend DeviceTensor<bool, Rank, Device_, Layout> operator<(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
+      DeviceTensor<bool, Rank, Device_, Layout> out(lhs.dimensions());
       out.view() = (lhs < v);
       return out;
     }
 
-    friend DeviceTensor<Device_, bool, Rank, Layout> operator>(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
-      DeviceTensor<Device_, bool, Rank, Layout> out(lhs.dimensions());
+    friend DeviceTensor<bool, Rank, Device_, Layout> operator>(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
+      DeviceTensor<bool, Rank, Device_, Layout> out(lhs.dimensions());
       out.view() = (lhs > v);
       return out;
     }
@@ -420,23 +420,23 @@ namespace EigenSinn
     }
 
     // comparison operators
-    friend DeviceTensor<Device_, bool, Rank, Layout> operator==(DeviceTensor& lhs, DeviceTensor& rhs) {
+    friend DeviceTensor<bool, Rank, Device_, Layout> operator==(DeviceTensor& lhs, DeviceTensor& rhs) {
       return *lhs == *rhs;
     }
 
-    friend DeviceTensor<Device_, bool, Rank, Layout> operator>(DeviceTensor& lhs, DeviceTensor& rhs) {
+    friend DeviceTensor<bool, Rank, Device_, Layout> operator>(DeviceTensor& lhs, DeviceTensor& rhs) {
       return *lhs > *rhs;
     }
 
-    friend DeviceTensor<Device_, bool, Rank, Layout> operator<(DeviceTensor& lhs, DeviceTensor& rhs) {
+    friend DeviceTensor<bool, Rank, Device_, Layout> operator<(DeviceTensor& lhs, DeviceTensor& rhs) {
       return *lhs < *rhs;
     }
 
-    friend DeviceTensor<Device_, bool, Rank, Layout> operator>=(DeviceTensor& lhs, DeviceTensor& rhs) {
+    friend DeviceTensor<bool, Rank, Device_, Layout> operator>=(DeviceTensor& lhs, DeviceTensor& rhs) {
       return *lhs >= *rhs;
     }
 
-    friend DeviceTensor<Device_, bool, Rank, Layout> operator<=(DeviceTensor& lhs, DeviceTensor& rhs) {
+    friend DeviceTensor<bool, Rank, Device_, Layout> operator<=(DeviceTensor& lhs, DeviceTensor& rhs) {
       return *lhs <= *rhs;
     }
 

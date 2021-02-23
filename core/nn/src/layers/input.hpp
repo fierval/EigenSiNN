@@ -7,7 +7,7 @@ using std::unique_ptr;
 
 namespace EigenSinn {
 
-  template<typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class Input : public LayerBase<Scalar> {
 
   public:
@@ -30,7 +30,7 @@ namespace EigenSinn {
       input.set_from_host(inp_tensor);
     }
 
-    void set_input(const DeviceTensor<Device_, Scalar, Rank, Layout>& inp_tensor) {
+    void set_input(const DeviceTensor<Scalar, Rank, Device_, Layout>& inp_tensor) {
 
       input = inp_tensor;
     }
@@ -41,6 +41,6 @@ namespace EigenSinn {
 
   private:
 
-    DeviceTensor<Device_, Scalar, Rank, Layout> input;
+    DeviceTensor<Scalar, Rank, Device_, Layout> input;
   };
 }

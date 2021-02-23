@@ -16,7 +16,7 @@ _in_dim - input dimension (D)
 namespace EigenSinn {
 
 
-  template<typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template<typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class Linear : public LayerBase<Scalar> {
 
   public:
@@ -34,7 +34,7 @@ namespace EigenSinn {
     // prev_layer_out: X[l-1], dim: [N, D]
     void forward(LayerBase<Scalar>& prev_layer) override {
 
-      DeviceTensor<Device_, Scalar, 2, Layout > prev_layer_tensor(prev_layer.get_output());
+      DeviceTensor<Scalar, 2, Device_, Layout > prev_layer_tensor(prev_layer.get_output());
 
       int batch_size = prev_layer_tensor->dimension(0);
 
@@ -58,8 +58,8 @@ namespace EigenSinn {
     // when we are feeding backward from the loss function
     void backward(LayerBase<Scalar>& prev_layer_any, std::any next_layer_grad_any) override {
 
-      DeviceTensor<Device_, Scalar, 2, Layout> prev_layer(prev_layer_any.get_output());
-      DeviceTensor<Device_, Scalar, 2, Layout> next_layer_grad(next_layer_grad_any);
+      DeviceTensor<Scalar, 2, Device_, Layout> prev_layer(prev_layer_any.get_output());
+      DeviceTensor<Scalar, 2, Device_, Layout> next_layer_grad(next_layer_grad_any);
 
       // this will be fed to the previous backprop layer as the delta parameter
       // dL/dX = dim delta[l+1] * w.T: [N, M] * [M, D] -> [N, D] (same as X[l-1])
@@ -126,7 +126,7 @@ namespace EigenSinn {
     }
 
     void set_weights(std::any& v) override {
-      weights = DeviceTensor<Device_, Scalar, 2, Layout>(v);
+      weights = DeviceTensor<Scalar, 2, Device_, Layout>(v);
     }
 
     void set_bias(std::any& v) override{
@@ -135,9 +135,9 @@ namespace EigenSinn {
 
   private:
 
-    DeviceTensor<Device_, Scalar, 2, Layout> weights;
-    DeviceTensor<Device_, Scalar, 2, Layout> layer_output, layer_grad_loss_by_weight, layer_grad_loss_by_input;
-    DeviceTensor<Device_, Scalar, 1, Layout> bias, loss_by_bias_derivative;
+    DeviceTensor<Scalar, 2, Device_, Layout> weights;
+    DeviceTensor<Scalar, 2, Device_, Layout> layer_output, layer_grad_loss_by_weight, layer_grad_loss_by_input;
+    DeviceTensor<Scalar, 1, Device_, Layout> bias, loss_by_bias_derivative;
 
     const int in_dim, out_dim;
     array<int, 2> broadcast_bias_dim;

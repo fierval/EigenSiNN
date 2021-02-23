@@ -7,7 +7,7 @@ using namespace  Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class Tanh : public LayerBase<Scalar> {
   public:
     // leaky relu if necessary
@@ -16,7 +16,7 @@ namespace EigenSinn {
 
     void forward(LayerBase<Scalar>& prev_layer_any) override {
 
-      DeviceTensor<Device_, Scalar, Rank, Layout> prev_layer(prev_layer_any.get_output());
+      DeviceTensor<Scalar, Rank, Device_, Layout> prev_layer(prev_layer_any.get_output());
 
       // we have never initialized or switched from train to test
       // initialize the "1" tensor used for sigmoid backprop
@@ -31,7 +31,7 @@ namespace EigenSinn {
 
     void backward(LayerBase<Scalar>& prev_layer_any, std::any next_layer_grad_any) override {
 
-      DeviceTensor<Device_, Scalar, Rank, Layout> next_layer_grad(next_layer_grad_any);
+      DeviceTensor<Scalar, Rank, Device_, Layout> next_layer_grad(next_layer_grad_any);
 
       layer_grad.view() = *next_layer_grad * (*ones - layer_output->pow(2.));
     }
@@ -46,7 +46,7 @@ namespace EigenSinn {
 
 
   private:
-    void init_cached(const DeviceTensor<Device_, Scalar, Rank, Layout>& prev_layer)
+    void init_cached(const DeviceTensor<Scalar, Rank, Device_, Layout>& prev_layer)
     {
       ones.resize(prev_layer.dimensions());
       ones.setConstant(1);
@@ -56,7 +56,7 @@ namespace EigenSinn {
     }
 
     bool inited;
-    DeviceTensor<Device_, Scalar, Rank, Layout> ones, layer_output, layer_grad;
+    DeviceTensor<Scalar, Rank, Device_, Layout> ones, layer_output, layer_grad;
   };
 
 

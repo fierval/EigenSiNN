@@ -13,7 +13,7 @@ using namespace  Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class Dropout : public LayerBase<Scalar> {
   public:
 
@@ -23,7 +23,7 @@ namespace EigenSinn {
       , inited(false) {
     }
 
-    void init(const DeviceTensor<Device_, Scalar, Rank, Layout>& x)  {
+    void init(const DeviceTensor<Scalar, Rank, Device_, Layout>& x)  {
 
       layer_gradient.resize(x.dimensions());
       layer_output.resize(x.dimensions());
@@ -46,7 +46,7 @@ namespace EigenSinn {
       
       if (!is_training) { return; }
 
-      DeviceTensor<Device_, Scalar, Rank> x(prev_layer.get_output());
+      DeviceTensor<Scalar, Rank, Device_, Layout> x(prev_layer.get_output());
 
       if (!inited) {
         inited = true;
@@ -90,10 +90,10 @@ namespace EigenSinn {
     }
 
   private:
-    DeviceTensor<Device_, Scalar, Rank> mask;
-    DeviceTensor<Device_, Scalar, Rank> layer_output, layer_gradient;
-    DeviceTensor<Device_, bool, Rank> if_tensor;
-    DeviceTensor<Device_, float, Rank> rands, then_tensor, else_tensor, prob_tensor;
+    DeviceTensor<Scalar, Rank, Device_, Layout> mask;
+    DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_gradient;
+    DeviceTensor<bool, Rank, Device_, Layout> if_tensor;
+    DeviceTensor<float, Rank, Device_, Layout> rands, then_tensor, else_tensor, prob_tensor;
     bool is_training, inited;
     const float prob;
   };

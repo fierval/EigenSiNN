@@ -8,7 +8,7 @@ namespace EigenSinn {
 
   // REVIEW: Not implementing bias for now
   // Batch normalization layers can take care of bias
-  template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class Conv2d : public LayerBase<Scalar> {
 
   public:
@@ -46,7 +46,7 @@ namespace EigenSinn {
 
     void forward(LayerBase<Scalar>& prev_layer_any) override {
 
-      DeviceTensor<Device_, Scalar, 4, Layout> prev_layer(prev_layer_any.get_output());
+      DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any.get_output());
 
       layer_output = convolve<Scalar, 4, Layout, Device_>(prev_layer, kernel, padding, stride, dilation);
 
@@ -61,25 +61,25 @@ namespace EigenSinn {
 
     void backward(LayerBase<Scalar>& prev_layer_any, std::any next_layer_grad_any) override {
 
-      DeviceTensor<Device_, Scalar, 4, Layout> prev_layer(prev_layer_any.get_output());
-      DeviceTensor<Device_, Scalar, 4, Layout> next_layer_grad(next_layer_grad_any);
+      DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any.get_output());
+      DeviceTensor<Scalar, 4, Device_, Layout> next_layer_grad(next_layer_grad_any);
 
-      DeviceTensor<Device_, Scalar, 2, Layout> dout = unfold_conv_res<Scalar, Layout, Device_>(next_layer_grad);
+      DeviceTensor<Scalar, 2, Device_, Layout> dout = unfold_conv_res<Scalar, Layout, Device_>(next_layer_grad);
 
       // flatten weights and kernel
-      DeviceTensor<Device_, Scalar, 2, Layout> unf_kernel = unfold_kernel(kernel);
-      DeviceTensor<Device_, Scalar, 2, Layout> x_col = im2col<Scalar, 4, Layout, Device_>(prev_layer, kernel.dimensions(), padding, stride, dilation);
+      DeviceTensor<Scalar, 2, Device_, Layout> unf_kernel = unfold_kernel(kernel);
+      DeviceTensor<Scalar, 2, Device_, Layout> x_col = im2col<Scalar, 4, Layout, Device_>(prev_layer, kernel.dimensions(), padding, stride, dilation);
 
       // dX: kernel.T * dout
-      DeviceTensor<Device_, Scalar, 4, Layout> dilated = dilate_tensor(kernel, dilation);
-      DeviceTensor<Device_, Scalar, 2, Layout> unf_dilated = unfold_kernel(dilated);
+      DeviceTensor<Scalar, 4, Device_, Layout> dilated = dilate_tensor(kernel, dilation);
+      DeviceTensor<Scalar, 2, Device_, Layout> unf_dilated = unfold_kernel(dilated);
       ProductDims prod_dims = { IndexPair<int>(0, 0) };
-      DeviceTensor<Device_, Scalar, 2, Layout>  dX_col(unf_dilated.dimension(1), dout.dimension(1));
+      DeviceTensor<Scalar, 2, Device_, Layout>  dX_col(unf_dilated.dimension(1), dout.dimension(1));
       dX_col.view() = unf_dilated->contract(*dout, prod_dims);
 
       // dW: dout * x_col.T
       prod_dims = { IndexPair<int>(1, 1) };
-      DeviceTensor<Device_, Scalar, 2, Layout>  dW_col(dout.dimension(0), x_col.dimension(0));
+      DeviceTensor<Scalar, 2, Device_, Layout>  dW_col(dout.dimension(0), x_col.dimension(0));
       dW_col.view() = dout->contract(*x_col, prod_dims);
 
       dX = col2im(dX_col, dilated.dimensions(), prev_layer.dimensions(), padding, stride);
@@ -115,16 +115,16 @@ namespace EigenSinn {
     }
 
     void set_weights(std::any& v) override {
-      kernel = DeviceTensor<Device_, Scalar, 4, Layout>(v);
+      kernel = DeviceTensor<Scalar, 4, Device_, Layout>(v);
     }
 
     void set_bias(std::any& v) override {
-      bias = DeviceTensor<Device_, Scalar, 1, Layout>(v);
+      bias = DeviceTensor<Scalar, 1, Device_, Layout>(v);
     }
 
   private:
-    DeviceTensor<Device_, Scalar, 4, Layout> kernel, layer_output, dX, dW;
-    DeviceTensor<Device_, Scalar, 1, Layout> bias, loss_by_bias_derivative;
+    DeviceTensor<Scalar, 4, Device_, Layout> kernel, layer_output, dX, dW;
+    DeviceTensor<Scalar, 1, Device_, Layout> bias, loss_by_bias_derivative;
 
     const Index stride, dilation;
     const Padding2D padding;
