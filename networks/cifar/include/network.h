@@ -16,7 +16,7 @@
 using namespace Eigen;
 using namespace EigenSinn;
 
-template <typename Device_= DefaultDevice>
+template <typename Device_= ThreadPoolDevice>
 struct NetworkNode {
   LayerBase<float> * layer;
   OptimizerBase<float, 0, Device_> * optimizer;
@@ -55,11 +55,11 @@ inline int get_flat_dimension(const Network& network, const array<Index, 4>& inp
   Tensor<float, 4> inp(input_dims);
   inp.setZero();
 
-  dynamic_cast<Input<float, 4, ColMajor, ThreadPoolDevice>*>(network[0].layer)->set_input(inp);
+  dynamic_cast<Input<float, 4>*>(network[0].layer)->set_input(inp);
 
   forward(network);
 
-  auto dims = DeviceTensor<ThreadPoolDevice, float, 4, 0>(network.rbegin()->layer->get_output()).dimensions();
+  auto dims = DeviceTensor<float, 4>(network.rbegin()->layer->get_output()).dimensions();
 
   return std::accumulate(dims.begin() + 1, dims.end(), 1, std::multiplies<int>());
 }
@@ -75,16 +75,16 @@ inline void init(const Network& network, bool debug = false) {
       j++;
 
       if (i < 7) {
-        DeviceTensor<ThreadPoolDevice, float, 4> init_tensor(read_tensor_csv<float, 4>(full_path));
-        dynamic_cast<Conv2d<float, 0, ThreadPoolDevice>*>(network[i].layer)->init(init_tensor.to_host());
+        DeviceTensor<float, 4> init_tensor(read_tensor_csv<float, 4>(full_path));
+        dynamic_cast<Conv2d<float>*>(network[i].layer)->init(init_tensor.to_host());
       }
       else {
-        DeviceTensor<ThreadPoolDevice, float, 2> init_tensor(read_tensor_csv<float, 2>(full_path));
+        DeviceTensor<float, 2> init_tensor(read_tensor_csv<float, 2>(full_path));
         // pytorch returns a transposed weight matrix
-        DeviceTensor<ThreadPoolDevice, float, 2> transposed(init_tensor.dimensions());
+        DeviceTensor<float, 2> transposed(init_tensor.dimensions());
         transposed.view() = init_tensor->shuffle(array<Index, 2>{1, 0});
 
-        dynamic_cast<Linear<float, 0, ThreadPoolDevice>*>(network[i].layer)->init(*transposed);
+        dynamic_cast<Linear<float>*>(network[i].layer)->init(*transposed);
       }
 
       continue;
@@ -122,7 +122,7 @@ inline void optimizer(const Network& network) {
 }
 template <Index Rank>
 inline auto get_optimizer(float learning_rate) {
-  return dynamic_cast<OptimizerBase<float, 0, ThreadPoolDevice>*>(new SGD<float, Rank, 0, ThreadPoolDevice>(learning_rate, 0, false));
+  return dynamic_cast<OptimizerBase<float>*>(new SGD<float, Rank>(learning_rate, 0, false));
 }
 
 inline auto create_network(array<Index, 4> input_dims, int num_classes, float learning_rate) {
@@ -130,29 +130,29 @@ inline auto create_network(array<Index, 4> input_dims, int num_classes, float le
   Network network;
 
   // push back rvalues so we don't have to invoke the copy constructor
-  network.push_back(NetworkNode<ThreadPoolDevice>(new Input<float, 4, 0, ThreadPoolDevice>));
-  network.push_back(NetworkNode<ThreadPoolDevice>(new Conv2d<float, 0, ThreadPoolDevice>(array<Index, 4>{6, 3, 5, 5}, Padding2D{ 0, 0 }, 1), get_optimizer<4>(learning_rate)));
-  network.push_back(NetworkNode<ThreadPoolDevice>(new ReLU<float, 4, 0, ThreadPoolDevice>));
-  network.push_back(NetworkNode<ThreadPoolDevice>(new MaxPooling<float, 4, 0, ThreadPoolDevice>(array<Index, 2>{2, 2}, 2)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new Input<float, 4>));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new Conv2d<float>(array<Index, 4>{6, 3, 5, 5}, Padding2D{ 0, 0 }, 1), get_optimizer<4>(learning_rate)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new ReLU<float, 4>));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new MaxPooling<float, 4>(array<Index, 2>{2, 2}, 2)));
 
-  network.push_back(NetworkNode<ThreadPoolDevice>(new Conv2d<float, 0, ThreadPoolDevice>(array<Index, 4>{16, 6, 5, 5}, Padding2D{ 0, 0 }, 1), get_optimizer<4>(learning_rate)));
-  network.push_back(NetworkNode<ThreadPoolDevice>(new ReLU<float, 4, 0, ThreadPoolDevice>));
-  network.push_back(NetworkNode<ThreadPoolDevice>(new MaxPooling<float, 4, 0, ThreadPoolDevice>(array<Index, 2>{2, 2}, 2)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new Conv2d<float>(array<Index, 4>{16, 6, 5, 5}, Padding2D{ 0, 0 }, 1), get_optimizer<4>(learning_rate)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new ReLU<float, 4>));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new MaxPooling<float, 4>(array<Index, 2>{2, 2}, 2)));
 
   // get flat dimension by pushing a zero tensor through the network defined so far
   int flat_dim = get_flat_dimension(network, array<Index, 4>{1, 3, 32, 32});
 
-  network.push_back(NetworkNode<ThreadPoolDevice>(new Flatten<float, 0, ThreadPoolDevice>));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new Flatten<float>));
 
 
-  network.push_back(NetworkNode<ThreadPoolDevice>(new Linear<float, 0, ThreadPoolDevice>(flat_dim, 120), get_optimizer<2>(learning_rate)));
-  network.push_back(NetworkNode<ThreadPoolDevice>(new ReLU<float, 2, 0, ThreadPoolDevice>));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new Linear<float>(flat_dim, 120), get_optimizer<2>(learning_rate)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new ReLU<float, 2>));
 
-  network.push_back(NetworkNode<ThreadPoolDevice>(new Linear<float, 0, ThreadPoolDevice>(120, 84), get_optimizer<2>(learning_rate)));
-  network.push_back(NetworkNode<ThreadPoolDevice>(new ReLU<float, 2, 0, ThreadPoolDevice>));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new Linear<float>(120, 84), get_optimizer<2>(learning_rate)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new ReLU<float, 2>));
 
   // cross-entropy loss includes the softmax non-linearity
-  network.push_back(NetworkNode<ThreadPoolDevice>(new Linear<float, 0, ThreadPoolDevice>(84, num_classes), get_optimizer<2>(learning_rate)));
+  network.push_back(NetworkNode<ThreadPoolDevice>(new Linear<float>(84, num_classes), get_optimizer<2>(learning_rate)));
 
   return network;
 }
