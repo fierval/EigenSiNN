@@ -94,6 +94,11 @@ namespace EigenSinn {
       for (Index w_im = -padding.second; w_im + kernel_width <= input.dimension(3) + padding.second; converted_portion++, w_im += stride) {
 
         Index shift = converted_portion * batches;
+        //#ifdef __CUDACC__
+        //        setColFromSlice(batches, shift, channels, h_im, kernel_height, dilation, w_im, kernel_width, output, input);
+        //#else
+        //        setColFromSlice_CPU(batches, shift, channels, h_im, kernel_height, dilation, w_im, kernel_width, output, input);
+        //#endif
         setColFromSlice(batches, shift, channels, h_im, kernel_height, dilation, w_im, kernel_width, output, input);
       }
     }
@@ -116,8 +121,8 @@ namespace EigenSinn {
     if (std::is_same<Device_, GpuDevice>::value) {
       static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
       dim3 grid(getGridSize(dims[0], block.x), getGridSize(dims[1], block.y));
-      
-      dilate_tensor_kernel<Scalar, ColMajor> <<< grid, block >>> (dims[0], dims[1], dims[2], dims[3], dilation, *dilated, *tensor);
+
+      dilate_tensor_kernel<Scalar, ColMajor> << < grid, block >> > (dims[0], dims[1], dims[2], dims[3], dilation, *dilated, *tensor);
       cudaDeviceSynchronize();
     }
     else {
@@ -132,10 +137,10 @@ namespace EigenSinn {
         }
       }
 #ifdef __CUDACC__
-    }
+      }
 #endif
     return dilated;
-  }
+    }
 
   // return kernel representation for GEMM with 
   // im2col representation of the conv layer
@@ -240,7 +245,11 @@ namespace EigenSinn {
       out_h = (stride * i) / (width - kernel_width + 1) - padding.second;
 
       slice.view() = col->slice(slice_starts, slice_offsets).eval().reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
+#ifdef __CUDACC__
       addAndSet<Scalar, Layout, Device_>(batch_size, channels, kernel_height, dilation, kernel_width, out_h, out_w, out, slice, device);
+#else
+      addAndSet_CPU<Scalar, Layout, Device_>(batch_size, channels, kernel_height, dilation, kernel_width, out_h, out_w, out, slice, device);
+#endif
     }
 
     return std::move(out);
@@ -299,4 +308,4 @@ namespace EigenSinn {
     Tensor<Scalar, Rank> output = convolve(input, kernel, { dim1, dim2 }, stride, dilation);
     return std::move(output);
   }
-} // namespace EigenSinn
+  } // namespace EigenSinn
