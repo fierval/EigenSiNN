@@ -23,8 +23,8 @@ namespace EigenSinnTest {
     auto PropagateGradient(int epochs, float momentum = 0.0, bool nesterov = false) {
 
       // collect weights and biases and perform the GD step
-      DeviceTensor<ThreadPoolDevice, float, 2> weights_auto;
-      DeviceTensor<ThreadPoolDevice, float, 1> bias_auto;
+      DeviceTensor<float, 2> weights_auto;
+      DeviceTensor<float, 1> bias_auto;
 
       Input<float, 2> input;
       input.set_input(cd.linearInput);
@@ -44,14 +44,14 @@ namespace EigenSinnTest {
         // propagate forward through the model
         linear.forward(input);
 
-        DeviceTensor<ThreadPoolDevice, float, 2> output(linear.get_output());
+        DeviceTensor<float, 2> output(linear.get_output());
 
         // compute loss
         // start propagating back
         // 1. compute dL/dy
         loss_func.step(output, cd.target);
 
-        DeviceTensor<ThreadPoolDevice, float, 2> dloss(loss_func.get_loss_derivative_by_input());
+        DeviceTensor<float, 2> dloss(loss_func.get_loss_derivative_by_input());
 
         // propagate back through the fc layer
         // compute dL/dw, dL/db, dL/dx
@@ -69,8 +69,8 @@ namespace EigenSinnTest {
 
     }
 
-    DeviceTensor<ThreadPoolDevice, float, 2> new_weights;
-    DeviceTensor<ThreadPoolDevice, float, 1> new_bias;
+    DeviceTensor<float, 2> new_weights;
+    DeviceTensor<float, 1> new_bias;
     CommonData2d<ThreadPoolDevice> cd;
     float lr;
   };
@@ -78,7 +78,7 @@ namespace EigenSinnTest {
 
   TEST_F(SGD, ZeroMomentum) {
 
-    DeviceTensor<ThreadPoolDevice, float, 2> tmp(cd.weight_dims);
+    DeviceTensor<float, 2> tmp(cd.weight_dims);
     tmp.setValues({ { 0.32386121,  0.16082032,  0.08126653,  0.30421251, -0.00304944,
          -0.08350309,  0.16417494, -0.35673440},
         { 0.20838137, -0.26138818,  0.29403499, -0.00155395, -0.17344446,
@@ -96,7 +96,7 @@ namespace EigenSinnTest {
 
   TEST_F(SGD, Momentum1Step) {
 
-    DeviceTensor<ThreadPoolDevice, float, 2> tmp(cd.weight_dims);
+    DeviceTensor<float, 2> tmp(cd.weight_dims);
     tmp.setValues({ { 3.37926388e-01,  1.59690693e-01,  1.02176636e-01,  2.84526557e-01,
          -2.26725824e-04, -9.27660763e-02,  1.64573103e-01, -3.61379057e-01},
         { 2.25439876e-01, -2.75997013e-01,  3.18087339e-01,  2.55925790e-03,
@@ -114,7 +114,7 @@ namespace EigenSinnTest {
 
   TEST_F(SGD, Momentum1StepNesterov) {
 
-    DeviceTensor<ThreadPoolDevice, float, 2> tmp(cd.weight_dims);
+    DeviceTensor<float, 2> tmp(cd.weight_dims);
     tmp.setValues({ { 3.39028239e-01,  1.59707010e-01,  1.03905559e-01,  2.82974273e-01,
           2.06110999e-05, -9.34924558e-02,  1.64605826e-01, -3.61862838e-01},
         { 2.26916432e-01, -2.77127922e-01,  3.20312917e-01,  2.97543406e-03,

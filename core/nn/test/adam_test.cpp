@@ -42,11 +42,11 @@ namespace EigenSinnTest {
         // propagate forward through the model
         linear.forward(input);
 
-        DeviceTensor<ThreadPoolDevice, float, 2> output(linear.get_output());
+        DeviceTensor<float, 2> output(linear.get_output());
 
         // compute loss
         loss_func.step(output, cd.target);
-        DeviceTensor<ThreadPoolDevice, float, 2> dloss(loss_func.get_loss_derivative_by_input());
+        DeviceTensor<float, 2> dloss(loss_func.get_loss_derivative_by_input());
 
         // propagate back through the fc layer
         // compute dL/dw, dL/db, dL/dx
@@ -63,8 +63,8 @@ namespace EigenSinnTest {
       EXPECT_TRUE(is_elementwise_approx_eq(new_bias, linear.get_bias()));
     }
 
-    DeviceTensor<ThreadPoolDevice, float, 2> new_weights;
-    DeviceTensor<ThreadPoolDevice, float, 1> new_bias;
+    DeviceTensor<float, 2> new_weights;
+    DeviceTensor<float, 1> new_bias;
     CommonData2d<ThreadPoolDevice> cd;
     float lr;
   };
@@ -72,7 +72,7 @@ namespace EigenSinnTest {
 
   TEST_F(Adam, OneStep) {
 
-    DeviceTensor<ThreadPoolDevice, float, 2> tmp(cd.weight_dims);
+    DeviceTensor<float, 2> tmp(cd.weight_dims);
     tmp.setValues({ { 0.30941489,  0.16201581,  0.06012393,  0.32472005, -0.00491815,
          -0.07433553,  0.16475038, -0.35374174},
         { 0.19189887, -0.24621475,  0.27166173, -0.00426837, -0.18301390,
@@ -90,7 +90,7 @@ namespace EigenSinnTest {
 
   TEST_F(Adam, TwoSteps) {
 
-    DeviceTensor<ThreadPoolDevice, float, 2> tmp(cd.weight_dims);
+    DeviceTensor<float, 2> tmp(cd.weight_dims);
     tmp.setValues({ { 0.31041464,  0.16101657,  0.06112371,  0.32372031, -0.00391832,
          -0.07533528,  0.16575015, -0.35474178},
         { 0.19289874, -0.24721453,  0.27266166, -0.00326850, -0.18201400,

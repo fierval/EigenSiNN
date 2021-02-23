@@ -33,8 +33,8 @@ namespace EigenSinn {
   }
 
   // broadcast channel dimension
-  template  <typename Scalar, Index Rank, int Layout, typename Device_>
-  inline DeviceTensor<Device_, Scalar, Rank, Layout> broadcast_as_last_dim(DeviceTensor<Device_, Scalar, 1, Layout>& t, DSizes<Index, Rank> broadcast_dims) {
+  template  <typename Scalar, Index Rank, , typename Device_, int Layout>
+  inline DeviceTensor<Scalar, Rank, Device_, Layout> broadcast_as_last_dim(DeviceTensor<Scalar, 1, Device_, Layout>& t, DSizes<Index, Rank> broadcast_dims) {
 
     DSizes<Index, Rank> reshaped_dims;
     DSizes<Index, Rank> original_dims = broadcast_dims;
@@ -43,24 +43,24 @@ namespace EigenSinn {
     reshaped_dims[(int)ImageDims::channel] = t.dimension(0);
     original_dims[(int)ImageDims::channel] = t.dimension(0);
 
-    DeviceTensor<Device_, Scalar, Rank, Layout> broadcasted(original_dims);
+    DeviceTensor<Scalar, Rank, Device_, Layout> broadcasted(original_dims);
 
     broadcasted.view() = t->reshape(reshaped_dims).broadcast(broadcast_dims);
     return std::move(broadcasted);
   }
 
   // NHWC format
-  template<typename Scalar, Index Rank, int Layout, typename Device_>
-  inline auto batch_norm(DeviceTensor<Device_, Scalar, Rank, Layout>& x, DeviceTensor<Device_, Scalar, 1, Layout>& gamma, DeviceTensor<Device_, Scalar, 1, Layout>& beta, float eps, float momentum,
-     DeviceTensor<Device_, Scalar, 1, Layout>& running_mean, DeviceTensor<Device_, Scalar, 1, Layout>& running_var, bool is_training) {
+  template<typename Scalar, Index Rank, typename Device_, int Layout>
+  inline auto batch_norm(DeviceTensor<Scalar, Rank, Device_, Layout>& x, DeviceTensor<Scalar, 1, Device_, Layout>& gamma, DeviceTensor<Scalar, 1, Device_, Layout>& beta, float eps, float momentum,
+     DeviceTensor<Scalar, 1, Device_, Layout>& running_mean, DeviceTensor<Scalar, 1, Device_, Layout>& running_var, bool is_training) {
 
     DSizes<Index, 1> single_dim{ x->dimension(1) };
 
-    DeviceTensor<Device_, Scalar, 1, Layout> mu(single_dim), variance(single_dim), std(single_dim), new_running_var(single_dim), new_running_mean(single_dim);
+    DeviceTensor<Scalar, 1, Device_, Layout> mu(single_dim), variance(single_dim), std(single_dim), new_running_var(single_dim), new_running_mean(single_dim);
 
-    DeviceTensor<Device_, Scalar, Rank, Layout> mu_broadcasted(x.dimensions()), mean_broadcasted(x.dimensions()), std_broadcasted(x.dimensions());
+    DeviceTensor<Scalar, Rank, Device_, Layout> mu_broadcasted(x.dimensions()), mean_broadcasted(x.dimensions()), std_broadcasted(x.dimensions());
       
-    DeviceTensor<Device_, Scalar, Rank, Layout> x_out(x.dimensions()), x_hat(x.dimensions());
+    DeviceTensor<Scalar, Rank, Device_, Layout> x_out(x.dimensions()), x_hat(x.dimensions());
 
     // get sample mean
     DSizes<Index, Rank - 1> reduction_dims;
@@ -95,8 +95,8 @@ namespace EigenSinn {
     std_broadcasted = broadcast_as_last_dim(std, broadcast_dims);
 
     
-    DeviceTensor<Device_, Scalar, Rank, Layout> gamma_broadcasted(broadcast_as_last_dim(gamma, broadcast_dims));
-    DeviceTensor<Device_, Scalar, Rank, Layout> beta_broadcasted(broadcast_as_last_dim(beta, broadcast_dims)) ;
+    DeviceTensor<Scalar, Rank, Device_, Layout> gamma_broadcasted(broadcast_as_last_dim(gamma, broadcast_dims));
+    DeviceTensor<Scalar, Rank, Device_, Layout> beta_broadcasted(broadcast_as_last_dim(beta, broadcast_dims)) ;
 
     x_hat.view() = (*x - *mean_broadcasted) / *std_broadcasted;
     x_out.view() = *gamma_broadcasted * *x_hat + *beta_broadcasted;

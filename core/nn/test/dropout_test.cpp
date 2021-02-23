@@ -30,9 +30,9 @@ namespace EigenSinnTest {
     dropout.forward(input);
 
     auto linearInput = cd.linearInput.to_host();
-    Tensor<float, 2> output = DeviceTensor<ThreadPoolDevice, float, 2>(dropout.get_output()).to_host();
+    Tensor<float, 2> output = DeviceTensor<float, 2>(dropout.get_output()).to_host();
 
-    Tensor<float, 2> zeros = DeviceTensor<ThreadPoolDevice, float, 2>(output.dimensions()).to_host();
+    Tensor<float, 2> zeros = DeviceTensor<float, 2>(output.dimensions()).to_host();
     zeros.setZero();
     
     Tensor<bool, 0> anyzeros; 
@@ -60,9 +60,9 @@ namespace EigenSinnTest {
 
     EigenSinn::Dropout<float, 2> dropout;
     dropout.forward(input);
-    dropout.backward(input, DeviceTensor<ThreadPoolDevice, float, 2>(cd.linearLoss));
+    dropout.backward(input, DeviceTensor<float, 2>(cd.linearLoss));
 
-    Tensor<float, 2> dinput = DeviceTensor<ThreadPoolDevice, float, 2>(dropout.get_loss_by_input_derivative()).to_host();
+    Tensor<float, 2> dinput = DeviceTensor<float, 2>(dropout.get_loss_by_input_derivative()).to_host();
 
     Tensor<float, 2> zeros(dinput.dimensions());
     zeros.setZero();

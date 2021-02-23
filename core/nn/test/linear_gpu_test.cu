@@ -23,14 +23,14 @@ namespace EigenSinnTest {
 
   TEST_F(FullyConnectedGpu, BackpropNoBias) {
 
-    Input<float, 2, ColMajor, GpuDevice> input;
+    Input<float, 2, GpuDevice> input;
     input.set_input(cd.linearInput);
 
-    Linear<float, ColMajor, GpuDevice> linear(cd.dims[1], cd.out_dims[1]);
+    Linear<float, GpuDevice> linear(cd.dims[1], cd.out_dims[1]);
 
     linear.init(cd.weights.to_host());
     linear.forward(input);
-    linear.backward(input, DeviceTensor<GpuDevice, float, 2>(cd.fakeloss));
+    linear.backward(input, DeviceTensor<float, 2, Device_>(cd.fakeloss));
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.output, linear.get_output()));
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dinput, linear.get_loss_by_input_derivative()));
@@ -39,14 +39,14 @@ namespace EigenSinnTest {
 
   TEST_F(FullyConnectedGpu, BackpropBias) {
 
-    Input<float, 2, ColMajor, GpuDevice> input;
+    Input<float, 2, GpuDevice> input;
     input.set_input(cd.linearInput);
 
-    Linear<float, ColMajor, GpuDevice> linear(cd.dims[1], cd.out_dims[1]);
+    Linear<float, GpuDevice> linear(cd.dims[1], cd.out_dims[1]);
 
     linear.init(cd.weights.to_host(), cd.bias.to_host());
     linear.forward(input);
-    linear.backward(input, DeviceTensor<GpuDevice, float, 2>(cd.fakeloss));
+    linear.backward(input, DeviceTensor<float, 2, Device_>(cd.fakeloss));
 
     cd.output.setValues({ { 0.23947978,  1.57379603,  0.23219500,  0.99900943},
         { 1.11431766, -1.17991734, -0.41367567,  1.14438200},
@@ -61,10 +61,10 @@ namespace EigenSinnTest {
   TEST_F(FullyConnectedGpu, Initialize) {
 
     int in_dim = 1024;
-    Linear<float, ColMajor, GpuDevice> linear(in_dim, 512);
+    Linear<float, GpuDevice> linear(in_dim, 512);
 
     linear.init();
-    Tensor<float, 2> weights(DeviceTensor<GpuDevice, float, 2>((linear.get_weights())).to_host());
+    Tensor<float, 2> weights(DeviceTensor<float, 2, Device_>((linear.get_weights())).to_host());
     Tensor<float, 0> avg = weights.mean();
     Tensor<float, 0> std = (weights - avg(0)).pow(2.).mean();
 

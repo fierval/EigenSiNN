@@ -47,7 +47,7 @@ namespace EigenSinn {
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_grad;
   };
 
-  template<typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class ReLU : public LeakyReLU<Scalar, Rank, Layout, Device_> {
   public:
     ReLU() : LeakyReLU(0) {}

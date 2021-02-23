@@ -5,7 +5,7 @@
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class Adam : public OptimizerBase<Scalar, Layout, Device_> {
 
   public:
@@ -24,8 +24,8 @@ namespace EigenSinn {
     // Computation: https://towardsdatascience.com/adam-latest-trends-in-deep-learning-optimization-6be9a291375c
     inline DeviceWeightBiasTuple step(LayerBase<Scalar>& layer) override {
 
-     DeviceTensor<Device_, Scalar, Rank, Layout> weights(layer.get_weights()), dweights(layer.get_loss_by_weights_derivative());
-     DeviceTensor<Device_, Scalar, 1, Layout> bias(layer.get_bias()), dbias(layer.get_loss_by_bias_derivative());
+     DeviceTensor<Scalar, Rank, Device_, Layout> weights(layer.get_weights()), dweights(layer.get_loss_by_weights_derivative());
+     DeviceTensor<Scalar, 1, Device_, Layout> bias(layer.get_bias()), dbias(layer.get_loss_by_bias_derivative());
 
       if (!param_set) {
         param_set = true;
@@ -53,10 +53,10 @@ namespace EigenSinn {
       cur_beta1 *= beta1;
       cur_beta2 *= beta2;
 
-      DeviceTensor<Device_, Scalar, Rank, Layout> denom_weights(velocity_weights.dimensions());
+      DeviceTensor<Scalar, Rank, Device_, Layout> denom_weights(velocity_weights.dimensions());
       denom_weights.view() = velocity_weights->sqrt() / sqrt(1 - cur_beta2) + eps;
 
-      DeviceTensor<Device_, Scalar, 1, Layout> denom_bias(velocity_bias.dimensions());
+      DeviceTensor<Scalar, 1, Device_, Layout> denom_bias(velocity_bias.dimensions());
       denom_bias.view() = velocity_bias->sqrt() / sqrt(1 - cur_beta2) + eps;
 
       Scalar step_size = lr / (1 - cur_beta1);
@@ -70,7 +70,7 @@ namespace EigenSinn {
   private:
     const Scalar beta1, beta2, eps;
     Scalar cur_beta1, cur_beta2;
-    DeviceTensor<Device_, Scalar, Rank, Layout> velocity_weights, momentum_weights;
-    DeviceTensor<Device_, Scalar, 1, Layout> velocity_bias, momentum_bias;
+    DeviceTensor<Scalar, Rank, Device_, Layout> velocity_weights, momentum_weights;
+    DeviceTensor<Scalar, 1, Device_, Layout> velocity_bias, momentum_bias;
   };
 }

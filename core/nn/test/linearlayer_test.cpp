@@ -65,7 +65,7 @@ namespace EigenSinnTest {
     Linear<float> linear(in_dim, 512);
 
     linear.init();
-    Tensor<float, 2> weights(DeviceTensor<ThreadPoolDevice, float, 2>((linear.get_weights())).to_host());
+    Tensor<float, 2> weights(DeviceTensor<float, 2>((linear.get_weights())).to_host());
     Tensor<float, 0> avg = weights.mean();
     Tensor<float, 0> std = (weights - avg(0)).pow(2.).mean();
 

@@ -35,16 +35,16 @@ namespace EigenSinnTest {
     }
 
     CommonData2d<ThreadPoolDevice> cd;
-    DeviceTensor<ThreadPoolDevice, float, 2> output, dinput;
+    DeviceTensor<float, 2> output, dinput;
 
   };
 
   TEST_F(Sigmoid, Backward) {
 
-    Input<float, 2, 0, ThreadPoolDevice> input;
+    Input<float, 2> input;
     input.set_input(cd.linearInput);
 
-    EigenSinn::Sigmoid<float, 2, 0, ThreadPoolDevice> sg;
+    EigenSinn::Sigmoid<float, 2> sg;
     sg.init();
     sg.forward(input);
     sg.backward(input, cd.linearLoss);

@@ -504,9 +504,9 @@ namespace EigenSinnTest {
 
     // 4d testa
     const array<Index, 4> dims = { 2, 3, 4, 4 }, poolDims = { 2, 3, 2, 2 }, kernelDims = { 5, 3, 3, 3 }, convOutDims = { 2, 5, 2, 2 };
-    DeviceTensor<Device_, float, 4> convInput, convLoss, batchNormLoss, convWeights, dweight, dinput, output, dinputDilated2Padded1, dweightsDilated2Padded1, outputDilated2Padded1;
-    DeviceTensor<Device_, float, 2> convInputUnrolledPad0Stride1;
-    DeviceTensor<Device_, float, 1> bias;
+    DeviceTensor<float, 4, Device_> convInput, convLoss, batchNormLoss, convWeights, dweight, dinput, output, dinputDilated2Padded1, dweightsDilated2Padded1, outputDilated2Padded1;
+    DeviceTensor<float, 2, Device_> convInputUnrolledPad0Stride1;
+    DeviceTensor<float, 1, Device_> bias;
   };
 
   template <typename Device_>

@@ -94,7 +94,7 @@ namespace EigenSinnTest {
     }
 
     CommonData4d<GpuDevice> cd;
-    DeviceTensor<GpuDevice, float, 4> output, dinput, fakeloss;
+    DeviceTensor<float, 4, GpuDevice> output, dinput, fakeloss;
     const array<Index, 2> extents2d = { 2, 2 };
     const array<Index, 2> extents1d = { 2 };
 
@@ -104,10 +104,10 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4dGpu, Backward) {
 
-    Input<float, 4, 0, GpuDevice> input;
+    Input<float, 4, GpuDevice> input;
     input.set_input(cd.convInput);
 
-    MaxPooling<float, 4, 0, GpuDevice> pl(extents2d, stride);
+    MaxPooling<float, 4, GpuDevice> pl(extents2d, stride);
 
     pl.init();
     pl.forward(input);

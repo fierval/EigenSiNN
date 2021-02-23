@@ -21,66 +21,66 @@ namespace EigenSinnTest {
   };
 
   TEST_F(DeviceTensorTest, CreateEmpty) {
-    DeviceTensor<ThreadPoolDevice, float, 4> d;
+    DeviceTensor<float, 4> d;
 
     EXPECT_FALSE(d);
   }
 
   TEST_F(DeviceTensorTest, CreateDims) {
-    DeviceTensor<ThreadPoolDevice, float, 4> d(4, 3, 2, 1);
+    DeviceTensor<float, 4> d(4, 3, 2, 1);
 
     EXPECT_EQ(24, d->dimensions().TotalSize());
   }
 
   TEST_F(DeviceTensorTest, CreateValue) {
-    DeviceTensor<ThreadPoolDevice, float, 4> d(cd.convInput);
+    DeviceTensor<float, 4> d(cd.convInput);
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.convInput, d));
   }
 
   TEST_F(DeviceTensorTest, AddTensorsOperator) {
-    DeviceTensor<ThreadPoolDevice, float, 4> d1(cd.convInput), d2(cd.convInput), sum_tensor;
+    DeviceTensor<float, 4> d1(cd.convInput), d2(cd.convInput), sum_tensor;
 
     sum_tensor = d1 + d2;
 
-    DeviceTensor<ThreadPoolDevice, float, 4> convsum = cd.convInput + cd.convInput;
+    DeviceTensor<float, 4> convsum = cd.convInput + cd.convInput;
 
     EXPECT_TRUE(is_elementwise_approx_eq(convsum, sum_tensor));
   }
 
   TEST_F(DeviceTensorTest, MultTensorsOperator) {
-    DeviceTensor<ThreadPoolDevice, float, 4> d1(cd.convInput), d2(cd.convInput), res_tensor;
+    DeviceTensor<float, 4> d1(cd.convInput), d2(cd.convInput), res_tensor;
 
     res_tensor = d1 * d2;
 
-    DeviceTensor<ThreadPoolDevice, float, 4> expected = cd.convInput * cd.convInput;
+    DeviceTensor<float, 4> expected = cd.convInput * cd.convInput;
 
     EXPECT_TRUE(is_elementwise_approx_eq(expected, res_tensor));
   }
 
   TEST_F(DeviceTensorTest, DivTensorsOperator) {
-    DeviceTensor<ThreadPoolDevice, float, 4> d1(cd.convInput), d2(cd.dinput), res_tensor;
+    DeviceTensor<float, 4> d1(cd.convInput), d2(cd.dinput), res_tensor;
 
     res_tensor = d1 / d2;
 
-    DeviceTensor<ThreadPoolDevice, float, 4> expected = cd.convInput / cd.dinput;
+    DeviceTensor<float, 4> expected = cd.convInput / cd.dinput;
 
     EXPECT_TRUE(is_elementwise_approx_eq(expected, res_tensor));
   }
 
   TEST_F(DeviceTensorTest, ThreeTensorsOperator) {
-    DeviceTensor<ThreadPoolDevice, float, 4> d1(cd.convInput), d2(cd.dinput), d3(cd.convInput), res_tensor;
+    DeviceTensor<float, 4> d1(cd.convInput), d2(cd.dinput), d3(cd.convInput), res_tensor;
 
     res_tensor = d1 / d2 + d3;
 
-    DeviceTensor<ThreadPoolDevice, float, 4> expected = cd.convInput / cd.dinput + cd.convInput;
+    DeviceTensor<float, 4> expected = cd.convInput / cd.dinput + cd.convInput;
 
     EXPECT_TRUE(is_elementwise_approx_eq(expected, res_tensor));
   }
 
 
   TEST_F(DeviceTensorTest, SqrtTensor) {
-    DeviceTensor<ThreadPoolDevice, float, 4> d1(cd.convInput), res_tensor(d1.dimensions()), d2(cd.dinput);
+    DeviceTensor<float, 4> d1(cd.convInput), res_tensor(d1.dimensions()), d2(cd.dinput);
 
     res_tensor.view() = d1->sqrt() + *d2;
 
@@ -91,7 +91,7 @@ namespace EigenSinnTest {
   }
 
   TEST_F(DeviceTensorTest, Resize) {
-    DeviceTensor<ThreadPoolDevice, float, 4> t1, t2(2, 3, 4, 5);
+    DeviceTensor<float, 4> t1, t2(2, 3, 4, 5);
 
     t1.resize(array<Index, 4>{2, 3, 4, 5});
     t2.resize(array<Index, 4>{3, 3, 3, 3});
@@ -103,7 +103,7 @@ namespace EigenSinnTest {
 
   TEST_F(DeviceTensorTest, SetConstant) {
 
-    DeviceTensor<ThreadPoolDevice, float, 4> t1(4, 4, 4, 4);
+    DeviceTensor<float, 4> t1(4, 4, 4, 4);
     t1.setConstant(1);
 
     Tensor<float, 4> expected(4, 4, 4, 4);
@@ -115,7 +115,7 @@ namespace EigenSinnTest {
 
   TEST_F(DeviceTensorTest, SetZero) {
 
-    DeviceTensor<ThreadPoolDevice, float, 4> t1(4, 4, 4, 4);
+    DeviceTensor<float, 4> t1(4, 4, 4, 4);
     t1.setZero();
 
     Tensor<float, 4> expected(4, 4, 4, 4);

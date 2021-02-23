@@ -70,7 +70,7 @@ namespace EigenSinnTest {
     Conv2d<float> conv2d(kdims);
 
     conv2d.init();
-    DeviceTensor<ThreadPoolDevice, float, 4> weights(conv2d.get_weights());
+    DeviceTensor<float, 4> weights(conv2d.get_weights());
 
     Tensor<float, 0> avg = weights.to_host().mean();
     
@@ -107,7 +107,7 @@ namespace EigenSinnTest {
   }
 
   TEST_F(Convolution, FoldUnfold) {
-    auto output = DeviceTensor<ThreadPoolDevice, float, 4>(cd.output);
+    auto output = DeviceTensor<float, 4>(cd.output);
     auto unf_fold = fold_conv_res(unfold_conv_res(output), output.dimensions());
 
     EXPECT_TRUE(is_elementwise_approx_eq(output, unf_fold));
@@ -121,7 +121,7 @@ namespace EigenSinnTest {
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
-    DeviceTensor<ThreadPoolDevice, float, 4> conv2dout(conv2d.get_output());
+    DeviceTensor<float, 4> conv2dout(conv2d.get_output());
     EXPECT_TRUE(is_elementwise_approx_eq(cd.outputDilated2Padded1, conv2dout));
 
     conv2d.backward(input, cd.convLoss);
@@ -139,7 +139,7 @@ namespace EigenSinnTest {
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
-    DeviceTensor<ThreadPoolDevice, float, 4> conv2dout(conv2d.get_output());
+    DeviceTensor<float, 4> conv2dout(conv2d.get_output());
     EXPECT_TRUE(is_elementwise_approx_eq(cd.outputDilated2Padded1, conv2dout));
   }
 }

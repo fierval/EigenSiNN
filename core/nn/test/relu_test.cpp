@@ -55,7 +55,7 @@ namespace EigenSinnTest {
 
 
     CommonData2d<ThreadPoolDevice> cd;
-    DeviceTensor<ThreadPoolDevice, float, 2> output, output_leaky, dinput, dinput_leaky;
+    DeviceTensor<float, 2> output, output_leaky, dinput, dinput_leaky;
     float thresh = 0.01;
 
   };

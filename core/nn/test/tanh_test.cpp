@@ -35,7 +35,7 @@ namespace EigenSinnTest {
     }
 
     CommonData2d<ThreadPoolDevice> cd;
-    DeviceTensor<ThreadPoolDevice, float, 2> output, dinput;
+    DeviceTensor<float, 2> output, dinput;
 
   };
 

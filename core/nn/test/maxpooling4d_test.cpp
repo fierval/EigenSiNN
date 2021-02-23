@@ -180,7 +180,7 @@ namespace EigenSinnTest {
 
     }
     CommonData4d<ThreadPoolDevice> cd;
-    DeviceTensor<ThreadPoolDevice, float, 4> output, dinput, fakeloss;
+    DeviceTensor<float, 4> output, dinput, fakeloss;
     const array<Index, 2> extents2d = { 2, 2 };
     const array<Index, 2> extents1d = { 2 };
 
@@ -190,7 +190,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4d, Validate) {
 
-    DeviceTensor<ThreadPoolDevice, float, 4> t(1, 3, 4, 4);
+    DeviceTensor<float, 4> t(1, 3, 4, 4);
     t.setConstant(1);
 
     auto dims = t.dimensions();
@@ -204,7 +204,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4d, BadExtent) {
 
-    DeviceTensor<ThreadPoolDevice, float, 2> t(4, 4);
+    DeviceTensor<float, 2> t(4, 4);
     t.setConstant(1);
 
     auto dims = t.dimensions();
@@ -218,7 +218,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4d, BadStride4d) {
 
-    DeviceTensor<ThreadPoolDevice, float, 4> t(3, 4, 10, 10);
+    DeviceTensor<float, 4> t(3, 4, 10, 10);
     t.setConstant(1);
 
     auto dims = t.dimensions();

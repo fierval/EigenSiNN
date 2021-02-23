@@ -38,7 +38,7 @@ namespace EigenSinnTest {
     }
 
     CommonData2d<ThreadPoolDevice> cd;
-    DeviceTensor<ThreadPoolDevice, float, 2> output, dinput, fakeloss;
+    DeviceTensor<float, 2> output, dinput, fakeloss;
     const array<Index, 1> extents1d = { 4 };
     const array<Index, 2> poolDims = { 3, 3 };
 
@@ -48,7 +48,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool2d, Validate) {
 
-    DeviceTensor<ThreadPoolDevice, float, 2> t(4, 4);
+    DeviceTensor<float, 2> t(4, 4);
     t.setConstant(1);
 
     auto dims = t.dimensions();
@@ -61,11 +61,11 @@ namespace EigenSinnTest {
   }
 
   TEST_F(Pool2d, Forward) {
-    Input<float, 2, ColMajor, ThreadPoolDevice> input;
+    Input<float, 2> input;
 
     input.set_input(cd.linearInput);
 
-    MaxPooling<float, 2, ColMajor, ThreadPoolDevice> pl(extents1d, stride);
+    MaxPooling<float, 2> pl(extents1d, stride);
     pl.init();
     pl.forward(input);
 
@@ -74,10 +74,10 @@ namespace EigenSinnTest {
 
   TEST_F(Pool2d, Backward) {
 
-    Input<float, 2, ColMajor, ThreadPoolDevice> input;
+    Input<float, 2> input;
     input.set_input(cd.linearInput);
 
-    MaxPooling<float, 2, ColMajor, ThreadPoolDevice> pl(extents1d, stride);
+    MaxPooling<float, 2> pl(extents1d, stride);
     pl.init();
     pl.forward(input);
 

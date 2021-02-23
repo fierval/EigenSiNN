@@ -30,7 +30,7 @@ namespace EigenSinn {
   }
 
   template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
-  inline DeviceTensor<Device_, Scalar, Rank, Layout> generate_xavier(DSizes<Index, Rank> layer_dims) {
+  inline DeviceTensor<Scalar, Rank, Device_, Layout> generate_xavier(DSizes<Index, Rank> layer_dims) {
 
     assert(Rank == 2 || Rank == 4);
 
@@ -48,7 +48,7 @@ namespace EigenSinn {
       assert(false);
     }
 
-    DeviceTensor<Device_, Scalar, Rank, Layout> weights(layer_dims);
+    DeviceTensor<Scalar, Rank, Device_, Layout> weights(layer_dims);
     weights.template setRandom<::internal::NormalRandomGenerator<Scalar>>();
 
     weights.view() = std * *weights;

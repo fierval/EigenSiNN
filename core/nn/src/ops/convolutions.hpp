@@ -69,7 +69,7 @@ namespace EigenSinn {
 
   // NCHW format
   template <typename Scalar, int Rank = 4, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
-  inline DeviceTensor<Device_, Scalar, 2, Layout> im2col(const DeviceTensor<Device_, Scalar, Rank, Layout>& input, const DSizes<Index, Rank>& kernel_dims, const Padding2D& padding, Index stride, Index dilation) {
+  inline DeviceTensor<Scalar, 2, Device_, Layout> im2col(const DeviceTensor<Scalar, Rank, Device_, Layout>& input, const DSizes<Index, Rank>& kernel_dims, const Padding2D& padding, Index stride, Index dilation) {
 
     auto out_dims = get_output_dimensions(*input, kernel_dims, padding, stride, dilation);
 
@@ -85,7 +85,7 @@ namespace EigenSinn {
     // batch_size (input dim[0]) * how_many_convolution_locations there are
     int conv_locations = out_dims[3] * out_dims[2];
 
-    DeviceTensor<Device_, Scalar, 2, Layout> output(col_dim, input.dimension(0) * conv_locations);
+    DeviceTensor<Scalar, 2, Device_, Layout> output(col_dim, input.dimension(0) * conv_locations);
 
     // "move" along axis 1 (columns) and append converted portions.
     // each converted portion is a a batch of would-be convolution operations
@@ -106,7 +106,7 @@ namespace EigenSinn {
   }
 
   template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
-  inline auto dilate_tensor(DeviceTensor<Device_, Scalar, 4, Layout>& tensor, Index dilation) {
+  inline auto dilate_tensor(DeviceTensor<Scalar, 4, Device_, Layout>& tensor, Index dilation) {
 
     if (dilation == 1) { return tensor; }
 
@@ -114,7 +114,7 @@ namespace EigenSinn {
     Index tensor_height = dilation * (dims[2] - 1) + 1;
     Index tensor_width = dilation * (dims[3] - 1) + 1;
 
-    DeviceTensor<Device_, Scalar, 4, Layout> dilated(dims[0], dims[1], tensor_height, tensor_width);
+    DeviceTensor<Scalar, 4, Device_, Layout> dilated(dims[0], dims[1], tensor_height, tensor_width);
     dilated.setZero();
 
 #ifdef __CUDACC__
@@ -145,24 +145,24 @@ namespace EigenSinn {
   // return kernel representation for GEMM with 
   // im2col representation of the conv layer
   template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
-  inline DeviceTensor<Device_, Scalar, 2, Layout> unfold_kernel(DeviceTensor<Device_, Scalar, 4, Layout>& kernel) {
+  inline DeviceTensor<Scalar, 2, Device_, Layout> unfold_kernel(DeviceTensor<Scalar, 4, Device_, Layout>& kernel) {
 
     auto dims = kernel.dimensions();
     Index col_channels = dims[1] * dims[2] * dims[3];
 
-    DeviceTensor<Device_, Scalar, 2, Layout> flat_kernel(dims[0], col_channels);
+    DeviceTensor<Scalar, 2, Device_, Layout> flat_kernel(dims[0], col_channels);
     flat_kernel.view() = kernel->shuffle(array<Index, 4>{ 0, 3, 2, 1 }).reshape(array<Index, 2>{dims[0], col_channels});
     return std::move(flat_kernel);
   }
 
   // convert back to the [b, c, h, w] kernel representation
   template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
-  inline auto fold_kernel(DeviceTensor<Device_, Scalar, 2, Layout>& kernel_col, const array<Index, 4>& expected_dims) {
+  inline auto fold_kernel(DeviceTensor<Scalar, 2, Device_, Layout>& kernel_col, const array<Index, 4>& expected_dims) {
 
     assert(expected_dims[0] == kernel_col.dimension(0));
     assert(expected_dims[1] * expected_dims[2] * expected_dims[3] == kernel_col.dimension(1));
 
-    DeviceTensor<Device_, Scalar, 4, Layout> out(expected_dims);
+    DeviceTensor<Scalar, 4, Device_, Layout> out(expected_dims);
     out.view() = kernel_col->reshape(array<Index, 4>{ expected_dims[0], expected_dims[3], expected_dims[2], expected_dims[1] })
       .shuffle(array<Index, 4>{0, 3, 2, 1});;
 
@@ -175,12 +175,12 @@ namespace EigenSinn {
   // F: [Bf x C * Hf * Wf], X: [C * Hf * Wf x B * Ho * Wo] -> [Bf X B * Ho * Wo], 
   // Resulting unrolled dimensions: [B, Bf, Ho, Wo], Bf = new C
   template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
-  inline auto unfold_conv_res(const DeviceTensor<Device_, Scalar, 4, Layout>& layer) {
+  inline auto unfold_conv_res(const DeviceTensor<Scalar, 4, Device_, Layout>& layer) {
 
     auto dims = layer.dimensions();
     Index col_channels = dims[0] * dims[2] * dims[3]; // B * Ho * Wo
 
-    DeviceTensor<Device_, Scalar, 2, Layout> flat_layer(dims[1], col_channels);
+    DeviceTensor<Scalar, 2, Device_, Layout> flat_layer(dims[1], col_channels);
     flat_layer.view() = layer->shuffle(array<Index, 4>{1, 0, 3, 2}).reshape(array<Index, 2>{dims[1], col_channels});
     return std::move(flat_layer);
   }
@@ -191,12 +191,12 @@ namespace EigenSinn {
   // e.g. t (*) k = r, t: [2, 3, 4, 4], k: [5, 3, 3, 3], r: [2, 5, 2, 2]
   // r in im2col form will be [5, 8]
   template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
-  inline auto fold_conv_res(const DeviceTensor<Device_, Scalar, 2, Layout>& conv_res, const array<Index, 4>& expected_dims) {
+  inline auto fold_conv_res(const DeviceTensor<Scalar, 2, Device_, Layout>& conv_res, const array<Index, 4>& expected_dims) {
 
     assert(expected_dims[1] == conv_res.dimension(0));
     assert(expected_dims[0] * expected_dims[2] * expected_dims[3] == conv_res.dimension(1));
 
-    DeviceTensor<Device_, Scalar, 4, Layout> out(expected_dims);
+    DeviceTensor<Scalar, 4, Device_, Layout> out(expected_dims);
     out.view() = conv_res->reshape(array<Index, 4>{ expected_dims[1], expected_dims[0], expected_dims[3], expected_dims[2] }).shuffle(array<Index, 4>{1, 0, 3, 2});
     return std::move(out);
   }
@@ -207,7 +207,7 @@ namespace EigenSinn {
   // Adding contributions of each folded slice to the result
   // Non-GPU version
   template <typename Scalar, int Layout, typename Device_>
-  inline auto col2im(const DeviceTensor<Device_, Scalar, 2, Layout>& col,
+  inline auto col2im(const DeviceTensor<Scalar, 2, Device_, Layout>& col,
     const array<Index, 4>& kernel_dims,
     const array<Index, 4>& orig_dims,
     const Padding2D& padding,
@@ -219,14 +219,14 @@ namespace EigenSinn {
       batch_size = orig_dims[0];
 
     array<Index, 2> col_dims = col.dimensions();
-    DeviceTensor<Device_, Scalar, 4, ColMajor> out(orig_dims);
+    DeviceTensor<Scalar, 4, Device_, ColMajor> out(orig_dims);
     out.setZero();
 
     Index out_w = 0, out_h = 0;
     array<Index, 2> slice_starts = { 0, 0 };
     array<Index, 2> slice_offsets = { col.dimension(0), batch_size };
     array<Index, 4> rev_shape = { kernel_dims[3], kernel_dims[2], kernel_dims[1], batch_size };
-    DeviceTensor<Device_, Scalar, 4, ColMajor> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[3]);
+    DeviceTensor<Scalar, 4, Device_, ColMajor> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[3]);
 
     Device_ device = out.get_device();
 
@@ -253,8 +253,8 @@ namespace EigenSinn {
 
   // NCHW format
   template <typename Scalar, Index Rank = 4, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
-  inline DeviceTensor<Device_, Scalar, 4, Layout> convolve(const DeviceTensor<Device_, Scalar, 4, Layout>& input,
-    DeviceTensor<Device_, Scalar, 4, Layout>& kernel, const Padding2D& padding, Index stride, Index dilation) {
+  inline DeviceTensor<Scalar, 4, Device_, Layout> convolve(const DeviceTensor<Scalar, 4, Device_, Layout>& input,
+    DeviceTensor<Scalar, 4, Device_, Layout>& kernel, const Padding2D& padding, Index stride, Index dilation) {
 
     //dimensions involved in the convolution. Channel dimension is also involved.
     array<Index, 3> dims({ (int)ImageDims::channel, (int)ImageDims::height, (int)ImageDims::width });
@@ -269,7 +269,7 @@ namespace EigenSinn {
     auto unf_kernel = unfold_kernel<Scalar, Layout, Device_>(kernel);
 
     ProductDims prod_dims = { IndexPair<int>(1,0) };
-    DeviceTensor<Device_, float, 2> res(unf_kernel.dimension(0), col_inputs.dimension(1));
+    DeviceTensor<float, 2, Device_> res(unf_kernel.dimension(0), col_inputs.dimension(1));
     res.view() = unf_kernel->contract(*col_inputs, prod_dims);
 
     // NCHW output tensor

@@ -18,7 +18,7 @@ namespace EigenSinnTest {
       target.resize(out_dims);
       weights.resize(weights_dim_shuffled);
 
-      DeviceTensor<Device_, float, 2> tmp(weight_dims);
+      DeviceTensor<float, 2, Device_> tmp(weight_dims);
 
       linearLoss.setValues({ {0.36603546, 0.40687686, 0.87746394, 0.62148917, 0.86859787, 0.51380110,
         0.60315830, 0.00604892},
@@ -82,7 +82,7 @@ namespace EigenSinnTest {
     }
 
     const array<Index, 2> dims = { 3, 8 }, out_dims = { 3, 4 }, weight_dims = { 4, 8 }, weights_dim_shuffled = { 8, 4 };
-    DeviceTensor<Device_, float, 2> linearInput, linearLoss, outputGrad, output, target, weights, dinput, fakeloss, dweights;
-    DeviceTensor<Device_, float, 1> bias, dbias;
+    DeviceTensor<float, 2, Device_> linearInput, linearLoss, outputGrad, output, target, weights, dinput, fakeloss, dweights;
+    DeviceTensor<float, 1, Device_> bias, dbias;
   };
 }

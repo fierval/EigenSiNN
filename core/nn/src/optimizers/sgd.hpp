@@ -5,7 +5,7 @@
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class SGD : public OptimizerBase<Scalar, Layout, Device_> {
 
   public:
@@ -23,8 +23,8 @@ namespace EigenSinn {
     // PyTorch computation of SGD: https://pytorch.org/docs/stable/_modules/torch/optim/sgd.html#SGD
     inline DeviceWeightBiasTuple step(LayerBase<Scalar>& layer) override {
       
-      DeviceTensor<Device_, Scalar, Rank, Layout> weights(layer.get_weights()), dweights(layer.get_loss_by_weights_derivative());
-      DeviceTensor<Device_, Scalar, 1, Layout> bias(layer.get_bias()), dbias(layer.get_loss_by_bias_derivative());
+      DeviceTensor<Scalar, Rank, Device_, Layout> weights(layer.get_weights()), dweights(layer.get_loss_by_weights_derivative());
+      DeviceTensor<Scalar, 1, Device_, Layout> bias(layer.get_bias()), dbias(layer.get_loss_by_bias_derivative());
 
       if (momentum != 0.0) {
         if (!param_set) {
@@ -54,8 +54,8 @@ namespace EigenSinn {
 
   private:
     const Scalar momentum;
-    DeviceTensor<Device_, Scalar, Rank, Layout> velocity_weights;
-    DeviceTensor<Device_, Scalar, 1, Layout> velocity_bias;
+    DeviceTensor<Scalar, Rank, Device_, Layout> velocity_weights;
+    DeviceTensor<Scalar, 1, Device_, Layout> velocity_bias;
     const bool nesterov;
   };
 }

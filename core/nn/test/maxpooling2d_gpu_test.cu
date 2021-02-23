@@ -38,7 +38,7 @@ namespace EigenSinnTest {
     }
 
     CommonData2d<GpuDevice> cd;
-    DeviceTensor<GpuDevice, float, 2> output, dinput, fakeloss;
+    DeviceTensor<float, 2, Device_> output, dinput, fakeloss;
     const array<Index, 1> extents1d = { 4 };
     const array<Index, 2> poolDims = { 3, 3 };
 
@@ -47,11 +47,11 @@ namespace EigenSinnTest {
   };
 
   TEST_F(Pool2dGpu, Forward) {
-    Input<float, 2, ColMajor, GpuDevice> input;
+    Input<float, 2, GpuDevice> input;
 
     input.set_input(cd.linearInput);
 
-    MaxPooling<float, 2, ColMajor, GpuDevice> pl(extents1d, stride);
+    MaxPooling<float, 2, GpuDevice> pl(extents1d, stride);
     pl.init();
     pl.forward(input);
 
@@ -60,10 +60,10 @@ namespace EigenSinnTest {
 
   TEST_F(Pool2dGpu, Backward) {
 
-    Input<float, 2, ColMajor, GpuDevice> input;
+    Input<float, 2, GpuDevice> input;
     input.set_input(cd.linearInput);
 
-    MaxPooling<float, 2, ColMajor, GpuDevice> pl(extents1d, stride);
+    MaxPooling<float, 2, GpuDevice> pl(extents1d, stride);
     pl.init();
     pl.forward(input);
 

@@ -21,19 +21,19 @@ namespace EigenSinnTest {
   };
 
   TEST_F(DeviceTensorTestGpu, CreateEmpty) {
-    DeviceTensor<GpuDevice, float, 4> d;
+    DeviceTensor<float, 4, GpuDevice> d;
 
     EXPECT_FALSE(d);
   }
 
   TEST_F(DeviceTensorTestGpu, CreateDims) {
-    DeviceTensor<GpuDevice, float, 4> d(4, 3, 2, 1);
+    DeviceTensor<float, 4, GpuDevice> d(4, 3, 2, 1);
 
     EXPECT_EQ(24, d->dimensions().TotalSize());
   }
 
   TEST_F(DeviceTensorTestGpu, CreateValue) {
-    DeviceTensor<GpuDevice, float, 4> d(cd.convInput);
+    DeviceTensor<float, 4, GpuDevice> d(cd.convInput);
 
     Tensor<float, 4> h_tensor = d.to_host();
 
@@ -41,57 +41,57 @@ namespace EigenSinnTest {
   }
 
   TEST_F(DeviceTensorTestGpu, AddTensors) {
-    DeviceTensor<GpuDevice, float, 4> d1(cd.convInput), d2(cd.convInput), sum_tensor(cd.convInput.dimensions());
+    DeviceTensor<float, 4, GpuDevice> d1(cd.convInput), d2(cd.convInput), sum_tensor(cd.convInput.dimensions());
 
     sum_tensor.view() = *d1 + *d2;
 
-    DeviceTensor<GpuDevice, float, 4> convsum = cd.convInput + cd.convInput;
+    DeviceTensor<float, 4, GpuDevice> convsum = cd.convInput + cd.convInput;
 
     EXPECT_TRUE(is_elementwise_approx_eq(convsum, sum_tensor));
   }
 
   TEST_F(DeviceTensorTestGpu, AddTensorsOperator) {
-    DeviceTensor<GpuDevice, float, 4> d1(cd.convInput), d2(cd.convInput), sum_tensor;
+    DeviceTensor<float, 4, GpuDevice> d1(cd.convInput), d2(cd.convInput), sum_tensor;
 
     sum_tensor = d1 + d2;
 
-    DeviceTensor<GpuDevice, float, 4> convsum = cd.convInput + cd.convInput;
+    DeviceTensor<float, 4, GpuDevice> convsum = cd.convInput + cd.convInput;
 
     EXPECT_TRUE(is_elementwise_approx_eq(convsum, sum_tensor));
   }
 
   TEST_F(DeviceTensorTestGpu, MultTensorsOperator) {
-    DeviceTensor<GpuDevice, float, 4> d1(cd.convInput), d2(cd.convInput), res_tensor;
+    DeviceTensor<float, 4, GpuDevice> d1(cd.convInput), d2(cd.convInput), res_tensor;
 
     res_tensor = d1 * d2;
 
-    DeviceTensor<GpuDevice, float, 4> expected = cd.convInput * cd.convInput;
+    DeviceTensor<float, 4, GpuDevice> expected = cd.convInput * cd.convInput;
 
     EXPECT_TRUE(is_elementwise_approx_eq(expected, res_tensor));
   }
 
   TEST_F(DeviceTensorTestGpu, MultTensorConstOperator) {
-    DeviceTensor<GpuDevice, float, 4> d1(cd.convInput), res_tensor;
+    DeviceTensor<float, 4, GpuDevice> d1(cd.convInput), res_tensor;
 
     res_tensor = 0.1f * d1;
 
-    DeviceTensor<GpuDevice, float, 4> expected = 0.1 * cd.convInput;
+    DeviceTensor<float, 4, GpuDevice> expected = 0.1 * cd.convInput;
 
     EXPECT_TRUE(is_elementwise_approx_eq(expected, res_tensor));
   }
 
   TEST_F(DeviceTensorTestGpu, DivTensorsOperator) {
-    DeviceTensor<GpuDevice, float, 4> d1(cd.convInput), d2(cd.dinput), res_tensor;
+    DeviceTensor<float, 4, GpuDevice> d1(cd.convInput), d2(cd.dinput), res_tensor;
 
     res_tensor = d1 / d2;
 
-    DeviceTensor<GpuDevice, float, 4> expected = cd.convInput / cd.dinput;
+    DeviceTensor<float, 4, GpuDevice> expected = cd.convInput / cd.dinput;
 
     EXPECT_TRUE(is_elementwise_approx_eq(expected, res_tensor));
   }
 
   TEST_F(DeviceTensorTestGpu, SqrtTensor) {
-    DeviceTensor<GpuDevice, float, 4> d1(cd.convInput), res_tensor(d1.dimensions()), d2(cd.dinput);
+    DeviceTensor<float, 4, GpuDevice> d1(cd.convInput), res_tensor(d1.dimensions()), d2(cd.dinput);
 
     res_tensor.view() = d1->sqrt() + *d2;
 
@@ -101,7 +101,7 @@ namespace EigenSinnTest {
   }
 
   TEST_F(DeviceTensorTestGpu, Resize) {
-    DeviceTensor<GpuDevice, float, 4> t1, t2(2, 3, 4, 5);
+    DeviceTensor<float, 4, GpuDevice> t1, t2(2, 3, 4, 5);
 
     t1.resize(array<Index, 4>{2, 3, 4, 5});
     t2.resize(array<Index, 4>{3, 3, 3, 3});
@@ -113,7 +113,7 @@ namespace EigenSinnTest {
 
   TEST_F(DeviceTensorTestGpu, SetConstant) {
 
-    DeviceTensor<GpuDevice, float, 4> t1(4, 4, 4, 4);
+    DeviceTensor<float, 4, GpuDevice> t1(4, 4, 4, 4);
     t1.setConstant(1);
 
     Tensor<float, 4> expected(4, 4, 4, 4);
@@ -127,7 +127,7 @@ namespace EigenSinnTest {
 
   TEST_F(DeviceTensorTestGpu, SetZero) {
 
-    DeviceTensor<GpuDevice, float, 4> t1(4, 4, 4, 4);
+    DeviceTensor<float, 4, GpuDevice> t1(4, 4, 4, 4);
     t1.setZero();
 
     Tensor<float, 4> expected(4, 4, 4, 4);

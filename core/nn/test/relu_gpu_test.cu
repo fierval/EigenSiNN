@@ -55,17 +55,17 @@ namespace EigenSinnTest {
 
 
     CommonData2d<GpuDevice> cd;
-    DeviceTensor<GpuDevice, float, 2> output, output_leaky, dinput, dinput_leaky;
+    DeviceTensor<float, 2, GpuDevice> output, output_leaky, dinput, dinput_leaky;
     float thresh = 0.01;
 
   };
 
   TEST_F(ReLU2dGpu, Backward) {
     
-    Input<float, 2, 0, GpuDevice> input;
+    Input<float, 2, GpuDevice> input;
     input.set_input(cd.linearInput);
 
-    ReLU<float, 2, 0, GpuDevice> rl;
+    ReLU<float, 2, GpuDevice> rl;
     rl.init();
     rl.forward(input);
     rl.backward(input, cd.linearLoss);
@@ -75,10 +75,10 @@ namespace EigenSinnTest {
 
   TEST_F(ReLU2dGpu, LeakyBackward) {
 
-    Input<float, 2, 0, GpuDevice> input;
+    Input<float, 2, GpuDevice> input;
     input.set_input(cd.linearInput);
 
-    LeakyReLU<float, 2, 0, GpuDevice> rl(thresh);
+    LeakyReLU<float, 2, GpuDevice> rl(thresh);
     rl.init();
     rl.forward(input);
     rl.backward(input, cd.linearLoss);

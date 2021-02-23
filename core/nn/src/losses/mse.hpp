@@ -11,7 +11,7 @@ namespace EigenSinn {
   public:
     MseLoss() {}
 
-    void step(DeviceTensor<Scalar, Rank, Device_, Layout>& predicted, DeviceTensor<Device_, Actual, Rank, Layout>& actual) override {
+    void step(DeviceTensor<Scalar, Rank, Device_, Layout>& predicted, DeviceTensor<Actual, Rank, Device_, Layout>& actual) override {
       
       initialize(predicted, actual);
 
