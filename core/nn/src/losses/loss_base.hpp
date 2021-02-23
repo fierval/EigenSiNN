@@ -8,12 +8,12 @@ using namespace Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, typename Actual, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, typename Actual, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class LossBase {
 
   public:
 
-    virtual void step(DeviceTensor<Device_, Scalar, Rank, Layout>& predictions_any, DeviceTensor<Device_, Actual, Rank, Layout>& actual_any) = 0;
+    virtual void step(DeviceTensor<Scalar, Rank, Device_, Layout>& predictions_any, DeviceTensor<Device_, Actual, Rank, Layout>& actual_any) = 0;
 
     virtual Scalar get_output() {
       return loss;
@@ -27,7 +27,7 @@ namespace EigenSinn {
 
   protected:
     // Initializes all sorts of auxiliary dimension values
-    inline void initialize(DeviceTensor<Device_, Scalar, Rank, Layout>& predicted, DeviceTensor<Device_, Actual, Rank, Layout>& actual) {
+    inline void initialize(DeviceTensor<Scalar, Rank, Device_, Layout>& predicted, DeviceTensor<Device_, Actual, Rank, Layout>& actual) {
 
       if (is_initialized) { return; }
 
@@ -74,6 +74,6 @@ namespace EigenSinn {
     Scalar loss;
     bool is_initialized = false;
 
-    DeviceTensor<Device_, Scalar, Rank, Layout> dloss, spread_grad;
+    DeviceTensor<Scalar, Rank, Device_, Layout> dloss, spread_grad;
   };
 }

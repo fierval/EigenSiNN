@@ -5,17 +5,17 @@
 
 namespace EigenSinn {
 
-  template<typename Scalar, typename Actual, Index Rank = 2, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template<typename Scalar, typename Actual, Index Rank = 2, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class MseLoss : public LossBase<Scalar, Actual, Rank, Layout, Device_> {
   
   public:
     MseLoss() {}
 
-    void step(DeviceTensor<Device_, Scalar, Rank, Layout>& predicted, DeviceTensor<Device_, Actual, Rank, Layout>& actual) override {
+    void step(DeviceTensor<Scalar, Rank, Device_, Layout>& predicted, DeviceTensor<Device_, Actual, Rank, Layout>& actual) override {
       
       initialize(predicted, actual);
 
-      DeviceTensor<Device_, Scalar, Rank, Layout> predicted_actual_diff(orig_dims);
+      DeviceTensor<Scalar, Rank, Device_, Layout> predicted_actual_diff(orig_dims);
       predicted_actual_diff.view() = *predicted - actual->cast<Scalar>();
 
       DeviceTensor<Device_, Scalar, 0, Layout> loss_t;
