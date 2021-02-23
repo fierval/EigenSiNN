@@ -207,12 +207,11 @@ namespace EigenSinn {
       throw std::invalid_argument("CPU device required");
     }
 
-    std::vector<Index> batch_vector(batch_size), channel_vector(channels);
+    std::vector<Index> batch_vector(batch_size);
     std::iota(batch_vector.begin(), batch_vector.end(), 0);
-    std::iota(channel_vector.begin(), channel_vector.end(), 0);
 
     std::for_each(std::execution::par_unseq, batch_vector.begin(), batch_vector.end(), [&](auto b) {
-      std::for_each(std::execution::par_unseq, channel_vector.begin(), channel_vector.end(), [&](auto c) {
+      for (Index c = 0; c < channels; c++) {
         for (Index h = 0; h < kernel_height; h += dilation) {
           for (Index w = 0; w < kernel_width; w += dilation) {
 
@@ -224,7 +223,7 @@ namespace EigenSinn {
             }
           }
         }
-        }); });
+      }});
   }
 #endif
 } // EigenSinn

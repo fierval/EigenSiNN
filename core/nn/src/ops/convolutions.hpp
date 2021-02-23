@@ -245,11 +245,7 @@ namespace EigenSinn {
       out_h = (stride * i) / (width - kernel_width + 1) - padding.second;
 
       slice.view() = col->slice(slice_starts, slice_offsets).eval().reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
-#ifdef __CUDACC__
       addAndSet<Scalar, Layout, Device_>(batch_size, channels, kernel_height, dilation, kernel_width, out_h, out_w, out, slice, device);
-#else
-      addAndSet_CPU<Scalar, Layout, Device_>(batch_size, channels, kernel_height, dilation, kernel_width, out_h, out_w, out, slice, device);
-#endif
     }
 
     return std::move(out);
