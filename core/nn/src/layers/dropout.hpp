@@ -66,7 +66,7 @@ namespace EigenSinn {
     // for derivations
     void backward(LayerBase<Scalar>& prev_layer_any, std::any next_layer_grad_any) override {
 
-      DeviceTensor<Device_, Scalar, Rank> next_layer_grad(next_layer_grad_any);
+      DeviceTensor<Scalar, Rank, Device_, Layout> next_layer_grad(next_layer_grad_any);
 
       if (!is_training) { return; }
 

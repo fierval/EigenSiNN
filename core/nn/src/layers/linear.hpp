@@ -130,7 +130,7 @@ namespace EigenSinn {
     }
 
     void set_bias(std::any& v) override{
-      bias = DeviceTensor<Device_, Scalar, 1, Layout>(v);
+      bias = DeviceTensor<Scalar, 1, Device_, Layout>(v);
     }
 
   private:

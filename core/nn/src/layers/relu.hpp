@@ -19,7 +19,7 @@ namespace EigenSinn {
     void forward(LayerBase<Scalar>& prev_layer) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> x(prev_layer.get_output());
-      auto res = leaky_relu<Scalar, Rank, Layout, Device_>(x, thresh);
+      auto res = leaky_relu(x, thresh);
 
       layer_output = res.second;
       mask = res.first;
@@ -29,7 +29,7 @@ namespace EigenSinn {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> x(next_layer_grad);
 
-      layer_grad = leaky_relu_back<Scalar, Rank, Layout, Device_>(x, mask);
+      layer_grad = leaky_relu_back(x, mask);
     }
 
     std::any get_output() override {
@@ -48,7 +48,7 @@ namespace EigenSinn {
   };
 
   template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  class ReLU : public LeakyReLU<Scalar, Rank, Layout, Device_> {
+  class ReLU : public LeakyReLU<Scalar, Rank, Device_, Layout> {
   public:
     ReLU() : LeakyReLU(0) {}
   };

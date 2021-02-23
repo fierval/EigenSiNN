@@ -16,14 +16,14 @@ namespace EigenSinn
       , device_(dispatcher.get_device()) {
 
       if (Rank == 0) {
-        tensor_view = create_device_ptr<Device_, Scalar, Rank, Layout>(DSizes<Index, Rank>(), device_);
+        tensor_view = create_device_ptr<Scalar, Rank, Device_, Layout>(DSizes<Index, Rank>(), device_);
       }
     }
 
     explicit DeviceTensor(const DSizes<Index, Rank> dims)
       : DeviceTensor() {
 
-      tensor_view = create_device_ptr<Device_, Scalar, Rank, Layout>(dims, device_);
+      tensor_view = create_device_ptr<Scalar, Rank, Device_, Layout>(dims, device_);
 
     }
 
@@ -64,12 +64,12 @@ namespace EigenSinn
     DeviceTensor(std::any& any) 
       : DeviceTensor() {
 
-      auto& d = std::any_cast<DeviceTensor<Device_, Scalar, Rank, Layout>&>(any);
+      auto& d = std::any_cast<DeviceTensor<Scalar, Rank, Device_, Layout>&>(any);
 
       tensor_view = std::move(d.tensor_view);
     }
 
-    DeviceTensor<Device_, Scalar, Rank, Layout> from_any(std::any& t) {
+    DeviceTensor<Scalar, Rank, Device_, Layout> from_any(std::any& t) {
       return std::any_cast<DeviceTensor<Scalar, Rank, Device_, Layout>&>(t);
     }
 
@@ -91,7 +91,7 @@ namespace EigenSinn
     explicit DeviceTensor(const Tensor<Scalar, Rank, Layout>& data)
       : DeviceTensor(data.dimensions()) {
 
-      move_to<Device_, Scalar, Rank, Layout>(*tensor_view, data.data(), device_);
+      move_to<Scalar, Rank, Device_, Layout>(*tensor_view, data.data(), device_);
     }
 
     void set_from_device(const Scalar* data, const DSizes<Index, Rank>& dims) {
@@ -101,7 +101,7 @@ namespace EigenSinn
 
     void set_from_host(const Scalar* data, const DSizes<Index, Rank>& dims) {
       create_device_tensor_if_needed(dims);
-      move_to<Device_, Scalar, Rank, Layout>(*tensor_view, data, device_);
+      move_to<Scalar, Rank, Device_, Layout>(*tensor_view, data, device_);
     }
 
     void set_from_host(const Tensor<Scalar, Rank, Layout>& data) {
@@ -184,7 +184,7 @@ namespace EigenSinn
     // resizing, setting values
     void resize(DSizes<Index, Rank> dims) {
       release();
-      tensor_view = create_device_ptr<Device_, Scalar, Rank, Layout>(DSizes<Index, Rank>(dims), device_);
+      tensor_view = create_device_ptr<Scalar, Rank, Device_, Layout>(DSizes<Index, Rank>(dims), device_);
     }
 
     DeviceTensor& resize(array<Index, Rank> dims) {
@@ -317,37 +317,37 @@ namespace EigenSinn
       return lhs;
     }
 
-    friend DeviceTensor<bool, Rank, Device_, Layout> operator==(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
+    friend DeviceTensor<bool, Rank, Device_, Layout> operator==(DeviceTensor<Scalar, Rank, Device_, Layout>& lhs, Scalar& v) {
       DeviceTensor<bool, Rank, Device_, Layout> out(lhs.dimensions());
       out.view() = (lhs == v);
       return out;
     }
 
-    friend DeviceTensor<bool, Rank, Device_, Layout> operator!=(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
+    friend DeviceTensor<bool, Rank, Device_, Layout> operator!=(DeviceTensor<Scalar, Rank, Device_, Layout>& lhs, Scalar& v) {
       DeviceTensor<bool, Rank, Device_, Layout> out(lhs.dimensions());
       out.view() = (lhs != v);
       return out;
     }
 
-    friend DeviceTensor<bool, Rank, Device_, Layout> operator<=(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
+    friend DeviceTensor<bool, Rank, Device_, Layout> operator<=(DeviceTensor<Scalar, Rank, Device_, Layout>& lhs, Scalar& v) {
       DeviceTensor<bool, Rank, Device_, Layout> out(lhs.dimensions());
       out.view() = (lhs <= v);
       return out;
     }
 
-    friend DeviceTensor<bool, Rank, Device_, Layout> operator>=(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
+    friend DeviceTensor<bool, Rank, Device_, Layout> operator>=(DeviceTensor<Scalar, Rank, Device_, Layout>& lhs, Scalar& v) {
       DeviceTensor<bool, Rank, Device_, Layout> out(lhs.dimensions());
       out.view() = (lhs >= v);
       return out;
     }
 
-    friend DeviceTensor<bool, Rank, Device_, Layout> operator<(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
+    friend DeviceTensor<bool, Rank, Device_, Layout> operator<(DeviceTensor<Scalar, Rank, Device_, Layout>& lhs, Scalar& v) {
       DeviceTensor<bool, Rank, Device_, Layout> out(lhs.dimensions());
       out.view() = (lhs < v);
       return out;
     }
 
-    friend DeviceTensor<bool, Rank, Device_, Layout> operator>(DeviceTensor<Device_, Scalar, Rank, Layout>& lhs, Scalar& v) {
+    friend DeviceTensor<bool, Rank, Device_, Layout> operator>(DeviceTensor<Scalar, Rank, Device_, Layout>& lhs, Scalar& v) {
       DeviceTensor<bool, Rank, Device_, Layout> out(lhs.dimensions());
       out.view() = (lhs > v);
       return out;
@@ -396,7 +396,7 @@ namespace EigenSinn
 
     friend DeviceTensor operator/(Scalar lhs, DeviceTensor rhs) {
 
-      DeviceTensor<Device_, Scalar, Rank, Layout> res(rhs.dimensions());
+      DeviceTensor<Scalar, Rank, Device_, Layout> res(rhs.dimensions());
       res->device(rhs.device_) = lhs / rhs;
       return res;
     }
@@ -444,7 +444,7 @@ namespace EigenSinn
   private:
     void create_device_tensor_if_needed(const DSizes<Index, Rank>& dims) {
       release();
-      tensor_view = create_device_ptr<Device_, Scalar, Rank, Layout>(dims, device_);
+      tensor_view = create_device_ptr<Scalar, Rank, Device_, Layout>(dims, device_);
     }
 
     void release(bool release_device = false) {

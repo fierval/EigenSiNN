@@ -30,7 +30,7 @@ namespace EigenSinn {
   /// <param name="device"></param>
   /// <param name="dims"></param>
   /// <returns></returns>
-  template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   inline TensorView<Scalar, Rank, Layout> create_device_view(const DSizes<Index, Rank>& dims, Device_& device) {
 
     size_t alloc_size = dims.TotalSize() * sizeof(Scalar);
@@ -39,14 +39,14 @@ namespace EigenSinn {
     return out;
   }
 
-  template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   inline void move_to(TensorView<Scalar, Rank, Layout>& dest, const TensorView<Scalar, Rank, Layout>& src, Device_& device) {
 
     assert(src.dimensions() == dest.dimensions());
     device.memcpyHostToDevice(dest.data(), src.data(), dest.dimensions().TotalSize() * sizeof(Scalar));
   }
 
-  template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   inline void move_to(TensorView<Scalar, Rank, Layout>& dest, const Scalar* src, Device_& device) {
 
     device.memcpyHostToDevice(dest.data(), src, dest.dimensions().TotalSize() * sizeof(Scalar));
@@ -59,7 +59,7 @@ namespace EigenSinn {
   /// <typeparam name="Scalar"></typeparam>
   /// <param name="dims"></param>
   /// <param name="device"></param>
-  template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   inline PtrTensorView<Scalar, Rank> create_device_ptr(DSizes<Index, Rank> dims, Device_& device) {
 
     size_t alloc_size = dims.TotalSize() * sizeof(Scalar);
@@ -78,7 +78,7 @@ namespace EigenSinn {
   /// <param name="t"></param>
   /// <param name="val"></param>
   /// <param name="device"></param>
-  template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   inline void setConstant(TensorView<Scalar, Rank, Layout>& t, Scalar val, Device_& device) {
 
     assert(t.size());
@@ -90,12 +90,12 @@ namespace EigenSinn {
   }
 
 
-  template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   inline void setZero(TensorView<Scalar, Rank, Layout>& t, Device_& device) {
     setConstant(t, (Scalar)0, device);
   }
 
-  template<typename Device_, typename Scalar, Index Rank, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   inline void setValues(TensorView<Scalar, Rank, Layout>& t, const Tensor<Scalar, Rank, Layout>& vals, Device_& device) {
 
     assert(t.size());

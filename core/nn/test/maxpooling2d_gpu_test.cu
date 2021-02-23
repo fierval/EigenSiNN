@@ -38,7 +38,7 @@ namespace EigenSinnTest {
     }
 
     CommonData2d<GpuDevice> cd;
-    DeviceTensor<float, 2, Device_> output, dinput, fakeloss;
+    DeviceTensor<float, 2, GpuDevice> output, dinput, fakeloss;
     const array<Index, 1> extents1d = { 4 };
     const array<Index, 2> poolDims = { 3, 3 };
 

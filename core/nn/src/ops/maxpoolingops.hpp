@@ -167,7 +167,7 @@ namespace EigenSinn {
       array<Index, 4> output_starts({ 0, 0, 0, 0 });
 
       // get index tuples in order to use tuple reducer
-      DeviceTensor<Device_, Tuple<Index, Scalar>, 4> index_tuples(lengths);
+      DeviceTensor<Tuple<Index, Scalar>, 4, Device_> index_tuples(lengths);
       Device_ device = index_tuples.get_device();
 
       for (starts[2] = 0, output_starts[2] = 0; starts[2] + extents[0] <= dims[2]; starts[2] += stride, output_starts[2]++) {

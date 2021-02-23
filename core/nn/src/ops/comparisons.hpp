@@ -34,14 +34,14 @@ namespace EigenSinn {
   inline bool is_elementwise_approx_eq(const DeviceTensor<Scalar, Rank, Device_, Layout>& a, std::any b, float prec = 1e-5) {
 
     DeviceTensor<Scalar, Rank, Device_, Layout> out(b);
-    return is_elementwise_approx_eq<Scalar, Rank, Layout, Device_>(a, out, prec);
+    return is_elementwise_approx_eq<Scalar, Rank, Device_, Layout>(a, out, prec);
   }
 
   template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   inline bool is_elementwise_approx_eq(std::any a, const DeviceTensor<Scalar, Rank, Device_, Layout>& b, float prec = 1e-5) {
 
     DeviceTensor<Scalar, Rank, Device_, Layout> out(a);
-    return is_elementwise_approx_eq<Scalar, Rank, Layout, Device_>(b, out, prec);
+    return is_elementwise_approx_eq<Scalar, Rank, Device_, Layout>(b, out, prec);
   }
 
   template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
@@ -63,7 +63,7 @@ namespace EigenSinn {
   inline bool is_elementwise_approx_eq(std::any a, const Tensor<Scalar, Rank, Layout>& b, float prec = 1e-5) {
 
     auto out = DeviceTensor<Scalar, Rank, Device_, Layout>(a).to_host();
-    return is_elementwise_approx_eq<Scalar, Rank, Layout, Device_>(b, out, prec);
+    return is_elementwise_approx_eq<Scalar, Rank, Device_, Layout>(b, out, prec);
   }
 
 }

@@ -185,7 +185,7 @@ namespace EigenSinn {
     }
 
   private:
-    DeviceTensor<Device_, Scalar, Rank> layer_output, layer_gradient, xhat;
+    DeviceTensor<Scalar, Rank, Device_> layer_output, layer_gradient, xhat;
 
     DeviceTensor<Scalar, 1, Device_> gamma, beta, running_mean, running_variance, mu, var;
     DeviceTensor<Scalar, 1, Device_> dbeta, dgamma;

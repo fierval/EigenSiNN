@@ -6,7 +6,7 @@
 namespace EigenSinn {
 
   template<typename Scalar, typename Actual, Index Rank = 2, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  class MseLoss : public LossBase<Scalar, Actual, Rank, Layout, Device_> {
+  class MseLoss : public LossBase<Scalar, Actual, Rank, Device_, Layout> {
   
   public:
     MseLoss() {}
@@ -18,7 +18,7 @@ namespace EigenSinn {
       DeviceTensor<Scalar, Rank, Device_, Layout> predicted_actual_diff(orig_dims);
       predicted_actual_diff.view() = *predicted - actual->cast<Scalar>();
 
-      DeviceTensor<Device_, Scalar, 0, Layout> loss_t;
+      DeviceTensor<Scalar, 0, Device_, Layout> loss_t;
       loss_t.view() = predicted_actual_diff->pow(2).mean();
       loss = loss_t.to_host()(0);
 

@@ -33,7 +33,7 @@ namespace EigenSinn {
   }
 
   // broadcast channel dimension
-  template  <typename Scalar, Index Rank, , typename Device_, int Layout>
+  template  <typename Scalar, Index Rank, typename Device_, int Layout>
   inline DeviceTensor<Scalar, Rank, Device_, Layout> broadcast_as_last_dim(DeviceTensor<Scalar, 1, Device_, Layout>& t, DSizes<Index, Rank> broadcast_dims) {
 
     DSizes<Index, Rank> reshaped_dims;

@@ -42,7 +42,7 @@ namespace EigenSinn {
     void forward(LayerBase<Scalar>& prev_layer_any) override {
 
       DeviceTensor<Scalar, 4, Device_, Layout> input(prev_layer_any.get_output());
-      DeviceTensor<Scalar, 2, Device_, Layout> inp_reshaped = unfold_conv_res<Scalar, Layout, Device_>(input);
+      DeviceTensor<Scalar, 2, Device_, Layout> inp_reshaped = unfold_conv_res<Scalar, Device_, Layout>(input);
 
       
       DeviceTensor<Scalar, 4, Device_, Layout> dilated = dilate_tensor(kernel, dilation);
@@ -71,13 +71,13 @@ namespace EigenSinn {
       DeviceTensor<Scalar, 4, Device_, Layout> next_layer_grad(next_layer_grad_any);
 
       DeviceTensor<Scalar, 2, Device_, Layout> dout = 
-        im2col<Scalar, 4, Layout, Device_>(next_layer_grad, kernel.dimensions(), padding, stride, dilation);
+        im2col<Scalar, 4, Device_, Layout>(next_layer_grad, kernel.dimensions(), padding, stride, dilation);
 
       // dX: (kernel.T).T * dout which is just a regular convolution
       dX = convolve<Scalar, 4, Layout, Device_>(next_layer_grad, kernel, padding, stride, dilation);
 
       // dW: (dout * x_col.T).T
-      DeviceTensor<Scalar, 2, Device_, Layout> inp_reshaped = unfold_conv_res<Scalar, Layout, Device_>(prev_layer);
+      DeviceTensor<Scalar, 2, Device_, Layout> inp_reshaped = unfold_conv_res<Scalar, Device_, Layout>(prev_layer);
       ProductDims prod_dims = { IndexPair<int>(1, 1) };
       DeviceTensor<Scalar, 2, Device_, Layout>  dW_col(inp_reshaped.dimension(0), dout.dimension(0));
       dW_col.view() = inp_reshaped->contract(*dout, prod_dims);

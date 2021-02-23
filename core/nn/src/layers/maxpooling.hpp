@@ -57,7 +57,7 @@ namespace EigenSinn {
 
   private:
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_gradient;
-    DeviceTensor<Device_, Index, Rank, Layout> mask;
+    DeviceTensor<Index, Rank, Device_, Layout> mask;
 
     Index stride;
     array<Index, Rank / 2> extents;

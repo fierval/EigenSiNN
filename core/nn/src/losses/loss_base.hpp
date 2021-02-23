@@ -27,7 +27,7 @@ namespace EigenSinn {
 
   protected:
     // Initializes all sorts of auxiliary dimension values
-    inline void initialize(DeviceTensor<Scalar, Rank, Device_, Layout>& predicted, DeviceTensor<Device_, Actual, Rank, Layout>& actual) {
+    inline void initialize(DeviceTensor<Scalar, Rank, Device_, Layout>& predicted, DeviceTensor<Actual, Rank, Device_, Layout>& actual) {
 
       if (is_initialized) { return; }
 

@@ -30,7 +30,7 @@ namespace EigenSinnTest {
 
     linear.init(cd.weights.to_host());
     linear.forward(input);
-    linear.backward(input, DeviceTensor<float, 2, Device_>(cd.fakeloss));
+    linear.backward(input, DeviceTensor<float, 2, GpuDevice>(cd.fakeloss));
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.output, linear.get_output()));
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dinput, linear.get_loss_by_input_derivative()));
@@ -46,7 +46,7 @@ namespace EigenSinnTest {
 
     linear.init(cd.weights.to_host(), cd.bias.to_host());
     linear.forward(input);
-    linear.backward(input, DeviceTensor<float, 2, Device_>(cd.fakeloss));
+    linear.backward(input, DeviceTensor<float, 2, GpuDevice>(cd.fakeloss));
 
     cd.output.setValues({ { 0.23947978,  1.57379603,  0.23219500,  0.99900943},
         { 1.11431766, -1.17991734, -0.41367567,  1.14438200},
@@ -64,7 +64,7 @@ namespace EigenSinnTest {
     Linear<float, GpuDevice> linear(in_dim, 512);
 
     linear.init();
-    Tensor<float, 2> weights(DeviceTensor<float, 2, Device_>((linear.get_weights())).to_host());
+    Tensor<float, 2> weights(DeviceTensor<float, 2, GpuDevice>((linear.get_weights())).to_host());
     Tensor<float, 0> avg = weights.mean();
     Tensor<float, 0> std = (weights - avg(0)).pow(2.).mean();
 

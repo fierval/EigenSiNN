@@ -7,13 +7,13 @@ namespace EigenSinn {
 
   // TODO: Add support for any rank
   template<typename Scalar, typename Actual, Index Rank = 2, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  class CrossEntropyLoss : public LossBase<Scalar, Actual, Rank, Layout, Device_> {
+  class CrossEntropyLoss : public LossBase<Scalar, Actual, Rank, Device_, Layout> {
 
   public:
     CrossEntropyLoss() {
     }
 
-    void initialize(DeviceTensor<Scalar, Rank, Device_, Layout>& predicted, DeviceTensor<Device_, Actual, Rank, Layout>& actual) {
+    void initialize(DeviceTensor<Scalar, Rank, Device_, Layout>& predicted, DeviceTensor<Actual, Rank, Device_, Layout>& actual) {
 
       if (is_initialized) {
         return;
@@ -42,10 +42,10 @@ namespace EigenSinn {
       DeviceTensor<Scalar, Rank, Device_, Layout> exp_all(orig_dims);
       exp_all.view() = predicted->exp();
 
-      DeviceTensor<Device_, Scalar, Rank - 1, Layout> exp_sum(reduced_dims);
+      DeviceTensor<Scalar, Rank - 1, Device_, Layout> exp_sum(reduced_dims);
       exp_sum.view() = exp_all->sum(reduction_dims);
 
-      DeviceTensor<Device_, Scalar, 0, Layout> loss_t;
+      DeviceTensor<Scalar, 0, Device_, Layout> loss_t;
       loss_t.view() = (-(predicted * act_scalar)->sum(reduction_dims) + exp_sum->log()).mean();
       loss = loss_t.to_host()(0);
 
@@ -57,6 +57,6 @@ namespace EigenSinn {
 
   private:
 
-    DeviceTensor<Device_, Scalar, Rank - 1, Layout> dsum;
+    DeviceTensor<Scalar, Rank - 1, Device_, Layout> dsum;
   };
 }

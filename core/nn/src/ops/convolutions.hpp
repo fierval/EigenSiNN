@@ -68,7 +68,7 @@ namespace EigenSinn {
   }
 
   // NCHW format
-  template <typename Scalar, int Rank = 4, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, int Rank = 4, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   inline DeviceTensor<Scalar, 2, Device_, Layout> im2col(const DeviceTensor<Scalar, Rank, Device_, Layout>& input, const DSizes<Index, Rank>& kernel_dims, const Padding2D& padding, Index stride, Index dilation) {
 
     auto out_dims = get_output_dimensions(*input, kernel_dims, padding, stride, dilation);
@@ -105,7 +105,7 @@ namespace EigenSinn {
     return std::move(output);
   }
 
-  template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   inline auto dilate_tensor(DeviceTensor<Scalar, 4, Device_, Layout>& tensor, Index dilation) {
 
     if (dilation == 1) { return tensor; }
@@ -144,7 +144,7 @@ namespace EigenSinn {
 
   // return kernel representation for GEMM with 
   // im2col representation of the conv layer
-  template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   inline DeviceTensor<Scalar, 2, Device_, Layout> unfold_kernel(DeviceTensor<Scalar, 4, Device_, Layout>& kernel) {
 
     auto dims = kernel.dimensions();
@@ -156,7 +156,7 @@ namespace EigenSinn {
   }
 
   // convert back to the [b, c, h, w] kernel representation
-  template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   inline auto fold_kernel(DeviceTensor<Scalar, 2, Device_, Layout>& kernel_col, const array<Index, 4>& expected_dims) {
 
     assert(expected_dims[0] == kernel_col.dimension(0));
@@ -174,7 +174,7 @@ namespace EigenSinn {
   // final dimensions should be the same as those of FX in col form:
   // F: [Bf x C * Hf * Wf], X: [C * Hf * Wf x B * Ho * Wo] -> [Bf X B * Ho * Wo], 
   // Resulting unrolled dimensions: [B, Bf, Ho, Wo], Bf = new C
-  template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   inline auto unfold_conv_res(const DeviceTensor<Scalar, 4, Device_, Layout>& layer) {
 
     auto dims = layer.dimensions();
@@ -190,7 +190,7 @@ namespace EigenSinn {
   // assuming we have just performed a convolution operation.
   // e.g. t (*) k = r, t: [2, 3, 4, 4], k: [5, 3, 3, 3], r: [2, 5, 2, 2]
   // r in im2col form will be [5, 8]
-  template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   inline auto fold_conv_res(const DeviceTensor<Scalar, 2, Device_, Layout>& conv_res, const array<Index, 4>& expected_dims) {
 
     assert(expected_dims[1] == conv_res.dimension(0));
@@ -265,15 +265,15 @@ namespace EigenSinn {
     DSizes<Index, Rank> out_dims = get_output_dimensions(*input, kernel.dimensions(), padding, stride, dilation);
 
     // perform convolutiion with GEMM using im2col
-    auto col_inputs = im2col<Scalar, Rank, Layout, Device_>(input, kernel.dimensions(), padding, stride, dilation);
-    auto unf_kernel = unfold_kernel<Scalar, Layout, Device_>(kernel);
+    auto col_inputs = im2col<Scalar, Rank, Device_, Layout>(input, kernel.dimensions(), padding, stride, dilation);
+    auto unf_kernel = unfold_kernel<Scalar, Device_, Layout>(kernel);
 
     ProductDims prod_dims = { IndexPair<int>(1,0) };
     DeviceTensor<float, 2, Device_> res(unf_kernel.dimension(0), col_inputs.dimension(1));
     res.view() = unf_kernel->contract(*col_inputs, prod_dims);
 
     // NCHW output tensor
-    return std::move(fold_conv_res<Scalar, Layout, Device_>(res, out_dims));
+    return std::move(fold_conv_res<Scalar, Device_>(res, out_dims));
   }
 
   // pad unevenly in case of k % 2 == 1:
