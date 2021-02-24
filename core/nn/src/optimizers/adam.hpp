@@ -6,7 +6,7 @@
 namespace EigenSinn {
 
   template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  class Adam : public OptimizerBase<Scalar, Layout, Device_> {
+  class Adam : public OptimizerBase<Scalar, Device_, Layout> {
 
   public:
     Adam(Scalar _lr, float _beta1 = 0.9, float _beta2 = 0.999, float _eps = 1e-8)

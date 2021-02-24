@@ -6,7 +6,7 @@
 namespace EigenSinn {
 
   template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  class SGD : public OptimizerBase<Scalar, Layout, Device_> {
+  class SGD : public OptimizerBase<Scalar, Device_, Layout> {
 
   public:
     SGD(Scalar _lr, Scalar _momentum = 0, bool _nesterov = false)

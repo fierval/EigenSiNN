@@ -11,7 +11,7 @@ namespace EigenSinn {
 
   typedef std::tuple<std::any, std::any> DeviceWeightBiasTuple;
 
-  template <typename Scalar, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class OptimizerBase {
 
   public:
