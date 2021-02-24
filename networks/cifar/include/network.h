@@ -17,10 +17,10 @@ using namespace Eigen;
 using namespace EigenSinn;
 
 namespace network {
-  template <class Loss, typename Device_ = ThreadPoolDevice >
+  template <typename Scalar, typename Device_ = ThreadPoolDevice >
   struct NetworkNode {
-    std::unique_ptr<LayerBase<float>> layer;
-    std::unique_ptr<OptimizerBase<float, 0, Device_>> optimizer;
+    std::unique_ptr<LayerBase<Scalar>> layer;
+    std::unique_ptr<OptimizerBase<Scalar, Device_>> optimizer;
 
     NetworkNode() : layer(nullptr), optimizer(nullptr) {}
 
@@ -29,11 +29,12 @@ namespace network {
       optimizer = std::move(other.optimizer);
     }
 
-    NetworkNode(LayerBase<float>* _layer, OptimizerBase<float, 0, Device_>* _optimizer) : layer(_layer), optimizer(_optimizer) {}
+    NetworkNode(LayerBase<Scalar>* _layer, OptimizerBase<Scalar, 0, Device_>* _optimizer) : layer(_layer), optimizer(_optimizer) {}
+    
   };
 
 
-  template<class Loss, typename Device_>
+  template< template<typename Scalar, typename Actual, Index Rank = 2, typename Device_ = ThreadPoolDevice, int Layout = ColMajor> class Loss>
   class NetBase {
 
     typedef std::vector<NetworkNode<Device_>> Network;
@@ -79,7 +80,6 @@ namespace network {
     }
 
     // Run the step of back-propagation
-    template<typename Scalar, typename Actual, Index Rank, int Layout = ColMajor>
     inline virtual void step(DeviceTensor<Scalar, Rank, Device_, Layout>& batch_tensor, DeviceTensor<Actual, Rank, Device_, Layout>& label_tensor) {
 
       // get the input
@@ -97,6 +97,10 @@ namespace network {
 
       // optimizer steop
       optimizer();
+    }
+
+    inline void add(NetworkNode* n) {
+      network.push_back(n);
     }
 
   protected:
