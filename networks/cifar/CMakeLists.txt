@@ -29,8 +29,15 @@ message(STATUS "OpenCV libs: ${OpenCV_LIBS}")
 
 set(APP_EXE simple_cifar)
 
+set(WITH_CPU true)
+
 # discover sources
-file(GLOB_RECURSE APP_SOURCES LIST_DIRECTORIES false "src/*.cpp")
+if(WITH_CPU)
+    file(GLOB_RECURSE APP_SOURCES LIST_DIRECTORIES false "src/*.cpp")
+else()
+    file(GLOB_RECURSE APP_SOURCES LIST_DIRECTORIES false "src/*.cu")
+endif()
+
 message(STATUS "Sources: ${APP_SOURCES}")
 
 # build app exe
