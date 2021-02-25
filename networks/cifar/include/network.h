@@ -39,7 +39,14 @@ namespace EigenSinn {
 
   public:
 
+    NetBase() : inited(false) {}
+
     inline virtual void forward() {
+
+      if (!inited) {
+        throw std::logic_error("Initialize network weights first");
+      }
+
       for (auto it = network.begin() + 1; it != network.end(); it++) {
         it->layer->forward(*(it - 1)->layer);
       }
@@ -49,6 +56,8 @@ namespace EigenSinn {
       for (int i = 0; i < network.size(); i++) {
         network[i].layer->init();
       }
+
+      inited = true;
     }
 
     inline virtual void backward(std::any loss_derivative) {
@@ -119,6 +128,10 @@ namespace EigenSinn {
 
     // assuming that the last layer of the network is Flatten, we can get the flattened dimension
     inline int get_flat_dimension(const array<Index, Rank>& input_dims) {
+
+      // or it will throw during the forward pass
+      init();
+
       DeviceTensor<Scalar, Rank, Device_, Layout> inp(input_dims);
       inp.setZero();
 
@@ -134,12 +147,15 @@ namespace EigenSinn {
       for (int i = 1; i < dims.size(); i++) {
         res *= dims[i];
       }
+
+      // we will need to initialize remaining layers
+      inited = false;
       return res;
     }
 
     Network network;
     Loss loss;
-
+    bool inited;
   };
 
   template<typename Device_ = ThreadPoolDevice>

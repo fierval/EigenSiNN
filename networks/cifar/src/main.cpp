@@ -33,6 +33,7 @@ int main(int argc, char* argv[]) {
   LabelContainer next_labels;
 
   auto net = EigenSinn::Cifar10(array<Index, 4>{(Index)batch_size, channels, side, side}, num_classes, learning_rate);
+  net.init();
 
   auto start = std::chrono::high_resolution_clock::now();
   auto start_step = std::chrono::high_resolution_clock::now();
