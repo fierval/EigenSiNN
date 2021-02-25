@@ -125,105 +125,99 @@ namespace EigenSinn {
         batches, channels, dilation, kernel_width, kernel_height, h_im, w_im);
 
       cudaDeviceSynchronize();
+      return;
     }
-    else {
 
-#endif
-      for (Index b = 0; b < batches; b++) {
-        Index col = 0;
-        Index col_batch = shift + b;
+#else
+    for (Index b = 0; b < batches; b++) {
+      Index col = 0;
+      Index col_batch = shift + b;
 
-        for (Index c = 0; c < channels; c++) {
-          for (Index h_kernel = h_im; h_kernel < h_im + kernel_height; h_kernel += dilation) {
-            for (Index w_kernel = w_im; w_kernel < w_im + kernel_width; w_kernel += dilation, col++) {
+      for (Index c = 0; c < channels; c++) {
+        for (Index h_kernel = h_im; h_kernel < h_im + kernel_height; h_kernel += dilation) {
+          for (Index w_kernel = w_im; w_kernel < w_im + kernel_width; w_kernel += dilation, col++) {
 
-              if (h_kernel >= 0 && w_kernel >= 0 && h_kernel < input.dimension(2) && w_kernel < input.dimension(3)) {
-                (*output)(col, col_batch) = (*input)(b, c, h_kernel, w_kernel);
-              }
-              else {
-                (*output)(col, col_batch) = Scalar(0);
-              }
+            if (h_kernel >= 0 && w_kernel >= 0 && h_kernel < input.dimension(2) && w_kernel < input.dimension(3)) {
+              (*output)(col, col_batch) = (*input)(b, c, h_kernel, w_kernel);
+            }
+            else {
+              (*output)(col, col_batch) = Scalar(0);
             }
           }
         }
       }
-#ifdef __CUDACC__
     }
 #endif
   }
 
-  template<typename Scalar, int Layout, typename Device_>
-  void addAndSet(const Index& batch_size, const Index& channels, const Index& kernel_height,
-    int dilation, const Index& kernel_width, const Index& out_h, const Index& out_w,
-    DeviceTensor<Scalar, 4, Device_, Layout>& out, DeviceTensor<Scalar, 4, Device_, Layout>& slice,
-    Device_& device) {
+template<typename Scalar, int Layout, typename Device_>
+void addAndSet(const Index& batch_size, const Index& channels, const Index& kernel_height,
+  int dilation, const Index& kernel_width, const Index& out_h, const Index& out_w,
+  DeviceTensor<Scalar, 4, Device_, Layout>& out, DeviceTensor<Scalar, 4, Device_, Layout>& slice,
+  Device_& device) {
 
 #ifdef __CUDACC__
-    if (std::is_same<Device_, GpuDevice>::value) {
-      static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
-      dim3 grid(getGridSize(batch_size, block.x), getGridSize(channels, block.y));
+  if (std::is_same<Device_, GpuDevice>::value) {
+    static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
+    dim3 grid(getGridSize(batch_size, block.x), getGridSize(channels, block.y));
 
-      add_and_set_kernel<Scalar, ColMajor> << <grid, block >> > (*out, *slice,
-        batch_size, channels, kernel_height, kernel_width, out_h, out_w, dilation);
+    add_and_set_kernel<Scalar, ColMajor> << <grid, block >> > (*out, *slice,
+      batch_size, channels, kernel_height, kernel_width, out_h, out_w, dilation);
 
-      cudaDeviceSynchronize();
+    cudaDeviceSynchronize();
+    return;
+  }
+#else
+  for (Index b = 0; b < batch_size; b++) {
+    for (Index c = 0; c < channels; c++) {
+      for (Index h = 0; h < kernel_height; h += dilation) {
+        for (Index w = 0; w < kernel_width; w += dilation) {
 
-    }
-    else {
-#endif
-      for (Index b = 0; b < batch_size; b++) {
-        for (Index c = 0; c < channels; c++) {
-          for (Index h = 0; h < kernel_height; h += dilation) {
-            for (Index w = 0; w < kernel_width; w += dilation) {
+          Index height_offset = h + out_h;
+          Index width_offset = w + out_w;
 
-              Index height_offset = h + out_h;
-              Index width_offset = w + out_w;
-
-              if (height_offset >= 0 && height_offset < out.dimension(2) && width_offset >= 0 && width_offset < out.dimension(3)) {
-                (*out)(b, c, height_offset, width_offset) += (*slice)(b, c, h, w);
-              }
-            }
+          if (height_offset >= 0 && height_offset < out.dimension(2) && width_offset >= 0 && width_offset < out.dimension(3)) {
+            (*out)(b, c, height_offset, width_offset) += (*slice)(b, c, h, w);
           }
         }
       }
-
-#ifdef __CUDACC__
     }
-#endif
   }
+#endif
+}
 
 #ifdef __INTELLISENSE__
 #undef __CUDACC__
 #endif
 
 #ifndef __CUDACC__
-  template<typename Scalar, int Layout, typename Device_>
-  void addAndSet_CPU(const Index& batch_size, const Index& channels, const Index& kernel_height,
-    int dilation, const Index& kernel_width, const Index& out_h, const Index& out_w,
-    DeviceTensor<Scalar, 4, Device_, Layout>& out, DeviceTensor<Scalar, 4, Device_, Layout>& slice,
-    Device_& device) {
+template<typename Scalar, int Layout, typename Device_>
+void addAndSet_CPU(const Index& batch_size, const Index& channels, const Index& kernel_height,
+  int dilation, const Index& kernel_width, const Index& out_h, const Index& out_w,
+  DeviceTensor<Scalar, 4, Device_, Layout>& out, DeviceTensor<Scalar, 4, Device_, Layout>& slice,
+  Device_& device) {
 
-    if (!std::is_same<Device_, ThreadPoolDevice>::value && !std::is_same<Device_, DefaultDevice>::value) {
-      throw std::invalid_argument("CPU device required");
-    }
+  if (!std::is_same<Device_, ThreadPoolDevice>::value && !std::is_same<Device_, DefaultDevice>::value) {
+    throw std::invalid_argument("CPU device required");
+  }
 
-    std::vector<Index> batch_vector(batch_size);
-    std::iota(batch_vector.begin(), batch_vector.end(), 0);
+  std::vector<Index> batch_vector(batch_size);
+  std::iota(batch_vector.begin(), batch_vector.end(), 0);
 
-    std::for_each(std::execution::par_unseq, batch_vector.begin(), batch_vector.end(), [&](auto b) {
-      for (Index c = 0; c < channels; c++) {
-        for (Index h = 0; h < kernel_height; h += dilation) {
-          for (Index w = 0; w < kernel_width; w += dilation) {
+  std::for_each(std::execution::par_unseq, batch_vector.begin(), batch_vector.end(), [&](auto b) {
+    for (Index c = 0; c < channels; c++) {
+      for (Index h = 0; h < kernel_height; h += dilation) {
+        for (Index w = 0; w < kernel_width; w += dilation) {
 
-            Index height_offset = h + out_h;
-            Index width_offset = w + out_w;
+          Index height_offset = h + out_h;
+          Index width_offset = w + out_w;
 
-            if (height_offset >= 0 && height_offset < out.dimension(2) && width_offset >= 0 && width_offset < out.dimension(3)) {
-              (*out)(b, c, height_offset, width_offset) += (*slice)(b, c, h, w);
-            }
+          if (height_offset >= 0 && height_offset < out.dimension(2) && width_offset >= 0 && width_offset < out.dimension(3)) {
+            (*out)(b, c, height_offset, width_offset) += (*slice)(b, c, h, w);
           }
         }
-      }});
-  }
+      }
+    }});
+}
 #endif
 } // EigenSinn

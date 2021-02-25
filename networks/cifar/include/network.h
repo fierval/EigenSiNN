@@ -16,30 +16,29 @@
 using namespace Eigen;
 using namespace EigenSinn;
 
-namespace network {
+namespace EigenSinn {
   template <typename Scalar, typename Device_ = ThreadPoolDevice >
   struct NetworkNode {
     std::unique_ptr<LayerBase<Scalar>> layer;
     std::unique_ptr<OptimizerBase<Scalar, Device_>> optimizer;
 
-    NetworkNode() : layer(nullptr), optimizer(nullptr) {}
+    NetworkNode(LayerBase<Scalar>* _layer, OptimizerBase<Scalar,Device_, 0>* _optimizer = nullptr) : layer(_layer), optimizer(_optimizer) {}
 
-    NetworkNode(NetworkNode<Device_>&& other)  noexcept : NetworkNode<Device_>() {
+    NetworkNode(NetworkNode<Scalar, Device_>&& other)  noexcept {
       layer = std::move(other.layer);
       optimizer = std::move(other.optimizer);
     }
 
-    NetworkNode(LayerBase<Scalar>* _layer, OptimizerBase<Scalar, 0, Device_>* _optimizer) : layer(_layer), optimizer(_optimizer) {}
-    
   };
 
 
-  template< template<typename Scalar, typename Actual, Index Rank = 2, typename Device_ = ThreadPoolDevice, int Layout = ColMajor> class Loss>
+  template<typename Scalar, Index Rank, typename Loss, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class NetBase {
 
-    typedef std::vector<NetworkNode<Device_>> Network;
+    typedef std::vector<NetworkNode<Scalar, Device_>> Network;
 
   public:
+
     inline virtual void forward() {
       for (auto it = network.begin() + 1; it != network.end(); it++) {
         it->layer->forward(*(it - 1)->layer);
@@ -80,16 +79,17 @@ namespace network {
     }
 
     // Run the step of back-propagation
-    inline virtual void step(DeviceTensor<Scalar, Rank, Device_, Layout>& batch_tensor, DeviceTensor<Actual, Rank, Device_, Layout>& label_tensor) {
+    template<typename Actual, Index OutputRank>
+    inline void step(DeviceTensor<Scalar, Rank, Device_, Layout>& batch_tensor, DeviceTensor<Actual, OutputRank, Device_, Layout>& label_tensor) {
 
       // get the input
-      dynamic_cast<Input<float, 4>*>(network[0].layer)->set_input(batch_tensor);
+      dynamic_cast<Input<Scalar, Rank>*>(network[0].layer.get())->set_input(batch_tensor);
 
       // forward step
       forward();
 
       // loss step
-      DeviceTensor<float, 2> output(network.rbegin()->layer->get_output());
+      DeviceTensor<Scalar, OutputRank> output(network.rbegin()->layer->get_output());
       loss.step(output, label_tensor);
 
       // backward step
@@ -99,23 +99,34 @@ namespace network {
       optimizer();
     }
 
-    inline void add(NetworkNode* n) {
+    inline void set_input(DeviceTensor<Scalar, Rank, Device_, Layout>& tensor) {
+
+      auto inp_layer = dynamic_cast<Input<float, 4>*>(network[0].layer.get());
+      inp_layer->set_input(tensor);
+    }
+
+    inline std::any get_output() {
+      return network.rbegin()->layer.get()->get_output();
+    }
+
+    inline void add(NetworkNode<Scalar, Device_>* n) {
       network.push_back(n);
     }
+
+    inline std::any get_loss() { return loss.get_output(); }
 
   protected:
 
     // assuming that the last layer of the network is Flatten, we can get the flattened dimension
-    template<Index Rank>
-    inline int get_flat_dimension(const Network& network, const array<Index, Rank>& input_dims) {
-      Tensor<float, Rank> inp(input_dims);
+    inline int get_flat_dimension(const array<Index, Rank>& input_dims) {
+      DeviceTensor<Scalar, Rank, Device_, Layout> inp(input_dims);
       inp.setZero();
 
-      dynamic_cast<Input<float, Rank>*>(network[0].layer)->set_input(inp);
+      dynamic_cast<Input<Scalar, Rank>*>(network[0].layer.get())->set_input(inp);
 
       forward();
 
-      auto dims = DeviceTensor<float, Rank>(network.rbegin()->layer->get_output()).dimensions();
+      auto dims = DeviceTensor<Scalar, Rank>(network.rbegin()->layer->get_output()).dimensions();
       int res = 1;
 
       // no STL for CUDA, can't use std::accumulate
@@ -132,37 +143,36 @@ namespace network {
   };
 
   template<typename Device_ = ThreadPoolDevice>
-  class Cifar10 : public NetBase<Device_> {
+  class Cifar10 : public NetBase<float, 4, CrossEntropyLoss<float, uint8_t, 2, Device_>, Device_> {
 
-    inline void create_network(array<Index, 4> input_dims, int num_classes, float learning_rate) {
-
-      Network network;
+  public:
+    Cifar10(array<Index, 4> input_dims, int num_classes, float learning_rate) {
 
       // push back rvalues so we don't have to invoke the copy constructor
-      network.push_back(NetworkNode<Device_>(new Input<float, 4>));
+      network.push_back(NetworkNode<float, Device_>(new Input<float, 4>));
 
-      network.push_back(NetworkNode<Device_>(new Conv2d<float>(array<Index, 4>{6, 3, 5, 5}, Padding2D{ 0, 0 }, 1), get_optimizer<4>(learning_rate)));
-      network.push_back(NetworkNode<Device_>(new ReLU<float, 4>));
-      network.push_back(NetworkNode<Device_>(new MaxPooling<float, 4>(array<Index, 2>{2, 2}, 2)));
+      network.push_back(NetworkNode<float, Device_>(new Conv2d<float>(array<Index, 4>{6, 3, 5, 5}, Padding2D{ 0, 0 }, 1), get_optimizer<4>(learning_rate)));
+      network.push_back(NetworkNode<float, Device_>(new ReLU<float, 4>));
+      network.push_back(NetworkNode<float, Device_>(new MaxPooling<float, 4>(array<Index, 2>{2, 2}, 2)));
 
-      network.push_back(NetworkNode<Device_>(new Conv2d<float>(array<Index, 4>{16, 6, 5, 5}, Padding2D{ 0, 0 }, 1), get_optimizer<4>(learning_rate)));
-      network.push_back(NetworkNode<Device_>(new ReLU<float, 4>));
-      network.push_back(NetworkNode<Device_>(new MaxPooling<float, 4>(array<Index, 2>{2, 2}, 2)));
+      network.push_back(NetworkNode<float, Device_>(new Conv2d<float>(array<Index, 4>{16, 6, 5, 5}, Padding2D{ 0, 0 }, 1), get_optimizer<4>(learning_rate)));
+      network.push_back(NetworkNode<float, Device_>(new ReLU<float, 4>));
+      network.push_back(NetworkNode<float, Device_>(new MaxPooling<float, 4>(array<Index, 2>{2, 2}, 2)));
 
       // get flat dimension by pushing a zero tensor through the network defined so far
-      int flat_dim = get_flat_dimension(network, array<Index, 4>{1, 3, 32, 32});
+      int flat_dim = get_flat_dimension(array<Index, 4>{1, 3, 32, 32});
 
-      network.push_back(NetworkNode<Device_>(new Flatten<float>));
+      network.push_back(NetworkNode<float, Device_>(new Flatten<float>));
 
 
-      network.push_back(NetworkNode<Device_>(new Linear<float>(flat_dim, 120), get_optimizer<2>(learning_rate)));
-      network.push_back(NetworkNode<Device_>(new ReLU<float, 2>));
+      network.push_back(NetworkNode<float, Device_>(new Linear<float>(flat_dim, 120), get_optimizer<2>(learning_rate)));
+      network.push_back(NetworkNode<float, Device_>(new ReLU<float, 2>));
 
-      network.push_back(NetworkNode<Device_>(new Linear<float>(120, 84), get_optimizer<2>(learning_rate)));
-      network.push_back(NetworkNode<Device_>(new ReLU<float, 2>));
+      network.push_back(NetworkNode<float, Device_>(new Linear<float>(120, 84), get_optimizer<2>(learning_rate)));
+      network.push_back(NetworkNode<float, Device_>(new ReLU<float, 2>));
 
       // cross-entropy loss includes the softmax non-linearity
-      network.push_back(NetworkNode<Device_>(new Linear<float>(84, num_classes), get_optimizer<2>(learning_rate)));
+      network.push_back(NetworkNode<float, Device_>(new Linear<float>(84, num_classes), get_optimizer<2>(learning_rate)));
     }
 
   protected:

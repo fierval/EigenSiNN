@@ -22,8 +22,6 @@ int main(int argc, char* argv[]) {
   int channels = 3;
   float learning_rate = 0.001;
   
-  CrossEntropyLoss<float, uint8_t, 2> loss;
-
   std::vector<std::string> classes = { "plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck" };
   int num_classes = classes.size();
 
@@ -34,8 +32,7 @@ int main(int argc, char* argv[]) {
   ImageContainer next_images;
   LabelContainer next_labels;
 
-  auto network = create_network(array<Index, 4>{(Index)batch_size, channels, side, side}, num_classes, learning_rate);
-  init(network, debug_init);
+  auto net = EigenSinn::Cifar10(array<Index, 4>{(Index)batch_size, channels, side, side}, num_classes, learning_rate);
 
   auto start = std::chrono::high_resolution_clock::now();
   auto start_step = std::chrono::high_resolution_clock::now();
@@ -49,36 +46,20 @@ int main(int argc, char* argv[]) {
     
     shuffle<float, uint8_t>(dataset.training_images, dataset.training_labels, should_shuffle);
 
+    // execute network step
     for (int step = 1; step <= dataset.training_images.size() / batch_size; step++) {
 
       auto batch_tensor = DeviceTensor<float, 4>(create_batch_tensor(dataset.training_images, step - 1, batch_size));
       auto label_tensor = DeviceTensor<uint8_t, 2>(create_2d_label_tensor<uint8_t>(dataset.training_labels, step - 1, batch_size, num_classes));
 
-      // forward
-      dynamic_cast<Input<float, 4>*>(network[0].layer)->set_input(batch_tensor);
-
-      forward(network);
-      assert(_CrtCheckMemory());
-
-      // loss
-      DeviceTensor<float, 2> output(network.rbegin()->layer->get_output());
-      loss.step(output, label_tensor);
-
-      // std::cout << "Step: " << step << ". Loss: " << std::any_cast<float>(loss.get_output()) << std::endl;
-
-      // backward
-      backward(network, loss.get_loss_derivative_by_input());
-      assert(_CrtCheckMemory());
-
-      // optimizer
-      optimizer(network);
-      assert(_CrtCheckMemory());
+      // training step 
+      net.step(batch_tensor, label_tensor);
 
       if (step % 1000 == 0) {
         stop = std::chrono::high_resolution_clock::now();
         std::cout << "Epoch: " << i + 1 
           << ". Step: " << step 
-          << ". Loss: " << std::any_cast<float>(loss.get_output()) 
+          << ". Loss: " << std::any_cast<float>(net.get_loss()) 
           << ". Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start_step).count() / 1000. 
           << "." << std::endl;
 
@@ -97,12 +78,12 @@ int main(int argc, char* argv[]) {
   DeviceTensor<float, 4> batch_tensor(create_batch_tensor(dataset.test_images, 0, dataset.test_images.size()));
   Tensor<int, 1> label_tensor = create_1d_label_tensor(dataset.test_labels).cast<int>();
 
-  auto inp_layer = dynamic_cast<Input<float, 4>*>(network[0].layer);
-  inp_layer->set_input(batch_tensor);
+  net.set_input(batch_tensor);
+  net.forward();
 
-  forward(network);
+  DeviceTensor<float, 2> test_output(net.get_output());
 
-  DeviceTensor<float, 2> test_output(network.rbegin()->layer->get_output());
+  // extract predicted results from the output
   DeviceTensor<Tuple<Index, float>, 2> test_index_tuples(test_output.dimensions());
   test_index_tuples.view() = test_output->index_tuples();
 

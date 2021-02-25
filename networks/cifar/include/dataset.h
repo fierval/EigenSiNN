@@ -36,7 +36,7 @@ inline Tensor<Loss, 2> create_2d_label_tensor(std::vector<Loss>& labels, int sta
     out(j, labels[i + j]) = 1;
   }
 
-  return out;
+  return std::move(out);
 
 }
 
@@ -64,7 +64,7 @@ inline Tensor<Scalar, Rank + 1> create_batch_tensor(std::vector<Tensor<Scalar, R
     output.chip(i, 0) = images[i + start * batch_size];
   }
 
-  return output;
+  return std::move(output);
 }
 
 template <typename Scalar, typename Loss>
