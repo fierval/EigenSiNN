@@ -35,8 +35,8 @@ namespace EigenSinn {
 
       initialize(predicted, actual);
 
-      DeviceTensor<Scalar, Rank, Device_, Layout> act_scalar(orig_dims);
-      act_scalar.view() = actual->cast<Scalar>();
+      DeviceTensor<Actual, Rank, Device_, Layout> act_scalar(orig_dims);
+      //act_scalar.view() = actual->cast<Scalar>();
 
       // memoize these for the backward pass
       DeviceTensor<Scalar, Rank, Device_, Layout> exp_all(orig_dims);
@@ -46,7 +46,7 @@ namespace EigenSinn {
       exp_sum.view() = exp_all->sum(reduction_dims);
 
       DeviceTensor<Scalar, 0, Device_, Layout> loss_t;
-      loss_t.view() = (-(predicted * act_scalar)->sum(reduction_dims) + exp_sum->log()).mean();
+      loss_t.view() = (-(*predicted * *act_scalar).sum(reduction_dims) + exp_sum->log()).mean();
       loss = loss_t.to_host()(0);
 
       // backward step

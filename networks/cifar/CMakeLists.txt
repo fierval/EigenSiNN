@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(cifar LANGUAGES CXX)
+project(cifar LANGUAGES CXX CUDA)
 
 #set( CMAKE_TOOLCHAIN_FILE "C:/git/NN/vcpkg/scripts/buildsystems/vcpkg.cmake" )
 
@@ -11,6 +11,12 @@ find_package(OpenCV REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+set(CMAKE_CUDA_STANDARD 17)
+set(CMAKE_CUDA_STANDARD_REQUIRED True)
+
+set(CMAKE_CUDA_ARCHITECTURES 70 CACHE STRING "CUDA Arches" FORCE)
+
 get_filename_component(EIGEN3_INCLUDE_DIRS "../../core/eigen" ABSOLUTE)
 get_filename_component(EIGENSINN_INCLUDE_DIR "../../core/nn/src" ABSOLUTE)
 get_filename_component(CUR_INCLUDE_DIR "include" ABSOLUTE)
@@ -29,7 +35,7 @@ message(STATUS "OpenCV libs: ${OpenCV_LIBS}")
 
 set(APP_EXE simple_cifar)
 
-set(WITH_CPU true)
+set(WITH_CPU false)
 
 # discover sources
 if(WITH_CPU)
@@ -43,6 +49,11 @@ message(STATUS "Sources: ${APP_SOURCES}")
 # build app exe
 add_executable(${APP_EXE} ${APP_SOURCES})
 
+set_property(TARGET ${APP_EXE} 
+             PROPERTY CMAKE_CUDA_ARCHITECTURES $CMAKE_CUDA_ARCHITECTURES)
+
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
+
 target_include_directories(${APP_EXE} PRIVATE ${OpenCV_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS} ${EIGENSINN_INCLUDE_DIR} ${CUR_INCLUDE_DIR})
-target_compile_definitions(${APP_EXE} PRIVATE CIFAR_DATA_LOCATION="${CIFAR_DATA_DIR}" EIGEN_USE_THREADS)
+target_compile_definitions(${APP_EXE} PRIVATE CIFAR_DATA_LOCATION="${CIFAR_DATA_DIR}" EIGEN_USE_THREADS EIGEN_USE_GPU EIGEN_HAS_C99_MATH)
 target_link_libraries(${APP_EXE} PUBLIC ${OpenCV_LIBS})

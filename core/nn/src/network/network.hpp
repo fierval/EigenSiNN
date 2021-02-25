@@ -91,13 +91,13 @@ namespace EigenSinn {
     inline void step(DeviceTensor<Scalar, Rank, Device_, Layout>& batch_tensor, DeviceTensor<Actual, OutputRank, Device_, Layout>& label_tensor) {
 
       // get the input
-      dynamic_cast<Input<Scalar, Rank>*>(network[0].layer.get())->set_input(batch_tensor);
+      dynamic_cast<Input<Scalar, Rank, Device_, Layout>*>(network[0].layer.get())->set_input(batch_tensor);
 
       // forward step
       forward();
 
       // loss step
-      DeviceTensor<Scalar, OutputRank> output(network.rbegin()->layer->get_output());
+      DeviceTensor<Scalar, OutputRank, Device_, Layout> output(network.rbegin()->layer->get_output());
       loss.step(output, label_tensor);
 
       // backward step
@@ -109,7 +109,7 @@ namespace EigenSinn {
 
     inline void set_input(DeviceTensor<Scalar, Rank, Device_, Layout>& tensor) {
 
-      auto inp_layer = dynamic_cast<Input<float, 4>*>(network[0].layer.get());
+      auto inp_layer = dynamic_cast<Input<float, 4, Device_, Layout>*>(network[0].layer.get());
       inp_layer->set_input(tensor);
     }
 
@@ -117,8 +117,8 @@ namespace EigenSinn {
       return network.rbegin()->layer.get()->get_output();
     }
 
-    inline void add(NetworkNode<Scalar, Device_>& n) {
-      network.push_back(std::forward< NetworkNode<Scalar, Device_>>(n));
+    inline void add(LayerBase<Scalar>* n, OptimizerBase<Scalar, Device_>* opt = nullptr) {
+      network.push_back(NetworkNode<Scalar, Device_>(n, opt));
     }
 
     inline std::any get_loss() { return loss.get_output(); }
@@ -134,11 +134,11 @@ namespace EigenSinn {
       DeviceTensor<Scalar, Rank, Device_, Layout> inp(input_dims);
       inp.setZero();
 
-      dynamic_cast<Input<Scalar, Rank>*>(network[0].layer.get())->set_input(inp);
+      dynamic_cast<Input<Scalar, Rank, Device_, Layout>*>(network[0].layer.get())->set_input(inp);
 
       forward();
 
-      auto dims = DeviceTensor<Scalar, Rank>(network.rbegin()->layer->get_output()).dimensions();
+      auto dims = DeviceTensor<Scalar, Rank, Device_, Layout>(network.rbegin()->layer->get_output()).dimensions();
       int res = 1;
 
       // no STL for CUDA, can't use std::accumulate
