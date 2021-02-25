@@ -5,7 +5,7 @@
 #include <chrono>
 #include <vector>
 #include <string>
-#include <network/network.hpp>
+#include "cifar10_network.hpp"
 
 using namespace EigenSinn;
 using namespace Eigen;
@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
   ImageContainer next_images;
   LabelContainer next_labels;
 
-  auto net = EigenSinn::Cifar10(array<Index, 4>{(Index)batch_size, channels, side, side}, num_classes, learning_rate);
+  auto net = Cifar10(array<Index, 4>{(Index)batch_size, channels, side, side}, num_classes, learning_rate);
   net.init();
 
   auto start = std::chrono::high_resolution_clock::now();
