@@ -35,8 +35,8 @@ namespace EigenSinn {
 
       initialize(predicted, actual);
 
-      DeviceTensor<Actual, Rank, Device_, Layout> act_scalar(orig_dims);
-      //act_scalar.view() = actual->cast<Scalar>();
+      DeviceTensor<Scalar, Rank, Device_, Layout> act_scalar(orig_dims);
+      act_scalar.view() = actual->template cast<Scalar>();
 
       // memoize these for the backward pass
       DeviceTensor<Scalar, Rank, Device_, Layout> exp_all(orig_dims);
