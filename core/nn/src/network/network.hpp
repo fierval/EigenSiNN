@@ -22,7 +22,7 @@ namespace EigenSinn {
     std::unique_ptr<LayerBase<Scalar>> layer;
     std::unique_ptr<OptimizerBase<Scalar, Device_>> optimizer;
 
-    NetworkNode(LayerBase<Scalar>* _layer, OptimizerBase<Scalar,Device_, 0>* _optimizer = nullptr) : layer(_layer), optimizer(_optimizer) {}
+    NetworkNode(LayerBase<Scalar>* _layer, OptimizerBase<Scalar, Device_, 0>* _optimizer = nullptr) : layer(_layer), optimizer(_optimizer) {}
 
     NetworkNode(NetworkNode<Scalar, Device_>&& other)  noexcept {
       layer = std::move(other.layer);
@@ -41,14 +41,15 @@ namespace EigenSinn {
 
     NetBase() : inited(false) {}
 
+    // CUDA compiler doesn't understand STL containers, so do it in plain-old loop
     inline virtual void forward() {
 
       if (!inited) {
         throw std::logic_error("Initialize network weights first");
       }
 
-      for (auto it = network.begin() + 1; it != network.end(); it++) {
-        it->layer->forward(*(it - 1)->layer);
+      for (int i = 1; i < network.size(); i++) {
+        network[i].layer->forward(*network[i - 1].layer);
       }
     }
 
@@ -62,28 +63,26 @@ namespace EigenSinn {
 
     inline virtual void backward(std::any loss_derivative) {
 
-      for (auto rit = network.rbegin(); rit != network.rend() - 1; rit++) {
+      std::any derivative = loss_derivative;
+      for (size_t i = network.size() - 1; i > 0; i--) {
 
-        if (rit == network.rbegin()) {
-          rit->layer->backward(*(rit + 1)->layer, loss_derivative);
-        }
-        else {
-          rit->layer->backward(*(rit + 1)->layer, (rit - 1)->layer->get_loss_by_input_derivative());
-        }
+        network[i].layer->backward(*network[i - 1].layer, derivative);
+        derivative = network[i].layer->get_loss_by_input_derivative();
       }
     }
 
     inline virtual void optimizer() {
 
       static std::any weights_any, bias_any;
-      for (auto optit = network.rbegin(); optit != network.rend(); optit++) {
-        if (optit->optimizer == nullptr) {
+      for (size_t i = network.size() - 1; i > 0; i--) {
+
+        if (!network[i].optimizer) {
           continue;
         }
 
-        std::tie(weights_any, bias_any) = optit->optimizer->step(*(optit->layer));
-        optit->layer->set_weights(weights_any);
-        optit->layer->set_bias(bias_any);
+        std::tie(weights_any, bias_any) = network[i].optimizer->step(*(network[i].layer));
+        network[i].layer->set_weights(weights_any);
+        network[i].layer->set_bias(bias_any);
       }
     }
 

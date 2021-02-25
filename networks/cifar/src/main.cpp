@@ -5,7 +5,7 @@
 #include <chrono>
 #include <vector>
 #include <string>
-#include "network.h"
+#include <network/network.hpp>
 
 using namespace EigenSinn;
 using namespace Eigen;
