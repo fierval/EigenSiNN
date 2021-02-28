@@ -59,6 +59,8 @@ namespace EigenSinn {
 
     inline Scalar* data() { return data_; }
     inline Device_& get_device() { return device; }
+    inline const std::vector<Index>& get_dims() { return dims; }
+
   private:
 
     void set_dimensions(const std::vector<Index>& dims) {

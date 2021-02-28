@@ -8,17 +8,17 @@ using std::unique_ptr;
 namespace EigenSinn {
 
   template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  class Input : public LayerBase<Scalar> {
+  class Input : public LayerBase<Scalar, Device_> {
 
   public:
 
     Input() = default;
 
-    std::any get_output() {
+    PtrTensorAdapter<Scalar, Device_> get_output() {
       return input;
     };
 
-    std::any get_loss_by_input_derivative() { return std::any(); };
+    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() { return nullptr; };
 
     /// <summary>
     /// Grab data from the existing tensor
@@ -36,8 +36,8 @@ namespace EigenSinn {
     }
 
     // Required overrides
-    void forward(LayerBase<Scalar>& prev_layer_base) override {};
-    void backward(LayerBase<Scalar>& prev_layer, std::any next_layer_grad) override {};
+    void forward(LayerBase<Scalar, Device_>& prev_layer_base) override {};
+    void backward(LayerBase<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {};
 
   private:
 

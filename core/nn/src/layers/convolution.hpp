@@ -9,7 +9,7 @@ namespace EigenSinn {
   // REVIEW: Not implementing bias for now
   // Batch normalization layers can take care of bias
   template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  class Conv2d : public LayerBase<Scalar> {
+  class Conv2d : public LayerBase<Scalar, Device_> {
 
   public:
 
@@ -44,7 +44,7 @@ namespace EigenSinn {
       bias = _bias;
     }
 
-    void forward(LayerBase<Scalar>& prev_layer_any) override {
+    void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
 
       DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any.get_output());
 
@@ -59,7 +59,7 @@ namespace EigenSinn {
 
     }
 
-    void backward(LayerBase<Scalar>& prev_layer_any, std::any next_layer_grad_any) override {
+    void backward(LayerBase<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
 
       DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any.get_output());
       DeviceTensor<Scalar, 4, Device_, Layout> next_layer_grad(next_layer_grad_any);
@@ -89,36 +89,36 @@ namespace EigenSinn {
       loss_by_bias_derivative.view() = next_layer_grad->sum(array<Index, 3>{0, 2, 3});
     }
 
-    std::any get_loss_by_input_derivative() override {
-      return dX;
+    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() override {
+      return dX.raw();
     }
 
     // feed to optimizer
-    std::any get_loss_by_weights_derivative() override {
-      return dW;
+    PtrTensorAdapter<Scalar, Device_> get_loss_by_weights_derivative() override {
+      return dW.raw();
     }
 
-    std::any get_output() override {
-      return layer_output;
+    PtrTensorAdapter<Scalar, Device_> get_output() override {
+      return layer_output.raw();
     }
 
-    std::any get_weights() override {
-      return kernel;
+    PtrTensorAdapter<Scalar, Device_> get_weights() override {
+      return kernel.raw();
     }
 
-    std::any get_bias() override {
-      return bias;
+    PtrTensorAdapter<Scalar, Device_> get_bias() override {
+      return bias.raw();
     }
 
-    std::any get_loss_by_bias_derivative() override {
-      return loss_by_bias_derivative;
+    PtrTensorAdapter<Scalar, Device_> get_loss_by_bias_derivative() override {
+      return loss_by_bias_derivative.raw();
     }
 
-    void set_weights(std::any& v) override {
+    void set_weights(PtrTensorAdapter<Scalar, Device_>& v) override {
       kernel = DeviceTensor<Scalar, 4, Device_, Layout>(v);
     }
 
-    void set_bias(std::any& v) override {
+    void set_bias(PtrTensorAdapter<Scalar, Device_>& v) override {
       bias = DeviceTensor<Scalar, 1, Device_, Layout>(v);
     }
 

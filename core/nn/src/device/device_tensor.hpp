@@ -6,6 +6,9 @@
 
 namespace EigenSinn
 {
+  template<typename Scalar, typename Device_>
+  using PtrTensorAdapter = std::shared_ptr<TensorAdapter<Scalar, Device_>>;
+
   template<typename Scalar, Index Rank, typename Device_= ThreadPoolDevice, int Layout = ColMajor>
   class DeviceTensor {
 
@@ -67,6 +70,11 @@ namespace EigenSinn
       create_device_tensor(tv.dimensions(), tv.data());
     }
 
+    explicit DeviceTensor(PtrTensorAdapter<Scalar, Device_>& adapter) {
+      tensor_adapter = adapter;
+      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), TensorAdapter<Scalar, Device_>::vec2dims(adapter.get_dims())));
+    }
+
     Tensor<Scalar, Rank, Layout> to_host() const {
 
       DefaultDevice host;
@@ -92,14 +100,9 @@ namespace EigenSinn
       return *this;
     }
 
-    DeviceTensor& resize(Index dim) {
-      resize(DSizes<Index, 1>{dim});
-      return *this;
-    }
-
     template<typename... IndexTypes>
-    DeviceTensor& resize(Index firstDim, Index secondDimension, IndexTypes... otherDimensions) {
-      resize(DSizes<Index, Rank>(firstDim, secondDimension, otherDimensions...));
+    DeviceTensor& resize(Index firstDim, IndexTypes... otherDimensions) {
+      resize(DSizes<Index, Rank>(firstDim, otherDimensions...));
       return *this;
     }
 
@@ -174,7 +177,7 @@ namespace EigenSinn
 
     Device_& device() const { return tensor_adapter->get_device(); }
 
-    std::shared_ptr<TensorAdapter<Scalar, Device_>> raw() { return tensor_adapter; }
+    PtrTensorAdapter<Scalar, Device_> raw() { return tensor_adapter; }
 
   private:
 
@@ -182,7 +185,7 @@ namespace EigenSinn
       tensor_adapter = std::make_shared<TensorAdapter<Scalar, Device_>>();
     }
 
-    void create_device_tensor(const DSizes<Index, Rank> dims, Scalar * data = nullptr) {
+    void create_device_tensor(const DSizes<Index, Rank>& dims, Scalar * data = nullptr) {
 
       tensor_adapter = std::make_shared<TensorAdapter<Scalar, Device_>>(TensorAdapter<Scalar, Device_>::dims2vec(dims), data);
       tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), dims));
@@ -190,7 +193,7 @@ namespace EigenSinn
 
     void set_from_device(const Scalar* data, const DSizes<Index, Rank>& dims) {
       create_device_tensor(dims);
-      device().memcpy(tensor_view.data(), data, tensor_view->dimensions().TotalSize() * sizeof(Scalar));
+      device().memcpy(tensor_view->data(), data, tensor_view->dimensions().TotalSize() * sizeof(Scalar));
     }
 
     void set_from_host(const Scalar* data, const DSizes<Index, Rank>& dims) {

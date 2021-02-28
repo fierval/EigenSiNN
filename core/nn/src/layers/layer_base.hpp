@@ -15,28 +15,28 @@ namespace EigenSinn {
     Bias = 2
   };
 
-  template <typename Scalar>
+  template <typename Scalar, typename Device_ = ThreadPoolDevice>
   class LayerBase {
 
   public:
     virtual void init() {};
 
-    virtual void forward(LayerBase<Scalar>& prev_layer_base) = 0;
+    virtual void forward(LayerBase<Scalar, Device_>& prev_layer_base) = 0;
 
-    virtual void backward(LayerBase<Scalar>& prev_layer, std::any next_layer_grad_any) = 0;
+    virtual void backward(LayerBase<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) = 0;
 
-    virtual  std::any get_output() = 0;
+    virtual  PtrTensorAdapter<Scalar, Device_> get_output() = 0;
 
-    virtual  std::any get_loss_by_input_derivative() = 0;
+    virtual  PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() = 0;
 
-    virtual  std::any get_loss_by_weights_derivative() { return std::any(); };
-    virtual  std::any get_weights() { return std::any(); };
+    virtual  PtrTensorAdapter<Scalar, Device_> get_loss_by_weights_derivative() { return PtrTensorAdapter<Scalar, Device_>(); };
+    virtual  PtrTensorAdapter<Scalar, Device_> get_weights() { return PtrTensorAdapter<Scalar, Device_>(); };
 
-    virtual  std::any get_loss_by_bias_derivative() { return std::any(); }
-    virtual  std::any get_bias() { return std::any(); }
+    virtual  PtrTensorAdapter<Scalar, Device_> get_loss_by_bias_derivative() { return PtrTensorAdapter<Scalar, Device_>(); }
+    virtual  PtrTensorAdapter<Scalar, Device_> get_bias() { return PtrTensorAdapter<Scalar, Device_>(); }
 
-    virtual void set_weights(std::any&) {}
-    virtual void set_bias(std::any&) {}
+    virtual void set_weights(PtrTensorAdapter<Scalar, Device_>&) {}
+    virtual void set_bias(PtrTensorAdapter<Scalar, Device_>&) {}
 
     virtual ~LayerBase() = default;
 
