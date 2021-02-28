@@ -150,7 +150,7 @@ namespace EigenSinn {
     static inline std::mutex mtx;
     static inline Dispatcher<GpuDevice>* instance = nullptr;
     int ref_count;
-    Dispatcher() : gpu_device(&stream) { gpu_device = GpuDevice(&stream); }
+    Dispatcher() : stream(), gpu_device(&stream) { gpu_device = GpuDevice(&stream); }
     ~Dispatcher() {}
 
     CudaStreamDevice stream;

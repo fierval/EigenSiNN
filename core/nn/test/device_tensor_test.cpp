@@ -38,22 +38,22 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(cd.convInput, d));
   }
 
-  TEST_F(DeviceTensorTest, AddTensorsOperator) {
+  TEST_F(DeviceTensorTest, AddTensors) {
     DeviceTensor<float, 4> d1(cd.convInput), d2(cd.convInput), sum_tensor(cd.convInput.dimensions());
 
     sum_tensor.view() = *d1 + *d2;
 
-    DeviceTensor<float, 4> convsum (*cd.convInput + *cd.convInput);
+    Tensor<float, 4> convsum  = *cd.convInput + *cd.convInput;
 
     EXPECT_TRUE(is_elementwise_approx_eq(convsum, sum_tensor));
   }
 
-  TEST_F(DeviceTensorTest, MultTensorsOperator) {
+  TEST_F(DeviceTensorTest, MultTensors) {
     DeviceTensor<float, 4> d1(cd.convInput), d2(cd.convInput), res_tensor(cd.convInput.dimensions());
 
     res_tensor.view() = *d1 * *d2;
 
-    DeviceTensor<float, 4> expected(*cd.convInput * *cd.convInput);
+    Tensor<float, 4> expected =*cd.convInput * *cd.convInput;
 
     EXPECT_TRUE(is_elementwise_approx_eq(expected, res_tensor));
   }

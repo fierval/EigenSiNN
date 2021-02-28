@@ -43,7 +43,7 @@ namespace EigenSinn {
     static inline DSizes<Index, Rank> vec2dims(const std::vector<Index>& dims) {
       DSizes<Index, Rank> out;
 
-      for (Index = 0; i < Rank; i++) {
+      for (Index i = 0; i < Rank; i++) {
         out[i] = dims[i];
       }
       return out;

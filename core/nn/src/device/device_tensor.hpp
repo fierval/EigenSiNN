@@ -95,9 +95,9 @@ namespace EigenSinn
 
     // Rule of 5 definitions
     // the destructor frees the data held by the tensor_view
-    ~DeviceTensor() {
-      dispatcher.release();
-    }
+    //~DeviceTensor() {
+    //  dispatcher.release();
+    //}
 
     // copy constructor: we 
     DeviceTensor(const DeviceTensor& d) : DeviceTensor() {
@@ -144,6 +144,7 @@ namespace EigenSinn
     // resizing, setting values
     void resize(DSizes<Index, Rank> dims) {
       tensor_adapter.reset();
+      tensor_view.reset();
       create_device_tensor(DSizes<Index, Rank>(dims));
     }
 
