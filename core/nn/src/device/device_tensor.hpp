@@ -60,24 +60,13 @@ namespace EigenSinn
       move_to<Scalar, Rank, Device_, Layout>(*tensor_view, data.data(), device());
     }
 
-    void set_from_device(const Scalar* data, const DSizes<Index, Rank>& dims) {
-      create_device_tensor(dims);
-      device().memcpy(tensor_view.data(), data, tensor_view->dimensions().TotalSize() * sizeof(Scalar));
+    explicit DeviceTensor(const TensorView<Scalar, Rank, Layout>& tv)
+      : DeviceTensor(tv.dimensions()) {
+
+
+      create_device_tensor(tv.dimensions(), tv.data());
     }
 
-    void set_from_host(const Scalar* data, const DSizes<Index, Rank>& dims) {
-      create_device_tensor(dims, data);
-      move_to<Scalar, Rank, Device_, Layout>(*tensor_view, data, device());
-    }
-
-    void set_from_host(const Tensor<Scalar, Rank, Layout>& data) {
-      set_from_host(data.data(), data.dimensions());
-    }
-
-    /// <summary>
-    /// Create tensor on the host from the device tensor.
-    /// </summary>
-    /// <returns></returns>
     Tensor<Scalar, Rank, Layout> to_host() const {
 
       DefaultDevice host;
@@ -89,54 +78,6 @@ namespace EigenSinn
       Tensor<Scalar, Rank, Layout> out = TensorView<Scalar, Rank, Layout>(data, dimensions());
       
       return out;
-    }
-
-    // Rule of 5 definitions
-    // the destructor frees the data held by the tensor_view
-    //~DeviceTensor() {
-    //  dispatcher.release();
-    //}
-
-    // copy constructor: we 
-    DeviceTensor(const DeviceTensor& d) : DeviceTensor() {
-
-      bool is_null_copy = !d.tensor_view.has_value();
-
-      if (!is_null_copy) {
-        tensor_adapter = d.tensor_adapter;
-        tensor_view = d.tensor_view;
-      }
-    }
-
-    // copy assignment
-    DeviceTensor& operator=(const DeviceTensor& d) {
-      if (&d == this) {
-        return *this;
-      }
-
-      tensor_adapter = d.tensor_adapter;
-      tensor_view = d.tensor_view;
-      return *this;
-    }
-
-    // move constructor
-    DeviceTensor(DeviceTensor&& d) noexcept
-      : DeviceTensor() {
-
-      tensor_adapter = std::move(d.tensor_adapter);
-      tensor_view = std::move(d.tensor_view);
-    }
-
-    // move assignment
-    DeviceTensor& operator=(DeviceTensor&& d) noexcept {
-      if (&d == this) {
-        return *this;
-      }
-
-      tensor_adapter = std::move(d.tensor_adapter);
-      tensor_view = std::move(d.tensor_view);
-
-      return *this;
     }
 
     // resizing, setting values
@@ -245,6 +186,20 @@ namespace EigenSinn
 
       tensor_adapter = std::make_shared<TensorAdapter<Scalar, Device_>>(TensorAdapter<Scalar, Device_>::dims2vec(dims), data);
       tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), dims));
+    }
+
+    void set_from_device(const Scalar* data, const DSizes<Index, Rank>& dims) {
+      create_device_tensor(dims);
+      device().memcpy(tensor_view.data(), data, tensor_view->dimensions().TotalSize() * sizeof(Scalar));
+    }
+
+    void set_from_host(const Scalar* data, const DSizes<Index, Rank>& dims) {
+      create_device_tensor(dims, data);
+      move_to<Scalar, Rank, Device_, Layout>(*tensor_view, data, device());
+    }
+
+    void set_from_host(const Tensor<Scalar, Rank, Layout>& data) {
+      set_from_host(data.data(), data.dimensions());
     }
 
     // for tensor ops

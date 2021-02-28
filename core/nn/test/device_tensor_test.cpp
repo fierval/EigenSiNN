@@ -105,4 +105,19 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor));
   }
 
+  TEST_F(DeviceTensorTest, CopyTensor) {
+
+    DeviceTensor<float, 4> cp_input(cd.convInput);
+
+    EXPECT_EQ((*cp_input)(0, 0, 0, 0), (*cd.convInput)(0, 0, 0, 0));
+  }
+
+  TEST_F(DeviceTensorTest, MoveTensor) {
+
+    DeviceTensor<float, 4> cp_input(cd.convInput);
+    DeviceTensor<float, 4> mv_input(std::move(cp_input));
+
+    EXPECT_EQ((*cp_input)(0, 0, 0, 0), (*mv_input)(0, 0, 0, 0));
+  }
+
 }
