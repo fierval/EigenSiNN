@@ -18,6 +18,8 @@ namespace EigenSinn {
   public:
 
     static inline Dispatcher<DefaultDevice>& create() {
+      std::lock_guard<std::mutex> lck(mtx);
+
       if (instance == nullptr) {
         instance = new Dispatcher;
         instance->ref_count = 0;
@@ -27,6 +29,8 @@ namespace EigenSinn {
     }
 
     inline void release() {
+      std::lock_guard<std::mutex> lck(mtx);
+
       if (instance != nullptr) {
         instance->ref_count--;
         if (!instance->ref_count) {
@@ -41,6 +45,8 @@ namespace EigenSinn {
     }
 
   private:
+    static inline std::mutex mtx;
+
     static inline Dispatcher<DefaultDevice>* instance = nullptr;
     int ref_count;
     Dispatcher() = default;
@@ -59,6 +65,8 @@ namespace EigenSinn {
     }
 
     static inline Dispatcher<ThreadPoolDevice>& create() {
+      std::lock_guard<std::mutex> lck(mtx);
+
       if (instance == nullptr) {
         instance = new Dispatcher;
         instance->ref_count = 0;
@@ -68,6 +76,8 @@ namespace EigenSinn {
     }
 
     inline void release() {
+      std::lock_guard<std::mutex> lck(mtx);
+
       if (instance != nullptr) {
         instance->ref_count--;
         if (!instance->ref_count) {
@@ -89,6 +99,8 @@ namespace EigenSinn {
     }
 
     ~Dispatcher() {}
+    static inline std::mutex mtx;
+
     static inline Dispatcher<ThreadPoolDevice>* instance = nullptr;
     int ref_count;
     int n_devices;
@@ -112,6 +124,8 @@ namespace EigenSinn {
     }
 
     static inline Dispatcher<GpuDevice>& create() {
+      std::lock_guard<std::mutex> lck(mtx);
+
       if (instance == nullptr) {
         instance = new Dispatcher;
         instance->ref_count = 0;
@@ -121,6 +135,8 @@ namespace EigenSinn {
     }
 
     inline void release() {
+      std::lock_guard<std::mutex> lck(mtx);
+
       if (instance != nullptr) {
         instance->ref_count--;
         if (!instance->ref_count) {
@@ -131,9 +147,10 @@ namespace EigenSinn {
     }
 
   private:
+    static inline std::mutex mtx;
     static inline Dispatcher<GpuDevice>* instance = nullptr;
     int ref_count;
-    Dispatcher() : stream(), gpu_device(&stream) {}
+    Dispatcher() : gpu_device(&stream) { gpu_device = GpuDevice(&stream); }
     ~Dispatcher() {}
 
     CudaStreamDevice stream;

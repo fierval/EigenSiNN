@@ -39,45 +39,24 @@ namespace EigenSinnTest {
   }
 
   TEST_F(DeviceTensorTest, AddTensorsOperator) {
-    DeviceTensor<float, 4> d1(cd.convInput), d2(cd.convInput), sum_tensor;
+    DeviceTensor<float, 4> d1(cd.convInput), d2(cd.convInput), sum_tensor(cd.convInput.dimensions());
 
-    sum_tensor = d1 + d2;
+    sum_tensor.view() = *d1 + *d2;
 
-    DeviceTensor<float, 4> convsum = cd.convInput + cd.convInput;
+    DeviceTensor<float, 4> convsum (*cd.convInput + *cd.convInput);
 
     EXPECT_TRUE(is_elementwise_approx_eq(convsum, sum_tensor));
   }
 
   TEST_F(DeviceTensorTest, MultTensorsOperator) {
-    DeviceTensor<float, 4> d1(cd.convInput), d2(cd.convInput), res_tensor;
+    DeviceTensor<float, 4> d1(cd.convInput), d2(cd.convInput), res_tensor(cd.convInput.dimensions());
 
-    res_tensor = d1 * d2;
+    res_tensor.view() = *d1 * *d2;
 
-    DeviceTensor<float, 4> expected = cd.convInput * cd.convInput;
-
-    EXPECT_TRUE(is_elementwise_approx_eq(expected, res_tensor));
-  }
-
-  TEST_F(DeviceTensorTest, DivTensorsOperator) {
-    DeviceTensor<float, 4> d1(cd.convInput), d2(cd.dinput), res_tensor;
-
-    res_tensor = d1 / d2;
-
-    DeviceTensor<float, 4> expected = cd.convInput / cd.dinput;
+    DeviceTensor<float, 4> expected(*cd.convInput * *cd.convInput);
 
     EXPECT_TRUE(is_elementwise_approx_eq(expected, res_tensor));
   }
-
-  TEST_F(DeviceTensorTest, ThreeTensorsOperator) {
-    DeviceTensor<float, 4> d1(cd.convInput), d2(cd.dinput), d3(cd.convInput), res_tensor;
-
-    res_tensor = d1 / d2 + d3;
-
-    DeviceTensor<float, 4> expected = cd.convInput / cd.dinput + cd.convInput;
-
-    EXPECT_TRUE(is_elementwise_approx_eq(expected, res_tensor));
-  }
-
 
   TEST_F(DeviceTensorTest, SqrtTensor) {
     DeviceTensor<float, 4> d1(cd.convInput), res_tensor(d1.dimensions()), d2(cd.dinput);
