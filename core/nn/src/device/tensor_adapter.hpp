@@ -1,6 +1,6 @@
 #pragma once
 
-#include "unsupported/Eigen/CXX11/Tensor"
+#include "dispatcher.hpp"
 
 using namespace Eigen;
 
@@ -11,12 +11,18 @@ namespace EigenSinn {
 
   public:
 
-    explicit TensorAdapter(std::vector<Index> dims, Device_& _device, Scalar *_data = nullptr)
-      : dimensions(dims)
-      , device(_device) {
+    explicit TensorAdapter() 
+      : dispatcher(Dispatcher<Device_>::create())
+      , device(dispatcher.get_device()) {}
 
+    explicit TensorAdapter(const std::vector<Index>& dims, Scalar *_data = nullptr)
+      : TensorAdapter()  {
+
+      set_dimensions(dims);
+      // cannot have other
+      //dimensions = std::optional<std::vector<Index>>(dims);
       if (data_ == nullptr) {
-        this->data_ = static_cast<Scalar*>(device.allocate(compute_total_size_bytes()));
+        this->data_ = static_cast<Scalar*>(device.allocate(total_size * sizeof(Scalar)));
       }
       else {
         this->data_ = _data;
@@ -27,6 +33,8 @@ namespace EigenSinn {
       if (data_ != nullptr) {
         device.deallocate(data_);
       }
+
+      dispatcher.release();
     }
     // convert between dimensions and vector types
     template<Index Rank>
@@ -50,22 +58,24 @@ namespace EigenSinn {
     }
 
     inline Scalar* data() { return data_; }
-
+    inline Device_& get_device() { return device; }
   private:
 
-    Index compute_total_size_bytes() {
+    void set_dimensions(const std::vector<Index>& dims) {
 
-      if (dimensions.size() != 0) {
-        // since we are compiled with CUDA, not using STL
-        for (size_t i = 0; i < dimensions.size(); i++) {
-          total_size *= dimensions[i];
-        }
+      dimensions.resize(dims.size());
+      total_size = 1;
+      for (int i = 0; i < dims.size(); i++) {
+        dimensions[i] = dims[i];
+        total_size *= dims[i];
       }
-      return total_size * sizeof(Scalar);
     }
-    const Device_& device;
+
+    Dispatcher<Device_>& dispatcher;
+    Device_& device;
+
     Scalar* data_ = nullptr;
-    const std::vector<Index> dimensions;
+    std::vector<Index> dimensions;
     Index total_size = 1;
   };
 }

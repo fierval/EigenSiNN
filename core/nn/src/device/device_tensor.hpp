@@ -12,10 +12,8 @@ namespace EigenSinn
   public:
 
     // allocation constructors
-    explicit DeviceTensor()
-      : dispatcher(Dispatcher<Device_>::create())
-      , device_(dispatcher.get_device()) {
-
+    explicit DeviceTensor() {
+      create_device_tensor();
     }
 
     explicit DeviceTensor(const DSizes<Index, Rank> dims)
@@ -59,17 +57,17 @@ namespace EigenSinn
 
 
       create_device_tensor(data.dimensions());
-      move_to<Scalar, Rank, Device_, Layout>(*tensor_view, data.data(), device_);
+      move_to<Scalar, Rank, Device_, Layout>(*tensor_view, data.data(), device());
     }
 
     void set_from_device(const Scalar* data, const DSizes<Index, Rank>& dims) {
       create_device_tensor(dims);
-      device_.memcpy(tensor_view.data(), data, tensor_view->dimensions().TotalSize() * sizeof(Scalar));
+      device().memcpy(tensor_view.data(), data, tensor_view->dimensions().TotalSize() * sizeof(Scalar));
     }
 
     void set_from_host(const Scalar* data, const DSizes<Index, Rank>& dims) {
       create_device_tensor(dims, data);
-      move_to<Scalar, Rank, Device_, Layout>(*tensor_view, data, device_);
+      move_to<Scalar, Rank, Device_, Layout>(*tensor_view, data, device());
     }
 
     void set_from_host(const Tensor<Scalar, Rank, Layout>& data) {
@@ -87,7 +85,7 @@ namespace EigenSinn
       size_t alloc_size = size() * sizeof(Scalar);
 
       Scalar* data = static_cast<Scalar*>(host.allocate(alloc_size));
-      device_.memcpyDeviceToHost(data, tensor_view->data(), alloc_size);
+      device().memcpyDeviceToHost(data, tensor_view->data(), alloc_size);
       Tensor<Scalar, Rank, Layout> out = TensorView<Scalar, Rank, Layout>(data, dimensions());
       
       return out;
@@ -165,12 +163,12 @@ namespace EigenSinn
     }
 
     DeviceTensor& setConstant(Scalar c) {
-      EigenSinn::setConstant(*tensor_view, c, device_);
+      EigenSinn::setConstant(*tensor_view, c, device());
       return *this;
     }
 
     DeviceTensor& setZero() {
-      EigenSinn::setZero(*tensor_view, device_);
+      EigenSinn::setZero(*tensor_view, device());
       return *this;
     }
 
@@ -181,7 +179,7 @@ namespace EigenSinn
       TensorEvaluator<Tensor<Scalar, Rank, Layout>, DefaultDevice> eval(*static_cast<const Tensor<Scalar, Rank, Layout>*>(&temp), DefaultDevice());
       internal::initialize_tensor<Tensor<Scalar, Rank, Layout>, Rank>(eval, vals);
 
-      EigenSinn::setValues(*tensor_view, temp, device_);
+      EigenSinn::setValues(*tensor_view, temp, device());
       return *this;
     }
 
@@ -190,7 +188,7 @@ namespace EigenSinn
       assert(tensor_view);
       Tensor<Scalar, Rank, Layout> temp(dimensions());
       temp.setRandom();
-      move_to(*tensor_view, temp.data(), device_);
+      move_to(*tensor_view, temp.data(), device());
 
       return *this;
     }
@@ -201,7 +199,7 @@ namespace EigenSinn
       assert(tensor_view);
       Tensor<Scalar, Rank, Layout> temp(dimensions());
       temp.setRandom<RandomGenerator>();
-      move_to(*tensor_view, temp.data(), device_);
+      move_to(*tensor_view, temp.data(), device());
 
       return *this;
     }
@@ -231,26 +229,28 @@ namespace EigenSinn
       return tensor_view->dimension(i);
     }
 
-    auto view() { return tensor_view->device(device_); }
+    auto view() { return tensor_view->device(device()); }
 
-    Device_& get_device() { return device_; }
+    Device_& device() const { return tensor_adapter->get_device(); }
 
     std::shared_ptr<TensorAdapter<Scalar, Device_>> raw() { return tensor_adapter; }
 
   private:
 
-    void DeviceTensor::create_device_tensor(const DSizes<Index, Rank> dims, Scalar * data = nullptr) {
+    void create_device_tensor() {
+      tensor_adapter = std::make_shared<TensorAdapter<Scalar, Device_>>();
+    }
 
-      tensor_adapter = std::make_shared<TensorAdapter<Scalar, Device_>>(TensorAdapter<Scalar, Device_>::dims2vec(dims), device_, data);
+    void create_device_tensor(const DSizes<Index, Rank> dims, Scalar * data = nullptr) {
+
+      tensor_adapter = std::make_shared<TensorAdapter<Scalar, Device_>>(TensorAdapter<Scalar, Device_>::dims2vec(dims), data);
       tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), dims));
     }
 
     // for tensor ops
     OptionalTensorView<Scalar, Rank, Layout> tensor_view;
 
-    // for passing itc
+    // for passing tensors around
     std::shared_ptr<TensorAdapter<Scalar, Device_>> tensor_adapter;
-    Dispatcher<Device_>& dispatcher;
-    Device_ device_;
   };
 }
