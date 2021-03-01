@@ -33,16 +33,16 @@ namespace EigenSinn {
       bias.setZero();
     }
 
-    void init(const Tensor<Scalar, 4, Layout>& _weights) {
+    void init(Tensor<Scalar, 4, Layout>& _weights) {
       init();
 
-      kernel = DeviceTensor<Scalar, 4, Device_, Layout>(_weights);
+      kernel.set_from_host(_weights);
     }
 
-    void init(const Tensor<Scalar, 4, Layout>& _weights, const Tensor<Scalar, 1, Layout>& _bias) {
+    void init(Tensor<Scalar, 4, Layout>& _weights, Tensor<Scalar, 1, Layout>& _bias) {
       init(_weights);
 
-      bias = DeviceTensor<Scalar, 1, Device_, Layout>(_bias);
+      bias.set_from_host(_bias);
     }
 
     void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {

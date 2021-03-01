@@ -19,8 +19,7 @@ namespace EigenSinn
       create_device_tensor();
     }
 
-    explicit DeviceTensor(const DSizes<Index, Rank> dims)
-      : DeviceTensor() {
+    explicit DeviceTensor(const DSizes<Index, Rank> dims) {
 
       // already created
       create_device_tensor(dims);
@@ -162,15 +161,15 @@ namespace EigenSinn
     }
 
     Index size() const {
-      return tensor_view->dimensions().TotalSize();
+      return tensor_view.value().dimensions().TotalSize();
     }
 
     const DSizes<Index, Rank>& dimensions() const {
-      return tensor_view->dimensions();
+      return tensor_view.value().dimensions();
     }
 
     Index dimension(Index i) const {
-      return tensor_view->dimension(i);
+      return tensor_view.value().dimension(i);
     }
 
     auto view() { return tensor_view->device(device()); }
@@ -178,6 +177,21 @@ namespace EigenSinn
     Device_& device() const { return tensor_adapter->get_device(); }
 
     PtrTensorAdapter<Scalar, Device_> raw() { return tensor_adapter; }
+
+    void set_from_device(const Scalar* data, const DSizes<Index, Rank>& dims) {
+      create_device_tensor(dims);
+
+      device().memcpy(tensor_view->data(), data, tensor_view->dimensions().TotalSize() * sizeof(Scalar));
+    }
+
+    void set_from_host(Scalar* data, const DSizes<Index, Rank>& dims) {
+      create_device_tensor(dims);
+      move_to<Scalar, Rank, Device_, Layout>(*tensor_view, data, device());
+    }
+
+    void set_from_host(Tensor<Scalar, Rank, Layout>& data) {
+      set_from_host(data.data(), data.dimensions());
+    }
 
   private:
 
@@ -189,20 +203,6 @@ namespace EigenSinn
 
       tensor_adapter = std::make_shared<TensorAdapter<Scalar, Device_>>(TensorAdapter<Scalar, Device_>::dims2vec(dims), data);
       tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), dims));
-    }
-
-    void set_from_device(const Scalar* data, const DSizes<Index, Rank>& dims) {
-      create_device_tensor(dims);
-      device().memcpy(tensor_view->data(), data, tensor_view->dimensions().TotalSize() * sizeof(Scalar));
-    }
-
-    void set_from_host(const Scalar* data, const DSizes<Index, Rank>& dims) {
-      create_device_tensor(dims, data);
-      move_to<Scalar, Rank, Device_, Layout>(*tensor_view, data, device());
-    }
-
-    void set_from_host(const Tensor<Scalar, Rank, Layout>& data) {
-      set_from_host(data.data(), data.dimensions());
     }
 
     // for tensor ops
