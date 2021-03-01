@@ -18,6 +18,7 @@ set(TEST_SOURCES "test/device_tensor_test.cpp"
                 "test/batchnorm_test.cpp"
                 "test/batchnorm4d_test.cpp"
                 "test/dropout_test.cpp"
+                "test/flatten_test.cpp"
                 )
 
 message(STATUS "Sources: ${TEST_SOURCES}")

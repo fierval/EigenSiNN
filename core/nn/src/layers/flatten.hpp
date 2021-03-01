@@ -8,12 +8,12 @@ namespace EigenSinn {
 
   // flatten convolution layer
   template<typename Scalar, typename Device_= ThreadPoolDevice, int Layout = ColMajor>
-  class Flatten : public LayerBase<Scalar> {
+  class Flatten : public LayerBase<Scalar, Device_> {
 
   public:
     Flatten() = default;
 
-    void forward(LayerBase<Scalar>& prev_layer_any) {
+    void forward(LayerBase<Scalar, Device_>& prev_layer_any) {
       
       DeviceTensor<Scalar, 4, Device_, Layout> orig(prev_layer_any.get_output());
 
@@ -23,19 +23,19 @@ namespace EigenSinn {
 
     }
 
-    void backward(LayerBase<Scalar>& prev_layer, std::any next_layer_grad) {
+    void backward(LayerBase<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) {
 
       DeviceTensor<Scalar, 2, Device_, Layout> unf_dout(next_layer_grad);
 
       folded = fold_kernel<Scalar>(unf_dout, original_dimensions);
     }
 
-    std::any get_output() override {
-      return unfolded;
+    PtrTensorAdapter<Scalar, Device_> get_output() override {
+      return unfolded.raw();
     }
 
-    std::any get_loss_by_input_derivative() override {
-      return folded;
+    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() override {
+      return folded.raw();
     }
 
   private:
