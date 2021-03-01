@@ -17,7 +17,7 @@ namespace EigenSinn {
 
 
   template<typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  class Linear : public LayerBase<Scalar> {
+  class Linear : public LayerBase<Scalar, Device_> {
 
   public:
     Linear(int _in_dim, int _out_dim) :
@@ -32,7 +32,7 @@ namespace EigenSinn {
     }
 
     // prev_layer_out: X[l-1], dim: [N, D]
-    void forward(LayerBase<Scalar>& prev_layer) override {
+    void forward(LayerBase<Scalar, Device_>& prev_layer) override {
 
       DeviceTensor<Scalar, 2, Device_, Layout > prev_layer_tensor(prev_layer.get_output());
 
@@ -56,7 +56,7 @@ namespace EigenSinn {
 
     // next_layer_grad: delta[l+1] = dL/dX[l+1], dims: [N, M] (same as X[l+1])
     // when we are feeding backward from the loss function
-    void backward(LayerBase<Scalar>& prev_layer_any, std::any next_layer_grad_any) override {
+    void backward(LayerBase<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
 
       DeviceTensor<Scalar, 2, Device_, Layout> prev_layer(prev_layer_any.get_output());
       DeviceTensor<Scalar, 2, Device_, Layout> next_layer_grad(next_layer_grad_any);
@@ -74,15 +74,15 @@ namespace EigenSinn {
       loss_by_bias_derivative.view() = next_layer_grad->sum(reduce_bias_dim);
     }
 
-    void init(const Tensor<Scalar, 2>& _weights) {
+    void init(Tensor<Scalar, 2>& _weights) {
       init();
-      weights = _weights;
+      weights.set_from_host(_weights);
     }
 
-    void init(const Tensor<Scalar, 2>& _weights, const Tensor<Scalar, 1>& _bias) {
+    void init(Tensor<Scalar, 2>& _weights, Tensor<Scalar, 1>& _bias) {
 
       init(_weights);
-      bias = _bias;
+      bias.set_from_host(_bias);
     }
 
     // TODO: actual initialization needed
@@ -100,36 +100,36 @@ namespace EigenSinn {
 
     // this will be fed to compute dL/dW[l-1]
     // it is dL/dX[l]
-    std::any get_loss_by_input_derivative() {
-      return layer_grad_loss_by_input;
+    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
+      return layer_grad_loss_by_input.raw();
     }
 
     // feed to optimizer
-    std::any get_loss_by_weights_derivative() override {
-      return layer_grad_loss_by_weight;
+    PtrTensorAdapter<Scalar, Device_> get_loss_by_weights_derivative() override {
+      return layer_grad_loss_by_weight.raw();
     }
 
-    std::any get_loss_by_bias_derivative() override {
-      return loss_by_bias_derivative;
+    PtrTensorAdapter<Scalar, Device_> get_loss_by_bias_derivative() override {
+      return loss_by_bias_derivative.raw();
     }
 
-    std::any get_output() override {
-      return layer_output;
+    PtrTensorAdapter<Scalar, Device_> get_output() override {
+      return layer_output.raw();
     }
 
-    std::any get_weights() override {
-      return weights;
+    PtrTensorAdapter<Scalar, Device_> get_weights() override {
+      return weights.raw();
     }
 
-    std::any get_bias() override {
-      return bias;
+    PtrTensorAdapter<Scalar, Device_> get_bias() override {
+      return bias.raw();
     }
 
-    void set_weights(std::any& v) override {
+    void set_weights(PtrTensorAdapter<Scalar, Device_>& v) override {
       weights = DeviceTensor<Scalar, 2, Device_, Layout>(v);
     }
 
-    void set_bias(std::any& v) override{
+    void set_bias(PtrTensorAdapter<Scalar, Device_>& v) override{
       bias = DeviceTensor<Scalar, 1, Device_, Layout>(v);
     }
 
