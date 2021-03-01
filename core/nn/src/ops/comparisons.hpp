@@ -51,4 +51,21 @@ namespace EigenSinn {
     const auto out = b.to_host();
     return is_elementwise_approx_eq(a, out, prec);
   }
+
+  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  inline bool is_elementwise_approx_eq(const DeviceTensor<Scalar, Rank, Device_, Layout>& a, PtrTensorAdapter<Scalar, Device_>& b, float prec = 1e-5) {
+
+    auto out = a.to_host();
+    DeviceTensor<Scalar, Rank, Device_, Layout> tmp(b);
+    return is_elementwise_approx_eq(out, tmp, prec);
+  }
+
+  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  inline bool is_elementwise_approx_eq(const PtrTensorAdapter<Scalar, Device_>& a, const DeviceTensor<Scalar, Rank, Device_, Layout>& b, float prec = 1e-5) {
+
+    const auto out = b.to_host();
+    DeviceTensor<Scalar, Rank, Device_, Layout> tmp(a);
+    return is_elementwise_approx_eq(tmp, out, prec);
+  }
+
 }

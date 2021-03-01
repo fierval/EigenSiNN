@@ -59,7 +59,7 @@ namespace EigenSinn
       : DeviceTensor(data.dimensions()) {
 
 
-      create_device_tensor(data.dimensions());
+      create_device_tensor(data.dimensions(), nullptr);
       move_to<Scalar, Rank, Device_, Layout>(*tensor_view, data.data(), device());
     }
 
@@ -72,7 +72,7 @@ namespace EigenSinn
 
     explicit DeviceTensor(PtrTensorAdapter<Scalar, Device_>& adapter) {
       tensor_adapter = adapter;
-      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), TensorAdapter<Scalar, Device_>::vec2dims(adapter.get_dims())));
+      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), TensorAdapter<Scalar, Device_>::vec2dims<Rank>(adapter->get_dims())));
     }
 
     Tensor<Scalar, Rank, Layout> to_host() const {
@@ -149,12 +149,12 @@ namespace EigenSinn
     }
 
     // access
-    const TensorView<Scalar, Rank, Layout>& operator* () const {
-      return *tensor_view;
+    inline TensorView<Scalar, Rank, Layout>& operator*() const {
+      return const_cast<TensorView<Scalar, Rank, Layout>&>(*tensor_view);
     }
 
-    const TensorView<Scalar, Rank, Layout>* operator-> () const {
-      return tensor_view.operator->();
+    inline TensorView<Scalar, Rank, Layout>* operator->() const {
+      return const_cast<TensorView<Scalar, Rank, Layout>*>(&tensor_view.value());
     }
 
     explicit operator bool() const {

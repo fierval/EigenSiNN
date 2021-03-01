@@ -15,7 +15,7 @@ namespace EigenSinn {
     Input() = default;
 
     PtrTensorAdapter<Scalar, Device_> get_output() {
-      return input;
+      return input.raw();
     };
 
     PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() { return nullptr; };

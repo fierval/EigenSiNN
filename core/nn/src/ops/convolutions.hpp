@@ -191,7 +191,7 @@ namespace EigenSinn {
   // e.g. t (*) k = r, t: [2, 3, 4, 4], k: [5, 3, 3, 3], r: [2, 5, 2, 2]
   // r in im2col form will be [5, 8]
   template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  inline auto fold_conv_res(const DeviceTensor<Scalar, 2, Device_, Layout>& conv_res, const array<Index, 4>& expected_dims) {
+  inline auto fold_conv_res(DeviceTensor<Scalar, 2, Device_, Layout>& conv_res, const array<Index, 4>& expected_dims) {
 
     assert(expected_dims[1] == conv_res.dimension(0));
     assert(expected_dims[0] * expected_dims[2] * expected_dims[3] == conv_res.dimension(1));
@@ -228,7 +228,7 @@ namespace EigenSinn {
     array<Index, 4> rev_shape = { kernel_dims[3], kernel_dims[2], kernel_dims[1], batch_size };
     DeviceTensor<Scalar, 4, Device_, ColMajor> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[3]);
 
-    Device_ device = out.get_device();
+    Device_ device = out.device();
 
     Index kernel_height = dilation * (kernel_dims[2] - 1) + 1;
     Index kernel_width = dilation * (kernel_dims[3] - 1) + 1;
