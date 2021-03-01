@@ -60,7 +60,7 @@ namespace EigenSinnTest {
 
     EigenSinn::Dropout<float, 2> dropout;
     dropout.forward(input);
-    dropout.backward(input, DeviceTensor<float, 2>(cd.linearLoss));
+    dropout.backward(input, cd.linearLoss.raw());
 
     Tensor<float, 2> dinput = DeviceTensor<float, 2>(dropout.get_loss_by_input_derivative()).to_host();
 

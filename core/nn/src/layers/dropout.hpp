@@ -14,7 +14,7 @@ using namespace  Eigen;
 namespace EigenSinn {
 
   template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  class Dropout : public LayerBase<Scalar> {
+  class Dropout : public LayerBase<Scalar, Device_> {
   public:
 
     Dropout(float _prob = 0.5)
@@ -42,7 +42,7 @@ namespace EigenSinn {
       prob_tensor.setConstant(prob);
     }
 
-    void forward(LayerBase<Scalar>& prev_layer) override {
+    void forward(LayerBase<Scalar, Device_>& prev_layer) override {
       
       if (!is_training) { return; }
 
@@ -64,7 +64,7 @@ namespace EigenSinn {
     }
 
     // for derivations
-    void backward(LayerBase<Scalar>& prev_layer_any, std::any next_layer_grad_any) override {
+    void backward(LayerBase<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> next_layer_grad(next_layer_grad_any);
 
@@ -73,12 +73,12 @@ namespace EigenSinn {
       layer_gradient.view() = *mask * *next_layer_grad;
     }
 
-    std::any get_output() override {
-      return layer_output;
+    PtrTensorAdapter<Scalar, Device_> get_output() override {
+      return layer_output.raw();
     }
 
-    std::any get_loss_by_input_derivative() {
-      return layer_gradient;
+    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
+      return layer_gradient.raw();
     }
 
     void set_training(bool _is_training) { 
