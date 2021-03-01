@@ -7,7 +7,15 @@ set(TEST_EXE eigentest)
 
 # discover test sources
 #file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "test/*.cu")
-set(TEST_SOURCES "test/device_tensor_test.cpp" "test/device_tensor_gpu_test.cu" "test/convlayer_test.cpp" "test/convlayer_gpu_test.cu" "test/linear_test.cpp" "test/linear_gpu_test.cu")
+set(TEST_SOURCES "test/device_tensor_test.cpp" 
+                "test/device_tensor_gpu_test.cu" 
+                "test/convlayer_test.cpp" 
+                "test/convlayer_gpu_test.cu" 
+                "test/linear_test.cpp" 
+                "test/linear_gpu_test.cu"
+                "test/convlayer_trans_gpu_test.cu"
+                "test/convlayer_trans_test.cpp"
+                )
 
 message(STATUS "Sources: ${TEST_SOURCES}")
 message(STATUS "CUDA Include: ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
