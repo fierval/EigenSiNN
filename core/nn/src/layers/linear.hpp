@@ -129,7 +129,7 @@ namespace EigenSinn {
       weights = DeviceTensor<Scalar, 2, Device_, Layout>(v);
     }
 
-    void set_bias(PtrTensorAdapter<Scalar, Device_>& v) override{
+    void set_bias(PtrTensorAdapter<Scalar, Device_>& v) override {
       bias = DeviceTensor<Scalar, 1, Device_, Layout>(v);
     }
 

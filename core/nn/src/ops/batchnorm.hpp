@@ -76,7 +76,7 @@ namespace EigenSinn {
       mu_broadcasted = broadcast_as_last_dim(mu, broadcast_dims);
 
       // variance
-      variance.view() = (x - mu_broadcasted)->pow(2.).mean(reduction_dims);
+      variance.view() = (*x - *mu_broadcasted).pow(2.).mean(reduction_dims);
 
       new_running_mean.view() = momentum * *running_mean + (1.0 - momentum) * *mu;
       new_running_var.view() = momentum * *running_var + (1.0 - momentum) * *variance;

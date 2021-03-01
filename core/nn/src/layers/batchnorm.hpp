@@ -15,11 +15,11 @@ namespace EigenSinn {
   // N - batch size
   // C - number of channels (1 for fully connected layers)
   template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  class BatchNormalizationLayer : public LayerBase<Scalar> {
+  class BatchNormalizationLayer : public LayerBase<Scalar, Device_> {
   public:
 
     BatchNormalizationLayer(Index num_features, float _eps = 1e-5, float _momentum = 0.9, bool _is_training = true)
-      : LayerBase<Scalar>()
+      : LayerBase<Scalar, Device_>()
       , momentum(_momentum)
       , eps(_eps)
       , is_training(_is_training)
@@ -47,7 +47,7 @@ namespace EigenSinn {
       gamma.set_from_host(_gamma);
     }
 
-    void forward(LayerBase<Scalar>& prev_layer_base) override {
+    void forward(LayerBase<Scalar, Device_>& prev_layer_base) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> prev_layer(prev_layer_base.get_output());
 
@@ -65,7 +65,7 @@ namespace EigenSinn {
 
     // see https://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html
     // for derivations
-    void backward(LayerBase<Scalar>& prev_layer_any, std::any next_layer_grad_any) override {
+    void backward(LayerBase<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> prev_layer(prev_layer_any.get_output());
       DeviceTensor<Scalar, Rank, Device_, Layout> dout(next_layer_grad_any);
@@ -92,7 +92,7 @@ namespace EigenSinn {
 
       // Step 9
       // dbeta = sum(dout, reduced by all dims except channel)
-      Device_& device(dbeta.get_device());
+      Device_& device(dbeta.device());
 
       dbeta.view() = dout->sum(reduction_dims);
 
@@ -101,7 +101,7 @@ namespace EigenSinn {
       DeviceTensor<Scalar, Rank, Device_, Layout> gamma_broad(broadcast_as_last_dim(gamma, broadcast_dims));
       DeviceTensor<Scalar, Rank, Device_, Layout> dxhat(dout.dimensions());
       dxhat.view() = *dout * *gamma_broad;
-      dgamma.view() = (dout * xhat)->sum(reduction_dims);
+      dgamma.view() = (*dout * *xhat).sum(reduction_dims);
 
       // Step 7
       // d_inv_std
@@ -114,7 +114,7 @@ namespace EigenSinn {
 
       // Step 5
       DeviceTensor<Scalar, 1, Device_> d_var(var.dimensions());
-      d_var.view() = -0.5 * (dxhat * xmu)->sum(reduction_dims) / (*var + eps).pow(3. / 2.);
+      d_var.view() = -0.5 * (*dxhat * *xmu).sum(reduction_dims) / (*var + eps).pow(3. / 2.);
 
       // Step 4
       DeviceTensor<Scalar, Rank, Device_, Layout> d_var_broadcast = broadcast_as_last_dim(d_var, broadcast_dims);
@@ -130,7 +130,7 @@ namespace EigenSinn {
       DeviceTensor<Scalar, Rank, Device_, Layout> dx1(dxmu1.dimensions());
       dx1.view() = *dxmu1 + *dxmu2;
 
-      DeviceTensor<Scalar, 1, Device_> dmu(dout->dimension(1));
+      DeviceTensor<Scalar, 1, Device_, Layout> dmu(dout->dimension(1));
       dmu.view() = -dx1->sum(reduction_dims);
 
       // step 1
@@ -143,21 +143,21 @@ namespace EigenSinn {
       layer_gradient.view() = *dx1 + *dx2;
     }
 
-    std::any get_output() {
+    PtrTensorAdapter<Scalar, Device_> get_output() {
 
-      return layer_output;
+      return layer_output.raw();
     }
 
-    std::any get_loss_by_input_derivative() {
-      return layer_gradient;
+    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
+      return layer_gradient.raw();
     }
 
-    std::any get_loss_by_weights_derivative() override {
-      return dgamma;
+    PtrTensorAdapter<Scalar, Device_> get_loss_by_weights_derivative() override {
+      return dgamma.raw();
     }
 
-    std::any get_loss_by_bias_derivative() override {
-      return dbeta;
+    PtrTensorAdapter<Scalar, Device_> get_loss_by_bias_derivative() override {
+      return dbeta.raw();
     }
 
     inline void SetTraining(bool training) {
@@ -168,27 +168,27 @@ namespace EigenSinn {
       return is_training;
     }
 
-    std::any get_weights() override {
-      return gamma;
+    PtrTensorAdapter<Scalar, Device_> get_weights() override {
+      return gamma.raw();
     }
 
-    std::any get_bias() override {
-      return beta;
+    PtrTensorAdapter<Scalar, Device_> get_bias() override {
+      return beta.raw();
     }
 
-    void set_weights(const DeviceTensor<Scalar, 1, Device_, Layout>& v) {
-      gamma = v;
+    void set_weights(PtrTensorAdapter<Scalar, Device_>& v) override {
+      gamma = DeviceTensor<Scalar, 1, Device_, Layout>(v);
     }
 
-    void set_bias(const DeviceTensor<Scalar, 1, Device_, Layout>& v) {
-      beta = v;
+    void set_bias(PtrTensorAdapter<Scalar, Device_>& v) override {
+      beta = DeviceTensor<Scalar, 1, Device_, Layout>(v);
     }
 
   private:
-    DeviceTensor<Scalar, Rank, Device_> layer_output, layer_gradient, xhat;
+    DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_gradient, xhat;
 
-    DeviceTensor<Scalar, 1, Device_> gamma, beta, running_mean, running_variance, mu, var;
-    DeviceTensor<Scalar, 1, Device_> dbeta, dgamma;
+    DeviceTensor<Scalar, 1, Device_, Layout> gamma, beta, running_mean, running_variance, mu, var;
+    DeviceTensor<Scalar, 1, Device_, Layout> dbeta, dgamma;
     float momentum, eps;
     bool is_training;
 

@@ -25,7 +25,7 @@ namespace EigenSinn {
     /// </summary>
     /// <param name="inp_tensor">input data tensor</param>
     /// <param name= "move_to_device">whether to move the original memory to device before setting</param>
-    void set_input(const Tensor<Scalar, Rank, Layout>& inp_tensor) {
+    void set_input(Tensor<Scalar, Rank, Layout>& inp_tensor) {
 
       input.set_from_host(inp_tensor);
     }

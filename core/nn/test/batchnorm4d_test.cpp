@@ -113,7 +113,7 @@ namespace EigenSinnTest {
       BatchNormalizationLayer<float, 4> bn(3);
       bn.init(beta, gamma);
       bn.forward(input_layer);
-      bn.backward(input_layer, loss);
+      bn.backward(input_layer, loss.raw());
 
       DeviceTensor<float, 1> dbeta(cd.dims[1]), dgamma(cd.dims[1]);
       dbeta.setValues({ 15.55493259, 17.75424004, 14.48464108 });

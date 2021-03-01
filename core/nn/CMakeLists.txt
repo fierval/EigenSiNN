@@ -15,6 +15,8 @@ set(TEST_SOURCES "test/device_tensor_test.cpp"
                 "test/linear_gpu_test.cu"
                 "test/convlayer_trans_gpu_test.cu"
                 "test/convlayer_trans_test.cpp"
+                "test/batchnorm_test.cpp"
+                "test/batchnorm4d_test.cpp"
                 )
 
 message(STATUS "Sources: ${TEST_SOURCES}")
