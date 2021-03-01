@@ -19,7 +19,7 @@ namespace EigenSinn {
       return loss;
     }
 
-    virtual std::any get_loss_derivative_by_input() {
+    virtual PtrTensorAdapter<Scalar, Device_> get_loss_derivative_by_input() {
       return dloss;
     }
 

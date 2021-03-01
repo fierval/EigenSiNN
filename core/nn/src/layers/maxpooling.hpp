@@ -13,7 +13,7 @@ namespace EigenSinn {
   // N - batch size
   // C - number of channels (1 for fully connected layers)
   template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  class MaxPooling : public LayerBase<Scalar> {
+  class MaxPooling : public LayerBase<Scalar, Device_> {
   public:
 
     MaxPooling(const array<Index, Rank / 2>& _extents, Index _stride)
@@ -27,7 +27,7 @@ namespace EigenSinn {
       
     }
 
-    void forward(LayerBase<Scalar>& prev_layer) override {
+    void forward(LayerBase<Scalar, Device_>& prev_layer) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> x(prev_layer.get_output());
       auto res = max_pooler.do_max_pool(x, extents, stride);
@@ -39,19 +39,19 @@ namespace EigenSinn {
     }
 
     // for derivations
-    void backward(LayerBase<Scalar>& prev_layer, std::any next_layer_grad) override {
+    void backward(LayerBase<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> x(next_layer_grad);
 
       layer_gradient = max_pooler.do_max_pool_backward(x, mask, original_dimensions, extents, stride);
     }
 
-    std::any get_output() override {
-      return layer_output;
+    PtrTensorAdapter<Scalar, Device_> get_output() override {
+      return layer_output.raw();
     }
 
-    std::any get_loss_by_input_derivative() {
-      return layer_gradient;
+    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
+      return layer_gradient.raw();
     }
 
 

@@ -21,7 +21,7 @@ namespace EigenSinn {
     }
 
     // PyTorch computation of SGD: https://pytorch.org/docs/stable/_modules/torch/optim/sgd.html#SGD
-    inline DeviceWeightBiasTuple step(LayerBase<Scalar>& layer) override {
+    inline DeviceWeightBiasTuple step(LayerBase<Scalar, Device_>& layer) override {
       
       DeviceTensor<Scalar, Rank, Device_, Layout> weights(layer.get_weights()), dweights(layer.get_loss_by_weights_derivative());
       DeviceTensor<Scalar, 1, Device_, Layout> bias(layer.get_bias()), dbias(layer.get_loss_by_bias_derivative());

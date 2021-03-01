@@ -19,10 +19,10 @@ using namespace EigenSinn;
 namespace EigenSinn {
   template <typename Scalar, typename Device_ = ThreadPoolDevice >
   struct NetworkNode {
-    std::unique_ptr<LayerBase<Scalar>> layer;
+    std::unique_ptr<LayerBase<Scalar, Device_>> layer;
     std::unique_ptr<OptimizerBase<Scalar, Device_>> optimizer;
 
-    NetworkNode(LayerBase<Scalar>* _layer, OptimizerBase<Scalar, Device_, 0>* _optimizer = nullptr) : layer(_layer), optimizer(_optimizer) {}
+    NetworkNode(LayerBase<Scalar, Device_>* _layer, OptimizerBase<Scalar, Device_, 0>* _optimizer = nullptr) : layer(_layer), optimizer(_optimizer) {}
 
     NetworkNode(NetworkNode<Scalar, Device_>&& other)  noexcept {
       layer = std::move(other.layer);
@@ -61,9 +61,9 @@ namespace EigenSinn {
       inited = true;
     }
 
-    inline virtual void backward(std::any loss_derivative) {
+    inline virtual void backward(PtrTensorAdapter<Scalar, Device_> loss_derivative) {
 
-      std::any derivative = loss_derivative;
+      PtrTensorAdapter<Scalar, Device_> derivative = loss_derivative;
       for (size_t i = network.size() - 1; i > 0; i--) {
 
         network[i].layer->backward(*network[i - 1].layer, derivative);
@@ -73,7 +73,7 @@ namespace EigenSinn {
 
     inline virtual void optimizer() {
 
-      static std::any weights_any, bias_any;
+      static PtrTensorAdapter<Scalar, Device_> weights_any, bias_any;
       for (size_t i = network.size() - 1; i > 0; i--) {
 
         if (!network[i].optimizer) {
@@ -113,15 +113,15 @@ namespace EigenSinn {
       inp_layer->set_input(tensor);
     }
 
-    inline std::any get_output() {
+    inline PtrTensorAdapter<Scalar, Device_> get_output() {
       return network.rbegin()->layer.get()->get_output();
     }
 
-    inline void add(LayerBase<Scalar>* n, OptimizerBase<Scalar, Device_>* opt = nullptr) {
+    inline void add(LayerBase<Scalar, Device_>* n, OptimizerBase<Scalar, Device_>* opt = nullptr) {
       network.push_back(NetworkNode<Scalar, Device_>(n, opt));
     }
 
-    inline std::any get_loss() { return loss.get_output(); }
+    inline PtrTensorAdapter<Scalar, Device_> get_loss() { return loss.get_output(); }
 
   protected:
 

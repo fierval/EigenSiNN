@@ -8,14 +8,14 @@ using namespace  Eigen;
 namespace EigenSinn {
 
   template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  class Sigmoid : public LayerBase<Scalar> {
+  class Sigmoid : public LayerBase<Scalar, Device_> {
   public:
     // leaky relu if necessary
     Sigmoid() :
       inited(false)
     {}
 
-    void forward(LayerBase<Scalar>& prev_layer_any) override {
+    void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> prev_layer(prev_layer_any.get_output());
 
@@ -30,18 +30,18 @@ namespace EigenSinn {
     }
 
 
-    void backward(LayerBase<Scalar>& prev_layer_any, std::any next_layer_grad_any) override {
+    void backward(LayerBase<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> next_layer_grad(next_layer_grad_any);
 
       layer_grad.view() = *next_layer_grad * *layer_output * (*ones - *layer_output);
     }
 
-    std::any get_output() override {
+    PtrTensorAdapter<Scalar, Device_> get_output() override {
       return layer_output;
     };
 
-    std::any get_loss_by_input_derivative() override {
+    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() override {
       return layer_grad;
     };
 

@@ -57,7 +57,7 @@ namespace EigenSinnTest {
         // compute dL/dw, dL/db, dL/dx
         linear.backward(input, dloss);
 
-        std::any weights_any, bias_any;
+        PtrTensorAdapter<Scalar, Device_> weights_any, bias_any;
         std::tie(weights_any, bias_any) = sgd.step(linear);
 
         linear.set_weights(weights_any);

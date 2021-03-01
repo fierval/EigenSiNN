@@ -81,7 +81,7 @@ namespace EigenSinnTest {
     pl.init();
     pl.forward(input);
 
-    pl.backward(input, fakeloss);
+    pl.backward(input, fakeloss.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(pl.get_loss_by_input_derivative(), dinput));
   }

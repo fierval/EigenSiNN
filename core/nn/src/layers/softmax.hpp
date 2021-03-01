@@ -8,7 +8,7 @@ using namespace  Eigen;
 namespace EigenSinn {
 
   template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  class Softmax : public LayerBase<Scalar> {
+  class Softmax : public LayerBase<Scalar, Device_> {
   public:
     Softmax() 
       : inited(false)
@@ -23,7 +23,7 @@ namespace EigenSinn {
       reshape_dims[Rank - 1] = 1;
     }
 
-    void forward(LayerBase<Scalar>& prev_layer_any) override {
+    void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> prev_layer(prev_layer_any.get_output());
       
@@ -46,7 +46,7 @@ namespace EigenSinn {
       layer_output.view() = *exp_all / *exp_sum_broadcast;
     }
 
-    void backward(LayerBase<Scalar>& prev_layer_any, std::any next_layer_grad_any) override {
+    void backward(LayerBase<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
       
       DeviceTensor<Scalar, Rank, Device_, Layout> dout(next_layer_grad_any);
 
@@ -68,11 +68,11 @@ namespace EigenSinn {
       layer_grad.view() = *exp_all * *d_exp;
     }
 
-    std::any get_output() override {
+    PtrTensorAdapter<Scalar, Device_> get_output() override {
       return layer_output;
     };
 
-    std::any get_loss_by_input_derivative() override {
+    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() override {
       return layer_grad;
     };
 
