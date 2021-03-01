@@ -79,7 +79,7 @@ namespace EigenSinn {
   /// <param name="val"></param>
   /// <param name="device"></param>
   template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  inline void setConstant(TensorView<Scalar, Rank, Layout>& t, Scalar val, Device_& device) {
+  inline void setConstant(const TensorView<Scalar, Rank, Layout>& t, Scalar val, Device_& device) {
 
     assert(t.size());
     std::vector<Scalar> const_mem(t.size());
@@ -91,7 +91,7 @@ namespace EigenSinn {
 
 
   template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  inline void setZero(TensorView<Scalar, Rank, Layout>& t, Device_& device) {
+  inline void setZero(const TensorView<Scalar, Rank, Layout>& t, Device_& device) {
     setConstant(t, (Scalar)0, device);
   }
 
