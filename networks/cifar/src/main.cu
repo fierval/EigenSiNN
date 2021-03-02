@@ -43,8 +43,8 @@ int main(int argc, char* argv[]) {
     // execute network step
     for (int step = 1; step <= dataset.training_images.size() / batch_size; step++) {
 
-      auto batch_tensor = DeviceTensor<float, 4, GpuDevice>(create_batch_tensor(dataset.training_images, step - 1, batch_size));
-      auto label_tensor = DeviceTensor<uint8_t, 2, GpuDevice>(create_2d_label_tensor<uint8_t>(dataset.training_labels, step - 1, batch_size, num_classes));
+      DeviceTensor<float, 4, GpuDevice> batch_tensor(create_batch_tensor(dataset.training_images, step - 1, batch_size));
+      DeviceTensor<uint8_t, 2, GpuDevice> label_tensor(create_2d_label_tensor<uint8_t>(dataset.training_labels, step - 1, batch_size, num_classes));
 
       // training step 
       net.step(batch_tensor, label_tensor);

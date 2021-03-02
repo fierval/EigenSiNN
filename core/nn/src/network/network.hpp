@@ -80,9 +80,7 @@ namespace EigenSinn {
           continue;
         }
 
-        std::tie(weights_any, bias_any) = network[i].optimizer->step(*(network[i].layer));
-        network[i].layer->set_weights(weights_any);
-        network[i].layer->set_bias(bias_any);
+        network[i].optimizer->step(*(network[i].layer));
       }
     }
 
@@ -121,7 +119,7 @@ namespace EigenSinn {
       network.push_back(NetworkNode<Scalar, Device_>(n, opt));
     }
 
-    inline PtrTensorAdapter<Scalar, Device_> get_loss() { return loss.get_output(); }
+    inline Scalar get_loss() { return loss.get_output(); }
 
   protected:
 
