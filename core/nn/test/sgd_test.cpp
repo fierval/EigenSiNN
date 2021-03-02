@@ -22,10 +22,6 @@ namespace EigenSinnTest {
 
     auto PropagateGradient(int epochs, float momentum = 0.0, bool nesterov = false) {
 
-      // collect weights and biases and perform the GD step
-      DeviceTensor<float, 2> weights_auto;
-      DeviceTensor<float, 1> bias_auto;
-
       Input<float, 2> input;
       input.set_input(cd.linearInput);
 
@@ -58,10 +54,7 @@ namespace EigenSinnTest {
         linear.backward(input, dloss.raw());
 
         PtrTensorAdapter<float, ThreadPoolDevice> weights_any, bias_any;
-        std::tie(weights_any, bias_any) = sgd.step(linear);
-
-        linear.set_weights(weights_any);
-        linear.set_bias(bias_any);
+        sgd.step(linear);
       }
 
       EXPECT_TRUE(is_elementwise_approx_eq(new_weights, linear.get_weights()));

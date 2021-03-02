@@ -22,7 +22,7 @@ namespace EigenSinn {
     }
 
     // Computation: https://towardsdatascience.com/adam-latest-trends-in-deep-learning-optimization-6be9a291375c
-    inline DeviceWeightBiasTuple step(LayerBase<Scalar, Device_>& layer) override {
+    inline DeviceWeightBiasTuple<Scalar, Device_> step(LayerBase<Scalar, Device_>& layer) override {
 
      DeviceTensor<Scalar, Rank, Device_, Layout> weights(layer.get_weights()), dweights(layer.get_loss_by_weights_derivative());
      DeviceTensor<Scalar, 1, Device_, Layout> bias(layer.get_bias()), dbias(layer.get_loss_by_bias_derivative());
@@ -61,10 +61,10 @@ namespace EigenSinn {
 
       Scalar step_size = lr / (1 - cur_beta1);
 
-      weights -= step_size * momentum_weights / denom_weights;
-      bias -= step_size * momentum_bias / denom_bias;
+      weights.view() = *weights - step_size * *momentum_weights / *denom_weights;
+      bias.view() = *bias - step_size * *momentum_bias / *denom_bias;
 
-      return std::make_tuple(weights, bias);
+      return std::make_tuple(weights.raw(), bias.raw());
     }
 
   private:

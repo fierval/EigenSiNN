@@ -221,6 +221,13 @@ namespace EigenSinn
       set_from_host(data.data(), data.dimensions());
     }
 
+    DeviceTensor clone() {
+      DeviceTensor out;
+
+      out.set_from_device(tensor_adapter->data(), tensor_view->dimensions());
+      return out;
+    }
+
   private:
 
     void create_device_tensor() {

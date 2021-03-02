@@ -50,13 +50,9 @@ namespace EigenSinnTest {
 
         // propagate back through the fc layer
         // compute dL/dw, dL/db, dL/dx
-        linear.backward(input, dloss);
+        linear.backward(input, dloss.raw());
 
-        PtrTensorAdapter<Scalar, Device_> weights_any, bias_any;
-        std::tie(weights_any, bias_any) = adam.step(linear);
-
-        linear.set_weights(weights_any);
-        linear.set_bias(bias_any);
+        adam.step(linear);
       }
 
       EXPECT_TRUE(is_elementwise_approx_eq(new_weights, linear.get_weights()));

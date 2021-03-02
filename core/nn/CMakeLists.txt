@@ -7,28 +7,8 @@ set(TEST_EXE eigentest)
 
 # discover test sources
 #file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "test/*.cu")
-set(TEST_SOURCES "test/device_tensor_test.cpp" 
-                "test/device_tensor_gpu_test.cu" 
-                "test/convlayer_test.cpp" 
-                "test/convlayer_gpu_test.cu" 
-                "test/linear_test.cpp" 
-                "test/linear_gpu_test.cu"
-                "test/convlayer_trans_gpu_test.cu"
-                "test/convlayer_trans_test.cpp"
-                "test/batchnorm_test.cpp"
-                "test/batchnorm4d_test.cpp"
-                "test/dropout_test.cpp"
-                "test/flatten_test.cpp"
-                "test/maxpooling2d_test.cpp"
-                "test/maxpooling4d_test.cpp"
-                "test/maxpooling2d_gpu_test.cu"
-                "test/maxpooling4d_gpu_test.cu"
-                "test/relu_test.cpp"
-                "test/relu_gpu_test.cu"
-                "test/sigmoid_test.cpp"
-                "test/softmax_test.cpp"
-                "test/tanh_test.cpp"
-                "test/losses_test.cpp"
+set(TEST_SOURCES
+                "test/adam_test.cpp"
                 "test/sgd_test.cpp"
                 )
 

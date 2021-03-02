@@ -29,26 +29,26 @@ namespace EigenSinn {
       if (momentum != 0.0) {
         if (!param_set) {
           param_set = true;
-          velocity_weights = dweights;
-          velocity_bias = dbias;
+          velocity_weights = dweights.clone();
+          velocity_bias = dbias.clone();
         }
         else {
-          velocity_weights = momentum * *velocity_weights + *dweights;
-          velocity_bias = momentum * *velocity_bias + *dbias;
+          velocity_weights.view() = momentum * *velocity_weights + *dweights;
+          velocity_bias.view() = momentum * *velocity_bias + *dbias;
         }
 
         if (nesterov) {
-          dweights += momentum * velocity_weights;
-          dbias += momentum * velocity_bias;
+          dweights.view() = *dweights + momentum * *velocity_weights;
+          dbias.view() = *dbias + momentum * *velocity_bias;
         }
         else {
-          dweights = velocity_weights;
-          dbias = velocity_bias;
+          dweights.view() = *velocity_weights;
+          dbias.view() = *velocity_bias;
         }
       }
 
-      weights -= lr * dweights;
-      bias -= lr * dbias;
+      weights.view() = *weights - lr * *dweights;
+      bias.view() = *bias - lr * *dbias;
       return std::make_tuple(weights.raw(), bias.raw());
     }
 

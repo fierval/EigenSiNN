@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dispatcher.hpp"
+#include "device_helpers.hpp"
 
 using namespace Eigen;
 
@@ -27,6 +28,22 @@ namespace EigenSinn {
       else {
         this->data_ = _data;
       }
+    }
+
+    explicit TensorAdapter(const TensorAdapter<Scalar, Device_>& t) 
+      : TensorAdapter() {
+
+      data_ = t.data_;
+      dimensions = t.dimensions;
+      total_size = t.total_size;
+    }
+
+    explicit TensorAdapter(const TensorAdapter<Scalar, Device_>&& t)
+      : TensorAdapter() {
+
+      data_ = t.data_;
+      dimensions = t.dimensions;
+      total_size = t.total_size;
     }
 
     ~TensorAdapter() {
@@ -60,6 +77,15 @@ namespace EigenSinn {
     inline Scalar* data() { return data_; }
     inline Device_& get_device() { return device; }
     inline const std::vector<Index>& get_dims() { return dimensions; }
+
+    inline TensorAdapter<Scalar, Device_> clone() {
+
+      // will allocate memory and set dimensions
+      TensorAdapter<Scalar, Device_> out(dimensions);
+      device.memcpy(out.data_, data_, total_size * sizeof(Scalar));
+      return out;
+    }
+
 
   private:
 

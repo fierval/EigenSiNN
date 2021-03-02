@@ -53,23 +53,6 @@ namespace EigenSinn {
   }
 
   /// <summary>
-  /// Allocate original tensor
-  /// </summary>
-  /// <typeparam name="Device_"></typeparam>
-  /// <typeparam name="Scalar"></typeparam>
-  /// <param name="dims"></param>
-  /// <param name="device"></param>
-  //template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  //inline PtrTensorView<Scalar, Rank> create_device_ptr(DSizes<Index, Rank> dims, Device_& device) {
-
-  //  size_t alloc_size = dims.TotalSize() * sizeof(Scalar);
-  //  Scalar* ptr = static_cast<Scalar*>(device.allocate(alloc_size));
-  //  PtrTensorView<Scalar, Rank, Layout> out(new TensorView<Scalar, Rank, Layout>(ptr, dims));
-
-  //  return std::move(out);
-  //}
-
-  /// <summary>
   /// Just line t.setConstant but extending for GPU
   /// Assuming memory has been allocated
   /// </summary>
