@@ -32,8 +32,7 @@ namespace EigenSinn {
     pos_mask.view() = (*output >= zero).template cast<Scalar>();
     neg_mask.view() = (*output < zero).template cast<Scalar>();
     
-    neg_mask *= threshold;
-    mask.view() = *neg_mask + *pos_mask;
+    mask.view() = *neg_mask * threshold + *pos_mask;
 
     output.view() = *mask * *t;
     return Tuple(std::move(mask), std::move(output));

@@ -68,7 +68,7 @@ namespace EigenSinnTest {
     ReLU<float, 2> rl;
     rl.init();
     rl.forward(input);
-    rl.backward(input, cd.linearLoss);
+    rl.backward(input, cd.linearLoss.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(rl.get_loss_by_input_derivative(), dinput, 3e-5));
   }
@@ -81,7 +81,7 @@ namespace EigenSinnTest {
     LeakyReLU<float, 2> rl(thresh);
     rl.init();
     rl.forward(input);
-    rl.backward(input, cd.linearLoss);
+    rl.backward(input, cd.linearLoss.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(rl.get_loss_by_input_derivative(), dinput_leaky));
   }
