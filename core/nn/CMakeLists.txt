@@ -28,6 +28,7 @@ set(TEST_SOURCES "test/device_tensor_test.cpp"
                 "test/sigmoid_test.cpp"
                 "test/softmax_test.cpp"
                 "test/tanh_test.cpp"
+                "test/losses_test.cpp"
                 )
 
 message(STATUS "Sources: ${TEST_SOURCES}")

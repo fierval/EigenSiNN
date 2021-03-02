@@ -16,7 +16,14 @@ namespace EigenSinn
 
     // allocation constructors
     explicit DeviceTensor() {
-      create_device_tensor();
+
+      if (Rank == 0) {
+        std::vector<Index> dims;
+        create_device_tensor(dims, nullptr);
+      }
+      else {
+        create_device_tensor();
+      }
     }
 
     explicit DeviceTensor(const DSizes<Index, Rank> dims) {
@@ -226,6 +233,13 @@ namespace EigenSinn
       tensor_adapter = std::make_shared<TensorAdapter<Scalar, Device_>>(TensorAdapter<Scalar, Device_>::dims2vec(dims), data);
       tensor_view.reset();
       tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), dims));
+    }
+
+    void create_device_tensor(const std::vector<Index>& dims, Scalar* data) {
+
+      tensor_adapter = std::make_shared<TensorAdapter<Scalar, Device_>>(dims, data);
+      tensor_view.reset();
+      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), TensorAdapter<Scalar, Device_>::template vec2dims<Rank>(dims)));
     }
 
     void create_device_tensor(const DSizes<Index, Rank>& dims, const PtrTensorAdapter<Scalar, Device_>& data) {

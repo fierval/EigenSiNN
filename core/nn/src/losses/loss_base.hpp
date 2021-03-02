@@ -20,7 +20,7 @@ namespace EigenSinn {
     }
 
     virtual PtrTensorAdapter<Scalar, Device_> get_loss_derivative_by_input() {
-      return dloss;
+      return dloss.raw();
     }
 
     const array<Index, Rank>& get_dims() { return orig_dims; }
@@ -56,7 +56,7 @@ namespace EigenSinn {
 
       spread_grad.setConstant(1.);
       for (int i = 0; i < Rank; i++) {
-        spread_grad /= static_cast<Scalar>(orig_dims[i]);
+        spread_grad.view() = *spread_grad / static_cast<Scalar>(orig_dims[i]);
       }
 
       for (int i = 0; i < Rank; i++) {
