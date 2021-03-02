@@ -38,11 +38,11 @@ namespace EigenSinn {
     }
 
     PtrTensorAdapter<Scalar, Device_> get_output() override {
-      return layer_output;
+      return layer_output.raw();
     };
 
     PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() override {
-      return layer_grad;
+      return layer_grad.raw();
     };
 
 

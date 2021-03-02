@@ -47,7 +47,7 @@ namespace EigenSinnTest {
     EigenSinn::Sigmoid<float, 2> sg;
     sg.init();
     sg.forward(input);
-    sg.backward(input, cd.linearLoss);
+    sg.backward(input, cd.linearLoss.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(sg.get_output(), output));
     EXPECT_TRUE(is_elementwise_approx_eq(sg.get_loss_by_input_derivative(), dinput));

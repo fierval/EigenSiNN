@@ -38,7 +38,7 @@ namespace EigenSinn {
       DeviceTensor<Scalar, Rank, Device_, Layout> layer_max(prev_layer.dimensions());
       layer_max.view() = prev_layer->maximum().reshape(ones_dims).broadcast(dims);
 
-      exp_all.view() = (prev_layer - layer_max)->exp();
+      exp_all.view() = (*prev_layer - *layer_max).exp();
 
       exp_sum.view() = exp_all->sum(reduction_axes);
       exp_sum_broadcast.view() = exp_sum->reshape(reshape_dims).broadcast(broadcast_dims);
@@ -54,7 +54,7 @@ namespace EigenSinn {
       d_mul_exp.view() = *dout / *exp_sum_broadcast;
 
       DeviceTensor<Scalar, 1, Device_, Layout> d_mul_inv_x(dims[0]);
-      d_mul_inv_x.view() = (exp_all * dout)->sum(reduction_axes);
+      d_mul_inv_x.view() = (*exp_all * *dout).sum(reduction_axes);
 
       DeviceTensor<Scalar, 1, Device_, Layout> d_inv(dims[0]);
       d_inv.view() = -1. / exp_sum->pow(2) * *d_mul_inv_x;
@@ -69,11 +69,11 @@ namespace EigenSinn {
     }
 
     PtrTensorAdapter<Scalar, Device_> get_output() override {
-      return layer_output;
+      return layer_output.raw();
     };
 
     PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() override {
-      return layer_grad;
+      return layer_grad.raw();
     };
 
   private:

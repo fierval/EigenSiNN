@@ -25,6 +25,9 @@ set(TEST_SOURCES "test/device_tensor_test.cpp"
                 "test/maxpooling4d_gpu_test.cu"
                 "test/relu_test.cpp"
                 "test/relu_gpu_test.cu"
+                "test/sigmoid_test.cpp"
+                "test/softmax_test.cpp"
+                "test/tanh_test.cpp"
                 )
 
 message(STATUS "Sources: ${TEST_SOURCES}")
