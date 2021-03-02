@@ -6,11 +6,8 @@ message(STATUS "Eigen path: ${EIGEN_PATH}")
 set(TEST_EXE eigentest)
 
 # discover test sources
-#file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "test/*.cu")
-set(TEST_SOURCES
-                "test/adam_test.cpp"
-                "test/sgd_test.cpp"
-                )
+file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "test/*.cu")
+#set(TEST_SOURCES "test/adam_test.cpp")
 
 message(STATUS "Sources: ${TEST_SOURCES}")
 message(STATUS "CUDA Include: ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
