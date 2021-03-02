@@ -55,9 +55,9 @@ namespace EigenSinnTest {
 
         // propagate back through the fc layer
         // compute dL/dw, dL/db, dL/dx
-        linear.backward(input, dloss);
+        linear.backward(input, dloss.raw());
 
-        PtrTensorAdapter<Scalar, Device_> weights_any, bias_any;
+        PtrTensorAdapter<float, ThreadPoolDevice> weights_any, bias_any;
         std::tie(weights_any, bias_any) = sgd.step(linear);
 
         linear.set_weights(weights_any);

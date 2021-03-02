@@ -9,10 +9,12 @@ using namespace Eigen;
 
 namespace EigenSinn {
 
-  typedef std::tuple<PtrTensorAdapter<Scalar, Device_>, PtrTensorAdapter<Scalar, Device_>> DeviceWeightBiasTuple;
+  template<typename Scalar, typename Device_>
+  using DeviceWeightBiasTuple = std::tuple<PtrTensorAdapter<Scalar, Device_>, PtrTensorAdapter<Scalar, Device_>>;
 
   template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class OptimizerBase {
+
 
   public:
     
@@ -22,7 +24,7 @@ namespace EigenSinn {
 
     }
 
-    virtual DeviceWeightBiasTuple step(LayerBase<Scalar, Device_>& ) = 0;
+    virtual DeviceWeightBiasTuple<Scalar, Device_> step(LayerBase<Scalar, Device_>& ) = 0;
 
   protected:
     // learing rate

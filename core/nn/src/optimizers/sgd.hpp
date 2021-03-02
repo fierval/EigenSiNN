@@ -21,7 +21,7 @@ namespace EigenSinn {
     }
 
     // PyTorch computation of SGD: https://pytorch.org/docs/stable/_modules/torch/optim/sgd.html#SGD
-    inline DeviceWeightBiasTuple step(LayerBase<Scalar, Device_>& layer) override {
+    inline DeviceWeightBiasTuple<Scalar, Device_> step(LayerBase<Scalar, Device_>& layer) override {
       
       DeviceTensor<Scalar, Rank, Device_, Layout> weights(layer.get_weights()), dweights(layer.get_loss_by_weights_derivative());
       DeviceTensor<Scalar, 1, Device_, Layout> bias(layer.get_bias()), dbias(layer.get_loss_by_bias_derivative());
@@ -33,8 +33,8 @@ namespace EigenSinn {
           velocity_bias = dbias;
         }
         else {
-          velocity_weights = momentum * velocity_weights + dweights;
-          velocity_bias = momentum * velocity_bias + dbias;
+          velocity_weights = momentum * *velocity_weights + *dweights;
+          velocity_bias = momentum * *velocity_bias + *dbias;
         }
 
         if (nesterov) {
@@ -49,7 +49,7 @@ namespace EigenSinn {
 
       weights -= lr * dweights;
       bias -= lr * dbias;
-      return std::make_tuple(weights, bias);
+      return std::make_tuple(weights.raw(), bias.raw());
     }
 
   private:
