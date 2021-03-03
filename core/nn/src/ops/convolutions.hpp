@@ -122,8 +122,8 @@ namespace EigenSinn {
       static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
       dim3 grid(getGridSize(dims[0], block.x), getGridSize(dims[1], block.y));
 
-      dilate_tensor_kernel<Scalar, ColMajor> << < grid, block >> > (dims[0], dims[1], dims[2], dims[3], dilation, *dilated, *tensor);
-      cudaDeviceSynchronize();
+      dilate_tensor_kernel<Scalar, ColMajor> << < grid, block, 0, tensor.device().stream() >> > (dims[0], dims[1], dims[2], dims[3], dilation, *dilated, *tensor);
+      //cudaDeviceSynchronize();
     }
     else {
 #endif
