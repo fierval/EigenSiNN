@@ -42,7 +42,7 @@ if(WITH_GPU)
     set(CMAKE_CUDA_ARCHITECTURES 70 CACHE STRING "CUDA Arches" FORCE)
     
     file(GLOB_RECURSE APP_SOURCES LIST_DIRECTORIES false "src/*.cu")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr  --default-stream per-thread")
 
 endif()
 

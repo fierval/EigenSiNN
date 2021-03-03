@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
         stop = std::chrono::high_resolution_clock::now();
         std::cout << "Epoch: " << i + 1 
           << ". Step: " << step 
-          << ". Loss: " << std::any_cast<float>(net.get_loss()) 
+          << ". Loss: " << net.get_loss() 
           << ". Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start_step).count() / 1000. 
           << "." << std::endl;
 
