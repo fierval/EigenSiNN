@@ -35,12 +35,12 @@ namespace EigenSinn {
     return true;
   }
 
-  template <typename Scalar, int Rank, int Layer, typename Device_>
+  template <typename Scalar, int Rank, int Layout, typename Device_>
   struct MaxPooler {};
 
 
-  template <typename Scalar, typename Device_>
-  struct MaxPooler<Scalar, 2, ColMajor, Device_> {
+  template <typename Scalar, int Layout, typename Device_>
+  struct MaxPooler<Scalar, 2, Layout, Device_> {
 
     inline auto do_max_pool(const DeviceTensor<Scalar, 2, Device_, ColMajor>& t, const array<Index, 1>& extents, int stride) {
       auto dims = t.dimensions();
@@ -87,7 +87,7 @@ namespace EigenSinn {
         static long block(BLOCK_SIZE * BLOCK_SIZE);
         long grid((local_pool.dimension(0) + block - 1) / block);
 
-        maxpool_set_values_kernel2d<Scalar, ColMajor> << <grid, block >> > (*output, *mask, *local_pool, local_pool.dimension(0), output_starts[1]);
+        maxpool_set_values_kernel2d<Scalar, ColMajor> << <grid, block, 0, output.device().stream() >> > (*output, *mask, *local_pool, local_pool.dimension(0), output_starts[1]);
         cudaDeviceSynchronize();
       }
       else {
@@ -102,7 +102,7 @@ namespace EigenSinn {
 #endif
     }
 
-    inline DeviceTensor<Scalar, 2, Device_, ColMajor> do_max_pool_backward(const DeviceTensor<Scalar, 2, Device_>& grads, const DeviceTensor<Index, 2, Device_>& mask,
+    inline DeviceTensor<Scalar, 2, Device_, Layout> do_max_pool_backward(const DeviceTensor<Scalar, 2, Device_>& grads, const DeviceTensor<Index, 2, Device_>& mask,
       const array<Index, 2>& original_dims, const array<Index, 1>& extents, int stride) {
 
       array<Index, 2> starts({ 0, 0 });
@@ -110,7 +110,7 @@ namespace EigenSinn {
 
       array<Index, 2> grad_starts({ 0, 0 });
 
-      DeviceTensor<Scalar, 2, Device_> output(original_dims);
+      DeviceTensor<Scalar, 2, Device_, Layout> output(original_dims);
       output.setZero();
 
       for (starts[1] = 0, grad_starts[1] = 0; starts[1] + extents[0] <= original_dims[1]; starts[1] += stride, grad_starts[1]++) {
@@ -120,16 +120,15 @@ namespace EigenSinn {
       return output;
     }
 
-    inline void SetDInput(const array<Index, 2>& original_dims, const DeviceTensor<Index, 2, Device_>& mask, array<Index, 2>& grad_starts, const array<Index, 2>& pool_window,
-      DeviceTensor<Scalar, 2, Device_, 0>& output, array<Index, 2>& starts, const DeviceTensor<Scalar, 2, Device_, 0>& grads) {
+    inline void SetDInput(const array<Index, 2>& original_dims, const DeviceTensor<Index, 2, Device_, Layout>& mask, array<Index, 2>& grad_starts, const array<Index, 2>& pool_window,
+      DeviceTensor<Scalar, 2, Device_, Layout>& output, array<Index, 2>& starts, const DeviceTensor<Scalar, 2, Device_, Layout>& grads) {
 
 #ifdef __CUDACC__
       if (std::is_same<Device_, GpuDevice>::value) {
         static int block(BLOCK_SIZE * BLOCK_SIZE);
         int grid(getGridSize(original_dims[0], block));
 
-        maxpool_dinput_kernel2d<Scalar, ColMajor> << <grid, block >> > (*output, *grads, *mask, original_dims[0], grad_starts[1], pool_window[1], starts[1]);
-        cudaDeviceSynchronize();
+        maxpool_dinput_kernel2d<Scalar, Layout> << <grid, block,0, grads.device().stream() >> > (*output, *grads, *mask, original_dims[0], grad_starts[1], pool_window[1], starts[1]);
 
       }
       else {
@@ -137,7 +136,7 @@ namespace EigenSinn {
         for (int k = 0; k < original_dims[0]; k++) {
 
           Index idx_flat = (*mask)(k, grad_starts[1]);
-          Index idx_col = from_flat_dim<Index, 2, ColMajor>(pool_window, idx_flat)[1];
+          Index idx_col = from_flat_dim<Index, 2, Layout>(pool_window, idx_flat)[1];
 
           // index has been unrolled during the forward operation
           (*output)(k, starts[1] + idx_col) += (*grads)(k, grad_starts[1]);
@@ -149,16 +148,16 @@ namespace EigenSinn {
     }
   };
 
-  template <typename Scalar, typename Device_>
-  struct MaxPooler<Scalar, 4, ColMajor, Device_> {
+  template <typename Scalar, int Layout, typename Device_>
+  struct MaxPooler<Scalar, 4, Layout, Device_> {
     inline auto do_max_pool(const DeviceTensor<Scalar, 4, Device_>& t, const array<Index, 2>& extents, int stride) {
       auto dims = t.dimensions();
 
-      DeviceTensor<Tuple<Index, Scalar>, 2, Device_> local_pool(dims[0], dims[1]);
+      DeviceTensor<Tuple<Index, Scalar>, 2, Device_, Layout> local_pool(dims[0], dims[1]);
 
-      DeviceTensor<Scalar, 4, Device_> output(dims[0], dims[1], (dims[2] - extents[0]) / stride + 1, (dims[3] - extents[1]) / stride + 1);
+      DeviceTensor<Scalar, 4, Device_, Layout> output(dims[0], dims[1], (dims[2] - extents[0]) / stride + 1, (dims[3] - extents[1]) / stride + 1);
 
-      DeviceTensor<Index, 4, Device_> mask(output.dimensions());
+      DeviceTensor<Index, 4, Device_, Layout> mask(output.dimensions());
 
       array<Index, 4> starts({ 0, 0, 0, 0 });
       array<Index, 4> lengths({ dims[0], dims[1], extents[0], extents[1] });
@@ -167,7 +166,7 @@ namespace EigenSinn {
       array<Index, 4> output_starts({ 0, 0, 0, 0 });
 
       // get index tuples in order to use tuple reducer
-      DeviceTensor<Tuple<Index, Scalar>, 4, Device_> index_tuples(lengths);
+      DeviceTensor<Tuple<Index, Scalar>, 4, Device_, Layout> index_tuples(lengths);
       Device_ device = index_tuples.device();
 
       for (starts[2] = 0, output_starts[2] = 0; starts[2] + extents[0] <= dims[2]; starts[2] += stride, output_starts[2]++) {
@@ -185,8 +184,8 @@ namespace EigenSinn {
       return Tuple(output, mask);
     }
 
-    inline void SetIdxAndValue(DeviceTensor<Tuple<Index, Scalar>, 2, Device_>& local_pool, DeviceTensor<Index, 4, Device_>& mask,
-      DeviceTensor<Scalar, 4, Device_>& output, array<Index, 4>& output_starts, Device_& device) {
+    inline void SetIdxAndValue(DeviceTensor<Tuple<Index, Scalar>, 2, Device_, Layout>& local_pool, DeviceTensor<Index, 4, Device_, Layout>& mask,
+      DeviceTensor<Scalar, 4, Device_, Layout>& output, array<Index, 4>& output_starts, Device_& device) {
 #ifdef __CUDACC__
       if (std::is_same<Device_, GpuDevice>::value) {
 
@@ -196,7 +195,7 @@ namespace EigenSinn {
         dim3 grid((in_size.x + block.x - 1) / block.x, (in_size.y + block.y - 1) / block.y);
         dim3 output_starts_2d(output_starts[3], output_starts[2]);
 
-        maxpool_set_values_kernel4d<Scalar, ColMajor> << <grid, block >> > (*output, *mask, *local_pool, in_size, output_starts_2d);
+        maxpool_set_values_kernel4d<Scalar, Layout> << <grid, block >> > (*output, *mask, *local_pool, in_size, output_starts_2d);
         cudaDeviceSynchronize();
       }
       else {
@@ -214,7 +213,7 @@ namespace EigenSinn {
 #endif
     }
 
-    inline DeviceTensor<Scalar, 4, Device_> do_max_pool_backward(const DeviceTensor<Scalar, 4, Device_>& grads, const DeviceTensor<Index, 4, Device_>& mask,
+    inline DeviceTensor<Scalar, 4, Device_, Layout> do_max_pool_backward(const DeviceTensor<Scalar, 4, Device_, Layout>& grads, const DeviceTensor<Index, 4, Device_, Layout>& mask,
       const array<Index, 4>& original_dims, const array<Index, 2>& extents, int stride) {
 
       array<Index, 4> starts({ 0, 0, 0, 0 });
@@ -222,7 +221,7 @@ namespace EigenSinn {
 
       array<Index, 4> grad_starts({ 0, 0, 0, 0 });
 
-      DeviceTensor<Scalar, 4, Device_> output(original_dims);
+      DeviceTensor<Scalar, 4, Device_, Layout> output(original_dims);
 
       output.setZero();
 
@@ -237,8 +236,8 @@ namespace EigenSinn {
     }
 
     void SetDInput(const array<Index, 4>& original_dims, const DeviceTensor<Index, 4, Device_>& mask,
-      array<Index, 4>& grad_starts, const array<Index, 4>& pool_window_dims, DeviceTensor<Scalar, 4, Device_>& output,
-      array<Index, 4>& starts, const DeviceTensor<Scalar, 4, Device_>& grads)
+      array<Index, 4>& grad_starts, const array<Index, 4>& pool_window_dims, DeviceTensor<Scalar, 4, Device_, Layout>& output,
+      array<Index, 4>& starts, const DeviceTensor<Scalar, 4, Device_, Layout>& grads)
     {
 #ifdef __CUDACC__
       if (std::is_same<Device_, GpuDevice>::value) {
@@ -248,8 +247,7 @@ namespace EigenSinn {
         dim3 grad_starts_2d(grad_starts[3], grad_starts[2]);
         dim3 out_pos_2d(starts[3], starts[2]);
 
-        maxpool_dinput_kernel4d<Scalar, ColMajor> << <grid, block >> > (*output, *grads, *mask, original_dims[0], original_dims[1], grad_starts_2d, extents, out_pos_2d);
-        cudaDeviceSynchronize();
+        maxpool_dinput_kernel4d<Scalar, Layout> << <grid, block >> > (*output, *grads, *mask, original_dims[0], original_dims[1], grad_starts_2d, extents, out_pos_2d);
 
       }
       else {
@@ -259,7 +257,7 @@ namespace EigenSinn {
 
             // index has been flattened during the forward operation, unroll it
             Index idx_flat = (*mask)(k, j, grad_starts[2], grad_starts[3]);
-            array<Index, 4> unrolled_dim = from_flat_dim<Index, 4, ColMajor>(pool_window_dims, idx_flat);
+            array<Index, 4> unrolled_dim = from_flat_dim<Index, 4, Layout>(pool_window_dims, idx_flat);
 
             (*output)(k, j, starts[2] + unrolled_dim[2], starts[3] + unrolled_dim[3]) += (*grads)(k, j, grad_starts[2], grad_starts[3]);
           }
