@@ -8,7 +8,7 @@ using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
-  template<typename Device_ = ThreadPoolDevice>
+  template<typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   struct ConvDataWith1Padding {
 
     void init() {
@@ -475,7 +475,7 @@ namespace EigenSinnTest {
 
     const array<Index, 4> dims = { 2, 3, 4, 4 }, kernelDims = { 5, 3, 3, 3 }, convOutDims = { 2, 5, 4, 4 }, convInputTransDims = { 2, 5, 2, 2 };
     const int padding = 1, dilation = 1;
-    DeviceTensor<float, 4, Device_> convLoss, dweight, dinput, output, input_trans, dinput_trans, dweight_trans, convLossTrans, output_trans, weights;
+    DeviceTensor<float, 4, Device_, Layout> convLoss, dweight, dinput, output, input_trans, dinput_trans, dweight_trans, convLossTrans, output_trans, weights;
 
   };
 

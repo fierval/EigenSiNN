@@ -7,7 +7,7 @@ using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
-  template<typename Device_>
+  template<typename Device_, int Layout = ColMajor>
   struct CommonData2d {
 
     // data will be presented in NHWC format
@@ -18,7 +18,7 @@ namespace EigenSinnTest {
       target.resize(out_dims);
       weights.resize(weights_dim_shuffled);
 
-      DeviceTensor<float, 2, Device_> tmp(weight_dims);
+      DeviceTensor<float, 2, Device_, Layout> tmp(weight_dims);
 
       linearLoss.setValues({ {0.36603546, 0.40687686, 0.87746394, 0.62148917, 0.86859787, 0.51380110,
         0.60315830, 0.00604892},
@@ -82,7 +82,7 @@ namespace EigenSinnTest {
     }
 
     const array<Index, 2> dims = { 3, 8 }, out_dims = { 3, 4 }, weight_dims = { 4, 8 }, weights_dim_shuffled = { 8, 4 };
-    DeviceTensor<float, 2, Device_> linearInput, linearLoss, outputGrad, output, target, weights, dinput, fakeloss, dweights;
-    DeviceTensor<float, 1, Device_> bias, dbias;
+    DeviceTensor<float, 2, Device_, Layout> linearInput, linearLoss, outputGrad, output, target, weights, dinput, fakeloss, dweights;
+    DeviceTensor<float, 1, Device_, Layout> bias, dbias;
   };
 }
