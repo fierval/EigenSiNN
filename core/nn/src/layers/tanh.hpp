@@ -44,7 +44,6 @@ namespace EigenSinn {
       return layer_grad.raw();
     };
 
-
   private:
     void init_cached(const DeviceTensor<Scalar, Rank, Device_, Layout>& prev_layer)
     {

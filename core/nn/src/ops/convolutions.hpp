@@ -219,14 +219,14 @@ namespace EigenSinn {
       batch_size = orig_dims[0];
 
     array<Index, 2> col_dims = col.dimensions();
-    DeviceTensor<Scalar, 4, Device_, ColMajor> out(orig_dims);
+    DeviceTensor<Scalar, 4, Device_, Layout> out(orig_dims);
     out.setZero();
 
     Index out_w = 0, out_h = 0;
     array<Index, 2> slice_starts = { 0, 0 };
     array<Index, 2> slice_offsets = { col.dimension(0), batch_size };
     array<Index, 4> rev_shape = { kernel_dims[3], kernel_dims[2], kernel_dims[1], batch_size };
-    DeviceTensor<Scalar, 4, Device_, ColMajor> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[3]);
+    DeviceTensor<Scalar, 4, Device_, Layout> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[3]);
 
     Device_ device = out.device();
 
@@ -269,7 +269,7 @@ namespace EigenSinn {
     auto unf_kernel = unfold_kernel<Scalar, Device_, Layout>(kernel);
 
     ProductDims prod_dims = { IndexPair<int>(1,0) };
-    DeviceTensor<float, 2, Device_> res(unf_kernel.dimension(0), col_inputs.dimension(1));
+    DeviceTensor<float, 2, Device_, Layout> res(unf_kernel.dimension(0), col_inputs.dimension(1));
     res.view() = unf_kernel->contract(*col_inputs, prod_dims);
 
     // NCHW output tensor

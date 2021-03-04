@@ -185,7 +185,7 @@ namespace EigenSinn
     }
 
     explicit operator bool() const {
-      return tensor_view ? true : false;
+      return static_cast<bool>(tensor_view);
     }
 
     Index size() const {
