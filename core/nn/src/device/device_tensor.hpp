@@ -227,6 +227,15 @@ namespace EigenSinn
       out.set_from_device(tensor_adapter->data(), tensor_view->dimensions());
       return out;
     }
+    
+    // switch layout
+    inline DeviceTensor<Scalar, Rank, Device_, (Layout ^ RowMajor)> swap_layout() const {
+
+      DeviceTensor<Scalar, Rank, Device_, Layout^ RowMajor> out_t(dimensions());
+
+      out_t.view() = tensor_view->swap_layout().reshape(dimensions());
+      return out_t;
+    }
 
   private:
 
