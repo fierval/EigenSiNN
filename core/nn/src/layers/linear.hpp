@@ -74,12 +74,12 @@ namespace EigenSinn {
       loss_by_bias_derivative.view() = next_layer_grad->sum(reduce_bias_dim);
     }
 
-    void init(Tensor<Scalar, 2>& _weights) {
+    void init(Tensor<Scalar, 2, Layout>& _weights) {
       init();
       weights.set_from_host(_weights);
     }
 
-    void init(Tensor<Scalar, 2>& _weights, Tensor<Scalar, 1>& _bias) {
+    void init(Tensor<Scalar, 2, Layout>& _weights, Tensor<Scalar, 1, Layout>& _bias) {
 
       init(_weights);
       bias.set_from_host(_bias);
