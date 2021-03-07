@@ -90,6 +90,24 @@ namespace EigenSinn {
     // "move" along axis 1 (columns) and append converted portions.
     // each converted portion is a a batch of would-be convolution operations
     Index converted_portion = 0;
+
+#ifndef __CUDACC__
+
+    std::vector<Index> h_im_range(out_dims[(int)ImageDims::height]), w_im_range(out_dims[(int)ImageDims::width]);
+    std::iota(h_im_range.begin(), h_im_range.end(), 0);
+    std::iota(w_im_range.begin(), w_im_range.end(), 0);
+    std::transform(h_im_range.begin(), h_im_range.end(), h_im_range.begin(), [=](auto i) {return i* stride - padding.first; });
+    std::transform(w_im_range.begin(), w_im_range.end(), w_im_range.begin(), [=](auto i) {return i* stride - padding.second; });
+
+    std::for_each(std::execution::par_unseq, h_im_range.begin(), h_im_range.end(), [&](auto h_im) {
+      std::for_each(std::execution::par_unseq, w_im_range.begin(), w_im_range.end(), [&](auto w_im) {
+
+        int shift = batches * ((h_im / stride + padding.first) * out_dims[(int)ImageDims::width] + w_im / stride + padding.second);
+        setColFromSlice(batches, shift, channels, h_im, kernel_height, dilation, w_im, kernel_width, output, input);
+        });
+      });
+
+#else
     for (Index h_im = -padding.first; h_im + kernel_height <= input.dimension(2) + padding.first; h_im += stride) {
       for (Index w_im = -padding.second; w_im + kernel_width <= input.dimension(3) + padding.second; converted_portion++, w_im += stride) {
 
@@ -97,8 +115,9 @@ namespace EigenSinn {
         setColFromSlice(batches, shift, channels, h_im, kernel_height, dilation, w_im, kernel_width, output, input);
       }
     }
+#endif
     return std::move(output);
-  }
+}
 
   template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   inline auto dilate_tensor(DeviceTensor<Scalar, 4, Device_, Layout>& tensor, Index dilation) {

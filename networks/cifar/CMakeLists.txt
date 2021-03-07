@@ -12,7 +12,7 @@ find_package(OpenCV REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-get_filename_component(EIGEN3_INCLUDE_DIRS "../../core/eigen" ABSOLUTE)
+get_filename_component(EIGEN3_INCLUDE_DIRS "../../core/eigen-3.3.9" ABSOLUTE)
 get_filename_component(EIGENSINN_INCLUDE_DIR "../../core/nn/src" ABSOLUTE)
 get_filename_component(CUR_INCLUDE_DIR "include" ABSOLUTE)
 
@@ -31,7 +31,7 @@ message(STATUS "OpenCV libs: ${OpenCV_LIBS}")
 set(APP_EXE simple_cifar)
 
 set(WITH_GPU false)
-set(COL_MAJOR false)
+set(COL_MAJOR true)
 
 # discover sources
 file(GLOB_RECURSE APP_SOURCES LIST_DIRECTORIES false "src/*.cpp")

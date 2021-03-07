@@ -18,14 +18,14 @@ int main(int argc, char* argv[]) {
   std::vector<std::string> classes = { "plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck" };
   int num_classes = classes.size();
 
-  auto dataset = read_cifar_dataset<RowMajor>();
+  auto dataset = read_cifar_dataset<ColMajor>();
 
   explore(dataset, explore_dataset);
 
-  ImageContainer<RowMajor> next_images;
+  ImageContainer<ColMajor> next_images;
   LabelContainer next_labels;
 
-  auto net = Cifar10<ThreadPoolDevice, RowMajor>(array<Index, 4>{(Index)batch_size, channels, side, side}, num_classes, learning_rate);
+  auto net = Cifar10<ThreadPoolDevice, ColMajor>(array<Index, 4>{(Index)batch_size, channels, side, side}, num_classes, learning_rate);
   net.init();
 
   auto start = std::chrono::high_resolution_clock::now();
@@ -43,8 +43,8 @@ int main(int argc, char* argv[]) {
     // execute network step
     for (int step = 1; step <= dataset.training_images.size() / batch_size; step++) {
 
-      auto batch_tensor = DeviceTensor<float, 4, ThreadPoolDevice, RowMajor>(create_batch_tensor(dataset.training_images, step - 1, batch_size));
-      auto label_tensor = DeviceTensor<uint8_t, 2, ThreadPoolDevice, RowMajor>(create_2d_label_tensor<uint8_t, RowMajor>(dataset.training_labels, step - 1, batch_size, num_classes));
+      auto batch_tensor = DeviceTensor<float, 4, ThreadPoolDevice, ColMajor>(create_batch_tensor(dataset.training_images, step - 1, batch_size));
+      auto label_tensor = DeviceTensor<uint8_t, 2, ThreadPoolDevice, ColMajor>(create_2d_label_tensor<uint8_t, ColMajor>(dataset.training_labels, step - 1, batch_size, num_classes));
 
       // training step 
       net.step(batch_tensor, label_tensor);
@@ -68,6 +68,6 @@ int main(int argc, char* argv[]) {
   } 
   
   // Test
-  TestNetwork<ThreadPoolDevice, RowMajor>(dataset, net, num_classes, classes);
+  TestNetwork<ThreadPoolDevice, ColMajor>(dataset, net, num_classes, classes);
   return 0;
 }

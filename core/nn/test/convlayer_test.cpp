@@ -25,6 +25,19 @@ namespace EigenSinnTest {
   };
 
   
+  TEST_F(Convolution, Forward) {
+
+    Input<float, 4> input;
+    input.set_input(cd.convInput);
+
+    Conv2d<float> conv2d(cd.kernelDims);
+
+    conv2d.init(cd.convWeights.to_host());
+    conv2d.forward(input);
+    
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.output, conv2d.get_output()));
+  }
+
   TEST_F(Convolution, Backward) {
 
     Input<float, 4> input;
