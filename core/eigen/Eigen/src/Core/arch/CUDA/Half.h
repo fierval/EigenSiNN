@@ -42,6 +42,7 @@
 #define EIGEN_EXPLICIT_CAST(tgt_type) operator tgt_type()
 #endif
 
+#include <sstream>
 
 namespace Eigen {
 
@@ -208,22 +209,22 @@ namespace half_impl {
 // versions to get the ALU speed increased), but you do save the
 // conversion steps back and forth.
 
-EIGEN_STRONG_INLINE __device__ half operator + (const half& a, const half& b) {
-  return __hadd((__half)a, (__half)b);
-}
-EIGEN_STRONG_INLINE __device__ half operator * (const half& a, const half& b) {
-  return __hmul((__half)a, (__half)b);
-}
-EIGEN_STRONG_INLINE __device__ half operator - (const half& a, const half& b) {
-  return __hsub((__half)a, (__half)b);
-}
-EIGEN_STRONG_INLINE __device__ half operator / (const half& a, const half& b) {
+  EIGEN_STRONG_INLINE __device__ half operator + (const half& a, const half& b) {
+    return __hadd((__half)a, (__half)b);
+  }
+  EIGEN_STRONG_INLINE __device__ half operator * (const half& a, const half& b) {
+    return __hmul((__half)a, (__half)b);
+  }
+  EIGEN_STRONG_INLINE __device__ half operator - (const half& a, const half& b) {
+    return __hsub((__half)a, (__half)b);
+  }
+  EIGEN_STRONG_INLINE __device__ half operator / (const half& a, const half& b) {
   float num = __half2float(a);
   float denom = __half2float(b);
   return __float2half(num / denom);
 }
 EIGEN_STRONG_INLINE __device__ half operator - (const half& a) {
-  return __hneg((__half)a);
+  return __hneg(a);
 }
 EIGEN_STRONG_INLINE __device__ half& operator += (half& a, const half& b) {
   a = a + b;
@@ -242,22 +243,22 @@ EIGEN_STRONG_INLINE __device__ half& operator /= (half& a, const half& b) {
   return a;
 }
 EIGEN_STRONG_INLINE __device__ bool operator == (const half& a, const half& b) {
-  return __heq((__half)a, (__half)b);
+  return __heq(a, b);
 }
 EIGEN_STRONG_INLINE __device__ bool operator != (const half& a, const half& b) {
-  return __hne((__half)a, (__half)b);
+  return __hne(a, b);
 }
 EIGEN_STRONG_INLINE __device__ bool operator < (const half& a, const half& b) {
-  return __hlt((__half)a, (__half)b);
+  return __hlt(a, b);
 }
 EIGEN_STRONG_INLINE __device__ bool operator <= (const half& a, const half& b) {
-  return __hle((__half)a, (__half)b);
+  return __hle(a, b);
 }
 EIGEN_STRONG_INLINE __device__ bool operator > (const half& a, const half& b) {
-  return __hgt((__half)a, (__half)b);
+  return __hgt(a, b);
 }
 EIGEN_STRONG_INLINE __device__ bool operator >= (const half& a, const half& b) {
-  return __hge((__half)a, (__half)b);
+  return __hge(a, b);
 }
 
 #else  // Emulate support for half floats
@@ -627,9 +628,9 @@ struct hash<Eigen::half> {
 
 // Add the missing shfl_xor intrinsic
 #if defined(EIGEN_CUDA_ARCH) && EIGEN_CUDA_ARCH >= 300
-__device__ EIGEN_STRONG_INLINE Eigen::half __shfl_xor_sync(Eigen::half var, int laneMask, int width=warpSize) {
+__device__ EIGEN_STRONG_INLINE Eigen::half __shfl_xor(Eigen::half var, int laneMask, int width=warpSize) {
   #if EIGEN_CUDACC_VER < 90000
-  return static_cast<Eigen::half>(__shfl_xor_sync(static_cast<float>(var), laneMask, width));
+  return static_cast<Eigen::half>(__shfl_xor(static_cast<float>(var), laneMask, width));
   #else
   return static_cast<Eigen::half>(__shfl_xor_sync(0xFFFFFFFF, static_cast<float>(var), laneMask, width));
   #endif

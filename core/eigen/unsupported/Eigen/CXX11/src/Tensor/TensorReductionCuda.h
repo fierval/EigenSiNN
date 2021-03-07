@@ -13,6 +13,7 @@
 namespace Eigen {
 namespace internal {
 
+
 #if defined(EIGEN_USE_GPU) && defined(__CUDACC__)
 // Full reducers for GPU, don't vectorize for now
 
