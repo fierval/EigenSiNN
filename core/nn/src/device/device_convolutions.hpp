@@ -73,8 +73,8 @@ namespace EigenSinn {
   }
 
   template<typename Scalar, int Layout = ColMajor>
-  __global__ void add_and_set_kernel(TensorView<Scalar, 4, Layout> out, TensorView<Scalar, 4, Layout> slice,
-    long batches, long channels, long kernel_height, long kernel_width, long out_h, long out_w, long dilation) {
+  __global__ void add_and_set_kernel(TensorView<Scalar, 4, Layout> out, TensorView<Scalar, 2, Layout> col,
+    long batches, long channels, long col_start, long kernel_height, long kernel_width, long out_h, long out_w, long dilation) {
 
     // batch
     long b = threadIdx.x + blockIdx.x * blockDim.x;
@@ -83,20 +83,32 @@ namespace EigenSinn {
 
     if (b < batches && c < channels) {
 
+      long undalated_height = (kernel_height - 1) / dilation + 1;
+      long undalated_width = (kernel_width - 1) / dilation + 1;
+
+      // moving along the col tensor
+      // row = 0 is the flattened slice of kernel application at a given I(i, j) through all channels and batches
+      // col = col_start is the shift into the flattened application at position I(i, j) as we move the kernel along the image
+      long idx_row = c * undalated_height * undalated_width;
+      long idx_col = col_start + b;
+
+
       for (long h = 0; h < kernel_height; h += dilation) {
-        for (long w = 0; w < kernel_width; w += dilation) {
+        for (long w = 0; w < kernel_width; w += dilation, idx_row++) {
 
           long height_offset = h + out_h;
           long width_offset = w + out_w;
 
           if (height_offset >= 0 && height_offset < out.dimension(2) && width_offset >= 0 && width_offset < out.dimension(3)) {
             auto flat_out_dims = dimensions_cast<long>(out.dimensions());
-            auto flat_inp_dims = dimensions_cast<long>(slice.dimensions());
+            auto flat_inp_dims = dimensions_cast<long>(col.dimensions());
 
             long idx_output = to_flat_dim<long, 4, Layout>(flat_out_dims, { b, c, height_offset, width_offset });
-            long idx_inp = to_flat_dim<long, 4, Layout>(flat_inp_dims, { b, c, h, w });
+            long idx_inp = to_flat_dim<long, 2, Layout>(flat_inp_dims, { idx_row, idx_col });
 
-            out.data()[idx_output] += slice.data()[idx_inp];
+            out.data()[idx_output] += col.data()[idx_inp];
+
+            // move along the column tensor
           }
         }
       }
@@ -120,7 +132,6 @@ namespace EigenSinn {
       set_col_kernel<Scalar, Layout> << <grid, block, 0, input.device().stream() >> > (*input, *output, shift,
         batches, channels, dilation, kernel_width, kernel_height, h_im, w_im);
 
-      //cudaDeviceSynchronize();
       return;
     }
 
@@ -149,31 +160,33 @@ namespace EigenSinn {
 template<typename Scalar, int Layout, typename Device_>
 void addAndSet(const Index& batch_size, const Index& channels, const Index& kernel_height,
   int dilation, const Index& kernel_width, const Index& out_h, const Index& out_w,
-  DeviceTensor<Scalar, 4, Device_, Layout>& out, DeviceTensor<Scalar, 4, Device_, Layout>& slice,
-  Device_& device) {
+  DeviceTensor<Scalar, 4, Device_, Layout>& out, const DeviceTensor<Scalar, 2, Device_, Layout>& col, Index col_start, Device_& device) {
 
 #ifdef __CUDACC__
   if (std::is_same<Device_, GpuDevice>::value) {
     static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
     dim3 grid(getGridSize(batch_size, block.x), getGridSize(channels, block.y));
 
-    add_and_set_kernel<Scalar, Layout> << <grid, block, 0, device.stream() >> > (*out, *slice,
-      batch_size, channels, kernel_height, kernel_width, out_h, out_w, dilation);
+    add_and_set_kernel<Scalar, Layout> << <grid, block, 0, device.stream() >> > (*out, *col,
+      batch_size, channels, col_start, kernel_height, kernel_width, out_h, out_w, dilation);
 
-    //cudaDeviceSynchronize();
     return;
   }
 #else
-  for (Index b = 0; b < batch_size; b++) {
+  // indices into the 2d "col" tensor
+  int idx_col = col_start;
+  int idx_row = 0;
+
+  for (Index b = 0; b < batch_size; b++, idx_row = 0, idx_col++) {
     for (Index c = 0; c < channels; c++) {
       for (Index h = 0; h < kernel_height; h += dilation) {
-        for (Index w = 0; w < kernel_width; w += dilation) {
+        for (Index w = 0; w < kernel_width; w += dilation, idx_row++) {
 
           Index height_offset = h + out_h;
           Index width_offset = w + out_w;
 
           if (height_offset >= 0 && height_offset < out.dimension(2) && width_offset >= 0 && width_offset < out.dimension(3)) {
-            (*out)(b, c, height_offset, width_offset) += (*slice)(b, c, h, w);
+            (*out)(b, c, height_offset, width_offset) += (*col)(idx_row, idx_col);
           }
         }
       }

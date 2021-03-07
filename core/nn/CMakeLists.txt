@@ -9,6 +9,10 @@ set(TEST_EXE eigentest)
 #file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "test/*.cu")
 set(TEST_SOURCES 
     "test/cudnn_test.cu"
+    "test/convlayer_test.cpp"
+    "test/convlayer_gpu_test.cu"
+    "test/convlayer_trans_test.cpp"
+    "test/convlayer_trans_gpu_test.cu"
     )
 
 message(STATUS "Sources: ${TEST_SOURCES}")
@@ -33,6 +37,7 @@ set_property(TARGET ${TEST_EXE}
 target_compile_definitions(${TEST_EXE} PRIVATE EIGEN_USE_THREADS EIGEN_USE_GPU EIGEN_HAS_C99_MATH)
 
 target_include_directories(${TEST_EXE} PRIVATE "src" ${EIGEN_PATH} ${Boost_INCLUDE_DIRS} ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+
 target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${Boost_LIBRARIES} cudnn cublas)
 
 # gtest specific

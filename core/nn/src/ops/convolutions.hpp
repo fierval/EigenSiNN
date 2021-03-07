@@ -94,11 +94,6 @@ namespace EigenSinn {
       for (Index w_im = -padding.second; w_im + kernel_width <= input.dimension(3) + padding.second; converted_portion++, w_im += stride) {
 
         Index shift = converted_portion * batches;
-        //#ifdef __CUDACC__
-        //        setColFromSlice(batches, shift, channels, h_im, kernel_height, dilation, w_im, kernel_width, output, input);
-        //#else
-        //        setColFromSlice_CPU(batches, shift, channels, h_im, kernel_height, dilation, w_im, kernel_width, output, input);
-        //#endif
         setColFromSlice(batches, shift, channels, h_im, kernel_height, dilation, w_im, kernel_width, output, input);
       }
     }
@@ -213,20 +208,20 @@ namespace EigenSinn {
     const Padding2D& padding,
     int stride = 1, int dilation = 1) {
 
+    array<Index, 2> col_dims = col.dimensions();
+
     // intermediate output: original dimensions padded
     Index channels = kernel_dims[1],
       width = orig_dims[3] + 2 * padding.first,
-      batch_size = orig_dims[0];
+      batch_size = orig_dims[0],
+      num_batches = col_dims[1] / batch_size;
 
-    array<Index, 2> col_dims = col.dimensions();
     DeviceTensor<Scalar, 4, Device_, Layout> out(orig_dims);
     out.setZero();
 
     Index out_w = 0, out_h = 0;
-    array<Index, 2> slice_starts = { 0, 0 };
-    array<Index, 2> slice_offsets = { col.dimension(0), batch_size };
-    array<Index, 4> rev_shape = { kernel_dims[3], kernel_dims[2], kernel_dims[1], batch_size };
-    DeviceTensor<Scalar, 4, Device_, Layout> slice(batch_size, kernel_dims[1], kernel_dims[2], kernel_dims[3]);
+    // point in the col matrix where the batch_size long slice startes
+    Index col_start = 0;
 
     Device_ device = out.device();
 
@@ -238,14 +233,13 @@ namespace EigenSinn {
     // memcpy with setValues
     // shuffle dims to batch_size, channels, height, width
     // unpad with slice
-    for (Index i = 0; i < col_dims[1] / batch_size; i++, slice_starts[1] += batch_size) {
+    for (Index i = 0; i < num_batches; i++, col_start += batch_size) {
 
       // move to the next slice
       out_w = (stride * i) % (width - kernel_width + 1) - padding.first;
       out_h = (stride * i) / (width - kernel_width + 1) - padding.second;
 
-      slice.view() = col->slice(slice_starts, slice_offsets).eval().reshape(rev_shape).shuffle(array<Index, 4>{3, 2, 1, 0});
-      addAndSet<Scalar, Layout, Device_>(batch_size, channels, kernel_height, dilation, kernel_width, out_h, out_w, out, slice, device);
+      addAndSet<Scalar, Layout, Device_>(batch_size, channels, kernel_height, dilation, kernel_width, out_h, out_w, out, col, col_start, device);
     }
 
     return std::move(out);
