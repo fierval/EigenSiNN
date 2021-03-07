@@ -26,6 +26,7 @@ namespace EigenSinnTest {
 
   };
 
+#if 0
   TEST_F(CudnnTest, SimpleConv) {
 
     //Create all the descriptors
@@ -65,4 +66,5 @@ namespace EigenSinnTest {
     ctx.set_workspace();
    
   }
+#endif
 }

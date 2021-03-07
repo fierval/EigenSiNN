@@ -34,7 +34,7 @@ namespace cifar {
    * \tparam Image The type of image
    * \tparam Label The type of label
    */
-  template <template <typename...> class Container, typename Image, typename Label>
+  template <template <typename...> class Container, typename Image, typename Label, int Layout = ColMajor>
   struct CIFAR10_dataset {
     Container<Image> training_images; ///< The training images
     Container<Image> test_images;     ///< The test images
@@ -43,11 +43,11 @@ namespace cifar {
   };
 
   // normalize_denormalize = true - normalize. Otherwise denormalize
-  template<typename Scalar>
-  inline Tensor<Scalar, 3> normalize(Tensor<Scalar, 3>& raw, bool normalize_denormalize = true) {
+  template<typename Scalar, int Layout>
+  inline Tensor<Scalar, 3, Layout> normalize(Tensor<Scalar, 3, Layout>& raw, bool normalize_denormalize = true) {
     static bool inited(false);
-    static Tensor<Scalar, 1> mean(3), std(3);
-    static Tensor<Scalar, 3> broad_mean, broad_std;
+    static Tensor<Scalar, 1, Layout> mean(3), std(3);
+    static Tensor<Scalar, 3, Layout> broad_mean, broad_std;
 
     if (!inited) {
       inited = true;
@@ -61,7 +61,7 @@ namespace cifar {
       broad_std = std.reshape(array<Index, 3>{ 3,1,1 }).broadcast(array<Index, 3>{1, 32, 32});
     }
 
-    Tensor<Scalar, 3> res;
+    Tensor<Scalar, 3, Layout> res;
     if (normalize_denormalize) {
       res = (raw - broad_mean) / broad_std;
     }
@@ -78,7 +78,7 @@ namespace cifar {
    * \param path The path to the label file
    * \param limit The maximum number of elements to read (0: no limit)
    */
-  template <typename Images, typename Labels>
+  template <typename Images, typename Labels, int Layout>
   void read_cifar10_file(Images& images, Labels& labels, const std::string& path, std::size_t limit) {
 
     if (limit && limit <= images.size()) {
@@ -118,7 +118,7 @@ namespace cifar {
     labels.resize(labels.size() + size);
 
 
-    Tensor<float, 3> naught(3, 32, 32);
+    Tensor<float, 3, Layout> naught(3, 32, 32);
     naught.setZero();
 
     // so we simply initialize normalization
@@ -133,8 +133,12 @@ namespace cifar {
 
       // tensors are column-major and the image we get is row-major.
       // normalize them while at it.
-      Tensor<float, 3> col_major = 1. / 255 * im_value.swap_layout().cast<byte>().cast<float>().shuffle(array<Index, 3>{2, 1, 0});
-      Tensor<float, 3> normalized = normalize(col_major);
+#ifdef COLMAJOR
+      Tensor<float, 3, Layout> col_major = 1. / 255 * im_value.swap_layout().cast<byte>().cast<float>().shuffle(array<Index, 3>{2, 1, 0});
+#else
+      Tensor<float, 3, Layout> col_major = 1. / 255 * im_value.cast<byte>().cast<float>();
+#endif
+      Tensor<float, 3, Layout> normalized = normalize(col_major);
       
       images[start + i] = normalized;
 
@@ -149,9 +153,9 @@ namespace cifar {
    * \param limit The maximum number of elements to read (0: no limit)
    * \param func The functor to create the image objects.
    */
-  template <typename Images, typename Labels>
+  template <typename Images, typename Labels, int Layout>
   void read_test(const std::string& folder, std::size_t limit, Images& images, Labels& labels) {
-    read_cifar10_file(images, labels, folder + "/test_batch.bin", limit);
+    read_cifar10_file<Images, Labels, Layout>(images, labels, folder + "/test_batch.bin", limit);
   }
 
   /*!
@@ -162,13 +166,13 @@ namespace cifar {
    * \param limit The maximum number of elements to read (0: no limit)
    * \param func The functor to create the image objects.
    */
-  template <typename Images, typename Labels>
+  template <typename Images, typename Labels, int Layout>
   void read_training(const std::string& folder, std::size_t limit, Images& images, Labels& labels) {
-    read_cifar10_file(images, labels, folder + "/data_batch_1.bin", limit);
-    read_cifar10_file(images, labels, folder + "/data_batch_2.bin", limit);
-    read_cifar10_file(images, labels, folder + "/data_batch_3.bin", limit);
-    read_cifar10_file(images, labels, folder + "/data_batch_4.bin", limit);
-    read_cifar10_file(images, labels, folder + "/data_batch_5.bin", limit);
+    read_cifar10_file<Images, Labels, Layout>(images, labels, folder + "/data_batch_1.bin", limit);
+    read_cifar10_file<Images, Labels, Layout>(images, labels, folder + "/data_batch_2.bin", limit);
+    read_cifar10_file<Images, Labels, Layout>(images, labels, folder + "/data_batch_3.bin", limit);
+    read_cifar10_file<Images, Labels, Layout>(images, labels, folder + "/data_batch_4.bin", limit);
+    read_cifar10_file<Images, Labels, Layout>(images, labels, folder + "/data_batch_5.bin", limit);
   }
 
   /*!
@@ -179,9 +183,9 @@ namespace cifar {
    * \param limit The maximum number of elements to read (0: no limit)
    * \param func The functor to create the image objects.
    */
-  template <typename Images, typename Labels>
+  template <typename Images, typename Labels, int Layout>
   void read_test(std::size_t limit, Images& images, Labels& labels) {
-    read_test(CIFAR_DATA_LOCATION, limit, images, labels);
+    read_test<Images, Labels, Layout>(CIFAR_DATA_LOCATION, limit, images, labels);
   }
 
   /*!
@@ -192,17 +196,18 @@ namespace cifar {
    * \param limit The maximum number of elements to read (0: no limit)
    * \param func The functor to create the image objects.
    */
-  template <typename Images, typename Labels>
+  template <typename Images, typename Labels, int Layout>
   void read_training(std::size_t limit, Images& images, Labels& labels) {
-    read_training(CIFAR_DATA_LOCATION, limit, images, labels);
+    read_training<Images, Labels, Layout>(CIFAR_DATA_LOCATION, limit, images, labels);
   }
     
-  template <template <typename...> class Container, typename Image, typename Label = uint8_t>
-  CIFAR10_dataset<Container, Image, Label> read_dataset_3d(std::size_t training_limit = 0, std::size_t test_limit = 0) {
-    CIFAR10_dataset<Container, Image, Label> dataset;
+  template <template <typename...> class Container, typename Image, typename Label = uint8_t, int Layout = ColMajor>
+  CIFAR10_dataset<Container, Image, Label, Layout> read_dataset_3d(std::size_t training_limit = 0, std::size_t test_limit = 0) {
 
-    read_training(training_limit, dataset.training_images, dataset.training_labels);
-    read_test(test_limit, dataset.test_images, dataset.test_labels);
+    CIFAR10_dataset<Container, Image, Label, Layout> dataset;
+
+    read_training<decltype(dataset.training_images), decltype(dataset.training_labels), Layout>(training_limit, dataset.training_images, dataset.training_labels);
+    read_test<decltype(dataset.training_images), decltype(dataset.training_labels), Layout>(test_limit, dataset.test_images, dataset.test_labels);
 
     return dataset;
   }

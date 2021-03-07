@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED True)
 
-include_directories("eigen")
+include_directories("eigen-3.3.9")
 
 enable_testing()
 include(GoogleTest)

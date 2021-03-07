@@ -61,7 +61,7 @@ namespace EigenSinn {
 
       array<Index, 2> output_starts({ 0, 0 });
 
-      DeviceTensor <Tuple<Index, Scalar>, 2, Device_> index_tuples(lengths);
+      DeviceTensor <Tuple<Index, Scalar>, 2, Device_, Layout> index_tuples(lengths);
       Device_ device = output.device();
 
       for (starts[1] = 0, output_starts[1] = 0; starts[1] + extents[0] <= dims[1]; starts[1] += stride, output_starts[1]++) {
@@ -79,7 +79,7 @@ namespace EigenSinn {
 
     }
 
-    inline void SetIdxAndValue(DeviceTensor<Tuple<Index, Scalar>, 1, Device_, ColMajor>& local_pool, DeviceTensor<Index, 2, Device_, Layout>& mask,
+    inline void SetIdxAndValue(DeviceTensor<Tuple<Index, Scalar>, 1, Device_, Layout>& local_pool, DeviceTensor<Index, 2, Device_, Layout>& mask,
       DeviceTensor<Scalar, 2, Device_, Layout>& output, array<Index, 2>& output_starts, Device_& device) {
 #ifdef __CUDACC__
       if (std::is_same<Device_, GpuDevice>::value) {

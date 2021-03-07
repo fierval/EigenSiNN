@@ -30,7 +30,8 @@ message(STATUS "OpenCV libs: ${OpenCV_LIBS}")
 
 set(APP_EXE simple_cifar)
 
-set(WITH_GPU true)
+set(WITH_GPU false)
+set(COL_MAJOR false)
 
 # discover sources
 file(GLOB_RECURSE APP_SOURCES LIST_DIRECTORIES false "src/*.cpp")
@@ -52,6 +53,10 @@ message(STATUS "Sources: ${APP_SOURCES}")
 add_executable(${APP_EXE} ${APP_SOURCES})
 
 set(COMPILE_DEFS CIFAR_DATA_LOCATION="${CIFAR_DATA_DIR}" EIGEN_USE_THREADS)
+
+if(COL_MAJOR)
+    set(COMPILE_DEFS ${COMPILE_DEFS} COLMAJOR)
+endif()
 
 if(WITH_GPU)
     set_property(TARGET ${APP_EXE} 

@@ -13,22 +13,25 @@
 
 using namespace Eigen;
 
-typedef std::vector<Tensor<float, 3>> ImageContainer;
+template<int Layout = ColMajor>
+using ImageContainer =  std::vector<Tensor<float, 3, Layout>>;
+
 typedef std::vector<uint8_t> LabelContainer;
 
-inline cifar::CIFAR10_dataset<std::vector, Tensor<float, 3>, uint8_t> read_cifar_dataset() {
+template<int Layout = ColMajor>
+inline cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Layout>, uint8_t, Layout> read_cifar_dataset() {
 
-  auto dataset = cifar::read_dataset_3d<std::vector, Tensor<float, 3>, uint8_t>();
+  auto dataset = cifar::read_dataset_3d<std::vector, Tensor<float, 3, Layout>, uint8_t, Layout>();
   return dataset;
 }
 
 // convert loss class into categorical representation and convert to the network data type
-template<typename Loss>
-inline Tensor<Loss, 2> create_2d_label_tensor(std::vector<Loss>& labels, int start, int batch_size, Index n_categories) {
+template<typename Loss, int Layout = ColMajor>
+inline Tensor<Loss, 2, Layout> create_2d_label_tensor(std::vector<Loss>& labels, int start, int batch_size, Index n_categories) {
 
   array<Index, 2> dims{ (Index)batch_size, n_categories };
 
-  Tensor<Loss, 2> out(dims);
+  Tensor<Loss, 2, Layout> out(dims);
   out.setZero();
 
   Index i = batch_size * start;
@@ -40,17 +43,17 @@ inline Tensor<Loss, 2> create_2d_label_tensor(std::vector<Loss>& labels, int sta
 
 }
 
-template<typename Loss>
-inline Tensor<Loss, 1> create_1d_label_tensor(std::vector<Loss>& labels) {
+template<typename Loss, int Layout = ColMajor>
+inline Tensor<Loss, 1, Layout> create_1d_label_tensor(std::vector<Loss>& labels) {
 
-  Tensor<Loss, 1> out = TensorMap<Tensor<Loss, 1>>(labels.data(), labels.size());
+  Tensor<Loss, 1, Layout> out = TensorMap<Tensor<Loss, 1, Layout>>(labels.data(), labels.size());
 
   return out;
 
 }
 
-template<typename Scalar, Index Rank>
-inline Tensor<Scalar, Rank + 1> create_batch_tensor(std::vector<Tensor<Scalar, Rank>>& images, int start, int batch_size) {
+template<typename Scalar, Index Rank, int Layout = ColMajor>
+inline Tensor<Scalar, Rank + 1, Layout> create_batch_tensor(std::vector<Tensor<Scalar, Rank, Layout>>& images, int start, int batch_size) {
 
   array<Index, Rank + 1> out_dims;
   for (Index i = 1; i <= Rank; i++) {
@@ -59,7 +62,7 @@ inline Tensor<Scalar, Rank + 1> create_batch_tensor(std::vector<Tensor<Scalar, R
 
   out_dims[0] = batch_size;
 
-  Tensor<Scalar, Rank + 1> output(out_dims);
+  Tensor<Scalar, Rank + 1, Layout> output(out_dims);
   for (Index i = 0; i < batch_size; i++) {
     output.chip(i, 0) = images[i + start * batch_size];
   }
@@ -67,8 +70,8 @@ inline Tensor<Scalar, Rank + 1> create_batch_tensor(std::vector<Tensor<Scalar, R
   return std::move(output);
 }
 
-template <typename Scalar, typename Loss>
-inline void shuffle(ImageContainer& images, LabelContainer& labels, bool should_shuffle = true) {
+template <typename Scalar, typename Loss, int Layout = ColMajor>
+inline void shuffle(ImageContainer<Layout>& images, LabelContainer& labels, bool should_shuffle = true) {
 
   if (!should_shuffle) { return; }
 
@@ -85,7 +88,7 @@ inline void shuffle(ImageContainer& images, LabelContainer& labels, bool should_
   std::iota(range.begin(), range.end(), 0);
 
   std::shuffle(idxs.begin(), idxs.end(), rand_gen);
-  std::vector<Tensor<float, 3>> tmp_ims(images.size());
+  std::vector<Tensor<float, 3, Layout>> tmp_ims(images.size());
   std::vector<uint8_t> tmp_labs(labels.size());
 
   std::copy(std::execution::par, images.begin(), images.end(), tmp_ims.begin());
@@ -99,7 +102,8 @@ inline void shuffle(ImageContainer& images, LabelContainer& labels, bool should_
 }
 
 // explore the dataset
-inline void explore(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3>, uint8_t>& dataset, bool should_explore = false) {
+template<int Layout = ColMajor>
+inline void explore(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Layout>, uint8_t, Layout>& dataset, bool should_explore = false) {
 
   if (!should_explore) {
     return;
@@ -111,9 +115,9 @@ inline void explore(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3>, uint8_
 
   for (int i = 0; i < dataset.training_images.size(); i++) {
 
-    Tensor<float, 3> im = 255. * cifar::normalize<float>(dataset.training_images[i], false).shuffle(array<Index, 3>{1, 2, 0});
+    Tensor<float, 3, Layout> im = 255. * cifar::normalize<float>(dataset.training_images[i], false).shuffle(array<Index, 3>{1, 2, 0});
 
-    Tensor<uint8_t, 3> im8 = im.cast<uint8_t>();
+    Tensor<uint8_t, 3, Layout> im8 = im.cast<uint8_t>();
 
     // TODO: This came from 4.4.0
     cv::eigen2cv(im8, mat);
