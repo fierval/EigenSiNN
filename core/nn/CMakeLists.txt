@@ -1,6 +1,6 @@
 message(STATUS "Using C++${CMAKE_CXX_STANDARD}")
 
-get_filename_component(EIGEN_PATH "../eigen-3.3.9" ABSOLUTE)
+get_filename_component(EIGEN_PATH "../eigen" ABSOLUTE)
 message(STATUS "Eigen path: ${EIGEN_PATH}")
 
 set(TEST_EXE eigentest)
