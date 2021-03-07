@@ -4,6 +4,7 @@
 
 #include "include/commondata4d.hpp"
 #include "include/convdata4d.hpp"
+#include "ops/comparisons.hpp"
 
 using namespace Eigen;
 using namespace EigenSinn;
@@ -50,7 +51,7 @@ namespace EigenSinnTest {
 
     // get convolution output dimensions
     output_size = set_output_dims(ctx.conv_desc, ctx.input_desc, ctx.filter_desc);
-    DeviceTensor<float, 4, GpuDevice> out(output_size);
+    DeviceTensor<float, 4, GpuDevice, RowMajor> out(output_size);
 
     // create output tensor descriptor
     ctx.output_desc = tensor4d(output_size);
@@ -60,7 +61,7 @@ namespace EigenSinnTest {
       ctx.filter_desc, cd.convWeights->data(), ctx.conv_desc, ctx.conv_fwd_algo, ctx.d_workspace, ctx.workspace_size,
       &ctx.zero, ctx.output_desc, out->data()));
 
-
+    EXPECT_TRUE(is_elementwise_approx_eq(cd.output, out));
     ctx.set_workspace();
    
   }
