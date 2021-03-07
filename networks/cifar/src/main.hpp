@@ -16,7 +16,7 @@ inline void TestNetwork(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Lay
 
   std::cout << "Starting test..." << std::endl;
   DeviceTensor<float, 4, Device_, Layout> batch_tensor(create_batch_tensor(dataset.test_images, 0, dataset.test_images.size()));
-  Tensor<int, 1, Layout> label_tensor = create_1d_label_tensor<uint8_t, Layout>(dataset.test_labels).cast<int>();
+  Tensor<int, 1, Layout> label_tensor = create_1d_label_tensor<uint8_t, Layout>(dataset.test_labels).template cast<int>();
 
   net.set_input(batch_tensor);
   net.forward();
@@ -49,7 +49,7 @@ inline void TestNetwork(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Lay
   }
 
   // overall accuracy
-  Tensor<float, 0, Layout> matches = (predictions == label_tensor).cast<float>().sum();
+  Tensor<float, 0, Layout> matches = (predictions == label_tensor).template cast<float>().sum();
   std::cout << "Accuracy: " << matches(0) / predictions.dimension(0) << std::endl;
 
   // accuracy by class

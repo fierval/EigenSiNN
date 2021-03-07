@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
 
   explore(dataset, explore_dataset);
 
-  ImageContainer next_images;
+  ImageContainer<ColMajor> next_images;
   LabelContainer next_labels;
 
   auto net = Cifar10<GpuDevice>(array<Index, 4>{(Index)batch_size, channels, side, side}, num_classes, learning_rate);

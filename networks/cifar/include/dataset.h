@@ -117,7 +117,7 @@ inline void explore(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Layout>
 
     Tensor<float, 3, Layout> im = 255. * cifar::normalize<float>(dataset.training_images[i], false).shuffle(array<Index, 3>{1, 2, 0});
 
-    Tensor<uint8_t, 3, Layout> im8 = im.cast<uint8_t>();
+    Tensor<uint8_t, 3, Layout> im8 = im.template cast<uint8_t>();
 
     // TODO: This came from 4.4.0
     cv::eigen2cv(im8, mat);
