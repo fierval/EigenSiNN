@@ -153,9 +153,8 @@ namespace EigenSinn
     }
 
   // container for cuda resources
-  class CudaContext
+  struct CudaContext
   {
-  public:
     CudaContext()
     {
       cublasCreate(&_cublas_handle);
@@ -166,11 +165,11 @@ namespace EigenSinn
     {
       cublasDestroy(_cublas_handle);
       checkCudnnErrors(cudnnDestroy(_cudnn_handle));
-      cudnnDestroyFilterDescriptor(filter_desc_);
-      cudnnDestroyConvolutionDescriptor(conv_desc_);
+      cudnnDestroyFilterDescriptor(filter_desc);
+      cudnnDestroyConvolutionDescriptor(conv_desc);
 
       // terminate internal created blobs
-      if (d_workspace_ != nullptr) { cudaFree(d_workspace_);	d_workspace_ = nullptr; }
+      if (d_workspace != nullptr) { cudaFree(d_workspace);	d_workspace = nullptr; }
     }
 
     cublasHandle_t cublas() {
@@ -183,14 +182,14 @@ namespace EigenSinn
     const float zero = 0.f;
     const float minus_one = -1.f;
 
-    void* set_workspace()
+    void set_workspace()
     {
       size_t temp_size = 0;
 
       // forward
-      std::vector<cudnnConvolutionFwdAlgoPerf_t> 		 fwd_algo_perf_results(CUDNN_CONVOLUTION_FWD_ALGO_COUNT);
-      std::vector<cudnnConvolutionBwdFilterAlgoPerf_t> bwd_filter_algo_perf_results(CUDNN_CONVOLUTION_BWD_FILTER_ALGO_COUNT);
-      std::vector<cudnnConvolutionBwdDataAlgoPerf_t>	 bwd_data_algo_perf_results(CUDNN_CONVOLUTION_BWD_DATA_ALGO_COUNT);
+      std::vector<cudnnConvolutionFwdAlgoPerf_t> 		 fwd_algoperf_results(CUDNN_CONVOLUTION_FWD_ALGO_COUNT);
+      std::vector<cudnnConvolutionBwdFilterAlgoPerf_t> bwd_filter_algoperf_results(CUDNN_CONVOLUTION_BWD_FILTER_ALGO_COUNT);
+      std::vector<cudnnConvolutionBwdDataAlgoPerf_t>	 bwd_data_algoperf_results(CUDNN_CONVOLUTION_BWD_DATA_ALGO_COUNT);
 
       int algo_max_count;
       int returnedAlgoCount = 0;
@@ -199,94 +198,118 @@ namespace EigenSinn
 #if (DEBUG_FIND_ALGO & 1)
       std::cout << ": Available Algorithm Count [FWD]: " << algo_max_count << std::endl;
       checkCudnnErrors(cudnnFindConvolutionForwardAlgorithm(cudnn(),
-        input_desc_, filter_desc_, conv_desc_, output_desc_,
-        algo_max_count, &returnedAlgoCount, &fwd_algo_perf_results[0]));
+        input_desc, filter_desc, conv_desc, output_desc,
+        algo_max_count, &returnedAlgoCount, &fwd_algoperf_results[0]));
       std::cout << "returned algo_count: " << returnedAlgoCount << std::endl;
       for (int i = 0; i < returnedAlgoCount; i++)
-        std::cout << "fwd algo[" << i << "] time: " << fwd_algo_perf_results[i].time << ", memory: " << fwd_algo_perf_results[i].memory << std::endl;
+        std::cout << "fwd algo[" << i << "] time: " << fwd_algoperf_results[i].time << ", memory: " << fwd_algoperf_results[i].memory << std::endl;
 #else
       checkCudnnErrors(cudnnGetConvolutionForwardAlgorithm_v7(cudnn(),
-        input_desc_, filter_desc_, conv_desc_, output_desc_,
-        algo_max_count, &returnedAlgoCount, &fwd_algo_perf_results[0]));
+        input_desc, filter_desc, conv_desc, output_desc,
+        algo_max_count, &returnedAlgoCount, &fwd_algoperf_results[0]));
 #endif
       // shoose the fastest algorithm
-      conv_fwd_algo_ = fwd_algo_perf_results[0].algo;
+      conv_fwd_algo = fwd_algoperf_results[0].algo;
       checkCudnnErrors(cudnnGetConvolutionForwardWorkspaceSize(cudnn(),
-        input_desc_, filter_desc_, conv_desc_, output_desc_,
-        conv_fwd_algo_, &temp_size));
+        input_desc, filter_desc, conv_desc, output_desc,
+        conv_fwd_algo, &temp_size));
 
-      workspace_size_ = max(workspace_size_, temp_size);
+      workspace_size = max(workspace_size, temp_size);
 
       // bwd - filter
       checkCudnnErrors(cudnnGetConvolutionBackwardFilterAlgorithmMaxCount(cudnn(), &algo_max_count));
 #if (DEBUG_FIND_ALGO & 1)
       std::cout << ": Available Algorithm Count [BWD-filter]: " << algo_max_count << std::endl;
       checkCudnnErrors(cudnnFindConvolutionBackwardFilterAlgorithm(cudnn(),
-        input_desc_, output_desc_, conv_desc_, filter_desc_,
-        algo_max_count, &returnedAlgoCount, &bwd_filter_algo_perf_results[0]));
+        input_desc, output_desc, conv_desc, filter_desc,
+        algo_max_count, &returnedAlgoCount, &bwd_filter_algoperf_results[0]));
       for (int i = 0; i < returnedAlgoCount; i++)
-        std::cout << "bwd filter algo[" << i << "] time: " << fwd_algo_perf_results[i].time << ", memory: " << fwd_algo_perf_results[i].memory << std::endl;
+        std::cout << "bwd filter algo[" << i << "] time: " << fwd_algoperf_results[i].time << ", memory: " << fwd_algoperf_results[i].memory << std::endl;
 #else
       checkCudnnErrors(cudnnGetConvolutionBackwardFilterAlgorithm_v7(cuda_->cudnn(),
-        input_desc_, output_desc_, conv_desc_, filter_desc_,
-        algo_max_count, &returnedAlgoCount, &bwd_filter_algo_perf_results[0]));
+        input_desc, output_desc, conv_desc, filter_desc,
+        algo_max_count, &returnedAlgoCount, &bwd_filter_algoperf_results[0]));
 #endif
-      conv_bwd_filter_algo_ = bwd_filter_algo_perf_results[0].algo;
+      conv_bwd_filter_algo = bwd_filter_algoperf_results[0].algo;
       checkCudnnErrors(cudnnGetConvolutionBackwardFilterWorkspaceSize(cudnn(),
-        input_desc_, output_desc_, conv_desc_, filter_desc_,
-        conv_bwd_filter_algo_, &temp_size));
-      workspace_size_ = max(workspace_size_, temp_size);
+        input_desc, output_desc, conv_desc, filter_desc,
+        conv_bwd_filter_algo, &temp_size));
+      workspace_size = max(workspace_size, temp_size);
 
       // bwd - data
       checkCudnnErrors(cudnnGetConvolutionBackwardDataAlgorithmMaxCount(cudnn(), &algo_max_count));
 #if (DEBUG_FIND_ALGO & 1)
       std::cout << ": Available Algorithm Count [BWD-data]: " << algo_max_count << std::endl;
       checkCudnnErrors(cudnnFindConvolutionBackwardDataAlgorithm(cudnn(),
-        filter_desc_, output_desc_, conv_desc_, input_desc_,
-        algo_max_count, &returnedAlgoCount, &bwd_data_algo_perf_results[0]));
+        filter_desc, output_desc, conv_desc, input_desc,
+        algo_max_count, &returnedAlgoCount, &bwd_data_algoperf_results[0]));
       for (int i = 0; i < returnedAlgoCount; i++)
-        std::cout << "bwd data algo[" << i << "] time: " << fwd_algo_perf_results[i].time << ", memory: " << fwd_algo_perf_results[i].memory << std::endl;
+        std::cout << "bwd data algo[" << i << "] time: " << fwd_algoperf_results[i].time << ", memory: " << fwd_algoperf_results[i].memory << std::endl;
 #else
       checkCudnnErrors(cudnnGetConvolutionBackwardDataAlgorithm_v7(cudnn(),
-        filter_desc_, output_desc_, conv_desc_, input_desc_,
-        algo_max_count, &returnedAlgoCount, &bwd_data_algo_perf_results[0]));
+        filter_desc, output_desc, conv_desc, input_desc,
+        algo_max_count, &returnedAlgoCount, &bwd_data_algoperf_results[0]));
 #endif
-      conv_bwd_data_algo_ = bwd_data_algo_perf_results[0].algo;
+      conv_bwd_data_algo = bwd_data_algoperf_results[0].algo;
       checkCudnnErrors(cudnnGetConvolutionBackwardDataWorkspaceSize(cudnn(),
-        filter_desc_, output_desc_, conv_desc_, input_desc_,
-        conv_bwd_data_algo_, &temp_size));
-      workspace_size_ = max(workspace_size_, temp_size);
+        filter_desc, output_desc, conv_desc, input_desc,
+        conv_bwd_data_algo, &temp_size));
+      workspace_size = max(workspace_size, temp_size);
 
-      if (workspace_size_ > 0)
+      if (workspace_size > 0)
       {
-        if (d_workspace_ != nullptr)
-          checkCudaErrors(cudaFree(d_workspace_));
-        checkCudaErrors(cudaMalloc((void**)&d_workspace_, workspace_size_));
+        if (d_workspace != nullptr)
+          checkCudaErrors(cudaFree(d_workspace));
+        checkCudaErrors(cudaMalloc((void**)&d_workspace, workspace_size));
       }
-
-      return d_workspace_;
     }
-  private:
-
 
     cublasHandle_t _cublas_handle;
     cudnnHandle_t  _cudnn_handle;
 
-    cudnnTensorDescriptor_t input_desc_;
-    cudnnTensorDescriptor_t output_desc_;
+    cudnnTensorDescriptor_t input_desc;
+    cudnnTensorDescriptor_t output_desc;
     // weight/bias descriptor
-    cudnnFilterDescriptor_t filter_desc_;
-    cudnnTensorDescriptor_t bias_desc_;
+    cudnnFilterDescriptor_t filter_desc;
+    cudnnTensorDescriptor_t bias_desc;
 
-    cudnnConvolutionDescriptor_t    conv_desc_;
+    cudnnConvolutionDescriptor_t    conv_desc;
 
-    cudnnConvolutionFwdAlgo_t       conv_fwd_algo_;
-    cudnnConvolutionBwdDataAlgo_t   conv_bwd_data_algo_;
-    cudnnConvolutionBwdFilterAlgo_t conv_bwd_filter_algo_;
+    cudnnConvolutionFwdAlgo_t       conv_fwd_algo;
+    cudnnConvolutionBwdDataAlgo_t   conv_bwd_data_algo;
+    cudnnConvolutionBwdFilterAlgo_t conv_bwd_filter_algo;
 
-    size_t workspace_size_ = 0;
+    size_t workspace_size = 0;
     
-    void** d_workspace_ = nullptr;
+    void** d_workspace = nullptr;
 
   };
+
+
+  cudnnTensorDescriptor_t tensor4d(const DSizes<Index, 4>& dims)
+  {
+    cudnnTensorDescriptor_t tensor_desc;
+
+    cudnnCreateTensorDescriptor(&tensor_desc);
+    cudnnSetTensor4dDescriptor(tensor_desc,
+      CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT,
+      (int)dims[0], (int)dims[1], (int)dims[2], (int)dims[3]);
+
+    return tensor_desc;
+  }
+
+  DSizes<Index, 4> set_output_dims(cudnnConvolutionDescriptor_t conv_desc, cudnnTensorDescriptor_t input_desc, cudnnFilterDescriptor_t filter_desc) {
+
+    std::vector<int> dims(4);
+    DSizes<Index, 4> out;
+
+    checkCudnnErrors(
+      cudnnGetConvolution2dForwardOutputDim(conv_desc, input_desc, filter_desc, &dims[0], &dims[1], &dims[2], &dims[3]));
+
+    for (int i = 0; i < dims.size(); i++) {
+      out[i] = static_cast<Index>(dims[i]);
+    }
+    return out;
+  }
+
 } // namespace EigenSinn
