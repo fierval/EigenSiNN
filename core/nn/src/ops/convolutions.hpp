@@ -65,7 +65,7 @@ namespace EigenSinn {
       std::for_each(std::execution::par_unseq, w_im_range.begin(), w_im_range.end(), [&](auto w_im) {
 
         int shift = batches * ((h_im / stride + padding.first) * out_dims[(int)ImageDims::width] + w_im / stride + padding.second);
-        setColFromSlice(batches, shift, channels, h_im, kernel_height, dilation, w_im, kernel_width, output, input);
+        setColFromSlice(batches, padding, channels, h_im, kernel_height, stride, dilation, w_im, kernel_width, output, input);
         });
       });
 #else
