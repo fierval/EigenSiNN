@@ -3,6 +3,8 @@
 #include "layer_base.hpp"
 #include "ops/convolutions.hpp"
 #include "ops/initializations.hpp"
+#include "helpers/conv_params_bag.hpp"
+
 
 namespace EigenSinn {
 
@@ -13,15 +15,16 @@ namespace EigenSinn {
 
   public:
 
-    Conv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const Index _stride = 1, const Index _dilation = 1)
+    Conv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const int _stride = 1, const int _dilation = 1)
       : kernel(kernelDims)
       , padding(_padding)
       , stride(_stride)
       , dilation(_dilation)
       , bias(kernelDims[0])
       , bias_broadcast({ 0, 0, 0, 0 })
-      , loss_by_bias_derivative(kernelDims[0])
-    {}
+      , loss_by_bias_derivative(kernelDims[0]) {
+
+      }
 
 
     // TODO: this needs to be implemented for real
@@ -49,7 +52,14 @@ namespace EigenSinn {
 
       DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any.get_output());
 
-      layer_output = convolve<Scalar, 4, Layout, Device_>(prev_layer, kernel, padding, stride, dilation);
+      if(!params) {
+        params = std::make_shared<ConvolutionParams<4>>(prev_layer.dimensions(), kernel.dimensions(), padding, stride, dilation, false);
+      }
+
+      // make sure dimensions are still valid
+      params->check(prev_layer.dimensions());
+
+      layer_output = convolve<Scalar, 4, Layout, Device_>(prev_layer, kernel, *params);
 
       //add bias to each channel
       auto dims = layer_output.dimensions();
@@ -69,7 +79,7 @@ namespace EigenSinn {
 
       // flatten weights and kernel
       DeviceTensor<Scalar, 2, Device_, Layout> unf_kernel = unfold_kernel(kernel);
-      DeviceTensor<Scalar, 2, Device_, Layout> x_col = im2col(prev_layer, kernel.dimensions(), padding, stride, dilation);
+      DeviceTensor<Scalar, 2, Device_, Layout> x_col = im2col(prev_layer, *params);
 
       // dX: kernel.T * dout
       DeviceTensor<Scalar, 4, Device_, Layout> dilated = dilate_tensor(kernel, dilation);
@@ -83,7 +93,7 @@ namespace EigenSinn {
       DeviceTensor<Scalar, 2, Device_, Layout>  dW_col(dout.dimension(0), x_col.dimension(0));
       dW_col.view() = dout->contract(*x_col, prod_dims);
 
-      dX = col2im(dX_col, dilated.dimensions(), prev_layer.dimensions(), padding, stride);
+      dX = col2im(dX_col, *params, true);
       dW = fold_kernel(dW_col, kernel.dimensions());
 
       //bias
@@ -127,8 +137,11 @@ namespace EigenSinn {
     DeviceTensor<Scalar, 4, Device_, Layout> kernel, layer_output, dX, dW;
     DeviceTensor<Scalar, 1, Device_, Layout> bias, loss_by_bias_derivative;
 
-    const Index stride, dilation;
+    const int stride, dilation;
     const Padding2D padding;
     array<Index, 4> bias_broadcast;
+
+    // we don't know the input dimension offhand, so default initialization
+    std::shared_ptr<ConvolutionParams<4>> params;
   };
 }

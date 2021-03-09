@@ -2,6 +2,7 @@
 
 #include "device/device_tensor.hpp"
 #include "device/device_convolutions.hpp"
+#include "helpers/conv_params_bag.hpp"
 
 #define MAX_PAD 1e6
 using namespace Eigen;
@@ -30,56 +31,22 @@ namespace EigenSinn {
   inline Padding pad2dim(const Padding2D& pad2d) {
     return pad2dim(pad2d.first, pad2d.second, pad2d.first, pad2d.second);
   }
-
-  template <typename Scalar, Index Rank = 4, int Layout = ColMajor>
-  inline DSizes<Index, Rank> get_output_dimensions(const TensorView<Scalar, Rank, Layout>& input, const array<Index, Rank> kernel_dims, const Padding2D& padding, const Index stride, const Index dilation, bool is_transposed = false) {
-
-    if (!is_transposed) {
-      assert(kernel_dims[(int)ImageDims::channel] == input.dimension((int)ImageDims::channel));
-    }
-    else {
-      assert(kernel_dims[(int)ImageDims::batch] == input.dimension((int)ImageDims::channel));
-    }
-
-    assert(kernel_dims[(int)ImageDims::height] > 0 && kernel_dims[(int)ImageDims::width] > 0);
-
-    DSizes<Index, Rank> out_dims;
-
-    Index pad_height = 2 * padding.first;
-    Index pad_width = 2 * padding.second;
-
-    out_dims[(int)ImageDims::batch] = input.dimension((int)ImageDims::batch);
-    out_dims[(int)ImageDims::channel] = !is_transposed ? kernel_dims[(int)ImageDims::batch] : kernel_dims[(int)ImageDims::channel];
-
-    if (!is_transposed) {
-      // see https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html
-      out_dims[(int)ImageDims::height] = (input.dimension((int)ImageDims::height) + pad_height - dilation * (kernel_dims[(int)ImageDims::height] - 1) - 1) / stride + 1;
-      out_dims[(int)ImageDims::width] = (input.dimension((int)ImageDims::width) + pad_width - dilation * (kernel_dims[(int)ImageDims::width] - 1) - 1) / stride + 1;
-    }
-    // see https://pytorch.org/docs/stable/generated/torch.nn.ConvTranspose2d.html
-    else {
-      out_dims[(int)ImageDims::height] = (input.dimension((int)ImageDims::height) - 1) * stride - pad_height + dilation * (kernel_dims[(int)ImageDims::height] - 1) + 1;
-      out_dims[(int)ImageDims::width] = (input.dimension((int)ImageDims::width) - 1) * stride - pad_width + dilation * (kernel_dims[(int)ImageDims::width] - 1) + 1;
-
-    }
-    return out_dims;
-
-
-  }
-
+  
   // NCHW format
   template <typename Scalar, int Rank = 4, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  inline DeviceTensor<Scalar, 2, Device_, Layout> im2col(const DeviceTensor<Scalar, Rank, Device_, Layout>& input, const DSizes<Index, Rank>& kernel_dims, const Padding2D& padding, Index stride, Index dilation) {
+  inline DeviceTensor<Scalar, 2, Device_, Layout> im2col(const DeviceTensor<Scalar, Rank, Device_, Layout>& input, ConvolutionParams<Rank> params) {
 
-    auto out_dims = get_output_dimensions(*input, kernel_dims, padding, stride, dilation);
+    int dilation = params.dilation, stride = params.stride;
+    auto padding = params.padding;
+    auto out_dims = params.output_dims();
+    auto kernel_dims = params.kernel_dims;
 
-    Index kernel_height = dilation * (kernel_dims[2] - 1) + 1;
-    Index kernel_width = dilation * (kernel_dims[3] - 1) + 1;
+    Index kernel_height = params.dilated_kernel_height;
+    Index kernel_width = params.dilated_kernel_width;
     Index channels = kernel_dims[1];
-    Index batches = input.dimension(0);
+    Index batches = params.orig_dims()[0];
 
     Index col_dim = channels * kernel_dims[2] * kernel_dims[3];
-    array<Index, Rank> slice_dims = { batches, channels, kernel_height, kernel_width };
 
     // output second dimension is 
     // batch_size (input dim[0]) * how_many_convolution_locations there are
@@ -92,12 +59,7 @@ namespace EigenSinn {
     Index converted_portion = 0;
 
 #ifndef __CUDACC__
-
-    std::vector<Index> h_im_range(out_dims[(int)ImageDims::height]), w_im_range(out_dims[(int)ImageDims::width]);
-    std::iota(h_im_range.begin(), h_im_range.end(), 0);
-    std::iota(w_im_range.begin(), w_im_range.end(), 0);
-    std::transform(h_im_range.begin(), h_im_range.end(), h_im_range.begin(), [=](auto i) {return i* stride - padding.first; });
-    std::transform(w_im_range.begin(), w_im_range.end(), w_im_range.begin(), [=](auto i) {return i* stride - padding.second; });
+    std::vector<Index> h_im_range = params.h_im_range, w_im_range = params.w_im_range;
 
     std::for_each(std::execution::par_unseq, h_im_range.begin(), h_im_range.end(), [&](auto h_im) {
       std::for_each(std::execution::par_unseq, w_im_range.begin(), w_im_range.end(), [&](auto w_im) {
@@ -106,7 +68,6 @@ namespace EigenSinn {
         setColFromSlice(batches, shift, channels, h_im, kernel_height, dilation, w_im, kernel_width, output, input);
         });
       });
-
 #else
     for (Index h_im = -padding.first; h_im + kernel_height <= input.dimension(2) + padding.first; h_im += stride) {
       for (Index w_im = -padding.second; w_im + kernel_width <= input.dimension(3) + padding.second; converted_portion++, w_im += stride) {
@@ -220,14 +181,18 @@ namespace EigenSinn {
   // We still slide the kernel window over the 2d representation, 
   // Adding contributions of each folded slice to the result
   // Non-GPU version
+  // TODO: is_dilated is a hack: we handle dilations by changing the kernel which means that dilation is already taken into account in most cases
   template <typename Scalar, int Layout, typename Device_>
-  inline auto col2im(const DeviceTensor<Scalar, 2, Device_, Layout>& col,
-    const array<Index, 4>& kernel_dims,
-    const array<Index, 4>& orig_dims,
-    const Padding2D& padding,
-    int stride = 1, int dilation = 1) {
+  inline auto col2im(const DeviceTensor<Scalar, 2, Device_, Layout>& col, const ConvolutionParams<4>& params, bool is_dilated = false) {
 
     array<Index, 2> col_dims = col.dimensions();
+    DSizes<Index, 4> orig_dims = params.orig_dims();
+    const DSizes<Index, 4> kernel_dims = params.dilated_kernel_dims;
+    const int stride = params.stride;
+
+    // REVIEW: dilation is set only if we have not already taken dilation into account
+    const int dilation = is_dilated ? 1 : params.dilation;
+    auto padding = params.padding;
 
     // intermediate output: original dimensions padded
     Index channels = kernel_dims[1],
@@ -244,8 +209,8 @@ namespace EigenSinn {
 
     Device_ device = out.device();
 
-    Index kernel_height = dilation * (kernel_dims[2] - 1) + 1;
-    Index kernel_width = dilation * (kernel_dims[3] - 1) + 1;
+    Index kernel_height = params.dilated_kernel_height;
+    Index kernel_width = params.dilated_kernel_width;
 
     // loop over col's batch size at a time
     // figure where it goes into the output
@@ -267,18 +232,15 @@ namespace EigenSinn {
   // NCHW format
   template <typename Scalar, Index Rank = 4, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
   inline DeviceTensor<Scalar, 4, Device_, Layout> convolve(const DeviceTensor<Scalar, 4, Device_, Layout>& input,
-    DeviceTensor<Scalar, 4, Device_, Layout>& kernel, const Padding2D& padding, Index stride, Index dilation) {
-
-    //dimensions involved in the convolution. Channel dimension is also involved.
-    array<Index, 3> dims({ (int)ImageDims::channel, (int)ImageDims::height, (int)ImageDims::width });
+    DeviceTensor<Scalar, 4, Device_, Layout>& kernel, const ConvolutionParams<Rank>& params) {
 
     assert(input.dimension((int)ImageDims::channel) == kernel.dimension((int)ImageDims::channel));
 
     // output dimensions
-    DSizes<Index, Rank> out_dims = get_output_dimensions(*input, kernel.dimensions(), padding, stride, dilation);
+    DSizes<Index, Rank> out_dims = params.output_dims();
 
     // perform convolutiion with GEMM using im2col
-    auto col_inputs = im2col<Scalar, Rank, Device_, Layout>(input, kernel.dimensions(), padding, stride, dilation);
+    auto col_inputs = im2col<Scalar, Rank, Device_, Layout>(input, params);
     auto unf_kernel = unfold_kernel<Scalar, Device_, Layout>(kernel);
 
     ProductDims prod_dims = { IndexPair<int>(1,0) };

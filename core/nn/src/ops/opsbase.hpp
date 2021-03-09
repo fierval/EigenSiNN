@@ -62,7 +62,6 @@ namespace EigenSinn {
     for (Index i = rev.size() - 1; i > 0; i--) {
       rev[rev.size() - i - 1] = i;
     }
-
     return rev;
   }
 

@@ -40,4 +40,16 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(cd1p.dweight_trans, conv2d.get_loss_by_weights_derivative()));
   }
 
+  TEST_F(TransConvolution, Forward1Padding2Dilated) {
+
+    Input<float, 4> input;
+    input.set_input(cd1p.input_trans);
+
+    TransConv2d<float> conv2d(cd1p.kernelDims, padding, stride, dilation);
+
+    conv2d.init(cd1p.weights.to_host());
+    conv2d.forward(input);
+    EXPECT_TRUE(is_elementwise_approx_eq(cd1p.output_trans, conv2d.get_output()));
+  }
+
 }

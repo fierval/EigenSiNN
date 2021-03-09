@@ -3,6 +3,7 @@
 #include "layer_base.hpp"
 #include "ops/convolutions.hpp"
 #include "ops/initializations.hpp"
+#include "helpers/conv_params_bag.hpp"
 
 namespace EigenSinn {
 
@@ -44,7 +45,13 @@ namespace EigenSinn {
       DeviceTensor<Scalar, 4, Device_, Layout> input(prev_layer_any.get_output());
       DeviceTensor<Scalar, 2, Device_, Layout> inp_reshaped = unfold_conv_res<Scalar, Device_, Layout>(input);
 
-      
+      if (!params) {
+        params = std::make_shared<ConvolutionParams<4>>(input.dimensions(), kernel.dimensions(), padding, stride, dilation, true);
+      }
+
+      // make sure dimensions are still valid
+      params->check(input.dimensions());
+
       DeviceTensor<Scalar, 4, Device_, Layout> dilated = dilate_tensor(kernel, dilation);
       DeviceTensor<Scalar, 2, Device_, Layout> unf_dilated = unfold_kernel(dilated);
 
@@ -54,8 +61,8 @@ namespace EigenSinn {
       X_col.view() = unf_dilated->contract(*inp_reshaped, prod_dims);
 
       // re-format into the image of output dimensions
-      DSizes<Index, 4> out_dims = get_output_dimensions(*input, kernel.dimensions(), padding, stride, dilation, true);
-      layer_output = col2im(X_col, dilated.dimensions(), out_dims, padding, stride);
+      DSizes<Index, 4> out_dims = params->orig_dims();
+      layer_output = col2im(X_col, *params, true);
 
       //add bias to each channel
       bias_broadcast = { out_dims[0], 1, out_dims[2], out_dims[3] };
@@ -70,13 +77,12 @@ namespace EigenSinn {
       DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any.get_output());
       DeviceTensor<Scalar, 4, Device_, Layout> next_layer_grad(next_layer_grad_any);
 
-      DeviceTensor<Scalar, 2, Device_, Layout> dout = 
-        im2col<Scalar, 4, Device_, Layout>(next_layer_grad, kernel.dimensions(), padding, stride, dilation);
+      DeviceTensor<Scalar, 2, Device_, Layout> dout = im2col<Scalar, 4, Device_, Layout>(next_layer_grad, *params);
 
-      // dX: (kernel.T).T * dout which is just a regular convolution
-      dX = convolve<Scalar, 4, Layout, Device_>(next_layer_grad, kernel, padding, stride, dilation);
+      // dX: kernel.T.T * dout which is just a regular convolution
+      dX = convolve<Scalar, 4, Layout, Device_>(next_layer_grad, kernel, *params);
 
-      // dW: (dout * x_col.T).T
+      // dW: (dout * x_col.T.T)
       DeviceTensor<Scalar, 2, Device_, Layout> inp_reshaped = unfold_conv_res<Scalar, Device_, Layout>(prev_layer);
       ProductDims prod_dims = { IndexPair<int>(1, 1) };
       DeviceTensor<Scalar, 2, Device_, Layout>  dW_col(inp_reshaped.dimension(0), dout.dimension(0));
@@ -125,8 +131,9 @@ namespace EigenSinn {
     DeviceTensor<Scalar, 4, Device_, Layout> kernel, layer_output, dX, dW;
     DeviceTensor<Scalar, 1, Device_, Layout> bias, loss_by_bias_derivative;
 
-    const Index stride, dilation;
+    const int stride, dilation;
     const Padding2D padding;
     array<Index, 4> bias_broadcast;
+    std::shared_ptr<ConvolutionParams<4>> params;
   };
 }

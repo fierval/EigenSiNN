@@ -22,7 +22,7 @@ public:
     add(new MaxPooling<float, 4, Device_, Layout>(array<Index, 2>{2, 2}, 2));
 
     // get flat dimension by pushing a zero tensor through the network defined so far
-    int flat_dim = get_flat_dimension(array<Index, 4>{1, 3, 32, 32});
+    int flat_dim = get_flat_dimension(input_dims);
 
     add(new Flatten<float, Device_, Layout>);
 
