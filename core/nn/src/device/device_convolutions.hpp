@@ -32,25 +32,28 @@ namespace EigenSinn {
   }
 
   template<typename Scalar, int Layout = ColMajor>
-  __global__ void set_col_kernel(long batches, Padding2D& padding, const long& channels, const long& h_im,
+  __global__ void set_col_kernel(long batches, Padding2D& padding, const long& channels,
     const long& kernel_height, const int& stride, const long& dilation,
-    const long& w_im, const long& kernel_width,
+    const long& kernel_width,
     TensorView<Scalar, 2, Layout>& output,
-    const TensorView<Scalar, 4, Layout>& input, long max_height, long max_width) {
+    const TensorView<Scalar, 4, Layout>& input, std::vector<long> h_im_range, std::vector<long> w_im_range, int output_width) {
 
     // batch
     long cur_height = threadIdx.x + blockIdx.x * blockDim.x;
     // channel
     long cur_width = threadIdx.y + blockIdx.y * blockDim.y;
 
-    if (cur_height > max_height || cur_width > max_width) {
+    if (cur_height >= h_im_range.size() || cur_width > w_im_range.size()) {
       return;
     }
+
+    long h_im = h_im_range[cur_height];
+    long w_im = w_im_range[cur_width];
 
     auto flat_out_dims = dimensions_cast<long>(output.dimensions());
     auto flat_inp_dims = dimensions_cast<long>(input.dimensions());
 
-    long shift = batches * ((h_im / stride + padding.first) * out_dims[(int)ImageDims::width] + w_im / stride + padding.second);
+    long shift = batches * ((h_im / stride + padding.first) * output_width + w_im / stride + padding.second);
 
     for (long b = 0; b < batches; b++) {
       long col = 0;
@@ -167,9 +170,9 @@ namespace EigenSinn {
     const Index& kernel_height, const int& stride, const Index& dilation,
     const Index& w_im, const Index& kernel_width,
     DeviceTensor<Scalar, 2, Device_, Layout>& output,
-    const DeviceTensor<Scalar, 4, Device_, Layout>& input) {
+    const DeviceTensor<Scalar, 4, Device_, Layout>& input, int output_width) {
 
-    long shift = batches * ((h_im / stride + padding.first) * out_dims[(int)ImageDims::width] + w_im / stride + padding.second);
+    long shift = batches * ((h_im / stride + padding.first) * output_width + w_im / stride + padding.second);
 
     for (Index b = 0; b < batches; b++) {
       Index col = 0;

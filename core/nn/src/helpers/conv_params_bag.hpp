@@ -68,6 +68,7 @@ namespace EigenSinn {
 
       std::iota(h_im_range.begin(), h_im_range.end(), 0);
       std::iota(w_im_range.begin(), w_im_range.end(), 0);
+
       std::transform(h_im_range.begin(), h_im_range.end(), h_im_range.begin(), [=](auto i) {return i * stride - padding.first; });
       std::transform(w_im_range.begin(), w_im_range.end(), w_im_range.begin(), [=](auto i) {return i * stride - padding.second; });
     }
@@ -101,7 +102,7 @@ namespace EigenSinn {
     Index dilated_kernel_width;
     const bool is_transposed;
 
-    std::vector<Index> h_im_range, w_im_range;
+    std::vector<long> h_im_range, w_im_range;
 
   private:
     // dimensions depend on convolution type (transposed/regular)

@@ -33,7 +33,7 @@ namespace EigenSinn {
 
   typedef array<std::pair<Index, Index>, 4> Padding;
   typedef IndexPair<Index> Dim2D;
-  typedef IndexPair<Index> Padding2D;
+  typedef IndexPair<long> Padding2D;
 
   typedef array<IndexPair<int>, 1> ProductDims;
 
