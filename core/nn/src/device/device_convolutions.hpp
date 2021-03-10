@@ -154,10 +154,14 @@ namespace EigenSinn {
     }
   }
 
+#ifdef __INTELLISENSE__
+#undef __CUDACC__
+#endif
+
   template<typename Scalar, int Layout, typename Device_>
-  void addAndSet(const Index& batch_size, const Index& channels, const Index& kernel_height,
-    int dilation, const Index& kernel_width, const Index& out_h, const Index& out_w,
-    DeviceTensor<Scalar, 4, Device_, Layout>& out, const DeviceTensor<Scalar, 2, Device_, Layout>& col, Index col_start, Device_& device) {
+  void addAndSet(const long& batch_size, const int batch, const long& channels, const int stride, const Padding2D& padding,
+    int dilation, const long& kernel_height, const long& kernel_width, const long& padded_width,
+    DeviceTensor<Scalar, 4, Device_, Layout>& out, const DeviceTensor<Scalar, 2, Device_, Layout>& col, long col_start, Device_& device) {
 
 #ifdef __CUDACC__
     if (std::is_same<Device_, GpuDevice>::value) {
@@ -170,6 +174,10 @@ namespace EigenSinn {
       return;
     }
 #else
+    // move to the next slice
+    long out_w = (stride * batch) % (padded_width - kernel_width + 1) - padding.first;
+    long out_h = (stride * batch) / (padded_width - kernel_width + 1) - padding.second;
+
     // indices into the 2d "col" tensor
     int idx_col = col_start;
     int idx_row = 0;

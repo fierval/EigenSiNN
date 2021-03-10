@@ -52,7 +52,6 @@ namespace EigenSinn {
     int conv_locations = out_dims[3] * out_dims[2];
 
     DeviceTensor<Scalar, 2, Device_, Layout> output(col_dim, input.dimension(0) * conv_locations);
-    output.setZero();
 
     int out_width = out_dims[(int)ImageDims::width];
 
@@ -202,15 +201,14 @@ namespace EigenSinn {
     auto padding = params.padding;
 
     // intermediate output: original dimensions padded
-    Index channels = kernel_dims[1],
-      width = orig_dims[3] + 2 * padding.first,
+    long channels = kernel_dims[1],
+      padded_width = orig_dims[3] + 2 * padding.first,
       batch_size = orig_dims[0],
       num_batches = col_dims[1] / batch_size;
 
     DeviceTensor<Scalar, 4, Device_, Layout> out(orig_dims);
     out.setZero();
 
-    Index out_w = 0, out_h = 0;
     // point in the col matrix where the batch_size long slice startes
     Index col_start = 0;
 
@@ -224,13 +222,9 @@ namespace EigenSinn {
     // memcpy with setValues
     // shuffle dims to batch_size, channels, height, width
     // unpad with slice
-    for (Index i = 0; i < num_batches; i++, col_start += batch_size) {
+    for (int i = 0; i < num_batches; i++, col_start += batch_size) {
 
-      // move to the next slice
-      out_w = (stride * i) % (width - kernel_width + 1) - padding.first;
-      out_h = (stride * i) / (width - kernel_width + 1) - padding.second;
-
-      addAndSet<Scalar, Layout, Device_>(batch_size, channels, kernel_height, dilation, kernel_width, out_h, out_w, out, col, col_start, device);
+      addAndSet<Scalar, Layout, Device_>(batch_size, i, channels, stride, padding, dilation, kernel_height, kernel_width, padded_width, out, col, col_start, device);
     }
 
     return std::move(out);
