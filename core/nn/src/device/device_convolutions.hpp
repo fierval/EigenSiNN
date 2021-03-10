@@ -32,10 +32,10 @@ namespace EigenSinn {
   }
 
   template<typename Scalar, int Layout = ColMajor>
-  __global__ void set_col_kernel(long batches, Padding2D& padding, const int channels,
-    const int kernel_height, const int kernel_width, const int stride, const int dilation,
+  __global__ void set_col_kernel(long batches, Padding2D padding, int channels,
+    int kernel_height, int kernel_width, int stride, int dilation,
     TensorView<Scalar, 2, Layout> output,
-    const TensorView<Scalar, 4, Layout> input, int out_height, int out_width) {
+    TensorView<Scalar, 4, Layout> input, int out_height, int out_width) {
 
     // current height in terms of the output
     long cur_height = threadIdx.x + blockIdx.x * blockDim.x;
@@ -51,13 +51,11 @@ namespace EigenSinn {
     long h_im = cur_height * stride - padding.first;
     long w_im = cur_width * stride - padding.second;
 
-    auto flat_out_dims = dimensions_cast<long>(output.dimensions());
-    auto flat_inp_dims = dimensions_cast<long>(input.dimensions());
-
     // shift into the output matrix columns where to start putting flattend data
     long shift = batches * (cur_height * out_width + cur_width);
 
-    printf("Shift: %dl, h_im: %dl, w_im: %dl", shift, h_im, w_im);
+    auto flat_out_dims = dimensions_cast<long>(output.dimensions());
+    auto flat_inp_dims = dimensions_cast<long>(input.dimensions());
 
     for (long b = 0; b < batches; b++) {
       long col = 0;
@@ -82,48 +80,6 @@ namespace EigenSinn {
       }
     }
   }
-#if 0
-  template<typename Scalar, int Layout = ColMajor>
-  __global__ void set_col_kernel(TensorView<Scalar, 4, Layout> input, TensorView<Scalar, 2, Layout> output,
-    long shift, long batches, long channels, long dilation, long kernel_width, long kernel_height, long h_im, long w_im) {
-
-    // batch
-    long b = threadIdx.x + blockIdx.x * blockDim.x;
-    // channel
-    long c = threadIdx.y + blockIdx.y * blockDim.y;
-
-    if (b < batches && c < channels) {
-
-      auto flat_out_dims = dimensions_cast<long>(output.dimensions());
-      auto flat_inp_dims = dimensions_cast<long>(input.dimensions());
-
-      // need to recover the actual kernel width & height
-      // in order to figure out exactly where in the output the input value belongs
-      long undilated_width = (kernel_width - 1) / dilation + 1;
-      long undilated_height = (kernel_height - 1) / dilation + 1;
-
-      long col = c * undilated_height * undilated_width;
-      long col_batch = shift + b;
-
-      for (long h_kernel = h_im; h_kernel < h_im + kernel_height; h_kernel += dilation) {
-        for (long w_kernel = w_im; w_kernel < w_im + kernel_width; w_kernel += dilation, col++) {
-
-          long idx_output = to_flat_dim<long, 2, Layout>(flat_out_dims, { col, col_batch });
-
-          if (h_kernel >= 0 && w_kernel >= 0 && h_kernel < flat_inp_dims[2] && w_kernel < flat_inp_dims[3]) {
-
-            long idx_inp = to_flat_dim<long, 4, Layout>(flat_inp_dims, { b, c, h_kernel, w_kernel });
-            output.data()[idx_output] = input.data()[idx_inp];
-          }
-          else {
-            output.data()[idx_output] = Scalar(0);
-          }
-        }
-      }
-
-    }
-  }
-#endif
 
   template<typename Scalar, int Layout = ColMajor>
   __global__ void add_and_set_kernel(TensorView<Scalar, 4, Layout> out, TensorView<Scalar, 2, Layout> col,

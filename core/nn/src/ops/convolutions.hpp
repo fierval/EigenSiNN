@@ -40,24 +40,21 @@ namespace EigenSinn {
     auto out_dims = params.output_dims();
     auto kernel_dims = params.kernel_dims;
 
-    Index kernel_height = params.dilated_kernel_height;
-    Index kernel_width = params.dilated_kernel_width;
-    Index channels = kernel_dims[1];
-    Index batches = params.orig_dims()[0];
+    long kernel_height = params.dilated_kernel_height;
+    long kernel_width = params.dilated_kernel_width;
+    long channels = kernel_dims[1];
+    long batches = params.orig_dims()[0];
 
-    Index col_dim = channels * kernel_dims[2] * kernel_dims[3];
+    long col_dim = channels * kernel_dims[2] * kernel_dims[3];
 
     // output second dimension is 
     // batch_size (input dim[0]) * how_many_convolution_locations there are
     int conv_locations = out_dims[3] * out_dims[2];
 
     DeviceTensor<Scalar, 2, Device_, Layout> output(col_dim, input.dimension(0) * conv_locations);
+    output.setZero();
 
     int out_width = out_dims[(int)ImageDims::width];
-
-#ifdef __INTELLISENSE__
-#define __CUDACC__
-#endif
 
 #ifndef __CUDACC__
 
@@ -80,10 +77,9 @@ namespace EigenSinn {
 
     int out_height = out_dims[(int)ImageDims::height];
 
-    set_col_kernel<Scalar, Layout> <<<grid, block, 0,  device.stream() >>>
+    set_col_kernel<Scalar, Layout> <<<grid, block, 0, device.stream()>>>
       (batches, padding, channels, kernel_height, kernel_width, stride, dilation,  *output, *input, out_height, out_width);
 
-    cudaDeviceSynchronize();
 #endif
 #ifndef __CUDACC__
     }
