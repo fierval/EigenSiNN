@@ -9,10 +9,10 @@ set(TEST_EXE eigentest)
 #file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "test/*.cu")
 set(TEST_SOURCES 
 #    "test/cudnn_test.cu"
-    "test/convlayer_test.cpp"
+#    "test/convlayer_test.cpp"
     "test/convlayer_gpu_test.cu"
-    "test/convlayer_trans_test.cpp"
-    "test/convlayer_trans_gpu_test.cu"
+#    "test/convlayer_trans_test.cpp"
+#    "test/convlayer_trans_gpu_test.cu"
 #    "test/maxpooling2d_rowmajor_test.cpp"
 #    "test/maxpooling4d_rowmajor_test.cpp"
     )

@@ -32,28 +32,32 @@ namespace EigenSinn {
   }
 
   template<typename Scalar, int Layout = ColMajor>
-  __global__ void set_col_kernel(long batches, Padding2D& padding, const long& channels,
-    const long& kernel_height, const int& stride, const long& dilation,
-    const long& kernel_width,
-    TensorView<Scalar, 2, Layout>& output,
-    const TensorView<Scalar, 4, Layout>& input, std::vector<long> h_im_range, std::vector<long> w_im_range, int output_width) {
+  __global__ void set_col_kernel(long batches, Padding2D& padding, const int channels,
+    const int kernel_height, const int kernel_width, const int stride, const int dilation,
+    TensorView<Scalar, 2, Layout> output,
+    const TensorView<Scalar, 4, Layout> input, int out_height, int out_width) {
 
-    // batch
+    // current height in terms of the output
     long cur_height = threadIdx.x + blockIdx.x * blockDim.x;
-    // channel
+    // current width in terms of the output
     long cur_width = threadIdx.y + blockIdx.y * blockDim.y;
 
-    if (cur_height >= h_im_range.size() || cur_width > w_im_range.size()) {
+    // gate
+    if (cur_height >= out_height || cur_width >= out_width) {
       return;
     }
 
-    long h_im = h_im_range[cur_height];
-    long w_im = w_im_range[cur_width];
+    // place in the image where to put the kernel at the moment
+    long h_im = cur_height * stride - padding.first;
+    long w_im = cur_width * stride - padding.second;
 
     auto flat_out_dims = dimensions_cast<long>(output.dimensions());
     auto flat_inp_dims = dimensions_cast<long>(input.dimensions());
 
-    long shift = batches * ((h_im / stride + padding.first) * output_width + w_im / stride + padding.second);
+    // shift into the output matrix columns where to start putting flattend data
+    long shift = batches * (cur_height * out_width + cur_width);
+
+    printf("Shift: %dl, h_im: %dl, w_im: %dl", shift, h_im, w_im);
 
     for (long b = 0; b < batches; b++) {
       long col = 0;
@@ -166,11 +170,11 @@ namespace EigenSinn {
 #endif
 
   template<typename Scalar, int Layout = ColMajor, typename Device_>
-  void setColFromSlice(Index batches, Padding2D& padding, const Index& channels, const Index& h_im,
-    const Index& kernel_height, const int& stride, const Index& dilation,
-    const Index& w_im, const Index& kernel_width,
-    DeviceTensor<Scalar, 2, Device_, Layout>& output,
-    const DeviceTensor<Scalar, 4, Device_, Layout>& input, int output_width) {
+  void setColFromSlice(Index batches, Padding2D& padding, const Index& channels, const int& stride, const Index& dilation,
+    const Index& h_im, const Index& w_im,
+    const Index& kernel_height, const Index& kernel_width,
+    DeviceTensor<Scalar, 2, Device_, Layout>& output,  const DeviceTensor<Scalar, 4, Device_, Layout>& input, int output_width) {
+
 
     long shift = batches * ((h_im / stride + padding.first) * output_width + w_im / stride + padding.second);
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "device/device_tensor.hpp"
 #include "device/device_convolutions.hpp"
 #include "helpers/conv_params_bag.hpp"
 
@@ -54,27 +53,37 @@ namespace EigenSinn {
 
     DeviceTensor<Scalar, 2, Device_, Layout> output(col_dim, input.dimension(0) * conv_locations);
 
-    int output_width = out_dims[(int)ImageDims::width];
+    int out_width = out_dims[(int)ImageDims::width];
+
+#ifdef __INTELLISENSE__
+#define __CUDACC__
+#endif
+
 #ifndef __CUDACC__
-    if (std::is_same<Device_, GpuDevice>::value) {
+
+    if (!std::is_same<Device_, GpuDevice>::value) {
       std::vector<long> h_im_range = params.h_im_range, w_im_range = params.w_im_range;
 
       std::for_each(std::execution::par_unseq, h_im_range.begin(), h_im_range.end(), [&](auto h_im) {
         std::for_each(std::execution::par_unseq, w_im_range.begin(), w_im_range.end(), [&](auto w_im) {
 
-          int shift = batches * ((h_im / stride + padding.first) * output_width + w_im / stride + padding.second);
-          setColFromSlice(batches, padding, channels, h_im, kernel_height, stride, dilation, w_im, kernel_width, output, input, output_width);
+          setColFromSlice(batches, padding, channels, stride, dilation, h_im, w_im, kernel_height, kernel_width, output, input, out_width);
           });
         });
     }
     else {
 #else
-    for (Index h_im = -padding.first; h_im + kernel_height <= input.dimension(2) + padding.first; h_im += stride) {
-      for (Index w_im = -padding.second; w_im + kernel_width <= input.dimension(3) + padding.second; w_im += stride) {
 
-        setColFromSlice(batches, padding, channels, h_im, kernel_height, stride, dilation, w_im, kernel_width, output, input, output_width);
-      }
-    }
+    static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
+    dim3 grid(getGridSize(out_dims[(int)ImageDims::height], block.x), getGridSize(out_dims[(int)ImageDims::width], block.y));
+    Device_ device = output.device();
+
+    int out_height = out_dims[(int)ImageDims::height];
+
+    set_col_kernel<Scalar, Layout> <<<grid, block, 0,  device.stream() >>>
+      (batches, padding, channels, kernel_height, kernel_width, stride, dilation,  *output, *input, out_height, out_width);
+
+    cudaDeviceSynchronize();
 #endif
 #ifndef __CUDACC__
     }
@@ -244,6 +253,8 @@ namespace EigenSinn {
     // perform convolutiion with GEMM using im2col
     auto col_inputs = im2col<Scalar, Rank, Device_, Layout>(input, params);
     auto unf_kernel = unfold_kernel<Scalar, Device_, Layout>(kernel);
+
+    Tensor<float, 2> col_inputs_debug = col_inputs.to_host();
 
     ProductDims prod_dims = { IndexPair<int>(1,0) };
     DeviceTensor<float, 2, Device_, Layout> res(unf_kernel.dimension(0), col_inputs.dimension(1));
