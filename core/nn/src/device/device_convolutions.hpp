@@ -88,7 +88,7 @@ namespace EigenSinn {
 
     int batch = threadIdx.x + blockDim.x * blockIdx.x;
 
-    if (batch > num_batches) {
+    if (batch >= num_batches) {
       return;
     }
 
@@ -116,7 +116,7 @@ namespace EigenSinn {
               long idx_output = to_flat_dim<long, 4, Layout>(flat_out_dims, { b, c, height_offset, width_offset });
               long idx_inp = to_flat_dim<long, 2, Layout>(flat_inp_dims, { idx_row, idx_col });
 
-              atomicAdd(out.data() + idx_output, col.data()[idx_inp]);
+              atomicAdd(&out.data()[idx_output], col.data()[idx_inp]);
 
             }
           }
