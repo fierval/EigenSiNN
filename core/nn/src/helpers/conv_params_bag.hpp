@@ -22,6 +22,7 @@ namespace EigenSinn {
 
       get_output_dimensions();
       set_kernel_positions();
+      set_batches_range();
 
       dilated_kernel_height = dilation * (kernel_dims[2] - 1) + 1;
       dilated_kernel_width = dilation * (kernel_dims[3] - 1) + 1;
@@ -73,6 +74,16 @@ namespace EigenSinn {
       std::transform(w_im_range.begin(), w_im_range.end(), w_im_range.begin(), [=](auto i) {return i * stride - padding.second; });
     }
 
+    // for col2im loop.
+    // the "batches" here are applications of the kernel
+    // not the training batches
+    inline void set_batches_range() {
+
+      const DSizes<Index, 4>& dims = output_dims();
+      col_batches.resize(dims[(int)ImageDims::height] * dims[(int)ImageDims::width]);
+      std::iota(col_batches.begin(), col_batches.end(), 0);
+    }
+
     inline const DSizes<Index, Rank>& orig_dims() const {
       return is_transposed ? out_dims : input_dims;
     }
@@ -102,7 +113,7 @@ namespace EigenSinn {
     Index dilated_kernel_width;
     const bool is_transposed;
 
-    std::vector<long> h_im_range, w_im_range;
+    std::vector<long> h_im_range, w_im_range, col_batches;
 
   private:
     // dimensions depend on convolution type (transposed/regular)

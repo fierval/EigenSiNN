@@ -67,7 +67,6 @@ namespace EigenSinn {
           });
         });
     }
-    else {
 #else
 
     static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
@@ -79,9 +78,6 @@ namespace EigenSinn {
     set_col_kernel<Scalar, Layout> <<<grid, block, 0, device.stream()>>>
       (batches, padding, channels, kernel_height, kernel_width, stride, dilation,  *output, *input, out_height, out_width);
 
-#endif
-#ifndef __CUDACC__
-    }
 #endif
     return std::move(output);
 }
@@ -209,23 +205,34 @@ namespace EigenSinn {
     DeviceTensor<Scalar, 4, Device_, Layout> out(orig_dims);
     out.setZero();
 
-    // point in the col matrix where the batch_size long slice startes
-    Index col_start = 0;
-
     Device_ device = out.device();
 
     Index kernel_height = params.dilated_kernel_height;
     Index kernel_width = params.dilated_kernel_width;
 
+#ifdef __INTELLISENSE__
+#define __CUDACC__
+#endif
+
     // loop over col's batch size at a time
     // figure where it goes into the output
-    // memcpy with setValues
-    // shuffle dims to batch_size, channels, height, width
-    // unpad with slice
-    for (int i = 0; i < num_batches; i++, col_start += batch_size) {
+#ifndef __CUDACC__
+    if (!std::is_same <Device_, GpuDevice>::value) {
+      std::mutex mtx;
+      std::for_each(std::execution::par_unseq, params.col_batches.begin(), params.col_batches.end(), [&](int batch) {
 
-      addAndSet<Scalar, Layout, Device_>(batch_size, i, channels, stride, padding, dilation, kernel_height, kernel_width, padded_width, out, col, col_start, device);
+        addAndSet<Scalar, Layout, Device_>(batch_size, batch, channels, stride, padding, dilation, kernel_height, kernel_width, padded_width, out, col, mtx);
+        });
     }
+#else
+    static int block(BLOCK_SIZE * BLOCK_SIZE);
+    int grid(getGridSize(num_batches, block));
+
+    add_and_set_kernel<Scalar, Layout> << < grid, block, 0, device.stream() >> >
+      (batch_size, num_batches, channels, stride, padding, dilation, kernel_height, kernel_width, padded_width, *out, *col);
+#endif
+
+
 
     return std::move(out);
   }

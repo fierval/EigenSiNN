@@ -82,6 +82,52 @@ namespace EigenSinn {
   }
 
   template<typename Scalar, int Layout = ColMajor>
+  __global__ void add_and_set_kernel(long batch_size, long num_batches, long channels, int stride, Padding2D padding,
+    int dilation, long kernel_height, long kernel_width, long padded_width,
+    TensorView<Scalar, 4, Layout> out, TensorView<Scalar, 2, Layout> col) {
+
+    int batch = threadIdx.x + blockDim.x * blockIdx.x;
+
+    if (batch > num_batches) {
+      return;
+    }
+
+    long out_w = (stride * batch) % (padded_width - kernel_width + 1) - padding.first;
+    long out_h = (stride * batch) / (padded_width - kernel_width + 1) - padding.second;
+    long col_start = batch * batch_size;
+
+    // indices into the 2d "col" tensor
+    int idx_col = col_start;
+    int idx_row = 0;
+
+    auto flat_out_dims = dimensions_cast<long>(out.dimensions());
+    auto flat_inp_dims = dimensions_cast<long>(col.dimensions());
+
+    for (long b = 0; b < batch_size; b++, idx_row = 0, idx_col++) {
+      for (long c = 0; c < channels; c++) {
+        for (long h = 0; h < kernel_height; h += dilation) {
+          for (long w = 0; w < kernel_width; w += dilation, idx_row++) {
+
+            long height_offset = h + out_h;
+            long width_offset = w + out_w;
+
+            if (height_offset >= 0 && height_offset < out.dimension(2) && width_offset >= 0 && width_offset < out.dimension(3)) {
+
+              long idx_output = to_flat_dim<long, 4, Layout>(flat_out_dims, { b, c, height_offset, width_offset });
+              long idx_inp = to_flat_dim<long, 2, Layout>(flat_inp_dims, { idx_row, idx_col });
+
+              atomicAdd(out.data() + idx_output, col.data()[idx_inp]);
+
+            }
+          }
+        }
+      }
+    }
+
+  }
+
+#if 0
+  template<typename Scalar, int Layout = ColMajor>
   __global__ void add_and_set_kernel(TensorView<Scalar, 4, Layout> out, TensorView<Scalar, 2, Layout> col,
     long batches, long channels, long col_start, long kernel_height, long kernel_width, long out_h, long out_w, long dilation) {
 
@@ -124,6 +170,7 @@ namespace EigenSinn {
     }
   }
 #endif
+#endif
 
   template<typename Scalar, int Layout = ColMajor, typename Device_>
   void setColFromSlice(Index batches, Padding2D& padding, const Index& channels, const int& stride, const Index& dilation,
@@ -154,29 +201,15 @@ namespace EigenSinn {
     }
   }
 
-#ifdef __INTELLISENSE__
-#undef __CUDACC__
-#endif
-
   template<typename Scalar, int Layout, typename Device_>
   void addAndSet(const long& batch_size, const int batch, const long& channels, const int stride, const Padding2D& padding,
     int dilation, const long& kernel_height, const long& kernel_width, const long& padded_width,
-    DeviceTensor<Scalar, 4, Device_, Layout>& out, const DeviceTensor<Scalar, 2, Device_, Layout>& col, long col_start, Device_& device) {
+    DeviceTensor<Scalar, 4, Device_, Layout>& out, const DeviceTensor<Scalar, 2, Device_, Layout>& col, std::mutex& mtx) {
 
-#ifdef __CUDACC__
-    if (std::is_same<Device_, GpuDevice>::value) {
-      static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
-      dim3 grid(getGridSize(batch_size, block.x), getGridSize(channels, block.y));
-
-      add_and_set_kernel<Scalar, Layout> << <grid, block, 0, device.stream() >> > (*out, *col,
-        batch_size, channels, col_start, kernel_height, kernel_width, out_h, out_w, dilation);
-
-      return;
-    }
-#else
     // move to the next slice
     long out_w = (stride * batch) % (padded_width - kernel_width + 1) - padding.first;
     long out_h = (stride * batch) / (padded_width - kernel_width + 1) - padding.second;
+    long col_start = batch * batch_size;
 
     // indices into the 2d "col" tensor
     int idx_col = col_start;
@@ -191,18 +224,15 @@ namespace EigenSinn {
             Index width_offset = w + out_w;
 
             if (height_offset >= 0 && height_offset < out.dimension(2) && width_offset >= 0 && width_offset < out.dimension(3)) {
+
+              std::lock_guard add_lock(mtx);
               (*out)(b, c, height_offset, width_offset) += (*col)(idx_row, idx_col);
             }
           }
         }
       }
     }
-#endif
   }
-
-#ifdef __INTELLISENSE__
-#undef __CUDACC__
-#endif
 
 #ifndef __CUDACC__
   template<typename Scalar, int Layout, typename Device_>
