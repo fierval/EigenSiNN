@@ -176,7 +176,7 @@ namespace EigenSinn {
     DeviceTensor<Scalar, 2, Device_, Layout>& output,  const DeviceTensor<Scalar, 4, Device_, Layout>& input, int output_width) {
 
 
-    long shift = batches * ((h_im / stride + padding.first) * output_width + w_im / stride + padding.second);
+    long shift = batches * ((h_im + padding.first) / stride * output_width + (w_im + padding.second) / stride);
 
     for (Index b = 0; b < batches; b++) {
       Index col = 0;
