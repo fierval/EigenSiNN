@@ -114,6 +114,7 @@ namespace EigenSinn
       device().memcpyDeviceToHost(data, tensor_view->data(), alloc_size);
       Tensor<Scalar, Rank, Layout> out = TensorView<Scalar, Rank, Layout>(data, dimensions());
 
+      host.deallocate(data);
       return out;
     }
 
