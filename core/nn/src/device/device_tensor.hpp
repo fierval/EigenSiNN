@@ -80,7 +80,9 @@ namespace EigenSinn
     }
 
     DeviceTensor(const DeviceTensor&& d) {
-      create_device_tensor(d.dimensions(), d.tensor_adapter);
+      tensor_adapter = std::move(d.tensor_adapter);
+      tensor_view.reset();
+      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), d.dimensions()));
     }
 
     DeviceTensor& operator=(const DeviceTensor& d) {
@@ -237,6 +239,10 @@ namespace EigenSinn
       return out_t;
     }
 
+    ~DeviceTensor() {
+      assert(true);
+    }
+
   private:
 
     void create_device_tensor() {
@@ -264,7 +270,6 @@ namespace EigenSinn
       tensor_view.reset();
       tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), dims));
     }
-
 
     // for tensor ops
     OptionalTensorView<Scalar, Rank, Layout> tensor_view;

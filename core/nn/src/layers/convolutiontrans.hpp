@@ -45,12 +45,10 @@ namespace EigenSinn {
       DeviceTensor<Scalar, 4, Device_, Layout> input(prev_layer_any.get_output());
       DeviceTensor<Scalar, 2, Device_, Layout> inp_reshaped = unfold_conv_res<Scalar, Device_, Layout>(input);
 
-      if (!params) {
+      if (!params || params->check(input.dimensions())) {
         params = std::make_shared<ConvolutionParams<4>>(input.dimensions(), kernel.dimensions(), padding, stride, dilation, true);
+        layer_output.resize(params->orig_dims());
       }
-
-      // make sure dimensions are still valid
-      params->check(input.dimensions());
 
       DeviceTensor<Scalar, 4, Device_, Layout> dilated = dilate_tensor(kernel, dilation);
       DeviceTensor<Scalar, 2, Device_, Layout> unf_dilated = unfold_kernel(dilated);
@@ -61,10 +59,10 @@ namespace EigenSinn {
       X_col.view() = unf_dilated->contract(*inp_reshaped, prod_dims);
 
       // re-format into the image of output dimensions
-      DSizes<Index, 4> out_dims = params->orig_dims();
-      layer_output = col2im(X_col, *params, true);
+      col2im(X_col, layer_output, *params, true);
 
       //add bias to each channel
+      DSizes<Index, 4> out_dims = params->orig_dims();
       bias_broadcast = { out_dims[0], 1, out_dims[2], out_dims[3] };
 
       // one bias per filter

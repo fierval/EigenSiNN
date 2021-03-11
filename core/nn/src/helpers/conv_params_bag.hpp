@@ -94,12 +94,13 @@ namespace EigenSinn {
 
     // this can happen if we switch from "train" to "test" mode
     // so our batch may change
-    inline void check(const DSizes<Index, Rank> new_input_dims) {
+    inline bool check(const DSizes<Index, Rank> new_input_dims) {
       if (new_input_dims[(int)ImageDims::batch] != input_dims[(int)ImageDims::batch]) {
         input_dims[(int)ImageDims::batch] = new_input_dims[(int)ImageDims::batch];
         out_dims[(int)ImageDims::batch] = new_input_dims[(int)ImageDims::batch];
+        return true;
       }
-
+      return false;
     }
 
     const DSizes<Index, Rank> kernel_dims;

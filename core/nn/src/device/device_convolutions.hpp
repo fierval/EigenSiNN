@@ -126,50 +126,6 @@ namespace EigenSinn {
 
   }
 
-#if 0
-  template<typename Scalar, int Layout = ColMajor>
-  __global__ void add_and_set_kernel(TensorView<Scalar, 4, Layout> out, TensorView<Scalar, 2, Layout> col,
-    long batches, long channels, long col_start, long kernel_height, long kernel_width, long out_h, long out_w, long dilation) {
-
-    // batch
-    long b = threadIdx.x + blockIdx.x * blockDim.x;
-    // channel
-    long c = threadIdx.y + blockIdx.y * blockDim.y;
-
-    if (b < batches && c < channels) {
-
-      long undalated_height = (kernel_height - 1) / dilation + 1;
-      long undalated_width = (kernel_width - 1) / dilation + 1;
-
-      // moving along the col tensor
-      // row = 0 is the flattened slice of kernel application at a given I(i, j) through all channels and batches
-      // col = col_start is the shift into the flattened application at position I(i, j) as we move the kernel along the image
-      long idx_row = c * undalated_height * undalated_width;
-      long idx_col = col_start + b;
-
-
-      for (long h = 0; h < kernel_height; h += dilation) {
-        for (long w = 0; w < kernel_width; w += dilation, idx_row++) {
-
-          long height_offset = h + out_h;
-          long width_offset = w + out_w;
-
-          if (height_offset >= 0 && height_offset < out.dimension(2) && width_offset >= 0 && width_offset < out.dimension(3)) {
-            auto flat_out_dims = dimensions_cast<long>(out.dimensions());
-            auto flat_inp_dims = dimensions_cast<long>(col.dimensions());
-
-            long idx_output = to_flat_dim<long, 4, Layout>(flat_out_dims, { b, c, height_offset, width_offset });
-            long idx_inp = to_flat_dim<long, 2, Layout>(flat_inp_dims, { idx_row, idx_col });
-
-            out.data()[idx_output] += col.data()[idx_inp];
-
-            // move along the column tensor
-          }
-        }
-      }
-    }
-  }
-#endif
 #endif
 
   template<typename Scalar, int Layout = ColMajor, typename Device_>
@@ -204,7 +160,7 @@ namespace EigenSinn {
   template<typename Scalar, int Layout, typename Device_>
   void addAndSet(const long& batch_size, const int batch, const long& channels, const int stride, const Padding2D& padding,
     int dilation, const long& kernel_height, const long& kernel_width, const long& padded_width,
-    DeviceTensor<Scalar, 4, Device_, Layout>& out, const DeviceTensor<Scalar, 2, Device_, Layout>& col, std::mutex& mtx) {
+    DeviceTensor<Scalar, 4, Device_, Layout>& out, const DeviceTensor<Scalar, 2, Device_, Layout>& col) {
 
     // move to the next slice
     long out_w = (stride * batch) % (padded_width - kernel_width + 1) - padding.first;
@@ -225,7 +181,6 @@ namespace EigenSinn {
 
             if (height_offset >= 0 && height_offset < out.dimension(2) && width_offset >= 0 && width_offset < out.dimension(3)) {
 
-              std::lock_guard add_lock(mtx);
               (*out)(b, c, height_offset, width_offset) += (*col)(idx_row, idx_col);
             }
           }

@@ -52,8 +52,9 @@ namespace EigenSinn {
 
       DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any.get_output());
 
-      if(!params) {
+      if(!params || params->check(prev_layer.dimensions())) {
         params = std::make_shared<ConvolutionParams<4>>(prev_layer.dimensions(), kernel.dimensions(), padding, stride, dilation, false);
+        dX.resize(params->orig_dims());
       }
 
       // make sure dimensions are still valid
@@ -93,7 +94,7 @@ namespace EigenSinn {
       DeviceTensor<Scalar, 2, Device_, Layout>  dW_col(dout.dimension(0), x_col.dimension(0));
       dW_col.view() = dout->contract(*x_col, prod_dims);
 
-      dX = col2im(dX_col, *params, true);
+      col2im(dX_col, dX, *params, true);
       dW = fold_kernel(dW_col, kernel.dimensions());
 
       //bias

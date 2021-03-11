@@ -61,19 +61,20 @@ namespace EigenSinn {
       inited = true;
     }
 
-    inline virtual void backward(PtrTensorAdapter<Scalar, Device_> loss_derivative) {
+    inline virtual void backward(const PtrTensorAdapter<Scalar, Device_>& loss_derivative) {
 
-      PtrTensorAdapter<Scalar, Device_> derivative = loss_derivative;
       for (size_t i = network.size() - 1; i > 0; i--) {
 
-        network[i].layer->backward(*network[i - 1].layer, derivative);
-        derivative = network[i].layer->get_loss_by_input_derivative();
+        if (i == network.size() - 1) {
+          network[i].layer->backward(*network[i - 1].layer, loss_derivative);
+          continue;
+        }
+        network[i].layer->backward(*network[i - 1].layer, network[i + 1].layer->get_loss_by_input_derivative());
       }
     }
 
     inline virtual void optimizer() {
 
-      static PtrTensorAdapter<Scalar, Device_> weights_any, bias_any;
       for (size_t i = network.size() - 1; i > 0; i--) {
 
         if (!network[i].optimizer) {

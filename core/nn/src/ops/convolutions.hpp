@@ -30,7 +30,7 @@ namespace EigenSinn {
   inline Padding pad2dim(const Padding2D& pad2d) {
     return pad2dim(pad2d.first, pad2d.second, pad2d.first, pad2d.second);
   }
-  
+
   // NCHW format
   template <typename Scalar, int Rank = 4, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   inline DeviceTensor<Scalar, 2, Device_, Layout> im2col(const DeviceTensor<Scalar, Rank, Device_, Layout>& input, ConvolutionParams<Rank> params) {
@@ -75,12 +75,12 @@ namespace EigenSinn {
 
     int out_height = out_dims[(int)ImageDims::height];
 
-    set_col_kernel<Scalar, Layout> <<<grid, block, 0, device.stream()>>>
-      (batches, padding, channels, kernel_height, kernel_width, stride, dilation,  *output, *input, out_height, out_width);
+    set_col_kernel<Scalar, Layout> << <grid, block, 0, device.stream() >> >
+      (batches, padding, channels, kernel_height, kernel_width, stride, dilation, *output, *input, out_height, out_width);
 
 #endif
     return std::move(output);
-}
+  }
 
   template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   inline auto dilate_tensor(DeviceTensor<Scalar, 4, Device_, Layout>& tensor, Index dilation) {
@@ -114,10 +114,10 @@ namespace EigenSinn {
         }
       }
 #ifdef __CUDACC__
-      }
+    }
 #endif
     return dilated;
-    }
+  }
 
   // return kernel representation for GEMM with 
   // im2col representation of the conv layer
@@ -185,7 +185,7 @@ namespace EigenSinn {
   // Non-GPU version
   // TODO: is_dilated is a hack: we handle dilations by changing the kernel which means that dilation is already taken into account in most cases
   template <typename Scalar, int Layout, typename Device_>
-  inline auto col2im(const DeviceTensor<Scalar, 2, Device_, Layout>& col, const ConvolutionParams<4>& params, bool is_dilated = false) {
+  inline void col2im(const DeviceTensor<Scalar, 2, Device_, Layout>& col, DeviceTensor<Scalar, 4, Device_, Layout>& out, const ConvolutionParams<4>& params, bool is_dilated = false) {
 
     array<Index, 2> col_dims = col.dimensions();
     DSizes<Index, 4> orig_dims = params.orig_dims();
@@ -202,10 +202,8 @@ namespace EigenSinn {
       batch_size = orig_dims[0],
       num_batches = col_dims[1] / batch_size;
 
-    DeviceTensor<Scalar, 4, Device_, Layout> out(orig_dims);
-    out.setZero();
-
     Device_ device = out.device();
+    out.setZero();
 
     Index kernel_height = params.dilated_kernel_height;
     Index kernel_width = params.dilated_kernel_width;
@@ -218,11 +216,10 @@ namespace EigenSinn {
     // figure where it goes into the output
 #ifndef __CUDACC__
     if (!std::is_same <Device_, GpuDevice>::value) {
-      std::mutex mtx;
-      std::for_each(std::execution::par_unseq, params.col_batches.begin(), params.col_batches.end(), [&](int batch) {
+      for (int batch = 0; batch < num_batches; batch++) {
 
-        addAndSet<Scalar, Layout, Device_>(batch_size, batch, channels, stride, padding, dilation, kernel_height, kernel_width, padded_width, out, col, mtx);
-        });
+        addAndSet<Scalar, Layout, Device_>(batch_size, batch, channels, stride, padding, dilation, kernel_height, kernel_width, padded_width, out, col);
+      }
     }
 #else
     static int block(BLOCK_SIZE * BLOCK_SIZE);
@@ -231,10 +228,6 @@ namespace EigenSinn {
     add_and_set_kernel<Scalar, Layout> << < grid, block, 0, device.stream() >> >
       (batch_size, num_batches, channels, stride, padding, dilation, kernel_height, kernel_width, padded_width, *out, *col);
 #endif
-
-
-
-    return std::move(out);
   }
 
   // NCHW format
@@ -250,8 +243,6 @@ namespace EigenSinn {
     // perform convolutiion with GEMM using im2col
     auto col_inputs = im2col<Scalar, Rank, Device_, Layout>(input, params);
     auto unf_kernel = unfold_kernel<Scalar, Device_, Layout>(kernel);
-
-    Tensor<float, 2> col_inputs_debug = col_inputs.to_host();
 
     ProductDims prod_dims = { IndexPair<int>(1,0) };
     DeviceTensor<float, 2, Device_, Layout> res(unf_kernel.dimension(0), col_inputs.dimension(1));
