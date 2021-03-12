@@ -1,7 +1,7 @@
 #pragma once
 
 #include "device_helpers.hpp"
-#include "ops/conversions.hpp"
+#include "ops/opsbase.hpp"
 #include "tensor_adapter.hpp"
 
 namespace EigenSinn
@@ -101,7 +101,7 @@ namespace EigenSinn
 
     explicit DeviceTensor(PtrTensorAdapter<Scalar, Device_>& adapter) {
       tensor_adapter = adapter;
-      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), TensorAdapter<Scalar, Device_>::template vec2dims<Rank>(adapter->get_dims())));
+      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), vec2dims<Rank>(adapter->get_dims())));
     }
 
     Tensor<Scalar, Rank, Layout> to_host() const {
@@ -253,7 +253,7 @@ namespace EigenSinn
 
     void create_device_tensor(const DSizes<Index, Rank>& dims, Scalar* data) {
 
-      tensor_adapter = std::make_shared<TensorAdapter<Scalar, Device_>>(TensorAdapter<Scalar, Device_>::dims2vec(dims), data);
+      tensor_adapter = std::make_shared<TensorAdapter<Scalar, Device_>>(dims2vec(dims), data);
       tensor_view.reset();
       tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), dims));
     }
@@ -262,7 +262,7 @@ namespace EigenSinn
 
       tensor_adapter = std::make_shared<TensorAdapter<Scalar, Device_>>(dims, data);
       tensor_view.reset();
-      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), TensorAdapter<Scalar, Device_>::template vec2dims<Rank>(dims)));
+      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), vec2dims<Rank>(dims)));
     }
 
     void create_device_tensor(const DSizes<Index, Rank>& dims, const PtrTensorAdapter<Scalar, Device_>& data) {

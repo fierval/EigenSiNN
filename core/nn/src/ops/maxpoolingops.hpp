@@ -3,6 +3,7 @@
 #include "opsbase.hpp"
 #include <device/device_tensor.hpp>
 #include <device/device_maxpool.hpp>
+#include <helpers/conv_params_bag.hpp>
 
 namespace EigenSinn {
 
@@ -150,7 +151,7 @@ namespace EigenSinn {
 
   template <typename Scalar, int Layout, typename Device_>
   struct MaxPooler<Scalar, 4, Layout, Device_> {
-    inline auto do_max_pool(const DeviceTensor<Scalar, 4, Device_, Layout>& t, const array<Index, 2>& extents, int stride) {
+    inline auto do_max_pool(const DeviceTensor<Scalar, 4, Device_, Layout>& t, const ConvolutionParams<4>& params) {
       auto dims = t.dimensions();
 
       DeviceTensor<Tuple<Index, Scalar>, 2, Device_, Layout> local_pool(dims[0], dims[1]);

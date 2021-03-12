@@ -16,10 +16,11 @@ namespace EigenSinn {
   class MaxPooling : public LayerBase<Scalar, Device_> {
   public:
 
-    MaxPooling(const array<Index, Rank / 2>& _extents, Index _stride)
+    MaxPooling(const std::vector<long>& _extents, Index _stride, Padding2D _padding = { 0, 0 }, int _dilation = 1)
       : extents(_extents)
       , stride(_stride)
-      , original_dimensions({0}) {
+      , padding(_padding)
+      , dilation(_dilation) {
 
     }
 
@@ -30,9 +31,23 @@ namespace EigenSinn {
     void forward(LayerBase<Scalar, Device_>& prev_layer) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> x(prev_layer.get_output());
-      auto res = max_pooler.do_max_pool(x, extents, stride);
 
-      original_dimensions = x.dimensions();
+      if (!params || params->check()) {
+        // dimensions represented by vector for Rank = 2 or Rank = 4
+        // need to prepend the right values to mimic convolutional kernel
+        auto it = extents.begin();
+        DSizes<Index, Rank> dims = x.dimensions();
+        if (Rank == 2) {
+          extents.insert(it, { dims[0] });
+        }
+        else { // Rank = 4 
+          extents.insert(it, { dims[0], dims[1] });
+        }
+        params = std::make_shared<ConvolutionParams<Rank>>(dims, vec2dims<Rank>(extents), padding, stride, dilation, false);
+      }
+
+      auto res = max_pooler.do_max_pool(x, params);
+
       layer_output = res.first;
       mask = res.second;
       
@@ -43,7 +58,7 @@ namespace EigenSinn {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> x(next_layer_grad);
 
-      layer_gradient = max_pooler.do_max_pool_backward(x, mask, original_dimensions, extents, stride);
+      layer_gradient = max_pooler.do_max_pool_backward(x, mask, params);
     }
 
     PtrTensorAdapter<Scalar, Device_> get_output() override {
@@ -59,10 +74,14 @@ namespace EigenSinn {
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_gradient;
     DeviceTensor<Index, Rank, Device_, Layout> mask;
 
-    Index stride;
-    array<Index, Rank / 2> extents;
-    array<Index, Rank> original_dimensions;
+    std::vector<long> extents;
     MaxPooler<Scalar, Rank, Layout, Device_> max_pooler;
+
+    const int stride;
+    const Padding2D padding;
+    const int dilation;
+
+    std::shared_ptr<ConvolutionParams<Rank>> params;
   };
 
 }

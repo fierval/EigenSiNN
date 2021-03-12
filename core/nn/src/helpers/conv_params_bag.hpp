@@ -6,7 +6,7 @@ using namespace Eigen;
 
 namespace EigenSinn {
 
-  template<Index Rank = 4>
+  template<Index Rank>
   class ConvolutionParams {
 
   public:
@@ -79,7 +79,7 @@ namespace EigenSinn {
     // not the training batches
     inline void set_batches_range() {
 
-      const DSizes<Index, 4>& dims = output_dims();
+      const DSizes<Index, Rank>& dims = output_dims();
       col_batches.resize(dims[(int)ImageDims::height] * dims[(int)ImageDims::width]);
       std::iota(col_batches.begin(), col_batches.end(), 0);
     }
@@ -95,12 +95,7 @@ namespace EigenSinn {
     // this can happen if we switch from "train" to "test" mode
     // so our batch may change
     inline bool check(const DSizes<Index, Rank> new_input_dims) {
-      if (new_input_dims[(int)ImageDims::batch] != input_dims[(int)ImageDims::batch]) {
-        input_dims[(int)ImageDims::batch] = new_input_dims[(int)ImageDims::batch];
-        out_dims[(int)ImageDims::batch] = new_input_dims[(int)ImageDims::batch];
-        return true;
-      }
-      return false;
+      return new_input_dims[(int)ImageDims::batch] != input_dims[(int)ImageDims::batch];
     }
 
     const DSizes<Index, Rank> kernel_dims;
@@ -121,6 +116,103 @@ namespace EigenSinn {
     // what is "input" for regular is "output" for transposed
     DSizes<Index, Rank> out_dims;
     DSizes<Index, Rank> input_dims;
+
+  };
+
+  template<>
+  class ConvolutionParams<2> {
+
+  public:
+
+    ConvolutionParams(const DSizes<Index, 2>& _in_dims, const DSizes<Index, 2> _kernel_dims,
+      const Padding2D& _padding, const int _stride, const int _dilation, const bool _is_transposed)
+      : input_dims(_in_dims)
+      , kernel_dims(_kernel_dims)
+      , padding(_padding)
+      , stride(_stride)
+      , dilation(_dilation)
+      , is_transposed(_is_transposed) {
+
+      get_output_dimensions();
+      set_kernel_positions();
+      set_batches_range();
+
+      dilated_kernel_width = dilation * (kernel_dims[1] - 1) + 1;
+
+      dilated_kernel_dims = kernel_dims;
+      dilated_kernel_dims[1] = dilated_kernel_width;
+    }
+
+    inline void get_output_dimensions() {
+
+      assert(kernel_dims[1] > 0);
+
+      Index pad_width = 2 * padding.first;
+
+      out_dims[0] = input_dims[0];
+
+      if (!is_transposed) {
+        // see https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html
+        out_dims[1] = (input_dims[1] + pad_width - dilation * (kernel_dims[1] - 1) - 1) / stride + 1;
+      }
+      // see https://pytorch.org/docs/stable/generated/torch.nn.ConvTranspose2d.html
+      else {
+        out_dims[1] = (input_dims[1] - 1) * stride - pad_width + dilation * (kernel_dims[1] - 1) + 1;
+      }
+    }
+
+    // Defines how to apply the kernel to images in case we are doing it on the CPU
+    inline void set_kernel_positions() {
+
+      w_im_range.resize(output_dims()[1]);
+
+      std::iota(w_im_range.begin(), w_im_range.end(), 0);
+
+      std::transform(w_im_range.begin(), w_im_range.end(), w_im_range.begin(), [=](auto i) {return i * stride - padding.first; });
+    }
+
+    // for col2im loop.
+    // the "batches" here are applications of the kernel
+    // not the training batches
+    inline void set_batches_range() {
+
+      const DSizes<Index, 2>& dims = output_dims();
+      col_batches.resize(dims[(int)ImageDims::height] * dims[1]);
+      std::iota(col_batches.begin(), col_batches.end(), 0);
+    }
+
+    inline const DSizes<Index, 2>& orig_dims() const {
+      return is_transposed ? out_dims : input_dims;
+    }
+
+    inline const DSizes<Index, 2>& output_dims() const {
+      return is_transposed ? input_dims : out_dims;
+    }
+
+    // this can happen if we switch from "train" to "test" mode
+    // so our batch may change
+    inline bool check(const DSizes<Index, 2> new_input_dims) {
+      return new_input_dims[0] != input_dims[0];
+    }
+
+    const DSizes<Index, 2> kernel_dims;
+    DSizes<Index, 2> dilated_kernel_dims;
+
+    const Padding2D padding;
+    const int stride;
+    const int dilation;
+
+    Index dilated_kernel_height;
+    Index dilated_kernel_width;
+    const bool is_transposed;
+
+    std::vector<long> h_im_range, w_im_range, col_batches;
+
+  private:
+    // dimensions depend on convolution type (transposed/regular)
+    // what is "input" for regular is "output" for transposed
+    DSizes<Index, 2> out_dims;
+    DSizes<Index, 2> input_dims;
 
   };
 } // namespace

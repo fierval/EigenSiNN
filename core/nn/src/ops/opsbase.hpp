@@ -75,6 +75,29 @@ namespace EigenSinn {
 
     return out;
   }
+
+  // convert between dimensions and vector types
+  template<Index Rank>
+  static inline std::vector<Index> dims2vec(const DSizes<Index, Rank>& dims) {
+    std::vector<Index> out(Rank);
+
+    for (Index i = 0; i < Rank; i++) {
+      out[i] = dims[i];
+    }
+    return out;
+  }
+
+  template<Index Rank>
+  static inline DSizes<Index, Rank> vec2dims(const std::vector<Index>& dims) {
+    DSizes<Index, Rank> out;
+
+    for (Index i = 0; i < Rank; i++) {
+      out[i] = dims[i];
+    }
+    return out;
+  }
+
+
 }
 
 
