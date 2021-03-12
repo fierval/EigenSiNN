@@ -8,7 +8,7 @@
 namespace EigenSinn {
 
   template <int Rank, class Dims>
-  inline bool check_valid_params(const array<Index, Rank / 2>& extents, int stride, Dims& dims) {
+  inline bool check_valid_params(const std::vector<long>& extents, int stride, Dims& dims) {
 
     if (stride <= 0) {
       return false;
@@ -43,7 +43,7 @@ namespace EigenSinn {
   template <typename Scalar, int Layout, typename Device_>
   struct MaxPooler<Scalar, 2, Layout, Device_> {
 
-    inline auto do_max_pool(const DeviceTensor<Scalar, 2, Device_, Layout>& t, const array<Index, 1>& extents, int stride) {
+    inline auto do_max_pool(const DeviceTensor<Scalar, 2, Device_, Layout>& t, const ConvolutionParams<2>& params) {
       auto dims = t.dimensions();
 
       if (!check_valid_params<2>(extents, stride, dims)) {
