@@ -12,7 +12,7 @@ namespace EigenSinn {
   // For Linear (fully connected) layers: (N, C)
   // N - batch size
   // C - number of channels (1 for fully connected layers)
-  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template <typename Scalar, Index Rank = 4, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class MaxPooling : public LayerBase<Scalar, Device_> {
   public:
 
@@ -21,6 +21,8 @@ namespace EigenSinn {
       , stride(_stride)
       , padding(_padding)
       , dilation(_dilation) {
+      
+      static_assert(Rank == 4, "MaxPooling is implemented only for Rank == 4");
 
     }
 
@@ -37,12 +39,7 @@ namespace EigenSinn {
         // need to prepend the right values to mimic convolutional kernel
         auto it = extents.begin();
         DSizes<Index, Rank> dims = x.dimensions();
-        if (Rank == 2) {
-          extents.insert(it, { dims[0] });
-        }
-        else { // Rank = 4 
-          extents.insert(it, { dims[0], dims[1] });
-        }
+        extents.insert(it, { dims[0], dims[1] });
         params = std::make_shared<ConvolutionParams<Rank>>(dims, vec2dims<Rank>(extents), padding, stride, dilation, false);
       }
 
