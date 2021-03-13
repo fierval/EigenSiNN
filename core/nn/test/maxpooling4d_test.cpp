@@ -181,8 +181,8 @@ namespace EigenSinnTest {
     }
     CommonData4d<ThreadPoolDevice> cd;
     DeviceTensor<float, 4> output, dinput, fakeloss;
-    const std::vector<long> extents2d = { 2, 2 };
-    const std::vector<long> extents1d = { 2 };
+    const DSizes<Index, 2> extents2d{ 2, 2 };
+    const DSizes<Index, 1> extents1d{ 2 };
 
     const int stride = 2;
 
@@ -194,7 +194,7 @@ namespace EigenSinnTest {
     t.setConstant(1);
 
     auto dims = t.dimensions();
-    std::vector<long> extents({ 2, 2 });
+    DSizes<Index, 2> extents{ 2, 2 };
     int stride = 2;
 
     bool res = check_valid_params<4>(extents, stride, dims);
@@ -208,7 +208,7 @@ namespace EigenSinnTest {
     t.setConstant(1);
 
     auto dims = t.dimensions();
-    array<Index, 1> extents({ 5 });
+    DSizes<Index, 1> extents({ 5 });
     int stride = 2;
 
     bool res = check_valid_params<2>(extents, stride, dims);
@@ -222,7 +222,7 @@ namespace EigenSinnTest {
     t.setConstant(1);
 
     auto dims = t.dimensions();
-    std::vector<long> extents({ 3, 3 });
+    DSizes<Index, 2> extents{ 3, 3 };
     int stride = 2;
 
     bool res = check_valid_params<4>(extents, stride, dims);

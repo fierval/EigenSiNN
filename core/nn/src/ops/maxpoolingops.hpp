@@ -8,7 +8,7 @@
 namespace EigenSinn {
 
   template <int Rank, class Dims>
-  inline bool check_valid_params(const std::vector<long>& extents, int stride, Dims& dims) {
+  inline bool check_valid_params(const DSizes<Index, Rank/2>& extents, int stride, Dims& dims) {
 
     if (stride <= 0) {
       return false;

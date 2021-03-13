@@ -40,8 +40,8 @@ target_compile_definitions(${TEST_EXE} PRIVATE EIGEN_USE_THREADS EIGEN_USE_GPU E
 
 target_include_directories(${TEST_EXE} PRIVATE "src" ${EIGEN_PATH} ${Boost_INCLUDE_DIRS} ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
-#target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${Boost_LIBRARIES})
-target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${Boost_LIBRARIES} cudnn cublas)
+target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${Boost_LIBRARIES})
+#target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${Boost_LIBRARIES} cudnn cublas)
 
 # gtest specific
 set(gtest_force_shared_crt ON)
