@@ -18,18 +18,18 @@ namespace EigenSinn {
   class MaxPooling : public LayerBase<Scalar, Device_> {
   public:
 
-    MaxPooling(const DSizes<Index, Rank/2>& _extents, Index _stride, Padding2D _padding = { 0, 0 }, int _dilation = 1)
+    MaxPooling(const DSizes<Index, Rank / 2>& _extents, Index _stride, Padding2D _padding = { 0, 0 }, int _dilation = 1)
       : extents(_extents)
       , stride(_stride)
       , padding(_padding)
       , dilation(_dilation) {
-      
+
       static_assert(Rank == 4, "MaxPooling is implemented only for Rank == 4");
 
     }
 
     void init() override {
-      
+
     }
 
     // Implementation from darknet: https://github.com/pjreddie/darknet/blob/9a4b19c4158b064a164e34a83ec8a16401580850/src/maxpool_layer.c
@@ -51,7 +51,7 @@ namespace EigenSinn {
         kernel_dims[3] = extents[1];
 
         params = std::make_shared<MaxPoolParams<Rank>>(dims, kernel_dims, padding, stride, dilation);
-        
+
         // cache input and output dimensions
         out_dims = params->output_dims();
 
@@ -65,39 +65,36 @@ namespace EigenSinn {
       int w_offset = -padding.first;
       int h_offset = -padding.second;
 
-      for (Index b = 0; b < out_dims[0]; ++b) {
-        for (Index c = 0; c < out_dims[1]; c++) {
-          for (Index h = 0; h < out_dims[2]; ++h) {
-            for (Index w = 0; w < out_dims[3]; ++w) {
+      // parallelize maxpooling
+      std::for_each(std::execution::par_unseq, params->output_range.begin(), params->output_range.end(), [&](auto out_index) {
 
-              int out_index = to_flat_dim<Index, 4, Layout>(out_dims, {b, c, h, w});
-              Scalar max_val = std::numeric_limits<Scalar>::lowest();
-              Index max_idx = -1;
+        DSizes<Index, Rank> offsets = from_flat_dim<Index, Rank, Layout>(out_dims, out_index);
+        Index b = offsets[0], c = offsets[1], h = offsets[2], w = offsets[3];
 
-              for (Index kernel_h = 0; kernel_h < params->dilated_kernel_height; kernel_h += dilation) {
-                for (Index kernel_w = 0; kernel_w < params->dilated_kernel_width; kernel_w += dilation) {
-                  Index cur_h = h_offset + h * stride + kernel_h;
-                  Index cur_w = w_offset + w * stride + kernel_w;
+        Scalar max_val = std::numeric_limits<Scalar>::lowest();
+        Index max_idx = -1;
 
-                  Scalar val;
+        for (Index kernel_h = 0; kernel_h < params->dilated_kernel_height; kernel_h += dilation) {
+          for (Index kernel_w = 0; kernel_w < params->dilated_kernel_width; kernel_w += dilation) {
+            Index cur_h = h_offset + h * stride + kernel_h;
+            Index cur_w = w_offset + w * stride + kernel_w;
 
-                  if (cur_h >= 0 && cur_h < dims[2] && cur_w >= 0 && cur_w < dims[3]) {
-                    val = (*x)(b, c, cur_h, cur_w);
-                  }
-                  else {
-                    val = std::numeric_limits<Scalar>::lowest();
-                  }
+            Scalar val;
 
-                  max_idx = (val > max_val) ? to_flat_dim<Index, 4, Layout>(dims, { b, c, cur_h, cur_w }) : max_idx;
-                  max_val = (val > max_val) ? val : max_val;
-                }
-              }
-              layer_output->data()[out_index] = max_val;
-              mask->data()[out_index] = max_idx;
+            if (cur_h >= 0 && cur_h < dims[2] && cur_w >= 0 && cur_w < dims[3]) {
+              val = (*x)(b, c, cur_h, cur_w);
             }
+            else {
+              val = std::numeric_limits<Scalar>::lowest();
+            }
+
+            max_idx = (val > max_val) ? to_flat_dim<Index, 4, Layout>(dims, { b, c, cur_h, cur_w }) : max_idx;
+            max_val = (val > max_val) ? val : max_val;
           }
         }
-      }
+        layer_output->data()[out_index] = max_val;
+        mask->data()[out_index] = max_idx;
+        });
     }
 
     // for derivations
@@ -106,10 +103,14 @@ namespace EigenSinn {
       DeviceTensor<Scalar, Rank, Device_, Layout> x(next_layer_grad);
 
       layer_gradient.setZero();
-      for (Index i = 0; i < out_dims.TotalSize(); i++) {
-        Index idx = mask->data()[i];
-        layer_gradient->data()[idx] += x->data()[i];
-      }
+
+
+      std::for_each(std::execution::par_unseq, params->output_range.begin(), params->output_range.end(), [&](auto out_index) {
+        Index idx = mask->data()[out_index];
+
+        std::lock_guard<std::mutex> lck(mtx);
+        layer_gradient->data()[idx] += x->data()[out_index];
+        });
     }
 
     PtrTensorAdapter<Scalar, Device_> get_output() override {
@@ -125,7 +126,7 @@ namespace EigenSinn {
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_gradient;
     DeviceTensor<Index, Rank, Device_, Layout> mask;
 
-    DSizes<Index, Rank/2> extents;
+    DSizes<Index, Rank / 2> extents;
     DSizes<Index, Rank> out_dims;
     DSizes<Index, Rank> dims;
 
@@ -134,6 +135,9 @@ namespace EigenSinn {
     const int dilation;
 
     std::shared_ptr<MaxPoolParams<Rank>> params;
+
+    // concurrency
+    std::mutex mtx;
   };
 
 }
