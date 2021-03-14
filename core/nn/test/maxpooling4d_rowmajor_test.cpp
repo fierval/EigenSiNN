@@ -182,7 +182,7 @@ namespace EigenSinnTest {
     CommonData4d<ThreadPoolDevice, RowMajor> cd;
     DeviceTensor<float, 4, ThreadPoolDevice, RowMajor> output, dinput, fakeloss;
     const DSizes<Index, 2> extents2d{ 2, 2 };
-    const DSizes<Index, 2> extents1d{ 2 };
+    const DSizes<Index, 1> extents1d{ 2 };
 
     const int stride = 2;
 
