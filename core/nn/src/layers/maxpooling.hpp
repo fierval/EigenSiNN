@@ -97,9 +97,10 @@ namespace EigenSinn {
     else {
 #else
       static int block(BLOCK_SIZE * BLOCK_SIZE);
-      static int grid(getGridSize(params->output_range.size(), BLOCK_SIZE * BLOCK_SIZE));
+      static int grid(getGridSize(out_dims.TotalSize(), BLOCK_SIZE * BLOCK_SIZE));
       auto stream = mask.device().stream();
-      max_pool_kernel<Scalar, Layout> <<<grid, block, 0, stream>>>
+      
+      maxpool_forward_kernel<Scalar, Layout> <<<grid, block, 0, stream>>>
         (h_offset, w_offset, params->dilated_kernel_height, params->dilated_kernel_width, stride, dilation, *x, *layer_output, *mask);
       
 #endif
@@ -109,20 +110,33 @@ namespace EigenSinn {
     }
 
     // for derivations
-    void backward(LayerBase<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {
+  void backward(LayerBase<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {
 
-      DeviceTensor<Scalar, Rank, Device_, Layout> x(next_layer_grad);
+    DeviceTensor<Scalar, Rank, Device_, Layout> x(next_layer_grad);
 
-      layer_gradient.setZero();
+    layer_gradient.setZero();
 
 #ifndef __CUDACC__
+    if (!std::is_same<Device_, GpuDevice>::value) {
       std::for_each(std::execution::par_unseq, params->output_range.begin(), params->output_range.end(), [&](auto out_index) {
         Index idx = mask->data()[out_index];
 
         std::lock_guard<std::mutex> lck(mtx);
         layer_gradient->data()[idx] += x->data()[out_index];
         });
+    }
+    else {
 #else
+    static int block(BLOCK_SIZE * BLOCK_SIZE);
+    static int grid(getGridSize(dims.TotalSize(), BLOCK_SIZE * BLOCK_SIZE));
+    auto stream = mask.device().stream();
+
+    maxpool_backward_kernel<Scalar, Layout> << <grid, block, 0, stream >> >
+      (-padding.first, -padding.second, params->dilated_kernel_height, params->dilated_kernel_width, stride, dilation, *x, *mask, *layer_gradient);
+
+#endif
+#ifndef __CUDACC__
+  }
 #endif
     }
 
