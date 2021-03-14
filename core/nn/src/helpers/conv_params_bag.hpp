@@ -81,8 +81,8 @@ namespace EigenSinn {
     const int stride;
     const int dilation;
 
-    Index dilated_kernel_height;
-    Index dilated_kernel_width;
+    long dilated_kernel_height;
+    long dilated_kernel_width;
     const bool is_transposed;
 
     std::vector<long> h_im_range, w_im_range, col_batches;

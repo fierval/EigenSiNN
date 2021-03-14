@@ -149,9 +149,9 @@ namespace EigenSinn {
   }
 
   template<typename ToIndex, long Rank>
-  EIGEN_DEVICE_FUNC inline array<ToIndex, Rank> dimensions_cast(DSizes<Index, Rank> from) {
+  EIGEN_DEVICE_FUNC inline DSizes<ToIndex, Rank> dimensions_cast(DSizes<Index, Rank> from) {
 
-    array<ToIndex, Rank> out;
+    DSizes<ToIndex, Rank> out;
     for (long i = 0; i < Rank; i++) {
       out[i] = from[i];
     }

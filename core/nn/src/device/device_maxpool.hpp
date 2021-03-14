@@ -8,7 +8,7 @@ namespace EigenSinn {
 #ifdef __CUDACC__
 
   template<typename Scalar, int Layout = ColMajor>
-  __global__ void maxpool_forward_kernel(long h_offset, long w_offset, long kernel_height, long kernel_width, long stride, long dilation, TensorView<Scalar, 4, Layout> input, TensorView<Scalar, 4, Layout> layer_output, TensorView<Scalar, 4, Layout> mask) {
+  __global__ void maxpool_forward_kernel(long h_offset, long w_offset, long kernel_height, long kernel_width, long stride, long dilation, TensorView<Scalar, 4, Layout> input, TensorView<Scalar, 4, Layout> layer_output, TensorView<Index, 4, Layout> mask) {
 
     DSizes<long, 4> out_dims = dimensions_cast<long>(layer_output.dimensions());
 
@@ -19,9 +19,7 @@ namespace EigenSinn {
 
     DSizes<long, 4> dims = dimensions_cast<long>(input.dimensions());
 
-    DSizes<long, 4> offsets = from_flat_dim<long, Rank, Layout>(out_dims, out_index);
-
-    long b = offsets[0], out_dims[0] = offsets[1], out_dims[2] = offsets[2], out_dims[3] = offsets[3];
+    DSizes<long, 4> offsets = from_flat_dim<long, 4, Layout>(out_dims, out_index);
 
     Scalar max_val = std::numeric_limits<Scalar>::lowest();
     long max_idx = -1;
@@ -35,9 +33,9 @@ namespace EigenSinn {
         Scalar val;
 
         if (cur_h >= 0 && cur_h < dims[2] && cur_w >= 0 && cur_w < dims[3]) {
-          input_idx = to_flat_dim<long, 4, Layout>(dims, { b, out_dims[0], cur_h, cur_w });
+          long input_idx = to_flat_dim<long, 4, Layout>(dims, { offsets[0], offsets[1], cur_h, cur_w });
 
-          val = x.data()[input_idx];
+          val = input.data()[input_idx];
           max_idx = (val > max_val) ? input_idx : max_idx;
           max_val = (val > max_val) ? val : max_val;
         }
@@ -49,7 +47,7 @@ namespace EigenSinn {
   }
 
   template<typename Scalar, int Layout = ColMajor>
-  __global__ void maxpool_backward_kernel(long h_offset, long w_offset, long kernel_h, long kernel_w, int stride, int dilation, TensorView<Scalar, 4, Layout> next_layer_grad, TensorView<Scalar, 4, Layout> mask, TensorView<Scalar, 4, Layout> layer_gradient)
+  __global__ void maxpool_backward_kernel(long h_offset, long w_offset, long kernel_h, long kernel_w, int stride, int dilation, TensorView<Scalar, 4, Layout> next_layer_grad, TensorView<Index, 4, Layout> mask, TensorView<Scalar, 4, Layout> layer_gradient)
   {
 
     // same as input dimensions
@@ -71,7 +69,7 @@ namespace EigenSinn {
 
         long out_w = (in_offsets[3] - w_offset) / stride + cur_inp_w;
         long out_h = (in_offsets[2] - h_offset) / stride + cur_inp_h;
-        long out_index = to_flat_dims(out_dims, { in_offsets[0], in_offsets[1], out_h, out_w });
+        long out_index = to_flat_dim<long, 4, Layout>(out_dims, { in_offsets[0], in_offsets[1], out_h, out_w });
 
           if (out_w >= 0 && out_w < out_dims[3] && out_h >= 0 && out_h < out_dims[2] && mask.data()[out_index] == in_idx) {
           
