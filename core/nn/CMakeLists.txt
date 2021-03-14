@@ -15,7 +15,7 @@ set(TEST_SOURCES
 #    "test/convlayer_trans_gpu_test.cu"
 #    "test/maxpooling2d_rowmajor_test.cpp"
     "test/maxpooling4d_test.cpp"
-    "test/maxpooling4d_rowmajor_test.cpp"
+#    "test/maxpooling4d_rowmajor_test.cpp"
     "test/maxpooling4d_gpu_test.cu"
     )
 

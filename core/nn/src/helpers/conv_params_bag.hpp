@@ -5,6 +5,34 @@
 using namespace Eigen;
 
 namespace EigenSinn {
+  template <int Rank, class Dims>
+  inline bool check_valid_params(const DSizes<Index, Rank / 2>& extents, int stride, Dims& dims) {
+
+    if (stride <= 0) {
+      return false;
+    }
+
+    if (Rank != 2 && Rank != 4) {
+      return false;
+    }
+
+    for (Index i = 0; i < Rank / 2; i++) {
+      // we are interested in the second or 3rd and 4th
+      // depending on the tensor: 2d or 4d
+      int tensor_dim = Rank == 2 ? dims[i + 1] : dims[i + 2];
+      int diff = tensor_dim - extents[i];
+
+      if (diff < 0) {
+        return false;
+      }
+
+      if (stride != 1 && diff % stride != 0) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 
   template<Index Rank>
   class ConvolutionParams {

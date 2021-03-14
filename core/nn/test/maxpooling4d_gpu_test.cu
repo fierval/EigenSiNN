@@ -95,8 +95,7 @@ namespace EigenSinnTest {
 
     CommonData4d<GpuDevice> cd;
     DeviceTensor<float, 4, GpuDevice> output, dinput, fakeloss;
-    const array<Index, 2> extents2d = { 2, 2 };
-    const array<Index, 2> extents1d = { 2 };
+    const DSizes<Index, 2> extents2d{ 2, 2 };
 
     const int stride = 2;
 

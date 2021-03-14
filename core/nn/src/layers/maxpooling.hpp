@@ -4,6 +4,7 @@
 #include <ops/conversions.hpp>
 #include <device/device_helpers.hpp>
 #include <device/device_maxpool.hpp>
+#include <helpers/conv_params_bag.hpp>
 #include <limits>
 
 using namespace  Eigen;
