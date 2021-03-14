@@ -239,10 +239,23 @@ namespace EigenSinnTest {
 
     pl.init();
     pl.forward(input);
+    EXPECT_TRUE(is_elementwise_approx_eq(pl.get_output(), output));
+
     pl.backward(input, fakeloss.raw());
+    EXPECT_TRUE(is_elementwise_approx_eq(pl.get_loss_by_input_derivative(), dinput));
+  }
+
+  TEST_F(Pool4d, Forward) {
+
+    Input<float, 4> input;
+    input.set_input(cd.convInput);
+
+    MaxPooling<float, 4> pl(extents2d, stride);
+
+    pl.init();
+    pl.forward(input);
 
     EXPECT_TRUE(is_elementwise_approx_eq(pl.get_output(), output));
-    EXPECT_TRUE(is_elementwise_approx_eq(pl.get_loss_by_input_derivative(), dinput));
   }
 
   TEST_F(Pool4d, BackwardStride1) {

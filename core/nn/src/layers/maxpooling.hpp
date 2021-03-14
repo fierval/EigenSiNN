@@ -38,21 +38,32 @@ namespace EigenSinn {
       DeviceTensor<Scalar, Rank, Device_, Layout> x(prev_layer.get_output());
 
       if (!params || params->check(x.dimensions())) {
+
         // dimensions represented by vector for Rank = 2 or Rank = 4
-        // need to prepend the right values to mimic convolutional kernel
-        DSizes<Index, Rank> dims = x.dimensions();
-        DSizes<Index, Rank> kernel_dims = dims;
+        // need to prepend the right values to mimic convolutional kernel (batch, channels)
+        dims = x.dimensions();
+
+        DSizes<Index, Rank> kernel_dims;
+
         kernel_dims[0] = dims[0];
         kernel_dims[1] = dims[1];
+        kernel_dims[2] = extents[0];
+        kernel_dims[3] = extents[1];
 
-        params = std::make_shared<ConvolutionParams<Rank>>(dims, kernel_dims, padding, stride, dilation, false);
+        params = std::make_shared<MaxPoolParams<Rank>>(dims, kernel_dims, padding, stride, dilation);
+        
+        // cache input and output dimensions
+        out_dims = params->output_dims();
+
+        // allocate output tensors
+        layer_output = DeviceTensor<Scalar, Rank, Device_, Layout>(out_dims);
+        mask = DeviceTensor<Index, Rank, Device_, Layout>(out_dims);
+
+        layer_gradient = DeviceTensor<Scalar, Rank, Device_, Layout>(dims);
       }
 
       int w_offset = -padding.first;
       int h_offset = -padding.second;
-
-      DSizes<Index, Rank> out_dims = params->output_dims();
-      DSizes<Index, Rank> dims = params->orig_dims();
 
       for (Index b = 0; b < out_dims[0]; ++b) {
         for (Index c = 0; c < out_dims[1]; c++) {
@@ -94,7 +105,8 @@ namespace EigenSinn {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> x(next_layer_grad);
 
-      for (Index i = 0; i < params->output_dims().TotalSize(); i++) {
+      layer_gradient.setZero();
+      for (Index i = 0; i < out_dims.TotalSize(); i++) {
         Index idx = mask->data()[i];
         layer_gradient->data()[idx] += x->data()[i];
       }
@@ -114,12 +126,14 @@ namespace EigenSinn {
     DeviceTensor<Index, Rank, Device_, Layout> mask;
 
     DSizes<Index, Rank/2> extents;
+    DSizes<Index, Rank> out_dims;
+    DSizes<Index, Rank> dims;
 
     const int stride;
     const Padding2D padding;
     const int dilation;
 
-    std::shared_ptr<ConvolutionParams<Rank>> params;
+    std::shared_ptr<MaxPoolParams<Rank>> params;
   };
 
 }

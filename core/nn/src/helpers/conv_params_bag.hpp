@@ -32,6 +32,34 @@ namespace EigenSinn {
       dilated_kernel_dims[3] = dilated_kernel_width;
     }
 
+    inline const DSizes<Index, Rank>& orig_dims() const {
+      return is_transposed ? out_dims : input_dims;
+    }
+
+    inline const DSizes<Index, Rank>& output_dims() const {
+      return is_transposed ? input_dims : out_dims;
+    }
+
+    // this can happen if we switch from "train" to "test" mode
+    // so our batch may change
+    inline bool check(const DSizes<Index, Rank> new_input_dims) {
+      return new_input_dims[(int)ImageDims::batch] != input_dims[(int)ImageDims::batch];
+    }
+
+    const DSizes<Index, Rank> kernel_dims;
+    DSizes<Index, Rank> dilated_kernel_dims;
+
+    const Padding2D padding;
+    const int stride;
+    const int dilation;
+
+    Index dilated_kernel_height;
+    Index dilated_kernel_width;
+    const bool is_transposed;
+
+    std::vector<long> h_im_range, w_im_range, col_batches;
+
+  protected:
     inline void get_output_dimensions() {
 
       if (!is_transposed) {
@@ -84,38 +112,23 @@ namespace EigenSinn {
       std::iota(col_batches.begin(), col_batches.end(), 0);
     }
 
-    inline const DSizes<Index, Rank>& orig_dims() const {
-      return is_transposed ? out_dims : input_dims;
-    }
-
-    inline const DSizes<Index, Rank>& output_dims() const {
-      return is_transposed ? input_dims : out_dims;
-    }
-
-    // this can happen if we switch from "train" to "test" mode
-    // so our batch may change
-    inline bool check(const DSizes<Index, Rank> new_input_dims) {
-      return new_input_dims[(int)ImageDims::batch] != input_dims[(int)ImageDims::batch];
-    }
-
-    const DSizes<Index, Rank> kernel_dims;
-    DSizes<Index, Rank> dilated_kernel_dims;
-
-    const Padding2D padding;
-    const int stride;
-    const int dilation;
-
-    Index dilated_kernel_height;
-    Index dilated_kernel_width;
-    const bool is_transposed;
-
-    std::vector<long> h_im_range, w_im_range, col_batches;
-
-  private:
     // dimensions depend on convolution type (transposed/regular)
     // what is "input" for regular is "output" for transposed
     DSizes<Index, Rank> out_dims;
     DSizes<Index, Rank> input_dims;
 
   };
+
+  template<Index Rank>
+  class MaxPoolParams : public ConvolutionParams<Rank> {
+
+  public:
+    MaxPoolParams(const DSizes<Index, Rank>& _in_dims, const DSizes<Index, Rank> _kernel_dims, const Padding2D& _padding, const int _stride, const int _dilation)
+      : ConvolutionParams<Rank>(_in_dims, _kernel_dims, _padding, _stride, _dilation, false) {
+
+      // the only thing we need to tweak: set the output dimensions correctly
+      out_dims[(int)ImageDims::channel] = input_dims[(int)ImageDims::channel];
+    }
+  };
+
 } // namespace
