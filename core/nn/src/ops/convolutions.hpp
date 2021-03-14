@@ -67,6 +67,7 @@ namespace EigenSinn {
           });
         });
     }
+    else {
 #else
 
     static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
@@ -78,6 +79,9 @@ namespace EigenSinn {
     set_col_kernel<Scalar, Layout> << <grid, block, 0, device.stream() >> >
       (batches, padding, channels, kernel_height, kernel_width, stride, dilation, *output, *input, out_height, out_width);
 
+#endif
+#ifndef __CUDACC__
+  }
 #endif
     return std::move(output);
   }
@@ -221,12 +225,16 @@ namespace EigenSinn {
         addAndSet<Scalar, Layout, Device_>(batch_size, batch, channels, stride, padding, dilation, kernel_height, kernel_width, padded_width, out, col);
       }
     }
+    else {
 #else
     static int block(BLOCK_SIZE * BLOCK_SIZE);
     int grid(getGridSize(num_batches, block));
 
     add_and_set_kernel<Scalar, Layout> << < grid, block, 0, device.stream() >> >
       (batch_size, num_batches, channels, stride, padding, dilation, kernel_height, kernel_width, padded_width, *out, *col);
+#endif
+#ifndef __CUDACC__
+  }
 #endif
   }
 

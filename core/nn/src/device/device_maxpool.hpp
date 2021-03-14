@@ -1,10 +1,52 @@
 #pragma once
 
 #include "device_helpers.hpp"
+#include <limits>
 
 namespace EigenSinn {
 
 #ifdef __CUDACC__
+
+  template<typename Scalar, int Layout = ColMajor>
+  __global__ void max_pool_kernel(long h_offset, long w_offset, long kernel_height, long kernel_width, long stride, long dilation, TensorView<Scalar, 4, Layout> input, TensorView<Scalar, 4, Layout> layer_output, TensorView<Scalar, 4, Layout> mask) {
+
+    DSizes<long, 4> out_dims = dimensions_cast<long>(layer_output.dimensions());
+
+    long out_index = threadIdx.x + blockDim.x * gridDim.x;
+    if (out_index >= out_dims.TotalSize()) {
+      return;
+    }
+
+    DSizes<long, 4> dims = dimensions_cast<long>(input.dimensions());
+
+    DSizes<long, 4> offsets = from_flat_dim<long, Rank, Layout>(out_dims, out_index);
+
+    long b = offsets[0], c = offsets[1], h = offsets[2], w = offsets[3];
+
+    Scalar max_val = std::numeric_limits<Scalar>::lowest();
+    long max_idx = -1;
+    long input_flat_dims;
+
+    for (long kernel_h = 0; kernel_h < kernel_height; kernel_h += dilation) {
+      for (long kernel_w = 0; kernel_w < kernel_width; kernel_w += dilation) {
+        long cur_h = h_offset + h * stride + kernel_h;
+        long cur_w = w_offset + w * stride + kernel_w;
+
+        Scalar val;
+
+        if (cur_h >= 0 && cur_h < dims[2] && cur_w >= 0 && cur_w < dims[3]) {
+          input_idx = to_flat_dim<long, 4, Layout>(dims, { b, c, cur_h, cur_w });
+
+          val = x.data()[input_idx];
+          max_idx = (val > max_val) ? input_idx : max_idx;
+          max_val = (val > max_val) ? val : max_val;
+        }
+      }
+    }
+    layer_output.data()[out_index] = max_val;
+    mask.data()[out_index] = max_idx;
+
+  }
 
   template<typename Scalar, int Layout = ColMajor>
   __global__ void maxpool_set_values_kernel4d(
@@ -66,60 +108,5 @@ namespace EigenSinn {
       output.data()[idx_output] += dout.data()[idx_grad];
     }
   }
-
-  template<typename Scalar, int Layout = ColMajor>
-  __global__ void maxpool_set_values_kernel2d(
-    TensorView<Scalar, 2, Layout> output, TensorView<Index, 2, Layout> mask, TensorView<Tuple<Index, Scalar>, 1, Layout> local_pool,
-        long batches, long output_starts) {
-
-    int batch = threadIdx.x + blockIdx.x * blockDim.x;
-
-    if (batch < batches) {
-
-      // TODO: for some reason creating Index-type (long long) arrays crashes the kernel
-      // so convering everything to "long"
-      auto dims = mask.dimensions();
-      auto out_dims = array<long, 2>{(long)dims[0], (long)dims[1]};
-
-      auto idx_output = to_flat_dim<long, 2, Layout>(out_dims, { batch, output_starts});
-
-      mask.data()[idx_output] = local_pool.data()[batch].first;
-      output.data()[idx_output] = local_pool.data()[batch].second;
-    }
-
-  }
-
-  template<typename Scalar, int Layout = ColMajor>
-  __global__ void maxpool_dinput_kernel2d(
-    TensorView<Scalar, 2, Layout> output, TensorView<Scalar, 2, Layout> dout, TensorView<Index, 2, Layout> mask
-    , long batches, long grad_starts, long extents, long output_pos) {
-
-    int batch = threadIdx.x + blockIdx.x * blockDim.x;
-
-    if (batch < batches) {
-
-      array<long, 2> pool_window_dims{ batches, (long)extents };
-
-      // TODO: for some reason creating Index-type (long long) arrays crashes the kernel
-      // so convering everything to "long"
-      auto dims = mask.dimensions();
-      auto mask_dims = array<long, 2>{(long)dims[0], (long)dims[1]};
-
-      dims = output.dimensions();
-      auto out_dims = array<long, 2>{(long)dims[0], (long)dims[1]};
-
-      auto idx = to_flat_dim<long, 2, Layout>(mask_dims, { batch, (long)grad_starts });
-      auto idx_flat = mask.data()[idx];
-
-      auto idx_col = from_flat_dim<long, 2, ColMajor>(pool_window_dims, idx_flat)[1];
-
-      long idx_output = to_flat_dim<long, 2, Layout>(out_dims, { batch, (long)output_pos + idx_col });
-      long idx_grad = to_flat_dim<long, 2, Layout>(mask_dims, { batch, (long)grad_starts });
-
-      output.data()[idx_output] += dout.data()[idx_grad];
-    }
-
-  }
-
 #endif  
-}
+} // namespace EigenSinn

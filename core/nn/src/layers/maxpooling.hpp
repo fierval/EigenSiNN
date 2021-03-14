@@ -1,9 +1,9 @@
 #pragma once
 
 #include "layer_base.hpp"
-#include <ops/maxpoolingops.hpp>
 #include <ops/conversions.hpp>
 #include <device/device_helpers.hpp>
+#include <device/device_maxpool.hpp>
 #include <limits>
 
 using namespace  Eigen;
@@ -65,36 +65,47 @@ namespace EigenSinn {
       int w_offset = -padding.first;
       int h_offset = -padding.second;
 
-      // parallelize maxpooling
-      std::for_each(std::execution::par_unseq, params->output_range.begin(), params->output_range.end(), [&](auto out_index) {
+#ifndef __CUDACC__
+      if (!std::is_same<Device_, GpuDevice>::value) {
+        // parallelize maxpooling
+        std::for_each(std::execution::par_unseq, params->output_range.begin(), params->output_range.end(), [&](auto out_index) {
 
-        DSizes<Index, Rank> offsets = from_flat_dim<Index, Rank, Layout>(out_dims, out_index);
-        Index b = offsets[0], c = offsets[1], h = offsets[2], w = offsets[3];
+          DSizes<Index, Rank> offsets = from_flat_dim<Index, Rank, Layout>(out_dims, out_index);
+          Index b = offsets[0], c = offsets[1], h = offsets[2], w = offsets[3];
 
-        Scalar max_val = std::numeric_limits<Scalar>::lowest();
-        Index max_idx = -1;
+          Scalar max_val = std::numeric_limits<Scalar>::lowest();
+          Index max_idx = -1;
 
-        for (Index kernel_h = 0; kernel_h < params->dilated_kernel_height; kernel_h += dilation) {
-          for (Index kernel_w = 0; kernel_w < params->dilated_kernel_width; kernel_w += dilation) {
-            Index cur_h = h_offset + h * stride + kernel_h;
-            Index cur_w = w_offset + w * stride + kernel_w;
+          for (Index kernel_h = 0; kernel_h < params->dilated_kernel_height; kernel_h += dilation) {
+            for (Index kernel_w = 0; kernel_w < params->dilated_kernel_width; kernel_w += dilation) {
+              Index cur_h = h_offset + h * stride + kernel_h;
+              Index cur_w = w_offset + w * stride + kernel_w;
 
-            Scalar val;
+              Scalar val;
 
-            if (cur_h >= 0 && cur_h < dims[2] && cur_w >= 0 && cur_w < dims[3]) {
-              val = (*x)(b, c, cur_h, cur_w);
+              if (cur_h >= 0 && cur_h < dims[2] && cur_w >= 0 && cur_w < dims[3]) {
+                val = (*x)(b, c, cur_h, cur_w);
+                max_idx = (val > max_val) ? to_flat_dim<Index, 4, Layout>(dims, { b, c, cur_h, cur_w }) : max_idx;
+                max_val = (val > max_val) ? val : max_val;
+              }
             }
-            else {
-              val = std::numeric_limits<Scalar>::lowest();
-            }
-
-            max_idx = (val > max_val) ? to_flat_dim<Index, 4, Layout>(dims, { b, c, cur_h, cur_w }) : max_idx;
-            max_val = (val > max_val) ? val : max_val;
           }
-        }
-        layer_output->data()[out_index] = max_val;
-        mask->data()[out_index] = max_idx;
-        });
+          layer_output->data()[out_index] = max_val;
+          mask->data()[out_index] = max_idx;
+          });
+    }
+    else {
+#else
+      static int block(BLOCK_SIZE * BLOCK_SIZE);
+      static int grid(getGridSize(params->output_range.size(), BLOCK_SIZE * BLOCK_SIZE));
+      auto stream = mask.device().stream();
+      max_pool_kernel<Scalar, Layout> <<<grid, block, 0, stream>>>
+        (h_offset, w_offset, params->dilated_kernel_height, params->dilated_kernel_width, stride, dilation, *x, *layer_output, *mask);
+      
+#endif
+#ifndef __CUDACC__
+      }
+#endif
     }
 
     // for derivations
@@ -104,13 +115,15 @@ namespace EigenSinn {
 
       layer_gradient.setZero();
 
-
+#ifndef __CUDACC__
       std::for_each(std::execution::par_unseq, params->output_range.begin(), params->output_range.end(), [&](auto out_index) {
         Index idx = mask->data()[out_index];
 
         std::lock_guard<std::mutex> lck(mtx);
         layer_gradient->data()[idx] += x->data()[out_index];
         });
+#else
+#endif
     }
 
     PtrTensorAdapter<Scalar, Device_> get_output() override {

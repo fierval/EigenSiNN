@@ -16,6 +16,7 @@ set(TEST_SOURCES
 #    "test/maxpooling2d_rowmajor_test.cpp"
     "test/maxpooling4d_test.cpp"
     "test/maxpooling4d_rowmajor_test.cpp"
+    "test/maxpooling4d_gpu_test.cu"
     )
 
 message(STATUS "Sources: ${TEST_SOURCES}")
