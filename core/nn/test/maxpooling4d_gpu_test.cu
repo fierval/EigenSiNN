@@ -116,5 +116,16 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(pl.get_loss_by_input_derivative(), dinput));
   }
 
+  TEST_F(Pool4dGpu, Forward) {
 
+    Input<float, 4, GpuDevice> input;
+    input.set_input(cd.convInput);
+
+    MaxPooling<float, 4, GpuDevice> pl(extents2d, stride);
+
+    pl.init();
+    pl.forward(input);
+
+    EXPECT_TRUE(is_elementwise_approx_eq(pl.get_output(), output));
+  }
 }
