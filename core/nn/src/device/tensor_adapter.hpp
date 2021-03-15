@@ -7,8 +7,9 @@ using namespace Eigen;
 
 namespace EigenSinn {
 
+  // copying this object simply increases its ownership
   template<typename Scalar, typename Device_>
-  class TensorAdapter {
+  class TensorAdapter : public std::enable_shared_from_this<TensorAdapter<Scalar, Device_>> {
 
   public:
 

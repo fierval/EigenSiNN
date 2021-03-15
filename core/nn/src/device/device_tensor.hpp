@@ -76,7 +76,7 @@ namespace EigenSinn
     }
 
     DeviceTensor(const DeviceTensor& d) {
-      create_device_tensor(d.tensor_view->dimensions(), d.tensor_adapter);
+      create_device_tensor(d.dimensions(), d.tensor_adapter);
     }
 
     DeviceTensor(const DeviceTensor&& d) {
@@ -267,7 +267,7 @@ namespace EigenSinn
 
     void create_device_tensor(const DSizes<Index, Rank>& dims, const PtrTensorAdapter<Scalar, Device_>& data) {
 
-      tensor_adapter = data;
+      tensor_adapter = data->shared_from_this();
       tensor_view.reset();
       tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), dims));
     }

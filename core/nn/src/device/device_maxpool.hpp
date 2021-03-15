@@ -23,7 +23,6 @@ namespace EigenSinn {
 
     Scalar max_val = std::numeric_limits<Scalar>::lowest();
     long max_idx = -1;
-    long input_flat_dims;
 
     for (long kernel_h = 0; kernel_h < kernel_height; kernel_h += dilation) {
       for (long kernel_w = 0; kernel_w < kernel_width; kernel_w += dilation) {
