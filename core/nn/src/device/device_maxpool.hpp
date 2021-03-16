@@ -26,8 +26,8 @@ namespace EigenSinn {
 
     for (long kernel_h = 0; kernel_h < kernel_height; kernel_h += dilation) {
       for (long kernel_w = 0; kernel_w < kernel_width; kernel_w += dilation) {
-        long cur_h = h_offset + out_dims[2] * stride + kernel_h;
-        long cur_w = w_offset + out_dims[3] * stride + kernel_w;
+        long cur_h = h_offset + offsets[2] * stride + kernel_h;
+        long cur_w = w_offset + offsets[3] * stride + kernel_w;
 
         Scalar val;
 
