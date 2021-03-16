@@ -104,6 +104,8 @@ namespace EigenSinn {
       maxpool_forward_kernel<Scalar, Layout> <<<grid, block, 0, stream>>>
         (h_offset, w_offset, params->dilated_kernel_height, params->dilated_kernel_width, stride, dilation, *x, *layer_output, *mask);
       
+      cudaDeviceSynchronize();
+      
 #endif
 #ifndef __CUDACC__
       }
@@ -134,7 +136,7 @@ namespace EigenSinn {
 
     maxpool_backward_kernel<Scalar, Layout> << <grid, block, 0, stream >> >
       (-padding.first, -padding.second, params->dilated_kernel_height, params->dilated_kernel_width, stride, dilation, *x, *mask, *layer_gradient);
-
+    cudaDeviceSynchronize();
 #endif
 #ifndef __CUDACC__
   }

@@ -121,6 +121,7 @@ namespace EigenSinn {
     }
 
     inline Scalar get_loss() { return loss.get_output(); }
+    Network network;
 
   protected:
 
@@ -151,7 +152,6 @@ namespace EigenSinn {
       return res;
     }
 
-    Network network;
     Loss loss;
     bool inited;
   };

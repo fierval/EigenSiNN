@@ -57,9 +57,6 @@ namespace EigenSinn {
         dX.resize(params->orig_dims());
       }
 
-      // make sure dimensions are still valid
-      params->check(prev_layer.dimensions());
-
       layer_output = convolve<Scalar, 4, Layout, Device_>(prev_layer, kernel, *params);
 
       //add bias to each channel
