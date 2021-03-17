@@ -76,12 +76,14 @@ namespace EigenSinn
     }
 
     DeviceTensor(const DeviceTensor& d) {
-      create_device_tensor(d.tensor_view->dimensions(), d.tensor_adapter);
+      if (!d.tensor_view) { return; }
+      create_device_tensor(d.dimensions(), d.tensor_adapter);
     }
 
     DeviceTensor(const DeviceTensor&& d) {
+      if (!d.tensor_view) { return; }
       tensor_adapter = std::move(d.tensor_adapter);
-      tensor_view.reset();
+      reset_view();
       tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), d.dimensions()));
     }
 
@@ -121,7 +123,7 @@ namespace EigenSinn
     // resizing, setting values
     void resize(DSizes<Index, Rank> dims) {
       tensor_adapter.reset();
-      tensor_view.reset();
+      reset_view();
       create_device_tensor(DSizes<Index, Rank>(dims), nullptr);
     }
 
@@ -246,29 +248,34 @@ namespace EigenSinn
 
   private:
 
+    inline void reset_view() {
+      if (tensor_view) {
+        tensor_view.reset();
+      }
+    }
     void create_device_tensor() {
       tensor_adapter = std::make_shared<TensorAdapter<Scalar, Device_>>();
-      tensor_view.reset();
+      reset_view();
     }
 
     void create_device_tensor(const DSizes<Index, Rank>& dims, Scalar* data) {
 
       tensor_adapter = std::make_shared<TensorAdapter<Scalar, Device_>>(dims2vec(dims), data);
-      tensor_view.reset();
+      reset_view();
       tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), dims));
     }
 
     void create_device_tensor(const std::vector<Index>& dims, Scalar* data) {
 
       tensor_adapter = std::make_shared<TensorAdapter<Scalar, Device_>>(dims, data);
-      tensor_view.reset();
+      reset_view();
       tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), vec2dims<Rank>(dims)));
     }
 
     void create_device_tensor(const DSizes<Index, Rank>& dims, const PtrTensorAdapter<Scalar, Device_>& data) {
 
       tensor_adapter = data;
-      tensor_view.reset();
+      reset_view();
       tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), dims));
     }
 

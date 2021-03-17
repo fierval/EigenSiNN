@@ -11,9 +11,9 @@ namespace EigenSinn {
     TensorView<Scalar, 4, Layout> dilated, TensorView<Scalar, 4, Layout> tensor) {
 
     // batch
-    int b = threadIdx.x + blockIdx.x * blockDim.x;
+    long b = threadIdx.x + blockIdx.x * blockDim.x;
     // channel
-    int c = threadIdx.y + blockIdx.y * blockDim.y;
+    long c = threadIdx.y + blockIdx.y * blockDim.y;
 
     if (b < batches && c < channels) {
       for (long h = 0; h < height; h++) {
@@ -86,7 +86,7 @@ namespace EigenSinn {
     int dilation, long kernel_height, long kernel_width, long padded_width,
     TensorView<Scalar, 4, Layout> out, TensorView<Scalar, 2, Layout> col) {
 
-    int batch = threadIdx.x + blockDim.x * blockIdx.x;
+    long batch = threadIdx.x + blockDim.x * blockIdx.x;
 
     if (batch >= num_batches) {
       return;
@@ -97,8 +97,8 @@ namespace EigenSinn {
     long col_start = batch * batch_size;
 
     // indices into the 2d "col" tensor
-    int idx_col = col_start;
-    int idx_row = 0;
+    long idx_col = col_start;
+    long idx_row = 0;
 
     auto flat_out_dims = dimensions_cast<long>(out.dimensions());
     auto flat_inp_dims = dimensions_cast<long>(col.dimensions());
@@ -168,8 +168,8 @@ namespace EigenSinn {
     long col_start = batch * batch_size;
 
     // indices into the 2d "col" tensor
-    int idx_col = col_start;
-    int idx_row = 0;
+    long idx_col = col_start;
+    long idx_row = 0;
 
     for (Index b = 0; b < batch_size; b++, idx_row = 0, idx_col++) {
       for (Index c = 0; c < channels; c++) {

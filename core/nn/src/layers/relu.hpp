@@ -50,7 +50,7 @@ namespace EigenSinn {
   template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class ReLU : public LeakyReLU<Scalar, Rank, Device_, Layout> {
   public:
-    ReLU() : LeakyReLU(0) {}
+    ReLU() : LeakyReLU<Scalar, Rank, Device_, Layout>(0) {}
   };
 
 }

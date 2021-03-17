@@ -9,9 +9,9 @@ bool debug_init = false;
 
 int main(int argc, char* argv[]) {
 
-  size_t batch_size = 10;
+  size_t batch_size = 100;
   int side = 32;
-  int num_epochs = 4;
+  int num_epochs = 8;
   int channels = 3;
   float learning_rate = 0.001;
   

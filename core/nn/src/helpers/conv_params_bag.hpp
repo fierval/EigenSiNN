@@ -152,7 +152,7 @@ namespace EigenSinn {
 
   public:
     MaxPoolParams(const DSizes<Index, Rank>& _in_dims, const DSizes<Index, Rank> _kernel_dims, const Padding2D& _padding, const int _stride, const int _dilation)
-      : ConvolutionParams(_in_dims, _kernel_dims, _padding, _stride, _dilation, false) {
+      : ConvolutionParams<Rank>(_in_dims, _kernel_dims, _padding, _stride, _dilation, false) {
 
       // the only thing we need to tweak: set the output dimensions correctly
       out_dims[(int)ImageDims::channel] = input_dims[(int)ImageDims::channel];
