@@ -19,7 +19,7 @@ namespace EigenSinn {
         return;
       }
 
-      LossBase::initialize(predicted, actual);
+      LossBase<Scalar, Actual, Rank, Device_, Layout>::initialize(predicted, actual);
 
 
       dsum.resize(reduced_dims);

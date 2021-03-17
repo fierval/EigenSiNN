@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
     stop = std::chrono::high_resolution_clock::now();
     double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() / 1000.;
 
-    std::cout << "Epoch: " << i + 1 << ". Time: " << elapsed << " sec." << std::endl;
+    std::cout << "Epoch: " << i + 1 << ". Time: " << elapsed << " sec." << " Loss: " << net.get_loss() << "." << std::endl;
   } 
   
   // Test
