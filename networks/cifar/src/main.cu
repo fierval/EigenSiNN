@@ -9,7 +9,7 @@ bool debug_init = false;
 
 int main(int argc, char* argv[]) {
 
-  size_t batch_size = 100;
+  size_t batch_size = 10;
   int side = 32;
   int num_epochs = 8;
   int channels = 3;
@@ -68,6 +68,6 @@ int main(int argc, char* argv[]) {
   } 
   
   // Test
-  TestNetwork(dataset, net, num_classes, classes);
+  TestNetworkSingleBatch(dataset, net, num_classes, classes);
   return 0;
 }
