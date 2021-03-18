@@ -21,7 +21,7 @@
 
 using namespace Eigen;
 
-#include "device/dispatcher.hpp"
+#include "device/device_wrapper.hpp"
 
 namespace EigenSinn {
 

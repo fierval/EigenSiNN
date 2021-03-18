@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dispatcher.hpp"
+#include "device_wrapper.hpp"
 #include "device_helpers.hpp"
 
 using namespace Eigen;
@@ -14,8 +14,7 @@ namespace EigenSinn {
   public:
 
     explicit TensorAdapter() 
-      : dispatcher(Dispatcher<Device_>::create())
-      , device(dispatcher.get_device()) {}
+      : device(dispatcher()) {}
 
     explicit TensorAdapter(const std::vector<Index>& dims, Scalar *_data = nullptr)
       : TensorAdapter()  {
@@ -51,8 +50,6 @@ namespace EigenSinn {
       if (data_ != nullptr) {
         device.deallocate(data_);
       }
-
-      dispatcher.release();
     }
 
     inline Scalar* data() { return data_; }
@@ -80,7 +77,7 @@ namespace EigenSinn {
       }
     }
 
-    Dispatcher<Device_>& dispatcher;
+    static inline DeviceWrapper<Device_> dispatcher;
     Device_& device;
 
     Scalar* data_ = nullptr;
