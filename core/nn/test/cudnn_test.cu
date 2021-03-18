@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "device/device_tensor.hpp"
-#include <cudnn/helper.hpp>
+#include <cudnn/context.hpp>
 
 #include "include/commondata4d.hpp"
 #include "include/convdata4d.hpp"

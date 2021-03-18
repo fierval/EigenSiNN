@@ -8,22 +8,22 @@ using namespace Eigen;
 namespace EigenSinn {
 
   template<typename Device_>
-  class DeviceWrapper {};
-
-  template <>
-  class DeviceWrapper<DefaultDevice> {
+  class DeviceWrapper {
+  
   public:
-    DeviceWrapper() {}
+    DeviceWrapper() : device_() {
 
-    const DefaultDevice& operator()() {
-      return cpu_device;
+    }
+
+    Device_& operator()() {
+      return device_;
     }
 
   private:
-
-    DefaultDevice cpu_device;
+    Device_ device_;
   };
 
+  
 #ifdef EIGEN_USE_THREADS
   template <>
   class DeviceWrapper<ThreadPoolDevice> {
