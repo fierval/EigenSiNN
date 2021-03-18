@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "device/device_tensor.hpp"
-#include <cudnn/context.hpp>
+#include <helpers/cudnn_helpers.hpp>
 
 #include "include/commondata4d.hpp"
 #include "include/convdata4d.hpp"
@@ -21,8 +21,8 @@ namespace EigenSinnTest {
     CommonData4d<GpuDevice, RowMajor> cd;
     ConvDataWith1Padding<GpuDevice, RowMajor> cd1p;
 
-    const int padding = 0, stride = 1, dilation = 1;
-    DSizes<Index, 4> output_size;
+    const int stride = 1, dilation = 1;
+    const Padding2D padding{ 0, 0 };
 
   };
 
@@ -33,32 +33,13 @@ namespace EigenSinnTest {
     // - input tensor
     // - filter
     // - convolution
-    CudaContext ctx;
+    cudnnTensorDescriptor_t input_desc;
+    cudnnTensorDescriptor_t output_desc;
 
-    ctx.input_desc = tensor4d(cd.convInput.dimensions());
-    DSizes<Index, 4> filter_dims = cd.convWeights.dimensions();
+    ConvolutionParams<4> params(cd.convInput.dimensions(), cd.convWeights.dimensions(), padding, stride, dilation, false);
+    CudnnWorkspace ctx(params);
 
-    // Filter properties
-    cudnnCreateFilterDescriptor(&ctx.filter_desc);
-    checkCudnnErrors(cudnnSetFilter4dDescriptor(ctx.filter_desc, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, filter_dims[0], filter_dims[1], filter_dims[2], filter_dims[3]));
-
-    // Convolution descriptor, set properties
-    cudnnCreateConvolutionDescriptor(&ctx.conv_desc);
-    checkCudnnErrors(cudnnSetConvolution2dDescriptor(ctx.conv_desc, padding, padding, stride, stride, dilation, dilation, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
-
-    // setting cudnn convolution math type
-    // CUDNN_DEFAULT_MATH operates convolution with FP32.
-    // If you use A100, CUDNN utilise tensor cores with TF32.
-    checkCudnnErrors(cudnnSetConvolutionMathType(ctx.conv_desc, CUDNN_DEFAULT_MATH));
-
-    // get convolution output dimensions
-    output_size = set_output_dims(ctx.conv_desc, ctx.input_desc, ctx.filter_desc);
-    DeviceTensor<float, 4, GpuDevice, RowMajor> out(output_size);
-
-    // create output tensor descriptor
-    ctx.output_desc = tensor4d(output_size);
-
-    ctx.set_workspace();
+    DeviceTensor<float, 4, GpuDevice, RowMajor> out(params.output_dims());
 
     // forward convolution
     checkCudnnErrors(cudnnConvolutionForward(ctx.cudnn(), &ctx.one, ctx.input_desc, cd.convInput->data(),

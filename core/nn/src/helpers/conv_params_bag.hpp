@@ -34,7 +34,7 @@ namespace EigenSinn {
     return true;
   }
 
-  template<Index Rank>
+  template<Index Rank = 4>
   class ConvolutionParams {
 
   public:

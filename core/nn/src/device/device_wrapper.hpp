@@ -2,6 +2,11 @@
 
 #include "unsupported/Eigen/CXX11/Tensor"
 #include <thread>
+
+#ifdef EIGEN_USE_GPU
+#include <cudnn/device.hpp>
+#endif
+
 using std::unique_ptr;
 using namespace Eigen;
 
@@ -68,4 +73,28 @@ namespace EigenSinn {
 
   };
 #endif
+
+#ifdef EIGEN_USE_CUDNN
+
+  template<>
+  class DeviceWrapper<GpuDevice> {
+
+  public:
+    DeviceWrapper()
+      : stream()
+      , gpu_device(&stream) {
+
+    }
+
+    GpuDevice& operator()() {
+      return gpu_device;
+    }
+
+  private:
+    CudaStreamDevice stream;
+    GpuDevice gpu_device;
+
+  };
+#endif
+
 }
