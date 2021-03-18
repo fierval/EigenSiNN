@@ -22,7 +22,7 @@ namespace EigenSinn
 #define DEBUG_LOSS      0
 #define DEBUG_ACCURACY  0
 
-#define DEBUG_FIND_ALGO 1
+#define DEBUG_FIND_ALGO 0
 
 /* CUDA API error return checker */
 #ifndef checkCudaErrors
@@ -226,7 +226,7 @@ namespace EigenSinn
       for (int i = 0; i < returnedAlgoCount; i++)
         std::cout << "bwd filter algo[" << i << "] time: " << fwd_algoperf_results[i].time << ", memory: " << fwd_algoperf_results[i].memory << std::endl;
 #else
-      checkCudnnErrors(cudnnGetConvolutionBackwardFilterAlgorithm_v7(cuda_->cudnn(),
+      checkCudnnErrors(cudnnGetConvolutionBackwardFilterAlgorithm_v7(cudnn(),
         input_desc, output_desc, conv_desc, filter_desc,
         algo_max_count, &returnedAlgoCount, &bwd_filter_algoperf_results[0]));
 #endif
@@ -300,13 +300,13 @@ namespace EigenSinn
 
   DSizes<Index, 4> set_output_dims(cudnnConvolutionDescriptor_t conv_desc, cudnnTensorDescriptor_t input_desc, cudnnFilterDescriptor_t filter_desc) {
 
-    std::vector<int> dims(4);
+    int dims[4];
     DSizes<Index, 4> out;
 
     checkCudnnErrors(
       cudnnGetConvolution2dForwardOutputDim(conv_desc, input_desc, filter_desc, &dims[0], &dims[1], &dims[2], &dims[3]));
 
-    for (int i = 0; i < dims.size(); i++) {
+    for (int i = 0; i < 4; i++) {
       out[i] = static_cast<Index>(dims[i]);
     }
     return out;

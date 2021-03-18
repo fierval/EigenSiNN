@@ -26,8 +26,7 @@ namespace EigenSinnTest {
 
   };
 
-#if 0
-  TEST_F(CudnnTest, SimpleConv) {
+  TEST_F(CudnnTest, SimpleConvForward) {
 
     //Create all the descriptors
     // - cudnn
@@ -37,9 +36,11 @@ namespace EigenSinnTest {
     CudaContext ctx;
 
     ctx.input_desc = tensor4d(cd.convInput.dimensions());
-    
+    DSizes<Index, 4> filter_dims = cd.convWeights.dimensions();
+
     // Filter properties
     cudnnCreateFilterDescriptor(&ctx.filter_desc);
+    checkCudnnErrors(cudnnSetFilter4dDescriptor(ctx.filter_desc, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, filter_dims[0], filter_dims[1], filter_dims[2], filter_dims[3]));
 
     // Convolution descriptor, set properties
     cudnnCreateConvolutionDescriptor(&ctx.conv_desc);
@@ -57,14 +58,14 @@ namespace EigenSinnTest {
     // create output tensor descriptor
     ctx.output_desc = tensor4d(output_size);
 
+    ctx.set_workspace();
+
     // forward convolution
     checkCudnnErrors(cudnnConvolutionForward(ctx.cudnn(), &ctx.one, ctx.input_desc, cd.convInput->data(),
       ctx.filter_desc, cd.convWeights->data(), ctx.conv_desc, ctx.conv_fwd_algo, ctx.d_workspace, ctx.workspace_size,
       &ctx.zero, ctx.output_desc, out->data()));
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.output, out));
-    ctx.set_workspace();
    
   }
-#endif
 }
