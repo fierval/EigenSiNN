@@ -37,7 +37,9 @@ namespace EigenSinnTest {
     cudnnTensorDescriptor_t output_desc;
 
     ConvolutionParams<4> params(cd.convInput.dimensions(), cd.convWeights.dimensions(), padding, stride, dilation, false);
-    CudnnWorkspace ctx(params);
+    DeviceWrapper<CudnnDevice> device;
+
+    CudnnWorkspace ctx(device(), params);
 
     DeviceTensor<float, 4, GpuDevice, RowMajor> out(params.output_dims());
 

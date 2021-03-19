@@ -74,27 +74,4 @@ namespace EigenSinn {
   };
 #endif
 
-#ifdef EIGEN_USE_CUDNN
-
-  template<>
-  class DeviceWrapper<GpuDevice> {
-
-  public:
-    DeviceWrapper()
-      : stream()
-      , gpu_device(&stream) {
-
-    }
-
-    GpuDevice& operator()() {
-      return gpu_device;
-    }
-
-  private:
-    CudaStreamDevice stream;
-    GpuDevice gpu_device;
-
-  };
-#endif
-
 }

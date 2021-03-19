@@ -11,7 +11,7 @@ namespace EigenSinn {
 
   struct CudnnWorkspace {
   
-    CudnnWorkspace(ConvolutionParams<4>& params) {
+    CudnnWorkspace(CudnnDevice& _cudnn, ConvolutionParams<4>& params) : cudnn(_cudnn) {
     
       DSizes<Index, 4> kernel_dims = params.dilated_kernel_dims;
       Padding2D padding = params.padding;
@@ -48,7 +48,7 @@ namespace EigenSinn {
 
     }
 
-    static inline CudnnDevice cudnn;
+    CudnnDevice& cudnn;
 
     // weight/bias descriptor
     cudnnFilterDescriptor_t filter_desc;

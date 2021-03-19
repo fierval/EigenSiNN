@@ -56,15 +56,6 @@ namespace EigenSinn {
     inline Device_& get_device() { return device; }
     inline const std::vector<Index>& get_dims() { return dimensions; }
 
-    inline TensorAdapter<Scalar, Device_> clone() {
-
-      // will allocate memory and set dimensions
-      TensorAdapter<Scalar, Device_> out(dimensions);
-      device.memcpy(out.data_, data_, total_size * sizeof(Scalar));
-      return out;
-    }
-
-
   private:
 
     void set_dimensions(const std::vector<Index>& dims) {
