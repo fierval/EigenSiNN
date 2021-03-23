@@ -4,7 +4,7 @@ using namespace EigenSinn;
 using namespace Eigen;
 
 bool should_shuffle = true;
-bool explore_dataset = true;
+bool explore_dataset = false;
 bool debug_init = false;
 
 int main(int argc, char* argv[]) {
@@ -68,6 +68,6 @@ int main(int argc, char* argv[]) {
   } 
   
   // Test
-  TestNetworkSingleBatch(dataset, net, num_classes, classes);
+  TestNetwork(dataset, net, num_classes, classes);
   return 0;
 }
