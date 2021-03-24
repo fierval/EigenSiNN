@@ -6,17 +6,18 @@ message(STATUS "Eigen path: ${EIGEN_PATH}")
 set(TEST_EXE eigentest)
 
 # discover test sources
-#file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "test/*.cu")
-set(TEST_SOURCES 
-    "test/cudnn_test.cu"
+file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "test/*.cu")
+#set(TEST_SOURCES 
+#    "test/cudnn_test.cu"
 #    "test/convlayer_test.cpp"
 #    "test/convlayer_gpu_test.cu"
+#    "test/memory_test_gpu.cu"
 #    "test/convlayer_trans_test.cpp"
 #    "test/convlayer_trans_gpu_test.cu"
 #    "test/maxpooling4d_test.cpp"
 #    "test/maxpooling4d_rowmajor_test.cpp"
 #    "test/maxpooling4d_gpu_test.cu"
-    )
+#    )
 
 message(STATUS "Sources: ${TEST_SOURCES}")
 message(STATUS "CUDA Include: ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
