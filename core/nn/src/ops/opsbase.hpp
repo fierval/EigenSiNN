@@ -4,7 +4,6 @@
 #include <cassert>
 #include <iostream>
 #include <utility>
-#include <any>
 #include <tuple>
 #include <stdexcept>
 #include <cstring>
@@ -13,10 +12,8 @@
 #include <cmath>
 #include <numeric>
 #include <execution>
-#include <type_traits>
 #include <vector>
 #include <array>
-#include <type_traits>
 #include <optional>
 
 using namespace Eigen;
