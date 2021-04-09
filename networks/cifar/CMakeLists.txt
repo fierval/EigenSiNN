@@ -30,7 +30,7 @@ message(STATUS "OpenCV libs: ${OpenCV_LIBS}")
 
 set(APP_EXE simple_cifar)
 
-set(WITH_GPU true)
+set(WITH_GPU false)
 set(COL_MAJOR true)
 
 # discover sources

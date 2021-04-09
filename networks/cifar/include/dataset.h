@@ -123,7 +123,7 @@ inline void explore(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Layout>
     cv::eigen2cv(im8, mat);
 
     cv::cvtColor(mat, clr, cv::COLOR_BGR2RGB);
-    cv::resize(clr, resized, cv::Size(120, 120));
+    cv::resize(clr, resized, cv::Size(600, 600));
 
     cv::imshow("Sample", resized);
     std::cout << "Class: " << classes[dataset.training_labels[i]] << std::endl;
