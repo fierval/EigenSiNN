@@ -79,6 +79,8 @@ namespace EigenSinn {
     set_col_kernel<Scalar, Layout> << <grid, block, 0, device.stream() >> >
       (batches, padding, channels, kernel_height, kernel_width, stride, dilation, *output, *input, out_height, out_width);
 
+    cudaDeviceSynchronize();
+
 #endif
 #ifndef __CUDACC__
   }
@@ -232,6 +234,7 @@ namespace EigenSinn {
     add_and_set_kernel<Scalar, Layout> << < grid, block, 0, device.stream() >> >
       (batch_size, num_batches, channels, stride, padding, dilation, kernel_height, kernel_width, padded_width, *out, *col);
 
+    cudaDeviceSynchronize();
 #endif
 #ifndef __CUDACC__
   }

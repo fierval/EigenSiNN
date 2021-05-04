@@ -11,10 +11,6 @@
 
 using namespace EigenSinn;
 
-#ifdef EIGEN_USE_GPU
-void move_to_host(Cifar10<GpuDevice>& dev_net, Cifar10<DefaultDevice>& host_net);
-#endif
-
 template<typename Device_, int Layout = ColMajor>
 inline void TestNetwork(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Layout>, uint8_t, Layout>& dataset, Cifar10<Device_, Layout>& net, int num_classes, std::vector<cv::String>& classes) {
 
