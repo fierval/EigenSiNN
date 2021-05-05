@@ -9,9 +9,9 @@ bool debug_init = false;
 
 int main(int argc, char* argv[]) {
 
-  size_t batch_size = 10;
+  size_t batch_size = 10, inference_batch_size = 10;
   int side = 32;
-  int num_epochs = 8;
+  int num_epochs = 5;
   int channels = 3;
   float learning_rate = 0.001;
   
@@ -68,6 +68,6 @@ int main(int argc, char* argv[]) {
   } 
   
   // Test
-  TestNetwork(dataset, net, num_classes, classes);
+  TestNetworkSingleBatch(dataset, net, num_classes, classes, inference_batch_size);
   return 0;
 }

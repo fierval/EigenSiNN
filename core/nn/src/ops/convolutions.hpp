@@ -56,8 +56,7 @@ namespace EigenSinn {
     int out_width = out_dims[(int)ImageDims::width];
 
 #ifndef __CUDACC__
-
-    if (!std::is_same<Device_, GpuDevice>::value) {
+    if (is_cpu(input.device())) {
       std::vector<long> h_im_range = params.h_im_range, w_im_range = params.w_im_range;
 
       std::for_each(std::execution::par_unseq, h_im_range.begin(), h_im_range.end(), [&](auto h_im) {
@@ -67,23 +66,19 @@ namespace EigenSinn {
           });
         });
     }
-    else {
 #else
+    if (std::is_same<Device_, GpuDevice>::value) {
+      static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
+      dim3 grid(getGridSize(out_dims[(int)ImageDims::height], block.x), getGridSize(out_dims[(int)ImageDims::width], block.y));
+      Device_ device = output.device();
 
-    static dim3 block(BLOCK_SIZE, BLOCK_SIZE);
-    dim3 grid(getGridSize(out_dims[(int)ImageDims::height], block.x), getGridSize(out_dims[(int)ImageDims::width], block.y));
-    Device_ device = output.device();
+      int out_height = out_dims[(int)ImageDims::height];
 
-    int out_height = out_dims[(int)ImageDims::height];
+      set_col_kernel<Scalar, Layout> << <grid, block, 0, device.stream() >> >
+        (batches, padding, channels, kernel_height, kernel_width, stride, dilation, *output, *input, out_height, out_width);
 
-    set_col_kernel<Scalar, Layout> << <grid, block, 0, device.stream() >> >
-      (batches, padding, channels, kernel_height, kernel_width, stride, dilation, *output, *input, out_height, out_width);
-
-    cudaDeviceSynchronize();
-
-#endif
-#ifndef __CUDACC__
-  }
+      cudaDeviceSynchronize();
+    }
 #endif
     return std::move(output);
   }
@@ -107,19 +102,18 @@ namespace EigenSinn {
 
       dilate_tensor_kernel<Scalar, Layout> << < grid, block, 0, tensor.device().stream() >> > (dims[0], dims[1], dims[2], dims[3], dilation, *dilated, *tensor);
     }
-    else {
-#endif
-      for (Index b = 0; b < dims[0]; b++) {
-        for (Index c = 0; c < dims[1]; c++) {
-          for (Index h = 0; h < dims[2]; h++) {
-            for (Index w = 0; w < dims[3]; w++) {
-              (*dilated)(b, c, h * dilation, w * dilation) = (*tensor)(b, c, h, w);
-            }
-          }
-        }
+#else
+     if(is_cpu(tensor.device())) {
+       for (Index b = 0; b < dims[0]; b++) {
+         for (Index c = 0; c < dims[1]; c++) {
+           for (Index h = 0; h < dims[2]; h++) {
+             for (Index w = 0; w < dims[3]; w++) {
+               (*dilated)(b, c, h * dilation, w * dilation) = (*tensor)(b, c, h, w);
+             }
+           }
+         }
+       }
       }
-#ifdef __CUDACC__
-    }
 #endif
     return dilated;
   }
@@ -213,10 +207,6 @@ namespace EigenSinn {
     Index kernel_height = params.dilated_kernel_height;
     Index kernel_width = params.dilated_kernel_width;
 
-#ifdef __INTELLISENSE__
-#define __CUDACC__
-#endif
-
     // loop over col's batch size at a time
     // figure where it goes into the output
 #ifndef __CUDACC__
@@ -226,18 +216,16 @@ namespace EigenSinn {
         addAndSet<Scalar, Layout, Device_>(batch_size, batch, channels, stride, padding, dilation, kernel_height, kernel_width, padded_width, out, col);
       }
     }
-    else {
 #else
-    static int block(BLOCK_SIZE * BLOCK_SIZE);
-    int grid(getGridSize(num_batches, block));
+    if (std::is_same<Device_, GpuDevice>::value) {
+      static int block(BLOCK_SIZE * BLOCK_SIZE);
+      int grid(getGridSize(num_batches, block));
 
-    add_and_set_kernel<Scalar, Layout> << < grid, block, 0, device.stream() >> >
-      (batch_size, num_batches, channels, stride, padding, dilation, kernel_height, kernel_width, padded_width, *out, *col);
+      add_and_set_kernel<Scalar, Layout> << < grid, block, 0, device.stream() >> >
+        (batch_size, num_batches, channels, stride, padding, dilation, kernel_height, kernel_width, padded_width, *out, *col);
 
-    cudaDeviceSynchronize();
-#endif
-#ifndef __CUDACC__
-  }
+      cudaDeviceSynchronize();
+    }
 #endif
   }
 

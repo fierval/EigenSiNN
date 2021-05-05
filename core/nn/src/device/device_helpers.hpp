@@ -169,4 +169,9 @@ namespace EigenSinn {
     assert(total > 0 && block_size > 0);
     return (total + block_size - 1) / block_size;
   }
+
+  template<typename Device_>
+  EIGEN_DEVICE_FUNC inline bool is_cpu(Device_ device) {
+    return std::is_same<Device_, DefaultDevice>::value || std::is_same<Device_, ThreadPoolDevice>::value;
+  }
 } // EigenSinn
