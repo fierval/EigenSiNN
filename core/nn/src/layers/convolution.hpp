@@ -4,7 +4,7 @@
 #include "ops/convolutions.hpp"
 #include "ops/initializations.hpp"
 #include "helpers/conv_params_bag.hpp"
-
+#include "helpers/cudnn_workspace.hpp"
 
 namespace EigenSinn {
 
@@ -57,7 +57,20 @@ namespace EigenSinn {
         dX.resize(params->orig_dims());
       }
 
-      layer_output = convolve<Scalar, 4, Layout, Device_>(prev_layer, kernel, *params);
+      if (is_cudnn<Device_>()) {
+        if (!cudnn_workspace) {
+          cudnn_workspace = std::make_shared<CudnnWorkspace<Device_>>(prev_layer.device(), *params);
+        }
+
+        layer_output.resize(params->output_dims());
+
+        checkCudnnErrors(cudnnConvolutionForward((*cudnn_workspace)(), &(cudnn_workspace->one), cudnn_workspace->input_desc, prev_layer->data(),
+          cudnn_workspace->filter_desc, kernel->data(), cudnn_workspace->conv_desc, cudnn_workspace->conv_fwd_algo, cudnn_workspace->d_workspace, cudnn_workspace->workspace_size,
+          &(cudnn_workspace->zero), cudnn_workspace->output_desc, layer_output->data()));
+      }
+      else {
+        layer_output = convolve<Scalar, 4, Layout, Device_>(prev_layer, kernel, *params);
+      }
 
       //add bias to each channel
       auto dims = layer_output.dimensions();
@@ -72,6 +85,26 @@ namespace EigenSinn {
 
       DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any.get_output());
       DeviceTensor<Scalar, 4, Device_, Layout> next_layer_grad(next_layer_grad_any);
+
+      //bias
+      loss_by_bias_derivative.view() = next_layer_grad->sum(array<Index, 3>{0, 2, 3});
+
+      if (is_cudnn<Device_>()) {
+
+        // data backwards
+        checkCudnnErrors(cudnnConvolutionBackwardData((*cudnn_workspace)(), &(cudnn_workspace->one), cudnn_workspace->filter_desc, kernel->data(),
+          cudnn_workspace->output_desc, next_layer_grad->data(), cudnn_workspace->conv_desc, cudnn_workspace->conv_bwd_data_algo, 
+          cudnn_workspace->d_workspace, cudnn_workspace->workspace_size, &(cudnn_workspace->zero), cudnn_workspace->input_desc, dX->data()));
+
+        // weights backwards
+        checkCudnnErrors(
+          cudnnConvolutionBackwardFilter((*cudnn_workspace)(), &(cudnn_workspace->one), cudnn_workspace->input_desc, prev_layer->data(), 
+            cudnn_workspace->output_desc, next_layer_grad->data(),
+            cudnn_workspace->conv_desc, cudnn_workspace->conv_bwd_filter_algo, cudnn_workspace->d_workspace, 
+            cudnn_workspace->workspace_size, &(cudnn_workspace->zero), cudnn_workspace->filter_desc, dW->data()));
+        
+        return;
+      }
 
       DeviceTensor<Scalar, 2, Device_, Layout> dout = unfold_conv_res(next_layer_grad);
 
@@ -93,9 +126,6 @@ namespace EigenSinn {
 
       col2im(dX_col, dX, *params, true);
       dW = fold_kernel(dW_col, kernel.dimensions());
-
-      //bias
-      loss_by_bias_derivative.view() = next_layer_grad->sum(array<Index, 3>{0, 2, 3});
     }
 
     PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() override {
@@ -141,5 +171,6 @@ namespace EigenSinn {
 
     // we don't know the input dimension offhand, so default initialization
     std::shared_ptr<ConvolutionParams<4>> params;
+    std::shared_ptr<CudnnWorkspace<Device_>> cudnn_workspace;
   };
 }

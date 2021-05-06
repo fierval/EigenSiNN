@@ -18,7 +18,7 @@ namespace EigenSinnTest {
       cd1p.init();
 
       params = std::make_shared<ConvolutionParams<4>>(cd.convInput.dimensions(), cd.convWeights.dimensions(), padding, stride, dilation, false);
-      W = std::make_shared<CudnnWorkspace>(device(), *params);
+      W = std::make_shared<CudnnWorkspace<CudnnDevice>>(device(), *params);
     }
 
     CommonData4d<CudnnDevice, RowMajor> cd;
@@ -30,7 +30,7 @@ namespace EigenSinnTest {
     std::shared_ptr<ConvolutionParams<4> >params;
     static inline DeviceWrapper<CudnnDevice> device;
 
-    std::shared_ptr<CudnnWorkspace> W;
+    std::shared_ptr<CudnnWorkspace<CudnnDevice>> W;
   };
 
   TEST_F(CudnnTest, SimpleConvForward) {

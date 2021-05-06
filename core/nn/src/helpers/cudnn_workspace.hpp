@@ -9,7 +9,41 @@ const float minus_one = -1.f;
 
 namespace EigenSinn {
 
+  // A template for CudnnWorkspace so code without cuDNN compiles
+  template <typename Device_>
   struct CudnnWorkspace {
+    CudnnWorkspace(Device_& device, ConvolutionParams<4>& params) : cudnn(device)
+    {
+
+    }
+
+    Device_& cudnn;
+
+    // weight/bias descriptor
+    cudnnFilterDescriptor_t filter_desc;
+    cudnnTensorDescriptor_t bias_desc;
+
+    cudnnConvolutionDescriptor_t    conv_desc;
+
+    cudnnConvolutionFwdAlgo_t       conv_fwd_algo;
+    cudnnConvolutionBwdDataAlgo_t   conv_bwd_data_algo;
+    cudnnConvolutionBwdFilterAlgo_t conv_bwd_filter_algo;
+    cudnnTensorDescriptor_t         input_desc;
+    cudnnTensorDescriptor_t         output_desc;
+
+    size_t workspace_size = 0;
+
+    void** d_workspace = nullptr;
+
+    const float one = 1.f;
+    const float zero = 0.f;
+    const float minus_one = -1.f;
+
+    cudnnHandle_t operator()() { return nullptr; }
+  };
+
+  template <>
+  struct CudnnWorkspace<CudnnDevice> {
   
     CudnnWorkspace(CudnnDevice& _cudnn, ConvolutionParams<4>& params) : cudnn(_cudnn) {
     
@@ -69,6 +103,8 @@ namespace EigenSinn {
     const float one = 1.f;
     const float zero = 0.f;
     const float minus_one = -1.f;
+
+    cudnnHandle_t operator()() { return cudnn(); }
 
     private:
       inline void set_workspace()
