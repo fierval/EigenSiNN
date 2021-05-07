@@ -1,6 +1,5 @@
 #pragma once
 
-#include "cudnn/device.hpp"
 #include "conv_params_bag.hpp"
 
 const float one = 1.f;
@@ -9,43 +8,10 @@ const float minus_one = -1.f;
 
 namespace EigenSinn {
 
-  // A template for CudnnWorkspace so code without cuDNN compiles
-  template <typename Device_>
+
   struct CudnnWorkspace {
-    CudnnWorkspace(Device_& device, ConvolutionParams<4>& params) : cudnn(device)
-    {
-
-    }
-
-    Device_& cudnn;
-
-    // weight/bias descriptor
-    cudnnFilterDescriptor_t filter_desc;
-    cudnnTensorDescriptor_t bias_desc;
-
-    cudnnConvolutionDescriptor_t    conv_desc;
-
-    cudnnConvolutionFwdAlgo_t       conv_fwd_algo;
-    cudnnConvolutionBwdDataAlgo_t   conv_bwd_data_algo;
-    cudnnConvolutionBwdFilterAlgo_t conv_bwd_filter_algo;
-    cudnnTensorDescriptor_t         input_desc;
-    cudnnTensorDescriptor_t         output_desc;
-
-    size_t workspace_size = 0;
-
-    void** d_workspace = nullptr;
-
-    const float one = 1.f;
-    const float zero = 0.f;
-    const float minus_one = -1.f;
-
-    cudnnHandle_t operator()() { return nullptr; }
-  };
-
-  template <>
-  struct CudnnWorkspace<CudnnDevice> {
   
-    CudnnWorkspace(CudnnDevice& _cudnn, ConvolutionParams<4>& params) : cudnn(_cudnn) {
+    CudnnWorkspace(ConvolutionParams<4>& params) {
     
       DSizes<Index, 4> kernel_dims = params.dilated_kernel_dims;
       Padding2D padding = params.padding;
@@ -82,8 +48,6 @@ namespace EigenSinn {
 
     }
 
-    CudnnDevice& cudnn;
-
     // weight/bias descriptor
     cudnnFilterDescriptor_t filter_desc;
     cudnnTensorDescriptor_t bias_desc;
@@ -104,7 +68,13 @@ namespace EigenSinn {
     const float zero = 0.f;
     const float minus_one = -1.f;
 
-    cudnnHandle_t operator()() { return cudnn(); }
+     inline static cudnnHandle_t cudnn() {
+      static std::once_flag onceFlag;
+
+      static cudnnHandle_t cudnn_handle;
+      std::call_once(onceFlag, []() {checkCudnnErrors(cudnnCreate(&cudnn_handle)); });
+      return cudnn_handle; 
+    }
 
     private:
       inline void set_workspace()
