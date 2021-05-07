@@ -84,5 +84,4 @@ namespace EigenSinnTest {
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dweight, dweight));
   }
-
 }

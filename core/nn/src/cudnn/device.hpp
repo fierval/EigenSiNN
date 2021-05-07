@@ -94,8 +94,13 @@ namespace EigenSinn {
       return _device.maxBlocks();
     }
 
-    inline bool ok() const {
+    EIGEN_STRONG_INLINE bool ok() const {
       return _device.ok();
+    }
+
+    // For when we need to get the stream explicitly for compilation
+    EIGEN_STRONG_INLINE const cudaStream_t& stream() const {
+      return _device.stream();
     }
 
   private:

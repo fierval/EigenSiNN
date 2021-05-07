@@ -4,14 +4,13 @@
 #include "ops/convolutions.hpp"
 #include "ops/initializations.hpp"
 #include "helpers/conv_params_bag.hpp"
-#include "helpers/cudnn_workspace.hpp"
+#include "convolution_def.hpp"
 
 namespace EigenSinn {
 
-  // REVIEW: Not implementing bias for now
   // Batch normalization layers can take care of bias
-  template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-  class Conv2d : public LayerBase<Scalar, Device_> {
+  template <typename Scalar, typename Device_>
+  class Conv2d<Scalar, Device_, ColMajor> : public LayerBase<Scalar, Device_> {
 
   public:
 
@@ -32,17 +31,17 @@ namespace EigenSinn {
     void init() override {
 
       // Wrapping the pointer and moving it to the tensor keeping in mind the GPU device
-      kernel = generate_xavier<Scalar, 4, Layout, Device_>(kernel.dimensions());
+      kernel = generate_xavier<Scalar, 4, ColMajor, Device_>(kernel.dimensions());
       bias.setZero();
     }
 
-    void init(Tensor<Scalar, 4, Layout>& _weights) {
+    void init(Tensor<Scalar, 4, ColMajor>& _weights) {
       init();
 
       kernel.set_from_host(_weights);
     }
 
-    void init(Tensor<Scalar, 4, Layout>& _weights, Tensor<Scalar, 1, Layout>& _bias) {
+    void init(Tensor<Scalar, 4, ColMajor>& _weights, Tensor<Scalar, 1, ColMajor>& _bias) {
       init(_weights);
 
       bias.set_from_host(_bias);
@@ -50,27 +49,14 @@ namespace EigenSinn {
 
     void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
 
-      DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any.get_output());
+      DeviceTensor<Scalar, 4, Device_, ColMajor> prev_layer(prev_layer_any.get_output());
 
       if(!params || params->check(prev_layer.dimensions())) {
         params = std::make_shared<ConvolutionParams<4>>(prev_layer.dimensions(), kernel.dimensions(), padding, stride, dilation, false);
         dX.resize(params->orig_dims());
       }
 
-      if (is_cudnn<Device_>()) {
-        if (!cudnn_workspace) {
-          cudnn_workspace = std::make_shared<CudnnWorkspace<Device_>>(prev_layer.device(), *params);
-        }
-
-        layer_output.resize(params->output_dims());
-
-        checkCudnnErrors(cudnnConvolutionForward((*cudnn_workspace)(), &(cudnn_workspace->one), cudnn_workspace->input_desc, prev_layer->data(),
-          cudnn_workspace->filter_desc, kernel->data(), cudnn_workspace->conv_desc, cudnn_workspace->conv_fwd_algo, cudnn_workspace->d_workspace, cudnn_workspace->workspace_size,
-          &(cudnn_workspace->zero), cudnn_workspace->output_desc, layer_output->data()));
-      }
-      else {
-        layer_output = convolve<Scalar, 4, Layout, Device_>(prev_layer, kernel, *params);
-      }
+      layer_output = convolve<Scalar, 4, ColMajor, Device_>(prev_layer, kernel, *params);
 
       //add bias to each channel
       auto dims = layer_output.dimensions();
@@ -83,45 +69,28 @@ namespace EigenSinn {
 
     void backward(LayerBase<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
 
-      DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any.get_output());
-      DeviceTensor<Scalar, 4, Device_, Layout> next_layer_grad(next_layer_grad_any);
+      DeviceTensor<Scalar, 4, Device_, ColMajor> prev_layer(prev_layer_any.get_output());
+      DeviceTensor<Scalar, 4, Device_, ColMajor> next_layer_grad(next_layer_grad_any);
 
       //bias
       loss_by_bias_derivative.view() = next_layer_grad->sum(array<Index, 3>{0, 2, 3});
 
-      if (is_cudnn<Device_>()) {
-
-        // data backwards
-        checkCudnnErrors(cudnnConvolutionBackwardData((*cudnn_workspace)(), &(cudnn_workspace->one), cudnn_workspace->filter_desc, kernel->data(),
-          cudnn_workspace->output_desc, next_layer_grad->data(), cudnn_workspace->conv_desc, cudnn_workspace->conv_bwd_data_algo, 
-          cudnn_workspace->d_workspace, cudnn_workspace->workspace_size, &(cudnn_workspace->zero), cudnn_workspace->input_desc, dX->data()));
-
-        // weights backwards
-        checkCudnnErrors(
-          cudnnConvolutionBackwardFilter((*cudnn_workspace)(), &(cudnn_workspace->one), cudnn_workspace->input_desc, prev_layer->data(), 
-            cudnn_workspace->output_desc, next_layer_grad->data(),
-            cudnn_workspace->conv_desc, cudnn_workspace->conv_bwd_filter_algo, cudnn_workspace->d_workspace, 
-            cudnn_workspace->workspace_size, &(cudnn_workspace->zero), cudnn_workspace->filter_desc, dW->data()));
-        
-        return;
-      }
-
-      DeviceTensor<Scalar, 2, Device_, Layout> dout = unfold_conv_res(next_layer_grad);
+      DeviceTensor<Scalar, 2, Device_, ColMajor> dout = unfold_conv_res(next_layer_grad);
 
       // flatten weights and kernel
-      DeviceTensor<Scalar, 2, Device_, Layout> unf_kernel = unfold_kernel(kernel);
-      DeviceTensor<Scalar, 2, Device_, Layout> x_col = im2col(prev_layer, *params);
+      DeviceTensor<Scalar, 2, Device_, ColMajor> unf_kernel = unfold_kernel(kernel);
+      DeviceTensor<Scalar, 2, Device_, ColMajor> x_col = im2col(prev_layer, *params);
 
       // dX: kernel.T * dout
-      DeviceTensor<Scalar, 4, Device_, Layout> dilated = dilate_tensor(kernel, dilation);
-      DeviceTensor<Scalar, 2, Device_, Layout> unf_dilated = unfold_kernel(dilated);
+      DeviceTensor<Scalar, 4, Device_, ColMajor> dilated = dilate_tensor(kernel, dilation);
+      DeviceTensor<Scalar, 2, Device_, ColMajor> unf_dilated = unfold_kernel(dilated);
       ProductDims prod_dims = { IndexPair<int>(0, 0) };
-      DeviceTensor<Scalar, 2, Device_, Layout>  dX_col(unf_dilated.dimension(1), dout.dimension(1));
+      DeviceTensor<Scalar, 2, Device_, ColMajor>  dX_col(unf_dilated.dimension(1), dout.dimension(1));
       dX_col.view() = unf_dilated->contract(*dout, prod_dims);
 
       // dW: dout * x_col.T
       prod_dims = { IndexPair<int>(1, 1) };
-      DeviceTensor<Scalar, 2, Device_, Layout>  dW_col(dout.dimension(0), x_col.dimension(0));
+      DeviceTensor<Scalar, 2, Device_, ColMajor>  dW_col(dout.dimension(0), x_col.dimension(0));
       dW_col.view() = dout->contract(*x_col, prod_dims);
 
       col2im(dX_col, dX, *params, true);
@@ -154,16 +123,16 @@ namespace EigenSinn {
     }
 
     void set_weights(PtrTensorAdapter<Scalar, Device_>& v) override {
-      kernel = DeviceTensor<Scalar, 4, Device_, Layout>(v);
+      kernel = DeviceTensor<Scalar, 4, Device_, ColMajor>(v);
     }
 
     void set_bias(PtrTensorAdapter<Scalar, Device_>& v) override {
-      bias = DeviceTensor<Scalar, 1, Device_, Layout>(v);
+      bias = DeviceTensor<Scalar, 1, Device_, ColMajor>(v);
     }
 
   private:
-    DeviceTensor<Scalar, 4, Device_, Layout> kernel, layer_output, dX, dW;
-    DeviceTensor<Scalar, 1, Device_, Layout> bias, loss_by_bias_derivative;
+    DeviceTensor<Scalar, 4, Device_, ColMajor> kernel, layer_output, dX, dW;
+    DeviceTensor<Scalar, 1, Device_, ColMajor> bias, loss_by_bias_derivative;
 
     const int stride, dilation;
     const Padding2D padding;
@@ -171,6 +140,5 @@ namespace EigenSinn {
 
     // we don't know the input dimension offhand, so default initialization
     std::shared_ptr<ConvolutionParams<4>> params;
-    std::shared_ptr<CudnnWorkspace<Device_>> cudnn_workspace;
   };
 }
