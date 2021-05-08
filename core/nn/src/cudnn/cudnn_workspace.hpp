@@ -1,6 +1,7 @@
 #pragma once
 
-#include "conv_params_bag.hpp"
+#include "helpers/conv_params_bag.hpp"
+#include "common.hpp"
 
 const float one = 1.f;
 const float zero = 0.f;

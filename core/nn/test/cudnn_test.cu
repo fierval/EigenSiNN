@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "device/device_tensor.hpp"
-#include <helpers/cudnn_workspace.hpp>
+#include <cudnn/cudnn_workspace.hpp>
 
 #include "include/commondata4d.hpp"
 #include "include/convdata4d.hpp"
@@ -17,7 +17,7 @@ namespace EigenSinnTest {
       cd.init();
       cd1p.init();
 
-      params = std::make_shared<ConvolutionParams<4>>(cd.convInput.dimensions(), cd.convWeights.dimensions(), padding, stride, dilation, false);
+      params = std::make_shared<ConvolutionParams<4>>(cd.convInput.dimensions(), cd.convWeights.dimensions(), padding, stride, dilation, false, true);
       W = std::make_shared<CudnnWorkspace>(*params);
     }
 

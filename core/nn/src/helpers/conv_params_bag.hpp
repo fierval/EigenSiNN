@@ -40,13 +40,14 @@ namespace EigenSinn {
   public:
     // A bag of convolution parameters and cached values
     ConvolutionParams(const DSizes<Index, Rank>& _in_dims, const DSizes<Index, Rank> _kernel_dims,
-      const Padding2D& _padding, const int _stride, const int _dilation, const bool _is_transposed)
+      const Padding2D& _padding, const int _stride, const int _dilation, const bool _is_transposed, const bool _is_cudnn)
       : input_dims(_in_dims)
       , kernel_dims(_kernel_dims)
       , padding(_padding)
       , stride(_stride)
       , dilation(_dilation)
-      , is_transposed(_is_transposed) {
+      , is_transposed(_is_transposed)
+      , is_cudnn(_is_cudnn) {
 
       get_output_dimensions();
       set_kernel_positions();
@@ -84,6 +85,7 @@ namespace EigenSinn {
     long dilated_kernel_height;
     long dilated_kernel_width;
     const bool is_transposed;
+    const bool is_cudnn;
 
     std::vector<long> h_im_range, w_im_range, col_batches;
 

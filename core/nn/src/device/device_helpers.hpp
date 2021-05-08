@@ -174,9 +174,4 @@ namespace EigenSinn {
   EIGEN_DEVICE_FUNC inline bool is_cpu(Device_ device) {
     return std::is_same<Device_, DefaultDevice>::value || std::is_same<Device_, ThreadPoolDevice>::value;
   }
-
-  template<typename Device_>
-  inline bool is_cudnn() {
-    return std::is_same<Device_, CudnnDevice>::value;
-  }
 } // EigenSinn

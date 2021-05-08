@@ -13,14 +13,17 @@ namespace EigenSinn {
 
   public:
 
-    Conv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const int _stride = 1, const int _dilation = 1)
+    Conv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const int _stride = 1, const int _dilation = 1, const bool _is_cudnn = false)
       : kernel(kernelDims)
       , padding(_padding)
       , stride(_stride)
       , dilation(_dilation)
       , bias(kernelDims[0])
       , bias_broadcast({ 0, 0, 0, 0 })
-      , loss_by_bias_derivative(kernelDims[0]) {
+      , loss_by_bias_derivative(kernelDims[0])
+      , is_cudnn(_is_cudnn) {
+
+      assert(!is_cudnn || Layout & RowMajor);
 
       }
 
@@ -51,7 +54,7 @@ namespace EigenSinn {
       DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any.get_output());
 
       if(!params || params->check(prev_layer.dimensions())) {
-        params = std::make_shared<ConvolutionParams<4>>(prev_layer.dimensions(), kernel.dimensions(), padding, stride, dilation, false);
+        params = std::make_shared<ConvolutionParams<4>>(prev_layer.dimensions(), kernel.dimensions(), padding, stride, dilation, false, is_cudnn);
         dX.resize(params->orig_dims());
       }
 
@@ -139,5 +142,6 @@ namespace EigenSinn {
 
     // we don't know the input dimension offhand, so default initialization
     std::shared_ptr<ConvolutionParams<4>> params;
+    const bool is_cudnn;
   };
 }

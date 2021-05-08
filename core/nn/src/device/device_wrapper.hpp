@@ -3,10 +3,6 @@
 #include "unsupported/Eigen/CXX11/Tensor"
 #include <thread>
 
-#ifdef EIGEN_USE_GPU
-#include <cudnn/device.hpp>
-#endif
-
 using std::unique_ptr;
 using namespace Eigen;
 
