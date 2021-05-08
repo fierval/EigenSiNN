@@ -48,10 +48,10 @@ namespace EigenSinn {
 
     void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
 
-      DeviceTensor<Scalar, 4, Device_, Layout> input(prev_layer_any.get_output());
+      DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any.get_output());
 
-      if (!params || params->check(input.dimensions())) {
-        params = std::make_shared<ConvolutionParams<4>>(input.dimensions(), kernel.dimensions(), padding, stride, dilation, true, is_cudnn);
+      if (!params || params->check(prev_layer.dimensions())) {
+        params = std::make_shared<ConvolutionParams<4>>(prev_layer.dimensions(), kernel.dimensions(), padding, stride, dilation, true, is_cudnn);
         layer_output.resize(params->orig_dims());
         dX.resize(params->output_dims());
         dW.resize(kernel.dimensions());
@@ -73,14 +73,14 @@ namespace EigenSinn {
       if (is_cudnn) {
         // data forward
         checkCudnnErrors(cudnnConvolutionBackwardData(CudnnWorkspace::cudnn(), &(cudnn_workspace->one), cudnn_workspace->filter_desc, kernel->data(),
-          cudnn_workspace->output_desc, input->data(), cudnn_workspace->conv_desc, cudnn_workspace->conv_bwd_data_algo,
+          cudnn_workspace->output_desc, prev_layer->data(), cudnn_workspace->conv_desc, cudnn_workspace->conv_bwd_data_algo,
           cudnn_workspace->d_workspace, cudnn_workspace->workspace_size, &(cudnn_workspace->zero), cudnn_workspace->input_desc, layer_output->data()));
 
       }
       else {
 #endif // EIGEN_USE_GPU
 
-        DeviceTensor<Scalar, 2, Device_, Layout> inp_reshaped = unfold_conv_res<Scalar, Device_, Layout>(input);
+        DeviceTensor<Scalar, 2, Device_, Layout> inp_reshaped = unfold_conv_res<Scalar, Device_, Layout>(prev_layer);
 
         DeviceTensor<Scalar, 4, Device_, Layout> dilated = dilate_tensor(kernel, dilation);
         DeviceTensor<Scalar, 2, Device_, Layout> unf_dilated = unfold_kernel(dilated);
@@ -105,11 +105,32 @@ namespace EigenSinn {
 
       DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any.get_output());
       DeviceTensor<Scalar, 4, Device_, Layout> next_layer_grad(next_layer_grad_any);
+      //bias
+      loss_by_bias_derivative.view() = next_layer_grad->sum(array<Index, 3>{0, 2, 3});
 
-      DeviceTensor<Scalar, 2, Device_, Layout> dout = im2col<Scalar, 4, Device_, Layout>(next_layer_grad, *params);
+#ifdef EIGEN_USE_GPU
+      if (is_cudnn) {
+
+        // data backwards
+        checkCudnnErrors(cudnnConvolutionForward(CudnnWorkspace::cudnn(), &(cudnn_workspace->one), cudnn_workspace->input_desc, next_layer_grad->data(),
+          cudnn_workspace->filter_desc, kernel->data(), cudnn_workspace->conv_desc, cudnn_workspace->conv_fwd_algo, cudnn_workspace->d_workspace, cudnn_workspace->workspace_size,
+          &(cudnn_workspace->zero), cudnn_workspace->output_desc, dX->data()));
+
+        // weights backwards
+        checkCudnnErrors(
+          cudnnConvolutionBackwardFilter(CudnnWorkspace::cudnn(), &(cudnn_workspace->one), cudnn_workspace->input_desc, next_layer_grad->data(),
+            cudnn_workspace->output_desc, prev_layer->data(),
+            cudnn_workspace->conv_desc, cudnn_workspace->conv_bwd_filter_algo, cudnn_workspace->d_workspace,
+            cudnn_workspace->workspace_size, &(cudnn_workspace->zero), cudnn_workspace->filter_desc, dW->data()));
+
+        return;
+      }
+#endif // EIGEN_USE_GPU
 
       // dX: kernel.T.T * dout which is just a regular convolution
       dX = convolve<Scalar, 4, Layout, Device_>(next_layer_grad, kernel, *params);
+
+      DeviceTensor<Scalar, 2, Device_, Layout> dout = im2col<Scalar, 4, Device_, Layout>(next_layer_grad, *params);
 
       // dW: (dout * x_col.T.T)
       DeviceTensor<Scalar, 2, Device_, Layout> inp_reshaped = unfold_conv_res<Scalar, Device_, Layout>(prev_layer);
@@ -119,8 +140,6 @@ namespace EigenSinn {
 
       dW = fold_kernel(dW_col, kernel.dimensions());
 
-      //bias
-      loss_by_bias_derivative.view() = next_layer_grad->sum(array<Index, 3>{0, 2, 3});
     }
 
     PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() override {
