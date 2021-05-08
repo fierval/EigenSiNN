@@ -5,6 +5,10 @@
 #include "ops/initializations.hpp"
 #include "helpers/conv_params_bag.hpp"
 
+#ifdef EIGEN_USE_GPU
+#include "cudnn/cudnn_workspace.hpp"
+#endif
+
 namespace EigenSinn {
 
   // REVIEW: Not implementing bias for now
@@ -45,27 +49,52 @@ namespace EigenSinn {
     void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
 
       DeviceTensor<Scalar, 4, Device_, Layout> input(prev_layer_any.get_output());
-      DeviceTensor<Scalar, 2, Device_, Layout> inp_reshaped = unfold_conv_res<Scalar, Device_, Layout>(input);
 
       if (!params || params->check(input.dimensions())) {
-        params = std::make_shared<ConvolutionParams<4>>(input.dimensions(), kernel.dimensions(), padding, stride, dilation, true);
+        params = std::make_shared<ConvolutionParams<4>>(input.dimensions(), kernel.dimensions(), padding, stride, dilation, true, is_cudnn);
         layer_output.resize(params->orig_dims());
+        dX.resize(params->output_dims());
+        dW.resize(kernel.dimensions());
       }
 
-      DeviceTensor<Scalar, 4, Device_, Layout> dilated = dilate_tensor(kernel, dilation);
-      DeviceTensor<Scalar, 2, Device_, Layout> unf_dilated = unfold_kernel(dilated);
-
-      // transposed convolution: kernel.T * x_col
-      ProductDims prod_dims = { IndexPair<int>(0, 0) };
-      DeviceTensor<Scalar, 2, Device_, Layout>  X_col(unf_dilated.dimension(1), inp_reshaped.dimension(1));
-      X_col.view() = unf_dilated->contract(*inp_reshaped, prod_dims);
-
-      // re-format into the image of output dimensions
-      col2im(X_col, layer_output, *params, true);
-
-      //add bias to each channel
       DSizes<Index, 4> out_dims = params->orig_dims();
+      //add bias to each channel
       bias_broadcast = { out_dims[0], 1, out_dims[2], out_dims[3] };
+
+#ifdef __INTELLISENSE__
+#define EIGEN_USE_GPU
+#endif
+
+#ifdef EIGEN_USE_GPU
+      if (is_cudnn && !cudnn_workspace) {
+        cudnn_workspace = std::make_shared<CudnnWorkspace>(*params);
+      }
+
+      if (is_cudnn) {
+        // data forward
+        checkCudnnErrors(cudnnConvolutionBackwardData(CudnnWorkspace::cudnn(), &(cudnn_workspace->one), cudnn_workspace->filter_desc, kernel->data(),
+          cudnn_workspace->output_desc, input->data(), cudnn_workspace->conv_desc, cudnn_workspace->conv_bwd_data_algo,
+          cudnn_workspace->d_workspace, cudnn_workspace->workspace_size, &(cudnn_workspace->zero), cudnn_workspace->input_desc, layer_output->data()));
+
+      }
+      else {
+#endif // EIGEN_USE_GPU
+
+        DeviceTensor<Scalar, 2, Device_, Layout> inp_reshaped = unfold_conv_res<Scalar, Device_, Layout>(input);
+
+        DeviceTensor<Scalar, 4, Device_, Layout> dilated = dilate_tensor(kernel, dilation);
+        DeviceTensor<Scalar, 2, Device_, Layout> unf_dilated = unfold_kernel(dilated);
+
+        // transposed convolution: kernel.T * x_col
+        ProductDims prod_dims = { IndexPair<int>(0, 0) };
+        DeviceTensor<Scalar, 2, Device_, Layout>  X_col(unf_dilated.dimension(1), inp_reshaped.dimension(1));
+        X_col.view() = unf_dilated->contract(*inp_reshaped, prod_dims);
+
+        // re-format into the image of output dimensions
+        col2im(X_col, layer_output, *params, true);
+#ifdef EIGEN_USE_GPU
+      }
+#endif
 
       // one bias per filter
       layer_output.view() += bias->reshape(array<Index, 4>{ 1, kernel.dimension(1), 1, 1 }).broadcast(bias_broadcast);
@@ -140,6 +169,10 @@ namespace EigenSinn {
     const Padding2D padding;
     array<Index, 4> bias_broadcast;
     std::shared_ptr<ConvolutionParams<4>> params;
-    const bool is_cudnn;
+
+#ifdef EIGEN_USE_GPU
+    std::shared_ptr<CudnnWorkspace> cudnn_workspace;
+#endif
+    bool is_cudnn;
   };
 }
