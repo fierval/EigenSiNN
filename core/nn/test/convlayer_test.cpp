@@ -95,7 +95,7 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(var_expected, var, 1e-4));
   }
 
-  TEST_F(Convolution, unfold_kernel) {
+  TEST_F(Convolution, UnfoldKernel) {
 
     auto unf_kernel = unfold_kernel(cd.convWeights);
     auto folded_kernel = fold_kernel(unf_kernel, cd.kernelDims);
@@ -108,7 +108,7 @@ namespace EigenSinnTest {
     Input<float, 4> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float> conv2d(cd.kernelDims, false, { 1, 1 });
+    Conv2d<float> conv2d(cd.kernelDims, { 1, 1 });
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
@@ -130,7 +130,7 @@ namespace EigenSinnTest {
     Input<float, 4> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float> conv2d(cd.kernelDims, false, { 1, 1 }, 1, 2);
+    Conv2d<float> conv2d(cd.kernelDims, { 1, 1 }, 1, 2);
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
@@ -148,7 +148,7 @@ namespace EigenSinnTest {
     Input<float, 4> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float> conv2d(cd.kernelDims, false, { 1, 1 }, 1, 2);
+    Conv2d<float> conv2d(cd.kernelDims, { 1, 1 }, 1, 2);
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);

@@ -14,7 +14,7 @@ namespace EigenSinn {
 
   public:
 
-    TransConv2d(const array<Index, 4>& kernelDims, const bool _is_cudnn = false, const Padding2D& _padding = { 0, 0 }, const Index _stride = 1, const Index _dilation = 1)
+    TransConv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const Index _stride = 1, const Index _dilation = 1)
       : kernel(kernelDims)
       , padding(_padding)
       , stride(_stride)
@@ -22,9 +22,8 @@ namespace EigenSinn {
       , bias(kernelDims[1])
       , bias_broadcast({ 0, 0, 0, 0 })
       , loss_by_bias_derivative(kernelDims[1])
-      , is_cudnn(_is_cudnn) {
+      , is_cudnn(false) {
     
-      assert(!is_cudnn || Layout & RowMajor);
     }
 
 
@@ -126,6 +125,11 @@ namespace EigenSinn {
 
     void set_bias(PtrTensorAdapter<Scalar, Device_>& v) override {
       bias = DeviceTensor<Scalar, 1, Device_, Layout>(v);
+    }
+
+    inline void set_cudnn(bool _is_cudnn) {
+      assert(!_is_cudnn || Layout & RowMajor);
+      is_cudnn = _is_cudnn;
     }
 
   private:

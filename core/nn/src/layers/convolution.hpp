@@ -17,7 +17,7 @@ namespace EigenSinn {
 
   public:
 
-    Conv2d(const array<Index, 4>& kernelDims, const bool _is_cudnn = false, const Padding2D& _padding = { 0, 0 }, const int _stride = 1, const int _dilation = 1)
+    Conv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const int _stride = 1, const int _dilation = 1)
       : kernel(kernelDims)
       , padding(_padding)
       , stride(_stride)
@@ -25,9 +25,7 @@ namespace EigenSinn {
       , bias(kernelDims[0])
       , bias_broadcast({ 0, 0, 0, 0 })
       , loss_by_bias_derivative(kernelDims[0])
-      , is_cudnn(_is_cudnn) {
-
-      assert(!is_cudnn || Layout & RowMajor);
+      , is_cudnn(false) {
 
       }
 
@@ -154,6 +152,11 @@ namespace EigenSinn {
       bias = DeviceTensor<Scalar, 1, Device_, Layout>(v);
     }
 
+    inline void set_cudnn(bool _is_cudnn) { 
+      assert(!_is_cudnn || Layout & RowMajor);
+      is_cudnn = _is_cudnn; 
+    }
+
   private:
     DeviceTensor<Scalar, 4, Device_, Layout> kernel, layer_output, dX, dW;
     DeviceTensor<Scalar, 1, Device_, Layout> bias, loss_by_bias_derivative;
@@ -167,6 +170,6 @@ namespace EigenSinn {
 #ifdef EIGEN_USE_GPU
     std::shared_ptr<CudnnWorkspace> cudnn_workspace;
 #endif
-    const bool is_cudnn;
+    bool is_cudnn;
   };
 }

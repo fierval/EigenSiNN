@@ -30,7 +30,8 @@ namespace EigenSinnTest {
     Input<float, 4, GpuDevice, RowMajor> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float, GpuDevice, RowMajor> conv2d(cd.kernelDims, true);
+    Conv2d<float, GpuDevice, RowMajor> conv2d(cd.kernelDims);
+    conv2d.set_cudnn(true);
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
@@ -43,7 +44,8 @@ namespace EigenSinnTest {
     Input<float, 4, GpuDevice, RowMajor> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float, GpuDevice, RowMajor> conv2d(cd.kernelDims, true, { 1, 1 }, 1, 2);
+    Conv2d<float, GpuDevice, RowMajor> conv2d(cd.kernelDims, { 1, 1 }, 1, 2);
+    conv2d.set_cudnn(true);
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
@@ -64,7 +66,8 @@ namespace EigenSinnTest {
     Input<float, 4, GpuDevice, RowMajor> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float, GpuDevice, RowMajor> conv2d(cd.kernelDims, true);
+    Conv2d<float, GpuDevice, RowMajor> conv2d(cd.kernelDims);
+    conv2d.set_cudnn(true);
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
@@ -84,7 +87,8 @@ namespace EigenSinnTest {
     Input<float, 4, GpuDevice, RowMajor> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float, GpuDevice, RowMajor> conv2d(cd.kernelDims, true);
+    Conv2d<float, GpuDevice, RowMajor> conv2d(cd.kernelDims);
+    conv2d.set_cudnn(true);
 
     conv2d.init(cd.convWeights.to_host(), cd.bias.to_host());
     conv2d.forward(input);
@@ -101,6 +105,7 @@ namespace EigenSinnTest {
 
     array<Index, 4> kdims = { 1, 512, 3, 3 };
     Conv2d<float, GpuDevice, RowMajor> conv2d(kdims);
+    conv2d.set_cudnn(true);
 
     conv2d.init();
     DeviceTensor<float, 4, GpuDevice, RowMajor> weights(conv2d.get_weights());
@@ -120,7 +125,8 @@ namespace EigenSinnTest {
     Input<float, 4, GpuDevice, RowMajor> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float, GpuDevice, RowMajor> conv2d(cd.kernelDims, true, { 1, 1 });
+    Conv2d<float, GpuDevice, RowMajor> conv2d(cd.kernelDims, { 1, 1 });
+    conv2d.set_cudnn(true);
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
