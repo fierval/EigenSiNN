@@ -49,4 +49,4 @@ target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${Boost_LIBRARIES} cudnn cub
 
 # gtest specific
 set(gtest_force_shared_crt ON)
-#gtest_discover_tests(${TEST_EXE})
+gtest_discover_tests(${TEST_EXE})
