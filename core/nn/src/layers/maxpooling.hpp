@@ -51,7 +51,7 @@ namespace EigenSinn {
         kernel_dims[2] = extents[0];
         kernel_dims[3] = extents[1];
 
-        params = std::make_shared<MaxPoolParams<Rank>>(dims, kernel_dims, padding, stride, dilation);
+        params = std::make_shared<MaxPoolParams<Rank>>(dims, kernel_dims, padding, stride, dilation, false);
 
         // cache input and output dimensions
         out_dims = params->output_dims();
