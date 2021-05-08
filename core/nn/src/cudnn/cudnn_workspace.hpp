@@ -14,7 +14,7 @@ namespace EigenSinn {
   
     CudnnWorkspace(ConvolutionParams<4>& params) {
     
-      DSizes<Index, 4> kernel_dims = params.dilated_kernel_dims;
+      DSizes<Index, 4> kernel_dims = params.kernel_dims;
       Padding2D padding = params.padding;
       int stride = params.stride, dilation = params.dilation;
 

@@ -57,8 +57,11 @@ namespace EigenSinn {
 
       if(!params || params->check(prev_layer.dimensions())) {
         params = std::make_shared<ConvolutionParams<4>>(prev_layer.dimensions(), kernel.dimensions(), padding, stride, dilation, false, is_cudnn);
+
+        // make sure all output tensors are initialized to right sizes
         dX.resize(params->orig_dims());
         dW.resize(kernel.dimensions());
+        layer_output.resize(params->output_dims());
       }
 
 #ifdef EIGEN_USE_GPU
@@ -96,6 +99,24 @@ namespace EigenSinn {
 
       //bias
       loss_by_bias_derivative.view() = next_layer_grad->sum(array<Index, 3>{0, 2, 3});
+
+#ifdef EIGEN_USE_GPU
+      if (is_cudnn) {
+        // data backwards
+        checkCudnnErrors(cudnnConvolutionBackwardData(CudnnWorkspace::cudnn(), &(cudnn_workspace->one), cudnn_workspace->filter_desc, kernel->data(),
+          cudnn_workspace->output_desc, next_layer_grad->data(), cudnn_workspace->conv_desc, cudnn_workspace->conv_bwd_data_algo,
+          cudnn_workspace->d_workspace, cudnn_workspace->workspace_size, &(cudnn_workspace->zero), cudnn_workspace->input_desc, dX->data()));
+
+        // weights backwards
+        checkCudnnErrors(
+          cudnnConvolutionBackwardFilter(CudnnWorkspace::cudnn(), &(cudnn_workspace->one), cudnn_workspace->input_desc, prev_layer->data(),
+            cudnn_workspace->output_desc, next_layer_grad->data(),
+            cudnn_workspace->conv_desc, cudnn_workspace->conv_bwd_filter_algo, cudnn_workspace->d_workspace,
+            cudnn_workspace->workspace_size, &(cudnn_workspace->zero), cudnn_workspace->filter_desc, dW->data()));
+
+        return;
+      }
+#endif // EIGEN_USE_GPU
 
       DeviceTensor<Scalar, 2, Device_, Layout> dout = unfold_conv_res(next_layer_grad);
 
