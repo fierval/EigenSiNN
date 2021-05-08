@@ -5,6 +5,10 @@
 #include "ops/initializations.hpp"
 #include "helpers/conv_params_bag.hpp"
 
+#ifdef EIGEN_USE_GPU
+#include "cudnn/cudnn_workspace.hpp"
+#endif
+
 namespace EigenSinn {
 
   // Batch normalization layers can take care of bias
@@ -13,7 +17,7 @@ namespace EigenSinn {
 
   public:
 
-    Conv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const int _stride = 1, const int _dilation = 1, const bool _is_cudnn = false)
+    Conv2d(const array<Index, 4>& kernelDims, const bool _is_cudnn = false, const Padding2D& _padding = { 0, 0 }, const int _stride = 1, const int _dilation = 1)
       : kernel(kernelDims)
       , padding(_padding)
       , stride(_stride)
@@ -56,9 +60,27 @@ namespace EigenSinn {
       if(!params || params->check(prev_layer.dimensions())) {
         params = std::make_shared<ConvolutionParams<4>>(prev_layer.dimensions(), kernel.dimensions(), padding, stride, dilation, false, is_cudnn);
         dX.resize(params->orig_dims());
+        dW.resize(kernel.dimensions());
       }
 
-      layer_output = convolve<Scalar, 4, Layout, Device_>(prev_layer, kernel, *params);
+#ifdef EIGEN_USE_GPU
+      if (is_cudnn && !cudnn_workspace) {
+        cudnn_workspace = std::make_shared<CudnnWorkspace>(*params);
+      }
+
+
+      if (is_cudnn) {
+        checkCudnnErrors(cudnnConvolutionForward(CudnnWorkspace::cudnn(), &(cudnn_workspace->one), cudnn_workspace->input_desc, prev_layer->data(),
+          cudnn_workspace->filter_desc, kernel->data(), cudnn_workspace->conv_desc, cudnn_workspace->conv_fwd_algo, cudnn_workspace->d_workspace, cudnn_workspace->workspace_size,
+          &(cudnn_workspace->zero), cudnn_workspace->output_desc, layer_output->data()));
+
+      }
+      else {
+#endif
+        layer_output = convolve<Scalar, 4, Layout, Device_>(prev_layer, kernel, *params);
+#ifdef EIGEN_USE_GPU
+      }
+#endif
 
       //add bias to each channel
       auto dims = layer_output.dimensions();
@@ -142,6 +164,9 @@ namespace EigenSinn {
 
     // we don't know the input dimension offhand, so default initialization
     std::shared_ptr<ConvolutionParams<4>> params;
+#ifdef EIGEN_USE_GPU
+    std::shared_ptr<CudnnWorkspace> cudnn_workspace;
+#endif
     const bool is_cudnn;
   };
 }

@@ -10,7 +10,7 @@ set(TEST_EXE eigentest)
 set(TEST_SOURCES 
     "test/cudnn_test.cu"
     "test/convlayer_test.cpp"
-#    "test/convlayer_cudnn_test.cu"
+    "test/convlayer_cudnn_test.cu"
     "test/convlayer_gpu_test.cu"
 #    "test/memory_test_gpu.cu"
 #    "test/convlayer_trans_test.cpp"

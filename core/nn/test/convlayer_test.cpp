@@ -108,7 +108,7 @@ namespace EigenSinnTest {
     Input<float, 4> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float> conv2d(cd.kernelDims, { 1, 1 });
+    Conv2d<float> conv2d(cd.kernelDims, false, { 1, 1 });
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
@@ -130,7 +130,7 @@ namespace EigenSinnTest {
     Input<float, 4> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float> conv2d(cd.kernelDims, { 1, 1 }, 1, 2);
+    Conv2d<float> conv2d(cd.kernelDims, false, { 1, 1 }, 1, 2);
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
@@ -148,7 +148,7 @@ namespace EigenSinnTest {
     Input<float, 4> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float> conv2d(cd.kernelDims, { 1, 1 }, 1, 2);
+    Conv2d<float> conv2d(cd.kernelDims, false, { 1, 1 }, 1, 2);
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);

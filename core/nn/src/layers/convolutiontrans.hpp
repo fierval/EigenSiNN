@@ -14,7 +14,7 @@ namespace EigenSinn {
 
   public:
 
-    TransConv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const Index _stride = 1, const Index _dilation = 1, const bool _is_cudnn = false)
+    TransConv2d(const array<Index, 4>& kernelDims, const bool _is_cudnn = false, const Padding2D& _padding = { 0, 0 }, const Index _stride = 1, const Index _dilation = 1)
       : kernel(kernelDims)
       , padding(_padding)
       , stride(_stride)

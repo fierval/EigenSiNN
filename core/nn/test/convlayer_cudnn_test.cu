@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "layers/convolution_cudnn.hpp"
+#include "layers/convolution.hpp"
 #include "layers/input.hpp"
 #include "include/commondata4d.hpp"
 #include "include/convdata4d.hpp"
@@ -18,8 +18,8 @@ namespace EigenSinnTest {
       cd1p.init();
     }
 
-    CommonData4d<CudnnDevice, RowMajor> cd;
-    ConvDataWith1Padding<CudnnDevice, RowMajor> cd1p;
+    CommonData4d<GpuDevice, RowMajor> cd;
+    ConvDataWith1Padding<GpuDevice, RowMajor> cd1p;
 
     const Padding2D padding = { 0, 0 };
   };
@@ -27,10 +27,10 @@ namespace EigenSinnTest {
 
   TEST_F(ConvolutionCudnn, Forward) {
 
-    Input<float, 4, CudnnDevice, RowMajor> input;
+    Input<float, 4, GpuDevice, RowMajor> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float, CudnnDevice, RowMajor> conv2d(cd.kernelDims);
+    Conv2d<float, GpuDevice, RowMajor> conv2d(cd.kernelDims, true);
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
@@ -40,15 +40,15 @@ namespace EigenSinnTest {
   }
 
   TEST_F(ConvolutionCudnn, Backward1Padding2Dilated) {
-    Input<float, 4, CudnnDevice, RowMajor> input;
+    Input<float, 4, GpuDevice, RowMajor> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float, CudnnDevice, RowMajor> conv2d(cd.kernelDims, { 1, 1 }, 1, 2);
+    Conv2d<float, GpuDevice, RowMajor> conv2d(cd.kernelDims, true, { 1, 1 }, 1, 2);
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
     
-    DeviceTensor<float, 4, CudnnDevice, RowMajor> conv2dout(conv2d.get_output());
+    DeviceTensor<float, 4, GpuDevice, RowMajor> conv2dout(conv2d.get_output());
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.outputDilated2Padded1, conv2dout));
 
@@ -61,10 +61,10 @@ namespace EigenSinnTest {
 
   TEST_F(ConvolutionCudnn, Backward) {
 
-    Input<float, 4, CudnnDevice, RowMajor> input;
+    Input<float, 4, GpuDevice, RowMajor> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float, CudnnDevice, RowMajor> conv2d(cd.kernelDims);
+    Conv2d<float, GpuDevice, RowMajor> conv2d(cd.kernelDims, true);
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
@@ -81,10 +81,10 @@ namespace EigenSinnTest {
 
     cd.init_with_bias();
 
-    Input<float, 4, CudnnDevice, RowMajor> input;
+    Input<float, 4, GpuDevice, RowMajor> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float, CudnnDevice, RowMajor> conv2d(cd.kernelDims);
+    Conv2d<float, GpuDevice, RowMajor> conv2d(cd.kernelDims, true);
 
     conv2d.init(cd.convWeights.to_host(), cd.bias.to_host());
     conv2d.forward(input);
@@ -100,10 +100,10 @@ namespace EigenSinnTest {
   TEST_F(ConvolutionCudnn, Initialization) {
 
     array<Index, 4> kdims = { 1, 512, 3, 3 };
-    Conv2d<float, CudnnDevice, RowMajor> conv2d(kdims);
+    Conv2d<float, GpuDevice, RowMajor> conv2d(kdims);
 
     conv2d.init();
-    DeviceTensor<float, 4, CudnnDevice, RowMajor> weights(conv2d.get_weights());
+    DeviceTensor<float, 4, GpuDevice, RowMajor> weights(conv2d.get_weights());
 
     Tensor<float, 0, RowMajor> avg = weights.to_host().mean();
     
@@ -117,10 +117,10 @@ namespace EigenSinnTest {
 
   TEST_F(ConvolutionCudnn, Backward1Padding) {
 
-    Input<float, 4, CudnnDevice, RowMajor> input;
+    Input<float, 4, GpuDevice, RowMajor> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float, CudnnDevice, RowMajor> conv2d(cd.kernelDims, { 1, 1 });
+    Conv2d<float, GpuDevice, RowMajor> conv2d(cd.kernelDims, true, { 1, 1 });
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
