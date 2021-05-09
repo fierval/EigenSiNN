@@ -52,9 +52,10 @@ namespace EigenSinn {
 
       if (!params || params->check(prev_layer.dimensions())) {
         params = std::make_shared<ConvolutionParams<4>>(prev_layer.dimensions(), kernel.dimensions(), padding, stride, dilation, true, is_cudnn);
-        layer_output.resize(params->orig_dims());
-        dX.resize(params->output_dims());
+
+        dX.resize(params->get_input_dims());
         dW.resize(kernel.dimensions());
+        layer_output.resize(params->get_out_dims());
       }
 
       DSizes<Index, 4> out_dims = params->orig_dims();

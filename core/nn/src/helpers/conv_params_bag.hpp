@@ -69,6 +69,15 @@ namespace EigenSinn {
       return is_transposed ? input_dims : out_dims;
     }
 
+    // straight-up dimensions no matter whether transposed or not
+    inline const DSizes<Index, Rank>& get_input_dims() const {
+      return input_dims;
+    }
+
+    inline const DSizes<Index, Rank>& get_out_dims() const {
+      return out_dims;
+    }
+
     // this can happen if we switch from "train" to "test" mode
     // so our batch may change
     inline bool check(const DSizes<Index, Rank> new_input_dims) {

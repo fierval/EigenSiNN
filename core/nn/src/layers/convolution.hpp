@@ -59,9 +59,9 @@ namespace EigenSinn {
         params = std::make_shared<ConvolutionParams<4>>(prev_layer.dimensions(), kernel.dimensions(), padding, stride, dilation, false, is_cudnn);
 
         // make sure all output tensors are initialized to right sizes
-        dX.resize(params->orig_dims());
+        dX.resize(params->get_input_dims());
         dW.resize(kernel.dimensions());
-        layer_output.resize(params->output_dims());
+        layer_output.resize(params->get_out_dims());
       }
 
 #ifdef EIGEN_USE_GPU
