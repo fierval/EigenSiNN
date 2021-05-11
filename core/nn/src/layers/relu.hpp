@@ -3,6 +3,10 @@
 #include "layer_base.hpp"
 #include "ops/relu.hpp"
 
+#ifdef EIGEN_USE_GPU
+#include "cudnn/cudnn_activations.hpp"
+#endif
+
 using namespace  Eigen;
 
 namespace EigenSinn {
@@ -11,8 +15,9 @@ namespace EigenSinn {
   class LeakyReLU : public LayerBase<Scalar, Device_> {
   public:
     // leaky relu if necessary
-    LeakyReLU(float _thresh = 0.01) :
-      thresh(_thresh) {
+    LeakyReLU(float _thresh = 0.01, bool _is_cudnn = false)
+      : thresh(_thresh)
+      , is_cudnn(_is_cudnn) {
 
     }
 
@@ -45,6 +50,12 @@ namespace EigenSinn {
     float thresh;
     DeviceTensor<Scalar, Rank, Device_, Layout> mask;
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_grad;
+    bool is_cudnn;
+
+#ifdef EIGEN_USE_GPU
+    cudnnTensorDescriptor_t tensor_desc;
+#endif // EIGEN_USE_GPU
+
   };
 
   template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>

@@ -2,10 +2,6 @@
 
 #include "cudnn_workspace.hpp"
 
-const float one = 1.f;
-const float zero = 0.f;
-const float minus_one = -1.f;
-
 namespace EigenSinn {
 
   template <typename Scalar>
@@ -68,7 +64,7 @@ namespace EigenSinn {
         layer_output,
         tensor_desc,
         dx
-        );
+        ));
     }
 
   private:
