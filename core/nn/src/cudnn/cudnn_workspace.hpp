@@ -1,7 +1,7 @@
 #pragma once
 
 #include "helpers/conv_params_bag.hpp"
-#include "common.hpp"
+#include "cudnn_tensor_desc.hpp"
 
 const float one = 1.f;
 const float zero = 0.f;
@@ -12,7 +12,9 @@ namespace EigenSinn {
 
   struct CudnnWorkspace {
   
-    CudnnWorkspace(ConvolutionParams<4>& params) {
+    CudnnWorkspace(ConvolutionParams<4>& params) 
+    : input_desc(params.orig_dims())
+    , output_desc(params.output_dims()) {
     
       DSizes<Index, 4> kernel_dims = params.kernel_dims;
       Padding2D padding = params.padding;
@@ -31,10 +33,6 @@ namespace EigenSinn {
       // If you use A100, CUDNN utilise tensor cores with TF32.
       checkCudnnErrors(cudnnSetConvolutionMathType(conv_desc, CUDNN_DEFAULT_MATH));
 
-      // pick the algorithms and set workspace
-      input_desc = tensor4d(params.orig_dims());
-      output_desc = tensor4d(params.output_dims());
-
       set_workspace();
 
     }
@@ -42,8 +40,6 @@ namespace EigenSinn {
     ~CudnnWorkspace() {
       cudnnDestroyFilterDescriptor(filter_desc);
       cudnnDestroyConvolutionDescriptor(conv_desc);
-      cudnnDestroyTensorDescriptor(input_desc);
-      cudnnDestroyTensorDescriptor(output_desc);
       
       if (d_workspace != nullptr) { cudaFree(d_workspace);	d_workspace = nullptr; }
 
@@ -58,8 +54,8 @@ namespace EigenSinn {
     cudnnConvolutionFwdAlgo_t       conv_fwd_algo;
     cudnnConvolutionBwdDataAlgo_t   conv_bwd_data_algo;
     cudnnConvolutionBwdFilterAlgo_t conv_bwd_filter_algo;
-    cudnnTensorDescriptor_t         input_desc;
-    cudnnTensorDescriptor_t         output_desc;
+    TensorDescWrapper         input_desc;
+    TensorDescWrapper         output_desc;
 
     size_t workspace_size = 0;
 

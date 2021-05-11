@@ -19,11 +19,36 @@ namespace EigenSinn {
       : thresh(_thresh)
       , is_cudnn(_is_cudnn) {
 
+      assert(!is_cudnn || Layout == RowMajor);
+
+#ifdef EIGEN_USE_GPU
+      cudnn_act_mode = CUDNN_ACTIVATION_CLIPPED_RELU;
+#endif // EIGEN_USE_GPU
+
     }
 
     void forward(LayerBase<Scalar, Device_>& prev_layer) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> x(prev_layer.get_output());
+
+#ifdef EIGEN_USE_GPU
+      // no need to allocate output memory if we aren't using cudnn
+      // as the op will allocate it for us
+      if (is_cudnn && !tensor_desc) {
+        layer_output.resize(x.dimensions());
+        layer_grad.resize(x.dimensions());
+
+        tensor_desc.emplace(TensorDescWrapper(x.dimensions()));
+
+        cudnn_act.emplace(CudnnActivations<Scalar>(*tensor_desc, cudnn_act_mode, thresh));
+      }
+
+      if (is_cudnn) {
+        cudnn_act->forward(x->data(), layer_output->data());
+        return;
+      }
+#endif // EIGNE_USE_GPU
+
       auto res = leaky_relu(x, thresh);
 
       layer_output = res.second;
@@ -32,9 +57,14 @@ namespace EigenSinn {
 
     void backward(LayerBase<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {
 
-      DeviceTensor<Scalar, Rank, Device_, Layout> x(next_layer_grad);
-
-      layer_grad = leaky_relu_back(x, mask);
+      DeviceTensor<Scalar, Rank, Device_, Layout> y(next_layer_grad);
+#ifdef EIGEN_USE_GPU
+      if (is_cudnn) {
+        cudnn_act->backward(y->data(), layer_grad->data());
+        return;
+      }
+#endif
+      layer_grad = leaky_relu_back(y, mask);
     }
 
     PtrTensorAdapter<Scalar, Device_> get_output() override {
@@ -46,14 +76,17 @@ namespace EigenSinn {
     };
 
 
-  private:
+
+  protected:
     float thresh;
     DeviceTensor<Scalar, Rank, Device_, Layout> mask;
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_grad;
     bool is_cudnn;
 
 #ifdef EIGEN_USE_GPU
-    cudnnTensorDescriptor_t tensor_desc;
+    cudnnActivationMode_t cudnn_act_mode;
+    std::optional<TensorDescWrapper> tensor_desc;
+    std::optional<CudnnActivations<Scalar>> cudnn_act;
 #endif // EIGEN_USE_GPU
 
   };
@@ -61,7 +94,13 @@ namespace EigenSinn {
   template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class ReLU : public LeakyReLU<Scalar, Rank, Device_, Layout> {
   public:
-    ReLU() : LeakyReLU<Scalar, Rank, Device_, Layout>(0) {}
+    ReLU() : LeakyReLU<Scalar, Rank, Device_, Layout>(0) {
+
+#ifdef EIGEN_USE_GPU
+      cudnn_act_mode = CUDNN_ACTIVATION_RELU;
+#endif // EIGEN_USE_GPU
+
+    }
   };
 
 }
