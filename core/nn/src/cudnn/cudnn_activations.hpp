@@ -12,12 +12,11 @@ namespace EigenSinn {
   class CudnnActivations {
 
   public:
-    CudnnActivations(cudnnTensorDescriptor_t _tensor_desc, cudnnTensorDescriptor_t _dtensor_desc, cudnnActivationMode_t _act_mode, float _relu_coeff =  0.f)
+    CudnnActivations(cudnnTensorDescriptor_t _tensor_desc, cudnnActivationMode_t _act_mode, float _relu_coeff =  0.f)
     : act_mode(_act_mode)
     , cudnn_handle(CudnnWorkspace::cudnn())
     , relu_coeff(_relu_coeff)
-    , tensor_desc(_tensor_desc) 
-    , dtensor_desc(_dtensor_desc) {
+    , tensor_desc(_tensor_desc) {
       
       checkCudnnErrors(cudnnCreateActivationDescriptor(&act_desc));
       checkCudnnErrors(cudnnCreateActivationDescriptor(&act_desc));
@@ -63,7 +62,7 @@ namespace EigenSinn {
         &alpha,
         tensor_desc,
         layer_output,
-        dtensor_desc,
+        tensor_desc,
         dy,
         tensor_desc,
         layer_output,
@@ -77,7 +76,6 @@ namespace EigenSinn {
     cudnnHandle_t cudnn_handle;
     cudnnActivationMode_t act_mode;
     cudnnTensorDescriptor_t tensor_desc;
-    cudnnTensorDescriptor_t dtensor_desc;
     float relu_coeff;
 
     float* prev_layer, * layer_output;
