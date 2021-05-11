@@ -19,7 +19,7 @@ namespace EigenSinn {
       : thresh(_thresh)
       , is_cudnn(_is_cudnn) {
 
-      assert(!is_cudnn || Layout == RowMajor);
+      assert(!is_cudnn || (Layout == RowMajor && Rank > 2));
 
 #ifdef EIGEN_USE_GPU
       cudnn_act_mode = CUDNN_ACTIVATION_CLIPPED_RELU;
@@ -85,7 +85,7 @@ namespace EigenSinn {
 
 #ifdef EIGEN_USE_GPU
     cudnnActivationMode_t cudnn_act_mode;
-    std::optional<TensorDescWrapper> tensor_desc;
+    std::optional<TensorDescWrapper<Rank>> tensor_desc;
     std::optional<CudnnActivations<Scalar>> cudnn_act;
 #endif // EIGEN_USE_GPU
 

@@ -5,10 +5,11 @@
 
 namespace EigenSinn
 {
+	template <int Rank>
 	class TensorDescWrapper
 	{
 	public:
-		TensorDescWrapper(DSizes<Index, 4> dims) {
+		TensorDescWrapper(DSizes<Index, Rank> dims) {
 			tensor_desc = tensor4d(dims);
 		}
 
@@ -19,5 +20,15 @@ namespace EigenSinn
 		operator cudnnTensorDescriptor_t() { return tensor_desc; }
 	private:
 		cudnnTensorDescriptor_t tensor_desc;
+	};
+
+	template<>
+	class TensorDescWrapper<2> {
+
+	public:
+		TensorDescWrapper(DSizes<Index, 2> dims) {
+			
+		}
+		operator cudnnTensorDescriptor_t() { return nullptr; }
 	};
 }
