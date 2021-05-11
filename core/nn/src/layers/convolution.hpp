@@ -71,9 +71,9 @@ namespace EigenSinn {
 
 
       if (is_cudnn) {
-        checkCudnnErrors(cudnnConvolutionForward(CudnnWorkspace::cudnn(), &(cudnn_workspace->one), cudnn_workspace->input_desc, prev_layer->data(),
+        checkCudnnErrors(cudnnConvolutionForward(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one), cudnn_workspace->input_desc, prev_layer->data(),
           cudnn_workspace->filter_desc, kernel->data(), cudnn_workspace->conv_desc, cudnn_workspace->conv_fwd_algo, cudnn_workspace->d_workspace, cudnn_workspace->workspace_size,
-          &(cudnn_workspace->zero), cudnn_workspace->output_desc, layer_output->data()));
+          &(CudnnWorkspace::zero), cudnn_workspace->output_desc, layer_output->data()));
 
       }
       else {
@@ -103,16 +103,16 @@ namespace EigenSinn {
 #ifdef EIGEN_USE_GPU
       if (is_cudnn) {
         // data backwards
-        checkCudnnErrors(cudnnConvolutionBackwardData(CudnnWorkspace::cudnn(), &(cudnn_workspace->one), cudnn_workspace->filter_desc, kernel->data(),
+        checkCudnnErrors(cudnnConvolutionBackwardData(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one), cudnn_workspace->filter_desc, kernel->data(),
           cudnn_workspace->output_desc, next_layer_grad->data(), cudnn_workspace->conv_desc, cudnn_workspace->conv_bwd_data_algo,
-          cudnn_workspace->d_workspace, cudnn_workspace->workspace_size, &(cudnn_workspace->zero), cudnn_workspace->input_desc, dX->data()));
+          cudnn_workspace->d_workspace, cudnn_workspace->workspace_size, &(CudnnWorkspace::zero), cudnn_workspace->input_desc, dX->data()));
 
         // weights backwards
         checkCudnnErrors(
-          cudnnConvolutionBackwardFilter(CudnnWorkspace::cudnn(), &(cudnn_workspace->one), cudnn_workspace->input_desc, prev_layer->data(),
+          cudnnConvolutionBackwardFilter(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one), cudnn_workspace->input_desc, prev_layer->data(),
             cudnn_workspace->output_desc, next_layer_grad->data(),
             cudnn_workspace->conv_desc, cudnn_workspace->conv_bwd_filter_algo, cudnn_workspace->d_workspace,
-            cudnn_workspace->workspace_size, &(cudnn_workspace->zero), cudnn_workspace->filter_desc, dW->data()));
+            cudnn_workspace->workspace_size, &(CudnnWorkspace::zero), cudnn_workspace->filter_desc, dW->data()));
 
         return;
       }

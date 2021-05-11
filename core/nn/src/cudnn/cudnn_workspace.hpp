@@ -44,7 +44,7 @@ namespace EigenSinn {
       cudnnDestroyConvolutionDescriptor(conv_desc);
       cudnnDestroyTensorDescriptor(input_desc);
       cudnnDestroyTensorDescriptor(output_desc);
-
+      
       if (d_workspace != nullptr) { cudaFree(d_workspace);	d_workspace = nullptr; }
 
     }
@@ -65,9 +65,9 @@ namespace EigenSinn {
 
     void** d_workspace = nullptr;
 
-    const float one = 1.f;
-    const float zero = 0.f;
-    const float minus_one = -1.f;
+    static inline const float one = 1.f;
+    static inline const float zero = 0.f;
+    static inline const float minus_one = -1.f;
 
      inline static cudnnHandle_t cudnn() {
       static std::once_flag onceFlag;
