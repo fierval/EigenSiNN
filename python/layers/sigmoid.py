@@ -2,10 +2,7 @@
 import os, sys
 from utils import to_cpp
 
-tstpath = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.insert(0, tstpath)
-
-import tstcommon.commondata2d as cd
+import commondata2d as cd
 import torch
 import torch.nn as nn
 
