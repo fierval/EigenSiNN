@@ -54,8 +54,8 @@ namespace EigenSinn {
     cudnnConvolutionFwdAlgo_t       conv_fwd_algo;
     cudnnConvolutionBwdDataAlgo_t   conv_bwd_data_algo;
     cudnnConvolutionBwdFilterAlgo_t conv_bwd_filter_algo;
-    TensorDescWrapper         input_desc;
-    TensorDescWrapper         output_desc;
+    TensorDescWrapper<4>         input_desc;
+    TensorDescWrapper<4>         output_desc;
 
     size_t workspace_size = 0;
 

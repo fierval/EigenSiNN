@@ -54,7 +54,7 @@ namespace EigenSinn {
     /// <param name="dx"></param>
     void backward(Scalar* dy, Scalar* dx) {
 
-      checkCudnnErrors(cudnnActivationForward(cudnn_handle, 
+      checkCudnnErrors(cudnnActivationBackward(cudnn_handle, 
         act_desc,
         &alpha,
         tensor_desc,
@@ -63,6 +63,7 @@ namespace EigenSinn {
         dy,
         tensor_desc,
         layer_output,
+        &beta,
         tensor_desc,
         dx
         ));
