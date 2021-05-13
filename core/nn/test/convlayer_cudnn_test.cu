@@ -47,6 +47,25 @@ namespace EigenSinnTest {
     Conv2d<float, GpuDevice, RowMajor> conv2d(cd.kernelDims, { 1, 1 }, 1, 2);
     conv2d.set_cudnn(true);
 
+    DeviceTensor<float, 4, GpuDevice, RowMajor> input_tensor(2, 3, 4, 4);
+    input_tensor.setRandom();
+
+    ConvolutionParams<4> params(input_tensor.dimensions(), cd.convWeights.dimensions(), Padding2D{ 1, 1 }, 1, 1, false, true);
+    CudnnWorkspace W(params);
+    DSizes<Index, 4> out_dims = set_output_dims(W.conv_desc, W.input_desc, W.filter_desc);
+    DeviceTensor<float, 4, GpuDevice, RowMajor> layer_output(out_dims);
+    TensorDescWrapper<4> out_desc(out_dims);
+
+    float alpha = 1.0;
+    float beta = 0.0;
+
+    auto err = cudnnConvolutionForward(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one),
+      W.input_desc, input_tensor->data(),
+      W.filter_desc, cd.convWeights->data(),
+      W.conv_desc, W.conv_fwd_algo, W.d_workspace, W.workspace_size,
+      &(CudnnWorkspace::zero),
+      W.output_desc, layer_output->data());
+
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
     
@@ -125,8 +144,24 @@ namespace EigenSinnTest {
     Input<float, 4, GpuDevice, RowMajor> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float, GpuDevice, RowMajor> conv2d(cd.kernelDims, { 1, 1 });
+    Conv2d<float, GpuDevice, RowMajor> conv2d(cd.kernelDims, { 0, 0 });
     conv2d.set_cudnn(true);
+
+    ConvolutionParams<4> params(cd.convInput.dimensions(), cd.convWeights.dimensions(), { 1, 1 }, 1, 1, false, true);
+    CudnnWorkspace W(params);
+    DSizes<Index, 4> out_dims = set_output_dims(W.conv_desc, W.input_desc, W.filter_desc);
+    DeviceTensor<float, 4, GpuDevice, RowMajor> layer_output(out_dims);
+
+    float alpha = 1.0;
+    float beta = 0.0;
+
+    auto err = cudnnConvolutionForward(CudnnWorkspace::cudnn(), &alpha,
+      W.input_desc, cd.convInput->data(),
+      W.filter_desc, cd.convWeights->data(),
+      W.conv_desc, W.conv_fwd_algo, W.d_workspace, W.workspace_size,
+      &beta,
+      W.output_desc, layer_output->data());
+
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);

@@ -71,9 +71,12 @@ namespace EigenSinn {
 
 
       if (is_cudnn) {
-        checkCudnnErrors(cudnnConvolutionForward(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one), cudnn_workspace->input_desc, prev_layer->data(),
-          cudnn_workspace->filter_desc, kernel->data(), cudnn_workspace->conv_desc, cudnn_workspace->conv_fwd_algo, cudnn_workspace->d_workspace, cudnn_workspace->workspace_size,
-          &(CudnnWorkspace::zero), cudnn_workspace->output_desc, layer_output->data()));
+        checkCudnnErrors(cudnnConvolutionForward(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one), 
+          cudnn_workspace->input_desc, prev_layer->data(),
+          cudnn_workspace->filter_desc, kernel->data(), 
+          cudnn_workspace->conv_desc, cudnn_workspace->conv_fwd_algo, cudnn_workspace->d_workspace, cudnn_workspace->workspace_size,
+          &(CudnnWorkspace::zero), 
+          cudnn_workspace->output_desc, layer_output->data()));
 
       }
       else {

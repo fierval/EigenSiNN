@@ -3,10 +3,6 @@
 #include "helpers/conv_params_bag.hpp"
 #include "cudnn_tensor_desc.hpp"
 
-const float one = 1.f;
-const float zero = 0.f;
-const float minus_one = -1.f;
-
 namespace EigenSinn {
 
 
@@ -17,7 +13,8 @@ namespace EigenSinn {
     , output_desc(params.output_dims()) {
     
       DSizes<Index, 4> kernel_dims = params.kernel_dims;
-      Padding2D padding = params.padding;
+      int pad_h = static_cast<int>(params.padding.first);
+      int pad_w = static_cast<int>(params.padding.second);
       int stride = params.stride, dilation = params.dilation;
 
       // Kernel properties
@@ -26,7 +23,7 @@ namespace EigenSinn {
 
       // Convolution descriptor, set properties
       cudnnCreateConvolutionDescriptor(&conv_desc);
-      checkCudnnErrors(cudnnSetConvolution2dDescriptor(conv_desc, padding.first, padding.second, stride, stride, dilation, dilation, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
+      checkCudnnErrors(cudnnSetConvolution2dDescriptor(conv_desc, pad_h, pad_w, stride, stride, dilation, dilation, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
 
       // setting cudnn convolution math type
       // CUDNN_DEFAULT_MATH operates convolution with FP32.
@@ -59,11 +56,11 @@ namespace EigenSinn {
 
     size_t workspace_size = 0;
 
-    void** d_workspace = nullptr;
+    void* d_workspace = nullptr;
 
-    static inline const float one = 1.f;
-    static inline const float zero = 0.f;
-    static inline const float minus_one = -1.f;
+    static inline float one = 1.f;
+    static inline float zero = 0.f;
+    static inline float minus_one = -1.f;
 
      inline static cudnnHandle_t cudnn() {
       static std::once_flag onceFlag;

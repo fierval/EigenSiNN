@@ -17,7 +17,9 @@ namespace EigenSinn
 			checkCudnnErrors(cudnnDestroyTensorDescriptor(tensor_desc));
 		}
 
-		operator cudnnTensorDescriptor_t() { return tensor_desc; }
+		operator cudnnTensorDescriptor_t() { 
+			return tensor_desc; 
+		}
 	private:
 		cudnnTensorDescriptor_t tensor_desc;
 	};
