@@ -85,12 +85,16 @@ namespace EigenSinn {
         int returnedAlgoCount = 0;
 
         checkCudnnErrors(cudnnGetConvolutionForwardAlgorithmMaxCount(cudnn(), &algo_max_count));
-        checkCudnnErrors(cudnnGetConvolutionForwardAlgorithm_v7(cudnn(),
+        checkCudnnErrors(cudnnFindConvolutionForwardAlgorithm(cudnn(),
           input_desc, filter_desc, conv_desc, output_desc,
           algo_max_count, &returnedAlgoCount, &fwd_algoperf_results[0]));
 
         // shoose the fastest algorithm
+        // TODO: the above API returns non-deterministic results
+        // in some cases.
         conv_fwd_algo = fwd_algoperf_results[0].algo;
+        //conv_fwd_algo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
+
         checkCudnnErrors(cudnnGetConvolutionForwardWorkspaceSize(cudnn(),
           input_desc, filter_desc, conv_desc, output_desc,
           conv_fwd_algo, &temp_size));
@@ -99,7 +103,7 @@ namespace EigenSinn {
 
         // bwd - filter
         checkCudnnErrors(cudnnGetConvolutionBackwardFilterAlgorithmMaxCount(cudnn(), &algo_max_count));
-        checkCudnnErrors(cudnnGetConvolutionBackwardFilterAlgorithm_v7(cudnn(),
+        checkCudnnErrors(cudnnFindConvolutionBackwardFilterAlgorithm(cudnn(),
           input_desc, output_desc, conv_desc, filter_desc,
           algo_max_count, &returnedAlgoCount, &bwd_filter_algoperf_results[0]));
 
@@ -111,7 +115,7 @@ namespace EigenSinn {
 
         // bwd - data
         checkCudnnErrors(cudnnGetConvolutionBackwardDataAlgorithmMaxCount(cudnn(), &algo_max_count));
-        checkCudnnErrors(cudnnGetConvolutionBackwardDataAlgorithm_v7(cudnn(),
+        checkCudnnErrors(cudnnFindConvolutionBackwardDataAlgorithm(cudnn(),
           filter_desc, output_desc, conv_desc, input_desc,
           algo_max_count, &returnedAlgoCount, &bwd_data_algoperf_results[0]));
 
