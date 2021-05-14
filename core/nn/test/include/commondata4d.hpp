@@ -1,6 +1,5 @@
 #pragma once
 
-#include <unsupported/Eigen/CXX11/Tensor>
 #include <device/device_tensor.hpp>
 
 using namespace Eigen;
