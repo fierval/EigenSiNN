@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cudnn_workspace.hpp"
+#include "cudnn_tensor_desc.hpp"
 
 namespace EigenSinn {
 
@@ -8,13 +9,12 @@ namespace EigenSinn {
   class CudnnActivations {
 
   public:
-    CudnnActivations(cudnnTensorDescriptor_t _tensor_desc, cudnnActivationMode_t _act_mode, float _relu_coeff =  0.f)
+    CudnnActivations(TensorDescWrapper<4>& _tensor_desc, cudnnActivationMode_t _act_mode, float _relu_coeff =  0.f)
     : act_mode(_act_mode)
     , cudnn_handle(CudnnWorkspace::cudnn())
     , relu_coeff(_relu_coeff)
     , tensor_desc(_tensor_desc) {
       
-      checkCudnnErrors(cudnnCreateActivationDescriptor(&act_desc));
       checkCudnnErrors(cudnnCreateActivationDescriptor(&act_desc));
       checkCudnnErrors(cudnnSetActivationDescriptor(act_desc, act_mode, CUDNN_PROPAGATE_NAN, relu_coeff));
 
@@ -33,6 +33,7 @@ namespace EigenSinn {
     /// <param name="x">Input: Tensor prior to activation</param>
     /// <param name="y">Output: Activation result</param>
     void forward(Scalar* x, Scalar * y) {
+
       checkCudnnErrors(cudnnActivationForward(cudnn_handle,
         act_desc,
         &alpha,
@@ -73,7 +74,9 @@ namespace EigenSinn {
     cudnnActivationDescriptor_t act_desc = nullptr;
     cudnnHandle_t cudnn_handle;
     cudnnActivationMode_t act_mode;
-    cudnnTensorDescriptor_t tensor_desc;
+
+    TensorDescWrapper<4> tensor_desc;
+
     float relu_coeff;
 
     float* prev_layer, * layer_output;

@@ -9,19 +9,42 @@ namespace EigenSinn
 	class TensorDescWrapper
 	{
 	public:
-		TensorDescWrapper(DSizes<Index, Rank> dims) {
+		TensorDescWrapper(DSizes<Index, Rank> _dims) : dims(_dims) {
 			tensor_desc = tensor4d(dims);
 		}
 
 		~TensorDescWrapper() {
-			checkCudnnErrors(cudnnDestroyTensorDescriptor(tensor_desc));
+			if (tensor_desc != nullptr) {
+				checkCudnnErrors(cudnnDestroyTensorDescriptor(tensor_desc));
+			}
 		}
 
 		operator cudnnTensorDescriptor_t() { 
 			return tensor_desc; 
 		}
+
+		TensorDescWrapper(TensorDescWrapper&& d) {
+			if (this == &d) {
+				return;
+			}
+
+			tensor_desc = d.tensor_desc;
+			dims = d.dims;
+			d.tensor_desc = nullptr;
+		}
+
+		TensorDescWrapper(TensorDescWrapper& d) {
+			if (this == &d) {
+				return;
+			}
+
+			tensor_desc = tensor4d(d.dims);
+			dims = d.dims;
+		}
+
 	private:
 		cudnnTensorDescriptor_t tensor_desc;
+		DSizes<Index, Rank> dims;
 	};
 
 	template<>

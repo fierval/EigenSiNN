@@ -19,8 +19,8 @@ namespace EigenSinnTest {
       input.resize(dims);
       reluOutput.resize(dims);
       leakyReluOutput.resize(dims);
-      dreluOutput.resize(dims);
-      dleakyReluOutput.resize(dims);
+      dreluInput.resize(dims);
+      dleakyReluInput.resize(dims);
 
       input.setValues({ {{{ 0.38472944,  0.67100579,  0.03045433,  0.39088044},
           {-0.02941556,  0.51034510,  0.52840817, -0.43537331},
@@ -117,7 +117,7 @@ namespace EigenSinnTest {
           {-1.66577939e-02, -2.25190632e-02,  7.64278829e-01,  2.07678223e+00}}} });
 
 
-      dreluOutput.setValues({ {{{0.04538226, 0.95949411, 0.50452268, 0.59602135},
+      dreluInput.setValues({ {{{0.04538226, 0.95949411, 0.50452268, 0.59602135},
           {0.00000000, 0.73222357, 0.07335120, 0.00000000},
           {0.90876633, 0.00000000, 0.24576986, 0.00000000},
           {0.29745585, 0.00000000, 0.62964255, 0.36631453}},
@@ -148,7 +148,7 @@ namespace EigenSinnTest {
           {0.00000000, 0.00000000, 0.00000000, 0.00000000},
           {0.00000000, 0.00000000, 0.52929527, 0.41473496}}} });
 
-      dleakyReluOutput.setValues({ {{{4.53822613e-02, 9.59494114e-01, 5.04522681e-01, 5.96021354e-01},
+      dleakyReluInput.setValues({ {{{4.53822613e-02, 9.59494114e-01, 5.04522681e-01, 5.96021354e-01},
           {7.47904647e-03, 7.32223570e-01, 7.33511969e-02, 8.56075063e-03},
           {9.08766329e-01, 4.70806751e-03, 2.45769858e-01, 5.90512156e-03},
           {2.97455847e-01, 9.87739209e-03, 6.29642546e-01, 3.66314530e-01}},
@@ -180,10 +180,10 @@ namespace EigenSinnTest {
           {9.38736193e-04, 8.60514957e-03, 5.29295266e-01, 4.14734960e-01}}} });
     }
 
-  private:
+  
     const array<Index, 4> dims = { 2, 3, 4, 4 };
     const float leaky_thres = 1e-2;
-    DeviceTensor<float, 4, Device_, Layout> input, reluOutput, leakyReluOutput, dreluOutput, dleakyReluOutput;
+    DeviceTensor<float, 4, Device_, Layout> input, reluOutput, leakyReluOutput, dreluInput, dleakyReluInput;
   };
 
 }

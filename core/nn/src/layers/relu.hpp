@@ -38,9 +38,9 @@ namespace EigenSinn {
         layer_output.resize(x.dimensions());
         layer_grad.resize(x.dimensions());
 
-        tensor_desc.emplace(TensorDescWrapper(x.dimensions()));
+        tensor_desc = std::make_shared<TensorDescWrapper<Rank>>(x.dimensions());
 
-        cudnn_act.emplace(CudnnActivations<Scalar>(*tensor_desc, cudnn_act_mode, thresh));
+        cudnn_act = std::make_shared<CudnnActivations<Scalar>>(*tensor_desc, cudnn_act_mode, thresh);
       }
 
       if (is_cudnn) {
@@ -85,8 +85,8 @@ namespace EigenSinn {
 
 #ifdef EIGEN_USE_GPU
     cudnnActivationMode_t cudnn_act_mode;
-    std::optional<TensorDescWrapper<Rank>> tensor_desc;
-    std::optional<CudnnActivations<Scalar>> cudnn_act;
+    std::shared_ptr<TensorDescWrapper<Rank>> tensor_desc;
+    std::shared_ptr<CudnnActivations<Scalar>> cudnn_act;
 #endif // EIGEN_USE_GPU
 
   };
@@ -94,7 +94,7 @@ namespace EigenSinn {
   template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class ReLU : public LeakyReLU<Scalar, Rank, Device_, Layout> {
   public:
-    ReLU() : LeakyReLU<Scalar, Rank, Device_, Layout>(0) {
+    ReLU(bool _is_cudnn = false) : LeakyReLU<Scalar, Rank, Device_, Layout>(0, _is_cudnn) {
 
 #ifdef EIGEN_USE_GPU
       cudnn_act_mode = CUDNN_ACTIVATION_RELU;
