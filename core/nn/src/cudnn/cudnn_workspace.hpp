@@ -85,7 +85,7 @@ namespace EigenSinn {
         int returnedAlgoCount = 0;
 
         checkCudnnErrors(cudnnGetConvolutionForwardAlgorithmMaxCount(cudnn(), &algo_max_count));
-        checkCudnnErrors(cudnnFindConvolutionForwardAlgorithm(cudnn(),
+        checkCudnnErrors(cudnnGetConvolutionForwardAlgorithm_v7(cudnn(),
           input_desc, filter_desc, conv_desc, output_desc,
           algo_max_count, &returnedAlgoCount, &fwd_algoperf_results[0]));
 
@@ -103,7 +103,7 @@ namespace EigenSinn {
 
         // bwd - filter
         checkCudnnErrors(cudnnGetConvolutionBackwardFilterAlgorithmMaxCount(cudnn(), &algo_max_count));
-        checkCudnnErrors(cudnnFindConvolutionBackwardFilterAlgorithm(cudnn(),
+        checkCudnnErrors(cudnnGetConvolutionBackwardFilterAlgorithm_v7(cudnn(),
           input_desc, output_desc, conv_desc, filter_desc,
           algo_max_count, &returnedAlgoCount, &bwd_filter_algoperf_results[0]));
 
@@ -115,7 +115,7 @@ namespace EigenSinn {
 
         // bwd - data
         checkCudnnErrors(cudnnGetConvolutionBackwardDataAlgorithmMaxCount(cudnn(), &algo_max_count));
-        checkCudnnErrors(cudnnFindConvolutionBackwardDataAlgorithm(cudnn(),
+        checkCudnnErrors(cudnnGetConvolutionBackwardDataAlgorithm_v7(cudnn(),
           filter_desc, output_desc, conv_desc, input_desc,
           algo_max_count, &returnedAlgoCount, &bwd_data_algoperf_results[0]));
 

@@ -5,7 +5,7 @@
 #include "ops/initializations.hpp"
 #include "helpers/conv_params_bag.hpp"
 
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
 #include "cudnn/cudnn_workspace.hpp"
 #endif
 
@@ -64,7 +64,7 @@ namespace EigenSinn {
         layer_output.resize(params->get_out_dims());
       }
 
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
       if (is_cudnn && !cudnn_workspace) {
         cudnn_workspace = std::make_shared<CudnnWorkspace>(*params);
       }
@@ -82,7 +82,7 @@ namespace EigenSinn {
       else {
 #endif
         layer_output = convolve<Scalar, 4, Layout, Device_>(prev_layer, kernel, *params);
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
       }
 #endif
 
@@ -103,7 +103,7 @@ namespace EigenSinn {
       //bias
       loss_by_bias_derivative.view() = next_layer_grad->sum(array<Index, 3>{0, 2, 3});
 
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
       if (is_cudnn) {
         // data backwards
         checkCudnnErrors(cudnnConvolutionBackwardData(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one), cudnn_workspace->filter_desc, kernel->data(),
@@ -119,7 +119,7 @@ namespace EigenSinn {
 
         return;
       }
-#endif // EIGEN_USE_GPU
+#endif // __CUDACC__
 
       DeviceTensor<Scalar, 2, Device_, Layout> dout = unfold_conv_res(next_layer_grad);
 
@@ -191,7 +191,7 @@ namespace EigenSinn {
 
     // we don't know the input dimension offhand, so default initialization
     std::shared_ptr<ConvolutionParams<4>> params;
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
     std::shared_ptr<CudnnWorkspace> cudnn_workspace;
 #endif
     bool is_cudnn;
