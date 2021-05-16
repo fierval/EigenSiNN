@@ -5,11 +5,11 @@
 
 namespace EigenSinn {
 
-  template <typename Scalar>
+  template <typename Scalar, int Rank=4>
   class CudnnActivations {
 
   public:
-    CudnnActivations(TensorDescWrapper<4>& _tensor_desc, cudnnActivationMode_t _act_mode, float _relu_coeff =  0.f)
+    CudnnActivations(TensorDescWrapper<Rank>& _tensor_desc, cudnnActivationMode_t _act_mode, float _relu_coeff =  0.f)
     : act_mode(_act_mode)
     , cudnn_handle(CudnnWorkspace::cudnn())
     , relu_coeff(_relu_coeff)
@@ -75,7 +75,7 @@ namespace EigenSinn {
     cudnnHandle_t cudnn_handle;
     cudnnActivationMode_t act_mode;
 
-    TensorDescWrapper<4> tensor_desc;
+    TensorDescWrapper<Rank> tensor_desc;
 
     float relu_coeff;
 

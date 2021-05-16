@@ -7,8 +7,10 @@ set(TEST_EXE eigentest)
 
 # discover test sources
 file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "test/*.cu")
-set(TEST_SOURCES 
-     "test/relu4d_gpu_test.cu"
+#set(TEST_SOURCES 
+#    "test/sigmoid_gpu_test.cu"
+#    "test/sigmoid4d_gpu_test.cu"
+#    "test/sigmoid_test.cpp"
 #    "test/cudnn_test.cu"
 #    "test/convlayer_test.cpp"
 #    "test/convlayer_cudnn_test.cu"
@@ -20,7 +22,7 @@ set(TEST_SOURCES
 #    "test/maxpooling4d_test.cpp"
 #    "test/maxpooling4d_rowmajor_test.cpp"
 #    "test/maxpooling4d_gpu_test.cu"
-    )
+#    )
 
 message(STATUS "Sources: ${TEST_SOURCES}")
 message(STATUS "CUDA Include: ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")

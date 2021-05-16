@@ -3,7 +3,7 @@
 #include "layer_base.hpp"
 #include "ops/relu.hpp"
 
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
 #include "cudnn/cudnn_activations.hpp"
 #endif
 
@@ -28,7 +28,7 @@ namespace EigenSinn {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> x(prev_layer.get_output());
 
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
       // no need to allocate output memory if we aren't using cudnn
       // as the op will allocate it for us
       if (is_cudnn && !tensor_desc) {
@@ -37,7 +37,7 @@ namespace EigenSinn {
 
         tensor_desc = std::make_shared<TensorDescWrapper<Rank>>(x.dimensions());
 
-        cudnn_act = std::make_shared<CudnnActivations<Scalar>>(*tensor_desc, cudnn_act_mode, thresh);
+        cudnn_act = std::make_shared<CudnnActivations<Scalar, Rank>>(*tensor_desc, cudnn_act_mode, thresh);
       }
 
       if (is_cudnn) {
@@ -55,7 +55,7 @@ namespace EigenSinn {
     void backward(LayerBase<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> y(next_layer_grad);
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
       if (is_cudnn) {
         cudnn_act->backward(y->data(), layer_grad->data());
         return;
@@ -80,11 +80,11 @@ namespace EigenSinn {
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_grad;
     bool is_cudnn;
 
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
     cudnnActivationMode_t cudnn_act_mode = CUDNN_ACTIVATION_RELU;
     std::shared_ptr<TensorDescWrapper<Rank>> tensor_desc;
-    std::shared_ptr<CudnnActivations<Scalar>> cudnn_act;
-#endif // EIGEN_USE_GPU
+    std::shared_ptr<CudnnActivations<Scalar, Rank>> cudnn_act;
+#endif // __CUDACC__
 
   };
 
