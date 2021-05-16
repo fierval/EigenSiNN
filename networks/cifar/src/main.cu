@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
 
   size_t batch_size = 10, inference_batch_size = 1;
   int side = 32;
-  int num_epochs = 3;
+  int num_epochs = 5;
   int channels = 3;
   float learning_rate = 0.001;
   
