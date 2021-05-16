@@ -19,11 +19,8 @@ namespace EigenSinn {
       : thresh(_thresh)
       , is_cudnn(_is_cudnn) {
 
-      assert(!is_cudnn || (Layout == RowMajor && Rank > 2));
-
-#ifdef EIGEN_USE_GPU
-      cudnn_act_mode = CUDNN_ACTIVATION_CLIPPED_RELU;
-#endif // EIGEN_USE_GPU
+      // no LeakyReLU implementation in cuDNN
+      assert(!is_cudnn || (Layout == RowMajor && Rank > 2 && thresh == 0));
 
     }
 
@@ -84,7 +81,7 @@ namespace EigenSinn {
     bool is_cudnn;
 
 #ifdef EIGEN_USE_GPU
-    cudnnActivationMode_t cudnn_act_mode;
+    cudnnActivationMode_t cudnn_act_mode = CUDNN_ACTIVATION_RELU;
     std::shared_ptr<TensorDescWrapper<Rank>> tensor_desc;
     std::shared_ptr<CudnnActivations<Scalar>> cudnn_act;
 #endif // EIGEN_USE_GPU
@@ -96,9 +93,6 @@ namespace EigenSinn {
   public:
     ReLU(bool _is_cudnn = false) : LeakyReLU<Scalar, Rank, Device_, Layout>(0, _is_cudnn) {
 
-#ifdef EIGEN_USE_GPU
-      cudnn_act_mode = CUDNN_ACTIVATION_RELU;
-#endif // EIGEN_USE_GPU
 
     }
   };

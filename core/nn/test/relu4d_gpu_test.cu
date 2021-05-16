@@ -54,15 +54,19 @@ namespace EigenSinnTest {
 
   }
 
-  TEST_F(ReLU4dGpu, ForwardCudnn) {
+  TEST_F(ReLU4dGpu, BackwardLeakyRelu) {
 
     Input<float, 4, GpuDevice, RowMajor> input;
     input.set_input(rd.input);
 
-    ReLU<float, 4, GpuDevice, RowMajor> rl(true);
+    LeakyReLU<float, 4, GpuDevice, RowMajor> rl(rd.leaky_thres, false);
     rl.init();
     rl.forward(input);
-    EXPECT_TRUE(is_elementwise_approx_eq(rl.get_output(), rd.reluOutput, 3e-5));
-  }
+    EXPECT_TRUE(is_elementwise_approx_eq(rl.get_output(), rd.leakyReluOutput, 3e-5));
 
+    rl.backward(input, cd.convInput.raw());
+
+    EXPECT_TRUE(is_elementwise_approx_eq(rl.get_loss_by_input_derivative(), rd.dleakyReluInput, 3e-5));
+
+  }
 }
