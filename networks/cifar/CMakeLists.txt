@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.19.4)
+cmake_minimum_required(VERSION 3.20.2)
 project(cifar LANGUAGES CXX CUDA)
 
 #set( CMAKE_TOOLCHAIN_FILE "C:/git/NN/vcpkg/scripts/buildsystems/vcpkg.cmake" )
@@ -7,7 +7,7 @@ find_package(OpenCV REQUIRED)
 
 # CIFAR10 reader 
 # Clone https://github.com/wichtounet/cifar-10
-# and point cmake to the repo root
+# and point cmake to the location of cifar-10-batches-bin
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -66,4 +66,4 @@ endif()
 
 target_compile_definitions(${APP_EXE} PRIVATE ${COMPILE_DEFS})
 target_include_directories(${APP_EXE} PRIVATE ${OpenCV_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS} ${EIGENSINN_INCLUDE_DIR} ${CUR_INCLUDE_DIR})
-target_link_libraries(${APP_EXE} PUBLIC ${OpenCV_LIBS})
+target_link_libraries(${APP_EXE} PUBLIC ${OpenCV_LIBS} cudnn)
