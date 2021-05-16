@@ -72,7 +72,7 @@ inline void TestNetwork(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Lay
 }
 
 template<typename Device_, int Layout = ColMajor>
-inline void TestNetworkSingleBatch(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Layout>, uint8_t, Layout>& dataset, Cifar10<Device_, Layout>& net, int num_classes, std::vector<cv::String>& classes, size_t batch_size) {
+inline void TestNetworkSingleBatch(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Layout>, uint8_t, Layout>& dataset, Cifar10<Device_, Layout>& net, int num_classes, std::vector<cv::String>& classes) {
 
   std::cout << "Starting test..." << std::endl;
 
@@ -83,10 +83,10 @@ inline void TestNetworkSingleBatch(cifar::CIFAR10_dataset<std::vector, Tensor<fl
   n_correct.setZero();
   n_samples.setZero();
 
-  for (int i = 0; i < total_size; i+= batch_size) {
+  for (int i = 0; i < total_size; i++) {
 
-    DeviceTensor<float, 4, Device_, Layout> batch_tensor(create_batch_tensor(dataset.test_images, i, batch_size));
-    Tensor<int, 1, Layout> label_tensor = create_1d_label_tensor<uint8_t, Layout>(dataset.test_labels).template cast<int>().slice(DSizes<Index, 1>{ i }, DSizes<Index, 1>{ static_cast<Index>(batch_size) });
+    DeviceTensor<float, 4, Device_, Layout> batch_tensor(create_batch_tensor(dataset.test_images, i, 1));
+    Tensor<int, 1, Layout> label_tensor = create_1d_label_tensor<uint8_t, Layout>(dataset.test_labels).template cast<int>().slice(DSizes<Index, 1>{ i }, DSizes<Index, 1>{ 1 });
 
     net.set_input(batch_tensor);
     net.forward();
@@ -109,7 +109,7 @@ inline void TestNetworkSingleBatch(cifar::CIFAR10_dataset<std::vector, Tensor<fl
   }
 
   // overall accuracy
-    std::cout << "Accuracy: " << static_cast<float>(correct_predictions) / total_size << std::endl;
+  std::cout << "Accuracy: " << static_cast<float>(correct_predictions) / total_size << std::endl;
 
   // accuracy by class
   accuracy = n_correct / n_samples;

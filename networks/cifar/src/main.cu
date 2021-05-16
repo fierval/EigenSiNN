@@ -9,9 +9,9 @@ bool debug_init = false;
 
 int main(int argc, char* argv[]) {
 
-  size_t batch_size = 10, inference_batch_size = 10;
+  size_t batch_size = 10, inference_batch_size = 1;
   int side = 32;
-  int num_epochs = 5;
+  int num_epochs = 3;
   int channels = 3;
   float learning_rate = 0.001;
   
@@ -34,7 +34,6 @@ int main(int argc, char* argv[]) {
 
   // Train
   for (int i = 0; i < num_epochs; i++) {
-
     start = std::chrono::high_resolution_clock::now();
     start_step = std::chrono::high_resolution_clock::now();
     
@@ -68,6 +67,7 @@ int main(int argc, char* argv[]) {
   } 
   
   // Test
-  TestNetworkSingleBatch(dataset, net, num_classes, classes, inference_batch_size);
+  TestNetworkSingleBatch(dataset, net, num_classes, classes);
+  //TestNetwork(dataset, net, num_classes, classes);
   return 0;
 }
