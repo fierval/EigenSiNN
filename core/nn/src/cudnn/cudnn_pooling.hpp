@@ -9,7 +9,7 @@ namespace EigenSinn {
   class CudnnPooling {
 
   public:
-    CudnnPooling(DSizes<Index, Rank> in_dims, DSizes<Index, Rank> out_dims, cudnnPoolingMode_t _pooling_mode, MaxPoolParams& params)
+    CudnnPooling(DSizes<Index, Rank> in_dims, DSizes<Index, Rank> out_dims, cudnnPoolingMode_t _pooling_mode, MaxPoolParams<Rank>& params)
     : cudnn_handle(CudnnWorkspace::cudnn())
     , pooling_mode(_pooling_mode)
     , in_desc(in_dims)
@@ -17,7 +17,17 @@ namespace EigenSinn {
       
       if (Rank < 4) { return; }
       checkCudnnErrors(cudnnCreatePoolingDescriptor(&pooling_desc));
-      checkCudnnErrors(cudnnSetPooling2dDescriptor(pooling_desc, pooling_mode, params.kernel_dims[2], params.kernel_dims[3], params.padding.first, params.padding.second, params.stride, params.stride));
+      checkCudnnErrors(
+        cudnnSetPooling2dDescriptor(
+          pooling_desc, 
+          pooling_mode, 
+          CUDNN_PROPAGATE_NAN,
+          params.kernel_dims[2], 
+          params.kernel_dims[3], 
+          params.padding.first, 
+          params.padding.second, 
+          params.stride, 
+          params.stride));
 
     }
 
@@ -35,13 +45,13 @@ namespace EigenSinn {
     /// <param name="y">Output: Activation result</param>
     void forward(Scalar* x, Scalar * y) {
 
-      checkCudnnErrors(cudnnActivationForward(cudnn_handle,
-        act_desc,
+      checkCudnnErrors(cudnnPoolingForward(cudnn_handle,
+        pooling_desc,
         &alpha,
-        tensor_desc,
+        in_desc,
         x,
         &beta,
-        tensor_desc,
+        out_desc,
         y));
 
       prev_layer = x;
@@ -56,17 +66,17 @@ namespace EigenSinn {
     /// <param name="dx"></param>
     void backward(Scalar* dy, Scalar* dx) {
 
-      checkCudnnErrors(cudnnActivationBackward(cudnn_handle, 
-        act_desc,
+      checkCudnnErrors(cudnnPoolingBackward(cudnn_handle, 
+        pooling_desc,
         &alpha,
-        tensor_desc,
+        out_desc,
         layer_output,
-        tensor_desc,
+        out_desc,
         dy,
-        tensor_desc,
-        layer_output,
+        in_desc,
+        prev_layer,
         &beta,
-        tensor_desc,
+        in_desc,
         dx
         ));
     }

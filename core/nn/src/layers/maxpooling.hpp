@@ -103,11 +103,11 @@ namespace EigenSinn {
       else {
 #else
       if (is_cudnn && !cudnn_pooling) {
-        cudnn_pooling = std::make_shared<CudnnPooling<Scalar, Rank>>(dims, out_dims, CUDNN_POOLING_MAX, params);
+        cudnn_pooling = std::make_shared<CudnnPooling<Scalar, Rank>>(dims, out_dims, CUDNN_POOLING_MAX, *params);
       }
 
       if (is_cudnn) {
-        cudnn_pooling->forward(x, layer_output);
+        cudnn_pooling->forward(x->data(), layer_output->data());
         return;
       }
 
@@ -145,7 +145,7 @@ namespace EigenSinn {
 #else
 
     if (is_cudnn) {
-      cudnn_pooling->backward(x, layer_gradient);
+      cudnn_pooling->backward(x->data(), layer_gradient->data());
       return;
     }
 
