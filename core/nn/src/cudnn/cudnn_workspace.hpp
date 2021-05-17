@@ -5,6 +5,23 @@
 
 namespace EigenSinn {
 
+  struct CudnnConvWorkspaceWrapper {
+    CudnnConvWorkspaceWrapper(size_t size)  
+    : workspace_size(size) {
+
+      checkCudaErrors(cudaMalloc((void**)&d_workspace, workspace_size));
+    }
+
+    ~CudnnConvWorkspaceWrapper() {
+      if (d_workspace != nullptr) { cudaFree(d_workspace); }
+    }
+
+    operator void* () { return d_workspace; }
+
+    void* d_workspace = nullptr;
+    size_t workspace_size;
+
+  };
 
   struct CudnnWorkspace {
 
@@ -37,9 +54,6 @@ namespace EigenSinn {
     ~CudnnWorkspace() {
       cudnnDestroyFilterDescriptor(filter_desc);
       cudnnDestroyConvolutionDescriptor(conv_desc);
-
-      if (d_workspace != nullptr) { cudaFree(d_workspace);	d_workspace = nullptr; }
-
     }
 
     // weight/bias descriptor
@@ -56,7 +70,7 @@ namespace EigenSinn {
 
     static inline std::mutex workspace_mutex;
     static inline size_t workspace_size = 0;
-    static inline void* d_workspace = nullptr;
+    static inline std::unique_ptr<CudnnConvWorkspaceWrapper> d_workspace;
 
     static inline float one = 1.f;
     static inline float zero = 0.f;
@@ -133,10 +147,7 @@ namespace EigenSinn {
       if (cur_workspace_size > 0 && cur_workspace_size > workspace_size)
       {
         workspace_size = cur_workspace_size;
-        if (d_workspace != nullptr) {
-          checkCudaErrors(cudaFree(d_workspace));
-        }
-        checkCudaErrors(cudaMalloc((void**)&d_workspace, workspace_size));
+        d_workspace.reset(new CudnnConvWorkspaceWrapper(workspace_size));
       }
 
     }

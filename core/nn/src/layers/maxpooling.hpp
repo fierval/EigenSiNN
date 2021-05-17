@@ -186,7 +186,7 @@ PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
     bool is_cudnn;
 
 #ifdef __CUDACC__
-    std::shared_ptr<CudnnPooling> cudnn_pooling;
+    std::shared_ptr<CudnnPooling<Scalar, Rank>> cudnn_pooling;
     inline void set_cudnn(bool _is_cudnn) {
       assert(!_is_cudnn || Rank > 2 && Layout == RowMajor);
 
