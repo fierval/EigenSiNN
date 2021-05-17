@@ -171,6 +171,14 @@ PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
   return layer_gradient.raw();
 }
 
+#ifdef __CUDACC__
+    std::shared_ptr<CudnnPooling<Scalar, Rank>> cudnn_pooling;
+    inline void set_cudnn(bool _is_cudnn) {
+      assert(!_is_cudnn || Rank > 2 && Layout == RowMajor);
+
+      is_cudnn = _is_cudnn;
+    }
+#endif
 
   private:
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_gradient;
@@ -185,14 +193,6 @@ PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
     const int dilation;
     bool is_cudnn;
 
-#ifdef __CUDACC__
-    std::shared_ptr<CudnnPooling<Scalar, Rank>> cudnn_pooling;
-    inline void set_cudnn(bool _is_cudnn) {
-      assert(!_is_cudnn || Rank > 2 && Layout == RowMajor);
-
-      is_cudnn = _is_cudnn;
-    }
-#endif
     std::shared_ptr<MaxPoolParams<Rank>> params;
 
     // concurrency

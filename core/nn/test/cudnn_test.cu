@@ -43,11 +43,11 @@ namespace EigenSinnTest {
 
     // forward convolution
     checkCudnnErrors(cudnnConvolutionForward(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one), W->input_desc, cd.convInput->data(),
-      W->filter_desc, cd.convWeights->data(), W->conv_desc, W->conv_fwd_algo, W->d_workspace, W->workspace_size,
+      W->filter_desc, cd.convWeights->data(), W->conv_desc, W->conv_fwd_algo, CudnnWorkspace::workspace(), CudnnWorkspace::workspace_size,
       &(CudnnWorkspace::zero), W->output_desc, out->data()));
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.output, out));
-   
+
   }
 
   TEST_F(CudnnTest, SimpleConvBackward) {
@@ -64,14 +64,14 @@ namespace EigenSinnTest {
 
     // forward convolution
     checkCudnnErrors(cudnnConvolutionForward(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one), W->input_desc, cd.convInput->data(),
-      W->filter_desc, cd.convWeights->data(), W->conv_desc, W->conv_fwd_algo, W->d_workspace, W->workspace_size,
+      W->filter_desc, cd.convWeights->data(), W->conv_desc, W->conv_fwd_algo, CudnnWorkspace::workspace(), CudnnWorkspace::workspace_size,
       &(CudnnWorkspace::zero), W->output_desc, out->data()));
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.output, out));
 
     // data backwards
     checkCudnnErrors(cudnnConvolutionBackwardData(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one), W->filter_desc, cd.convWeights->data(),
-      W->output_desc, cd.convLoss->data(), W->conv_desc, W->conv_bwd_data_algo, W->d_workspace, W->workspace_size, &(CudnnWorkspace::zero), W->input_desc, dinput->data()));
+      W->output_desc, cd.convLoss->data(), W->conv_desc, W->conv_bwd_data_algo, CudnnWorkspace::workspace(), CudnnWorkspace::workspace_size, &(CudnnWorkspace::zero), W->input_desc, dinput->data()));
 
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dinput, dinput));
@@ -79,7 +79,7 @@ namespace EigenSinnTest {
     // weights backwards
     checkCudnnErrors(
       cudnnConvolutionBackwardFilter(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one), W->input_desc, cd.convInput->data(), W->output_desc, cd.convLoss->data(),
-        W->conv_desc, W->conv_bwd_filter_algo, W->d_workspace, W->workspace_size, &(CudnnWorkspace::zero), W->filter_desc, dweight->data()));
+        W->conv_desc, W->conv_bwd_filter_algo, CudnnWorkspace::workspace(), CudnnWorkspace::workspace_size, &(CudnnWorkspace::zero), W->filter_desc, dweight->data()));
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dweight, dweight));
   }

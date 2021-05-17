@@ -74,8 +74,8 @@ namespace EigenSinn {
         checkCudnnErrors(cudnnConvolutionForward(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one), 
           cudnn_workspace->input_desc, prev_layer->data(),
           cudnn_workspace->filter_desc, kernel->data(), 
-          cudnn_workspace->conv_desc, cudnn_workspace->conv_fwd_algo, cudnn_workspace->d_workspace, cudnn_workspace->workspace_size,
-          &(CudnnWorkspace::zero), 
+          cudnn_workspace->conv_desc, cudnn_workspace->conv_fwd_algo, CudnnWorkspace::workspace(), CudnnWorkspace::workspace_size,
+          &(CudnnWorkspace::zero),
           cudnn_workspace->output_desc, layer_output->data()));
 
       }
@@ -108,14 +108,14 @@ namespace EigenSinn {
         // data backwards
         checkCudnnErrors(cudnnConvolutionBackwardData(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one), cudnn_workspace->filter_desc, kernel->data(),
           cudnn_workspace->output_desc, next_layer_grad->data(), cudnn_workspace->conv_desc, cudnn_workspace->conv_bwd_data_algo,
-          cudnn_workspace->d_workspace, cudnn_workspace->workspace_size, &(CudnnWorkspace::zero), cudnn_workspace->input_desc, dX->data()));
+          CudnnWorkspace::workspace(), CudnnWorkspace::workspace_size, &(CudnnWorkspace::zero), cudnn_workspace->input_desc, dX->data()));
 
         // weights backwards
         checkCudnnErrors(
           cudnnConvolutionBackwardFilter(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one), cudnn_workspace->input_desc, prev_layer->data(),
             cudnn_workspace->output_desc, next_layer_grad->data(),
-            cudnn_workspace->conv_desc, cudnn_workspace->conv_bwd_filter_algo, cudnn_workspace->d_workspace,
-            cudnn_workspace->workspace_size, &(CudnnWorkspace::zero), cudnn_workspace->filter_desc, dW->data()));
+            cudnn_workspace->conv_desc, cudnn_workspace->conv_bwd_filter_algo, CudnnWorkspace::workspace(),
+            CudnnWorkspace::workspace_size, &(CudnnWorkspace::zero), cudnn_workspace->filter_desc, dW->data()));
 
         return;
       }

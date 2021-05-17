@@ -84,6 +84,13 @@ namespace EigenSinn {
       return cudnn_handle;
     }
 
+    inline static void * workspace() {
+      if (!d_workspace) {
+        return nullptr;
+      }
+      return d_workspace->d_workspace;
+    }
+
   private:
     inline void set_workspace()
     {
