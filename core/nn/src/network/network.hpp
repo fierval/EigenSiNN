@@ -17,7 +17,7 @@ using namespace Eigen;
 using namespace EigenSinn;
 
 namespace EigenSinn {
-  template <typename Scalar, typename Device_ = ThreadPoolDevice >
+  template <typename Scalar, typename Device_ = ThreadPoolDevice>
   struct NetworkNode {
     std::unique_ptr<LayerBase<Scalar, Device_>> layer;
     std::unique_ptr<OptimizerBase<Scalar, Device_>> optimizer;
@@ -32,7 +32,7 @@ namespace EigenSinn {
   };
 
 
-  template<typename Scalar, Index Rank, typename Loss, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Loss, typename Device_ = ThreadPoolDevice, int Layout = ColMajor, bool CuDnn = false>
   class NetBase {
 
     typedef std::vector<NetworkNode<Scalar, Device_>> Network;
@@ -117,6 +117,7 @@ namespace EigenSinn {
     }
 
     inline void add(LayerBase<Scalar, Device_>* n, OptimizerBase<Scalar, Device_>* opt = nullptr) {
+      n->set_cudnn(CuDnn);
       network.push_back(NetworkNode<Scalar, Device_>(n, opt));
     }
 

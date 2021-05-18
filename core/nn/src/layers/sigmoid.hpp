@@ -16,10 +16,9 @@ namespace EigenSinn {
   public:
     // leaky relu if necessary
     Sigmoid(bool _is_cudnn = false) 
-     : inited(false)
-      , is_cudnn(_is_cudnn) {
+     : inited(false) {
 
-      assert(!is_cudnn || (Layout == RowMajor && Rank > 2));
+      set_cudnn(_is_cudnn);
     }
 
     void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
@@ -75,6 +74,11 @@ namespace EigenSinn {
       return layer_grad.raw();
     };
 
+    inline void set_cudnn(bool _is_cudnn) override {
+
+      assert(!_is_cudnn || (Layout == RowMajor && Rank > 2));
+      is_cudnn = _is_cudnn;
+    }
 
   private:
     void init_cached(const DeviceTensor<Scalar, Rank, Device_, Layout>& prev_layer)

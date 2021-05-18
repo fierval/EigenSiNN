@@ -16,12 +16,9 @@ namespace EigenSinn {
   public:
     // leaky relu if necessary
     LeakyReLU(float _thresh = 0.01, bool _is_cudnn = false)
-      : thresh(_thresh)
-      , is_cudnn(_is_cudnn) {
+      : thresh(_thresh) {
 
-      // no LeakyReLU implementation in cuDNN
-      assert(!is_cudnn || (Layout == RowMajor && Rank > 2 && thresh == 0));
-
+      set_cudnn(_is_cudnn);
     }
 
     void forward(LayerBase<Scalar, Device_>& prev_layer) override {
@@ -70,7 +67,12 @@ namespace EigenSinn {
       return layer_grad.raw();
     };
 
-
+    inline void set_cudnn(bool _is_cudnn) override {
+      
+      // no LeakyReLU implementation in cuDNN
+      assert(!_is_cudnn || (Layout == RowMajor && Rank > 2 && thresh == 0));
+      is_cudnn = _is_cudnn;
+    }
 
   protected:
     float thresh;
