@@ -1,6 +1,6 @@
 # EigenSiNN
 
-Eigen based cross-platform header-only C++ library for deep learning with emphasis on computer vision, written to help educate myself on details of neural nets.
+[Eigen](https://gitlab.com/libeigen/eigen)-based cross-platform header-only C++ library for deep learning with emphasis on computer vision, written to help educate myself on details of neural nets.
 
 [Eigen](https://gitlab.com/libeigen/eigen) is used for all of the CPU and basics of the GPU implementation. 
 
