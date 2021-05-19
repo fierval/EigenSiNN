@@ -127,7 +127,14 @@ namespace EigenSinn {
     Index col_channels = dims[1] * dims[2] * dims[3];
 
     DeviceTensor<Scalar, 2, Device_, Layout> flat_kernel(dims[0], col_channels);
-    flat_kernel.view() = kernel->shuffle(array<Index, 4>{ 0, 3, 2, 1 }).reshape(array<Index, 2>{dims[0], col_channels});
+
+    // REVIEW: Looks like an Eigen bug in the shuffle()!!! It's incorrect when the layout is RowMajor
+    if (Layout == RowMajor) {
+      flat_kernel.view() = kernel->reshape(array<Index, 2>{dims[0], col_channels});
+    }
+    else {
+      flat_kernel.view() = kernel->shuffle(array<Index, 4>{ 0, 3, 2, 1 }).reshape(array<Index, 2>{dims[0], col_channels});
+    }
     return std::move(flat_kernel);
   }
 
@@ -139,8 +146,12 @@ namespace EigenSinn {
     assert(expected_dims[1] * expected_dims[2] * expected_dims[3] == kernel_col.dimension(1));
 
     DeviceTensor<Scalar, 4, Device_, Layout> out(expected_dims);
-    out.view() = kernel_col->reshape(array<Index, 4>{ expected_dims[0], expected_dims[3], expected_dims[2], expected_dims[1] })
-      .shuffle(array<Index, 4>{0, 3, 2, 1});;
+    if (Layout != RowMajor) {
+      out.view() = kernel_col->reshape(array<Index, 4>{ expected_dims[0], expected_dims[3], expected_dims[2], expected_dims[1] })
+        .shuffle(array<Index, 4>{0, 3, 2, 1});
+    } else {
+      out.view() = kernel_col->reshape(array<Index, 4>{ expected_dims[0], expected_dims[1], expected_dims[2], expected_dims[3] });
+    }
 
     return std::move(out);
   }
@@ -157,7 +168,10 @@ namespace EigenSinn {
     Index col_channels = dims[0] * dims[2] * dims[3]; // B * Ho * Wo
 
     DeviceTensor<Scalar, 2, Device_, Layout> flat_layer(dims[1], col_channels);
-    flat_layer.view() = layer->shuffle(array<Index, 4>{1, 0, 3, 2}).reshape(array<Index, 2>{dims[1], col_channels});
+
+    array<Index, 4> shuffle_dims = Layout != RowMajor ? array<Index, 4>{1, 0, 3, 2} : array<Index, 4>{1, 2, 3, 0};
+
+    flat_layer.view() = layer->shuffle(shuffle_dims).reshape(array<Index, 2>{dims[1], col_channels});
     return std::move(flat_layer);
   }
 
@@ -173,7 +187,14 @@ namespace EigenSinn {
     assert(expected_dims[0] * expected_dims[2] * expected_dims[3] == conv_res.dimension(1));
 
     DeviceTensor<Scalar, 4, Device_, Layout> out(expected_dims);
-    out.view() = conv_res->reshape(array<Index, 4>{ expected_dims[1], expected_dims[0], expected_dims[3], expected_dims[2] }).shuffle(array<Index, 4>{1, 0, 3, 2});
+
+    if (Layout != RowMajor) {
+      out.view() = conv_res->reshape(array<Index, 4>{ expected_dims[1], expected_dims[0], expected_dims[3], expected_dims[2] }).shuffle(array<Index, 4>{1, 0, 3, 2});
+    }
+    else {
+      out.view() = conv_res->reshape(array<Index, 4>{ expected_dims[1], expected_dims[2], expected_dims[3], expected_dims[0] }).shuffle(array<Index, 4>{3, 0, 1, 2});
+    }
+
     return std::move(out);
   }
 
