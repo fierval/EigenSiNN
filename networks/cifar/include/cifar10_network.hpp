@@ -4,8 +4,8 @@
 
 using namespace EigenSinn;
 
-template<typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
-class Cifar10 : public NetBase<float, 4, CrossEntropyLoss<float, uint8_t, 2, Device_, Layout>, Device_, Layout> {
+template<typename Device_ = ThreadPoolDevice, int Layout = ColMajor, bool CuDNN = false>
+class Cifar10 : public NetBase<float, 4, CrossEntropyLoss<float, uint8_t, 2, Device_, Layout>, Device_, Layout, CuDNN> {
 
 public:
   Cifar10(DSizes<Index, 4> input_dims, int num_classes, float learning_rate) {

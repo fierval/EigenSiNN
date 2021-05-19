@@ -71,8 +71,8 @@ inline void TestNetwork(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Lay
   }
 }
 
-template<typename Device_, int Layout = ColMajor>
-inline void TestNetworkSingleBatch(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Layout>, uint8_t, Layout>& dataset, Cifar10<Device_, Layout>& net, int num_classes, std::vector<cv::String>& classes) {
+template<typename Device_, int Layout = ColMajor, bool CuDNN = false>
+inline void TestNetworkSingleBatch(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Layout>, uint8_t, Layout>& dataset, Cifar10<Device_, Layout, CuDNN>& net, int num_classes, std::vector<cv::String>& classes) {
 
   std::cout << "Starting test..." << std::endl;
 

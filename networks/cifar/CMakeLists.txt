@@ -31,7 +31,7 @@ message(STATUS "OpenCV libs: ${OpenCV_LIBS}")
 set(APP_EXE simple_cifar)
 
 set(WITH_GPU true)
-set(COL_MAJOR true)
+set(COL_MAJOR false)
 
 # discover sources
 file(GLOB_RECURSE APP_SOURCES LIST_DIRECTORIES false "src/*.cpp")
