@@ -106,7 +106,8 @@ namespace EigenSinnTest {
     Input<float, 4, GpuDevice, RowMajor> input;
     input.set_input(cd.convInput);
 
-    EigenSinn::Sigmoid<float, 4, GpuDevice, RowMajor> sg(true);
+    EigenSinn::Sigmoid<float, 4, GpuDevice, RowMajor> sg;
+    sg.set_cudnn(true);
     sg.init();
     sg.forward(input);
     sg.backward(input, cd.convInput.raw());

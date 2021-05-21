@@ -34,9 +34,9 @@
             "cmakeCommandArgs": "",
             "buildCommandArgs": "",
             "ctestCommandArgs": "",
+            "inheritEnvironments": [ "msvc_x64_x64" ],
             "cmakeToolchain": "C:/git/NN/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "cmakeExecutable": "C:\\Program Files\\CMake\\bin\\cmake.exe",
-            "inheritEnvironments": [ "msvc_x64_x64" ],
             "variables": [
                 {
                     "name": "OpenCV_DIR",
@@ -49,6 +49,7 @@
                     "type": "STRING"
                 }
             ]
+
         }
     ]
 }

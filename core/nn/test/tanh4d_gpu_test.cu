@@ -104,7 +104,8 @@ namespace EigenSinnTest {
     Input<float, 4, GpuDevice, RowMajor> input;
     input.set_input(cd.convInput);
 
-    Tanh<float, 4, GpuDevice, RowMajor> tanh(true);
+    Tanh<float, 4, GpuDevice, RowMajor> tanh;
+    tanh.set_cudnn(true);
     tanh.init();
     tanh.forward(input);
     tanh.backward(input, cd.convInput.raw());

@@ -43,7 +43,8 @@ namespace EigenSinnTest {
     Input<float, 4, GpuDevice, RowMajor> input;
     input.set_input(rd.input);
 
-    ReLU<float, 4, GpuDevice, RowMajor> rl(true);
+    ReLU<float, 4, GpuDevice, RowMajor> rl;
+    rl.set_cudnn(true);
     rl.init();
     rl.forward(input);
     EXPECT_TRUE(is_elementwise_approx_eq(rl.get_output(), rd.reluOutput, 3e-5));
@@ -59,7 +60,7 @@ namespace EigenSinnTest {
     Input<float, 4, GpuDevice, RowMajor> input;
     input.set_input(rd.input);
 
-    LeakyReLU<float, 4, GpuDevice, RowMajor> rl(rd.leaky_thres, false);
+    LeakyReLU<float, 4, GpuDevice, RowMajor> rl(rd.leaky_thres);
     rl.init();
     rl.forward(input);
     EXPECT_TRUE(is_elementwise_approx_eq(rl.get_output(), rd.leakyReluOutput, 3e-5));

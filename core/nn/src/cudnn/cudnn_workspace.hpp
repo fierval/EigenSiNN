@@ -75,11 +75,11 @@ namespace EigenSinn {
     static inline float one = 1.f;
     static inline float zero = 0.f;
     static inline float minus_one = -1.f;
+    static inline cudnnHandle_t cudnn_handle;
 
     inline static cudnnHandle_t cudnn() {
       static std::once_flag onceFlag;
 
-      static cudnnHandle_t cudnn_handle;
       std::call_once(onceFlag, []() {checkCudnnErrors(cudnnCreate(&cudnn_handle)); });
       return cudnn_handle;
     }
@@ -95,18 +95,15 @@ namespace EigenSinn {
     inline void set_workspace()
     {
 
-      size_t temp_size = 0;
-
       // forward
-      std::vector<cudnnConvolutionFwdAlgoPerf_t> 		 fwd_algoperf_results(CUDNN_CONVOLUTION_FWD_ALGO_COUNT);
-      std::vector<cudnnConvolutionBwdFilterAlgoPerf_t> bwd_filter_algoperf_results(CUDNN_CONVOLUTION_BWD_FILTER_ALGO_COUNT);
-      std::vector<cudnnConvolutionBwdDataAlgoPerf_t>	 bwd_data_algoperf_results(CUDNN_CONVOLUTION_BWD_DATA_ALGO_COUNT);
 
       int algo_max_count;
       int returnedAlgoCount = 0;
 
       // fwd algorithm
       checkCudnnErrors(cudnnGetConvolutionForwardAlgorithmMaxCount(cudnn(), &algo_max_count));
+      std::vector<cudnnConvolutionFwdAlgoPerf_t> 		 fwd_algoperf_results(algo_max_count);
+
       checkCudnnErrors(cudnnGetConvolutionForwardAlgorithm_v7(cudnn(),
         input_desc, filter_desc, conv_desc, output_desc,
         algo_max_count, &returnedAlgoCount, &fwd_algoperf_results[0]));
@@ -115,6 +112,8 @@ namespace EigenSinn {
 
       // bwd - filter
       checkCudnnErrors(cudnnGetConvolutionBackwardFilterAlgorithmMaxCount(cudnn(), &algo_max_count));
+      std::vector<cudnnConvolutionBwdFilterAlgoPerf_t> bwd_filter_algoperf_results(algo_max_count);
+
       checkCudnnErrors(cudnnGetConvolutionBackwardFilterAlgorithm_v7(cudnn(),
         input_desc, output_desc, conv_desc, filter_desc,
         algo_max_count, &returnedAlgoCount, &bwd_filter_algoperf_results[0]));
@@ -123,6 +122,8 @@ namespace EigenSinn {
 
       // bwd - data
       checkCudnnErrors(cudnnGetConvolutionBackwardDataAlgorithmMaxCount(cudnn(), &algo_max_count));
+      std::vector<cudnnConvolutionBwdDataAlgoPerf_t>	 bwd_data_algoperf_results(algo_max_count);
+
       checkCudnnErrors(cudnnGetConvolutionBackwardDataAlgorithm_v7(cudnn(),
         filter_desc, output_desc, conv_desc, input_desc,
         algo_max_count, &returnedAlgoCount, &bwd_data_algoperf_results[0]));
@@ -132,26 +133,27 @@ namespace EigenSinn {
       // workspace
       // workspace is shared between all convolutional layers
       std::lock_guard<std::mutex> lock(workspace_mutex);
-      size_t cur_workspace_size = workspace_size;
+      size_t cur_workspace_size = 0;
+      size_t temp_size = 0;
 
       checkCudnnErrors(cudnnGetConvolutionForwardWorkspaceSize(cudnn(),
         input_desc, filter_desc, conv_desc, output_desc,
         conv_fwd_algo, &temp_size));
 
-      cur_workspace_size = max(cur_workspace_size, temp_size);
+      cur_workspace_size = ::max(cur_workspace_size, temp_size);
 
       checkCudnnErrors(cudnnGetConvolutionBackwardFilterWorkspaceSize(cudnn(),
         input_desc, output_desc, conv_desc, filter_desc,
         conv_bwd_filter_algo, &temp_size));
-      cur_workspace_size = max(cur_workspace_size, temp_size);
+      cur_workspace_size = ::max(cur_workspace_size, temp_size);
 
       checkCudnnErrors(cudnnGetConvolutionBackwardDataWorkspaceSize(cudnn(),
         filter_desc, output_desc, conv_desc, input_desc,
         conv_bwd_data_algo, &temp_size));
 
-      cur_workspace_size = max(cur_workspace_size, temp_size);
+      cur_workspace_size = ::max(cur_workspace_size, temp_size);
       
-      if (cur_workspace_size > 0 && cur_workspace_size > workspace_size)
+      if (cur_workspace_size > workspace_size)
       {
         workspace_size = cur_workspace_size;
         d_workspace.reset(new CudnnConvWorkspaceWrapper(workspace_size));

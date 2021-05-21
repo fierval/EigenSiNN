@@ -15,10 +15,10 @@ namespace EigenSinn {
   class Tanh : public LayerBase<Scalar, Device_> {
   public:
     // leaky relu if necessary
-    Tanh(bool _is_cudnn = false) 
-      : inited(false) {
-    
-      set_cudnn(_is_cudnn);
+    Tanh()
+      : inited(false)
+      , is_cudnn(false) {
+
     }
 
     void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
@@ -77,6 +77,7 @@ namespace EigenSinn {
 
     inline void set_cudnn(bool _is_cudnn) override {
 
+      if (Rank < 4) { return; }
       assert(!_is_cudnn || (Layout == RowMajor && Rank > 2));
       is_cudnn = _is_cudnn;
     }

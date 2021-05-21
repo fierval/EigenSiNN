@@ -27,7 +27,7 @@ namespace EigenSinn {
       , loss_by_bias_derivative(kernelDims[0])
       , is_cudnn(false) {
 
-      }
+    }
 
 
     // TODO: this needs to be implemented for real
@@ -55,29 +55,30 @@ namespace EigenSinn {
 
       DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any.get_output());
 
-      if(!params || params->check(prev_layer.dimensions())) {
+      if (!params || params->check(prev_layer.dimensions())) {
         params = std::make_shared<ConvolutionParams<4>>(prev_layer.dimensions(), kernel.dimensions(), padding, stride, dilation, false, is_cudnn);
 
         // make sure all output tensors are initialized to right sizes
         dX.resize(params->get_input_dims());
         dW.resize(kernel.dimensions());
         layer_output.resize(params->get_out_dims());
-      }
 
 #ifdef __CUDACC__
-      if (is_cudnn && !cudnn_workspace) {
-        cudnn_workspace = std::make_shared<CudnnWorkspace>(*params);
+        if (is_cudnn) {
+          cudnn_workspace.reset(new CudnnWorkspace(*params));
+        }
+#endif
       }
 
-
+#ifdef __CUDACC__  
       if (is_cudnn) {
-        checkCudnnErrors(cudnnConvolutionForward(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one), 
+
+        checkCudnnErrors(cudnnConvolutionForward(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one),
           cudnn_workspace->input_desc, prev_layer->data(),
-          cudnn_workspace->filter_desc, kernel->data(), 
+          cudnn_workspace->filter_desc, kernel->data(),
           cudnn_workspace->conv_desc, cudnn_workspace->conv_fwd_algo, CudnnWorkspace::workspace(), CudnnWorkspace::workspace_size,
           &(CudnnWorkspace::zero),
           cudnn_workspace->output_desc, layer_output->data()));
-
       }
       else {
 #endif
@@ -176,10 +177,12 @@ namespace EigenSinn {
       bias = DeviceTensor<Scalar, 1, Device_, Layout>(v);
     }
 
-    inline void set_cudnn(bool _is_cudnn) { 
+    inline void set_cudnn(bool _is_cudnn) {
       assert(!_is_cudnn || Layout & RowMajor);
-      is_cudnn = _is_cudnn; 
+      is_cudnn = _is_cudnn;
     }
+
+    ConvolutionParams<4>& get_maxpool_params() { return *params; }
 
   private:
     DeviceTensor<Scalar, 4, Device_, Layout> kernel, layer_output, dX, dW;

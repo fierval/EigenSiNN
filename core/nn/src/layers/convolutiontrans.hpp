@@ -56,20 +56,20 @@ namespace EigenSinn {
         dX.resize(params->get_input_dims());
         dW.resize(kernel.dimensions());
         layer_output.resize(params->get_out_dims());
+
+#ifdef __CUDACC__
+        if (is_cudnn) {
+          cudnn_workspace.reset(new CudnnWorkspace(*params));
+        }
+#endif
+
       }
 
       DSizes<Index, 4> out_dims = params->orig_dims();
       //add bias to each channel
       bias_broadcast = { out_dims[0], 1, out_dims[2], out_dims[3] };
 
-#ifdef __INTELLISENSE__
-#define EIGEN_USE_GPU
-#endif
-
 #ifdef EIGEN_USE_GPU
-      if (is_cudnn && !cudnn_workspace) {
-        cudnn_workspace = std::make_shared<CudnnWorkspace>(*params);
-      }
 
       if (is_cudnn) {
         // data forward
