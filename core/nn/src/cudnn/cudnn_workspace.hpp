@@ -140,8 +140,8 @@ namespace EigenSinn {
         input_desc, filter_desc, conv_desc, output_desc,
         conv_fwd_algo, &temp_size));
 
-      // There is an Eigen::max constant set to 0 which causes the following line(s) to be ignored!!!
-      // if don't specify the global namespace explicitly
+      // There is an Eigen::max constant set to 0 which causes the following line(s) to be ignored.
+      // Should therefore specify the global namespace explicitly!!!
       cur_workspace_size = ::max(cur_workspace_size, temp_size);
 
       checkCudnnErrors(cudnnGetConvolutionBackwardFilterWorkspaceSize(cudnn(),
