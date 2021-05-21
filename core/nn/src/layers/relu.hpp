@@ -15,12 +15,9 @@ namespace EigenSinn {
   class LeakyReLU : public LayerBase<Scalar, Device_> {
   public:
     // leaky relu if necessary
-    LeakyReLU(float _thresh = 0.01, bool _is_cudnn = false)
+    LeakyReLU(float _thresh = 0.01)
       : thresh(_thresh)
-      , is_cudnn(_is_cudnn) {
-
-      // no LeakyReLU implementation in cuDNN
-      assert(!is_cudnn || (Layout == RowMajor && Rank > 2 && thresh == 0));
+      , is_cudnn(false) {
 
     }
 
@@ -31,13 +28,11 @@ namespace EigenSinn {
 #ifdef __CUDACC__
       // no need to allocate output memory if we aren't using cudnn
       // as the op will allocate it for us
-      if (is_cudnn && !tensor_desc) {
+      if (is_cudnn && !cudnn_act) {
         layer_output.resize(x.dimensions());
         layer_grad.resize(x.dimensions());
 
-        tensor_desc = std::make_shared<TensorDescWrapper<Rank>>(x.dimensions());
-
-        cudnn_act = std::make_shared<CudnnActivations<Scalar, Rank>>(*tensor_desc, cudnn_act_mode, thresh);
+        cudnn_act = std::make_shared<CudnnActivations<Scalar, Rank>>(x.dimensions(), cudnn_act_mode, thresh);
       }
 
       if (is_cudnn) {
@@ -72,7 +67,13 @@ namespace EigenSinn {
       return layer_grad.raw();
     };
 
+    inline void set_cudnn(bool _is_cudnn) override {
 
+      if (Rank < 4) { return; }
+      // no LeakyReLU implementation in cuDNN
+      assert(!_is_cudnn || (Layout == RowMajor && Rank > 2 && thresh == 0));
+      is_cudnn = _is_cudnn;
+    }
 
   protected:
     float thresh;
@@ -82,7 +83,6 @@ namespace EigenSinn {
 
 #ifdef __CUDACC__
     cudnnActivationMode_t cudnn_act_mode = CUDNN_ACTIVATION_RELU;
-    std::shared_ptr<TensorDescWrapper<Rank>> tensor_desc;
     std::shared_ptr<CudnnActivations<Scalar, Rank>> cudnn_act;
 #endif // __CUDACC__
 
@@ -91,7 +91,7 @@ namespace EigenSinn {
   template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
   class ReLU : public LeakyReLU<Scalar, Rank, Device_, Layout> {
   public:
-    ReLU(bool _is_cudnn = false) : LeakyReLU<Scalar, Rank, Device_, Layout>(0, _is_cudnn) {
+    ReLU() : LeakyReLU<Scalar, Rank, Device_, Layout>(0) {
 
 
     }

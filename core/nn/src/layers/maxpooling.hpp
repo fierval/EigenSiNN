@@ -7,6 +7,10 @@
 #include <helpers/conv_params_bag.hpp>
 #include <limits>
 
+#ifdef __CUDACC__
+#include "cudnn/cudnn_pooling.hpp"
+#endif
+
 using namespace  Eigen;
 
 namespace EigenSinn {
@@ -23,7 +27,8 @@ namespace EigenSinn {
       : extents(_extents)
       , stride(_stride)
       , padding(_padding)
-      , dilation(_dilation) {
+      , dilation(_dilation)
+      , is_cudnn(false) {
 
       static_assert(Rank == 4, "MaxPooling is implemented only for Rank == 4");
 
@@ -93,25 +98,34 @@ namespace EigenSinn {
           }
           layer_output->data()[out_index] = max_val;
           mask->data()[out_index] = max_idx;
-          });
+      });
     }
-    else {
+      else {
 #else
+      if (is_cudnn && !cudnn_pooling) {
+        cudnn_pooling = std::make_shared<CudnnPooling<Scalar, Rank>>(dims, out_dims, CUDNN_POOLING_MAX, *params);
+      }
+
+      if (is_cudnn) {
+        cudnn_pooling->forward(x->data(), layer_output->data());
+        return;
+      }
+
       static int block(BLOCK_SIZE * BLOCK_SIZE);
       static int grid(getGridSize(out_dims.TotalSize(), BLOCK_SIZE * BLOCK_SIZE));
       auto stream = mask.device().stream();
-      
-      maxpool_forward_kernel<Scalar, Layout> <<<grid, block, 0, stream>>>
+
+      maxpool_forward_kernel<Scalar, Layout> << <grid, block, 0, stream >> >
         (h_offset, w_offset, params->dilated_kernel_height, params->dilated_kernel_width, stride, dilation, *x, *layer_output, *mask);
-      
+
       cudaDeviceSynchronize();
 #endif
 #ifndef __CUDACC__
       }
 #endif
-    }
+  }
 
-    // for derivations
+  // for derivations
   void backward(LayerBase<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {
 
     DeviceTensor<Scalar, Rank, Device_, Layout> x(next_layer_grad);
@@ -125,10 +139,16 @@ namespace EigenSinn {
 
         std::lock_guard<std::mutex> lck(mtx);
         layer_gradient->data()[idx] += x->data()[out_index];
-        });
-    }
+  });
+}
     else {
 #else
+
+    if (is_cudnn) {
+      cudnn_pooling->backward(x->data(), layer_gradient->data());
+      return;
+    }
+
     static int block(BLOCK_SIZE * BLOCK_SIZE);
     static int grid(getGridSize(dims.TotalSize(), BLOCK_SIZE * BLOCK_SIZE));
     auto stream = mask.device().stream();
@@ -139,19 +159,30 @@ namespace EigenSinn {
     cudaDeviceSynchronize();
 #endif
 #ifndef __CUDACC__
-  }
+    }
 #endif
+  }
+
+PtrTensorAdapter<Scalar, Device_> get_output() override {
+  return layer_output.raw();
+}
+
+PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
+  return layer_gradient.raw();
+}
+
+#ifdef __CUDACC__
+    std::shared_ptr<CudnnPooling<Scalar, Rank>> cudnn_pooling;
+    inline void set_cudnn(bool _is_cudnn) {
+
+      if (Rank < 4) { return; }
+      assert(!_is_cudnn || Rank > 2 && Layout == RowMajor);
+
+      is_cudnn = _is_cudnn;
     }
+#endif
 
-    PtrTensorAdapter<Scalar, Device_> get_output() override {
-      return layer_output.raw();
-    }
-
-    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
-      return layer_gradient.raw();
-    }
-
-
+    MaxPoolParams<Rank>& get_maxpool_params() { return *params; }
   private:
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_gradient;
     DeviceTensor<Index, Rank, Device_, Layout> mask;
@@ -163,6 +194,7 @@ namespace EigenSinn {
     const int stride;
     const Padding2D padding;
     const int dilation;
+    bool is_cudnn;
 
     std::shared_ptr<MaxPoolParams<Rank>> params;
 

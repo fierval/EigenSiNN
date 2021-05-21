@@ -56,26 +56,26 @@ namespace EigenSinn {
         dX.resize(params->get_input_dims());
         dW.resize(kernel.dimensions());
         layer_output.resize(params->get_out_dims());
+
+#ifdef __CUDACC__
+        if (is_cudnn) {
+          cudnn_workspace.reset(new CudnnWorkspace(*params));
+        }
+#endif
+
       }
 
       DSizes<Index, 4> out_dims = params->orig_dims();
       //add bias to each channel
       bias_broadcast = { out_dims[0], 1, out_dims[2], out_dims[3] };
 
-#ifdef __INTELLISENSE__
-#define EIGEN_USE_GPU
-#endif
-
 #ifdef EIGEN_USE_GPU
-      if (is_cudnn && !cudnn_workspace) {
-        cudnn_workspace = std::make_shared<CudnnWorkspace>(*params);
-      }
 
       if (is_cudnn) {
         // data forward
         checkCudnnErrors(cudnnConvolutionBackwardData(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one), cudnn_workspace->filter_desc, kernel->data(),
           cudnn_workspace->output_desc, prev_layer->data(), cudnn_workspace->conv_desc, cudnn_workspace->conv_bwd_data_algo,
-          cudnn_workspace->d_workspace, cudnn_workspace->workspace_size, &(CudnnWorkspace::zero), cudnn_workspace->input_desc, layer_output->data()));
+          CudnnWorkspace::workspace(), CudnnWorkspace::workspace_size, &(CudnnWorkspace::zero), cudnn_workspace->input_desc, layer_output->data()));
 
       }
       else {
@@ -114,15 +114,16 @@ namespace EigenSinn {
 
         // data backwards
         checkCudnnErrors(cudnnConvolutionForward(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one), cudnn_workspace->input_desc, next_layer_grad->data(),
-          cudnn_workspace->filter_desc, kernel->data(), cudnn_workspace->conv_desc, cudnn_workspace->conv_fwd_algo, cudnn_workspace->d_workspace, cudnn_workspace->workspace_size,
+          cudnn_workspace->filter_desc, kernel->data(), cudnn_workspace->conv_desc, cudnn_workspace->conv_fwd_algo, CudnnWorkspace::workspace(), CudnnWorkspace::workspace_size,
           &(CudnnWorkspace::zero), cudnn_workspace->output_desc, dX->data()));
 
         // weights backwards
         checkCudnnErrors(
           cudnnConvolutionBackwardFilter(CudnnWorkspace::cudnn(), &(CudnnWorkspace::one), cudnn_workspace->input_desc, next_layer_grad->data(),
             cudnn_workspace->output_desc, prev_layer->data(),
-            cudnn_workspace->conv_desc, cudnn_workspace->conv_bwd_filter_algo, cudnn_workspace->d_workspace,
-            cudnn_workspace->workspace_size, &(CudnnWorkspace::zero), cudnn_workspace->filter_desc, dW->data()));
+            cudnn_workspace->conv_desc, cudnn_workspace->conv_bwd_filter_algo, 
+            CudnnWorkspace::workspace(), CudnnWorkspace::workspace_size, 
+            &(CudnnWorkspace::zero), cudnn_workspace->filter_desc, dW->data()));
 
         return;
       }

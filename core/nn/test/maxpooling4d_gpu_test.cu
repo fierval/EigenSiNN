@@ -93,8 +93,8 @@ namespace EigenSinnTest {
 
     }
 
-    CommonData4d<GpuDevice> cd;
-    DeviceTensor<float, 4, GpuDevice> output, dinput, fakeloss;
+    CommonData4d<GpuDevice, RowMajor> cd;
+    DeviceTensor<float, 4, GpuDevice, RowMajor> output, dinput, fakeloss;
     const DSizes<Index, 2> extents2d{ 2, 2 };
 
     const int stride = 2;
@@ -103,10 +103,10 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4dGpu, Forward) {
 
-    Input<float, 4, GpuDevice> input;
+    Input<float, 4, GpuDevice, RowMajor> input;
     input.set_input(cd.convInput);
 
-    MaxPooling<float, 4, GpuDevice> pl(extents2d, stride);
+    MaxPooling<float, 4, GpuDevice, RowMajor> pl(extents2d, stride);
 
     pl.init();
     pl.forward(input);
@@ -116,10 +116,10 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4dGpu, Backward) {
 
-    Input<float, 4, GpuDevice> input;
+    Input<float, 4, GpuDevice, RowMajor> input;
     input.set_input(cd.convInput);
 
-    MaxPooling<float, 4, GpuDevice> pl(extents2d, stride);
+    MaxPooling<float, 4, GpuDevice, RowMajor> pl(extents2d, stride);
 
     pl.init();
     pl.forward(input);
@@ -128,5 +128,22 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(pl.get_output(), output));
     EXPECT_TRUE(is_elementwise_approx_eq(pl.get_loss_by_input_derivative(), dinput));
   }
+
+  TEST_F(Pool4dGpu, BackwardCudnn) {
+
+    Input<float, 4, GpuDevice, RowMajor> input;
+    input.set_input(cd.convInput);
+
+    MaxPooling<float, 4, GpuDevice, RowMajor> pl(extents2d, stride);
+    
+    pl.set_cudnn(true);
+    pl.init();
+    pl.forward(input);
+    pl.backward(input, fakeloss.raw());
+
+    EXPECT_TRUE(is_elementwise_approx_eq(pl.get_output(), output));
+    EXPECT_TRUE(is_elementwise_approx_eq(pl.get_loss_by_input_derivative(), dinput));
+  }
+
 
 }

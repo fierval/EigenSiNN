@@ -15,11 +15,10 @@ namespace EigenSinn {
   class Tanh : public LayerBase<Scalar, Device_> {
   public:
     // leaky relu if necessary
-    Tanh(bool _is_cudnn = false) 
+    Tanh()
       : inited(false)
-      , is_cudnn(_is_cudnn) {
-    
-      assert(!is_cudnn || (Layout == RowMajor && Rank > 2));
+      , is_cudnn(false) {
+
     }
 
     void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
@@ -36,13 +35,11 @@ namespace EigenSinn {
 #ifdef __CUDACC__
       // no need to allocate output memory if we aren't using cudnn
       // as the op will allocate it for us
-      if (is_cudnn && !tensor_desc) {
+      if (is_cudnn && !cudnn_act) {
         layer_output.resize(prev_layer.dimensions());
         layer_grad.resize(prev_layer.dimensions());
 
-        tensor_desc = std::make_shared<TensorDescWrapper<Rank>>(prev_layer.dimensions());
-
-        cudnn_act = std::make_shared<CudnnActivations<Scalar, Rank>>(*tensor_desc, cudnn_act_mode, 0.0);
+        cudnn_act = std::make_shared<CudnnActivations<Scalar, Rank>>(prev_layer.dimensions(), cudnn_act_mode, 0.0);
       }
 
       if (is_cudnn) {
@@ -78,6 +75,13 @@ namespace EigenSinn {
       return layer_grad.raw();
     };
 
+    inline void set_cudnn(bool _is_cudnn) override {
+
+      if (Rank < 4) { return; }
+      assert(!_is_cudnn || (Layout == RowMajor && Rank > 2));
+      is_cudnn = _is_cudnn;
+    }
+
   private:
     void init_cached(const DeviceTensor<Scalar, Rank, Device_, Layout>& prev_layer)
     {
@@ -93,7 +97,6 @@ namespace EigenSinn {
 
 #ifdef __CUDACC__
     cudnnActivationMode_t cudnn_act_mode = CUDNN_ACTIVATION_TANH;
-    std::shared_ptr<TensorDescWrapper<Rank>> tensor_desc;
     std::shared_ptr<CudnnActivations<Scalar, Rank>> cudnn_act;
 #endif // __CUDACC__
 

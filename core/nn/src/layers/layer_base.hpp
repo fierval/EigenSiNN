@@ -39,16 +39,7 @@ namespace EigenSinn {
     virtual void set_bias(PtrTensorAdapter<Scalar, Device_>&) {}
 
     virtual ~LayerBase() = default;
-
-  protected:
-    // rule of zero: https://en.cppreference.com/w/cpp/language/rule_of_three
-    // since the class is polymorphic (virtual functions) avoid slicing
-    // by explicity prohibiting copying
-    //LayerBase(const LayerBase&) = delete;
-    //LayerBase(LayerBase&&) = delete;
-    //LayerBase& operator=(const LayerBase&) = delete;
-    //LayerBase& operator=(LayerBase&&) = delete;
-
-
+    
+    virtual void set_cudnn(bool _is_cudnn) {}
   };
 }
