@@ -354,3 +354,6 @@ googletest/
 cifar-10-batches-bin/
 eigen-3.3.9/
 *.playlist
+
+# Protobuf
+protobf/
