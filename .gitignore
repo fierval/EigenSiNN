@@ -359,5 +359,6 @@ eigen-3.3.9/
 out/
 build/
 
-# Protobuf
+# onnx
 protobuf/
+onnx/

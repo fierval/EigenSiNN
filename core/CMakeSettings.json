@@ -11,18 +11,23 @@
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "cmakeExecutable": "C:\\Program Files\\CMake\\bin\\cmake.exe",
-      "variables": [       
-          {
-            "name": "VCPKG_TARGET_TRIPLET",
-            "value": "x64-windows",
-            "type": "STRING"
-          },
-          {
-            "name": "CMAKE_CUDA_ARCHITECTURES",
-            "value": "70",
-            "type": "STRING"
-          }
-      ],
+        "variables": [
+            {
+                "name": "VCPKG_TARGET_TRIPLET",
+                "value": "x64-windows",
+                "type": "STRING"
+            },
+            {
+                "name": "CMAKE_CUDA_ARCHITECTURES",
+                "value": "70",
+                "type": "STRING"
+            },
+            {
+                "name": "Protobuf_ROOT",
+                "value": "C:/git/NN/EigenSiNN/core/protobuf/install/cmake",
+                "type": "PATH"
+            }
+        ],
       "cmakeToolchain": "C:\\git\\NN\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
     },
     {
@@ -43,9 +48,14 @@
           "type": "STRING"
         },
         {
-          "name": "CMAKE_CUDA_ARCHITECTURES",
-          "value": "70",
-          "type": "STRING"
+            "name": "CMAKE_CUDA_ARCHITECTURES",
+            "value": "70",
+            "type": "STRING"
+        },
+        {
+            "name": "Protobuf_ROOT",
+            "value": "C:/git/NN/EigenSiNN/core/protobuf/install/cmake",
+            "type": "PATH"
         }
       ],
       "cmakeToolchain": "C:\\git\\NN\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
