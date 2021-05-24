@@ -18,6 +18,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 # Protobuf
+# From stackoverflow: https://stackoverflow.com/questions/53651181/cmake-find-protobuf-package-in-custom-directory
 include(${Protobuf_ROOT}/protobuf-config.cmake)
 include(${Protobuf_ROOT}/protobuf-module.cmake)
 include(${Protobuf_ROOT}/protobuf-options.cmake)
