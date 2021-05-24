@@ -6,7 +6,7 @@ message(STATUS "Eigen path: ${EIGEN_PATH}")
 set(TEST_EXE eigentest)
 
 # discover test sources
-file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "test/*.cu")
+file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "test/*.cu" "src/onnx/*.cc")
 # set(TEST_SOURCES 
 #    "test/sigmoid_gpu_test.cu"
 #    "test/sigmoid4d_gpu_test.cu"
@@ -46,10 +46,10 @@ set_property(TARGET ${TEST_EXE}
 # allow threadpool and GPU devices
 target_compile_definitions(${TEST_EXE} PRIVATE EIGEN_USE_THREADS EIGEN_USE_GPU EIGEN_HAS_C99_MATH)
 
-target_include_directories(${TEST_EXE} PRIVATE "src" ${EIGEN_PATH} ${Boost_INCLUDE_DIRS} ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+target_include_directories(${TEST_EXE} PRIVATE "src" ${EIGEN_PATH} ${Boost_INCLUDE_DIRS} ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} ${Protobuf_INCLUDE_DIRS})
 
 #target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${Boost_LIBRARIES})
-target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${Boost_LIBRARIES} cudnn cublas)
+target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${Boost_LIBRARIES} ${Protobuf_LIBRARIES} cudnn)
 
 # gtest specific
 set(gtest_force_shared_crt ON)
