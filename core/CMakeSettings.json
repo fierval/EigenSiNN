@@ -24,7 +24,7 @@
             },
             {
                 "name": "Protobuf_ROOT",
-                "value": "C:/git/NN/EigenSiNN/core/protobuf/install/cmake",
+                "value": "C:/git/NN/EigenSiNN/protobuf/install/cmake",
                 "type": "PATH"
             }
         ],
@@ -54,7 +54,7 @@
         },
         {
             "name": "Protobuf_ROOT",
-            "value": "C:/git/NN/EigenSiNN/core/protobuf/install/cmake",
+            "value": "C:/git/NN/EigenSiNN/protobuf/install/cmake",
             "type": "PATH"
         }
       ],
