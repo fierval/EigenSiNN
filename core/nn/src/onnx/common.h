@@ -56,7 +56,7 @@ namespace EigenSinn {
       return onnx::TensorProto_DataType::TensorProto_DataType_UINT8;
     }
 
-    throw std::bad_typeid("Tensor DataType not supported");
+    assert(false);
   }
 
   class EigenModel {
