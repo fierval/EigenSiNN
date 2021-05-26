@@ -4,6 +4,7 @@
 #include "ops/convolutions.hpp"
 #include "ops/initializations.hpp"
 #include "helpers/conv_params_bag.hpp"
+#include <onnx/common.h>
 
 #ifdef __CUDACC__
 #include "cudnn/cudnn_workspace.hpp"
@@ -182,7 +183,10 @@ namespace EigenSinn {
       is_cudnn = _is_cudnn;
     }
 
-    ConvolutionParams<4>& get_maxpool_params() { return *params; }
+    ConvolutionParams<4>& get_convolution_params() { return *params; }
+
+    // ONNX
+    std::vector<Index> out_dims() { return  dsizes2vector(params->get_out_dims()); }
 
   private:
     DeviceTensor<Scalar, 4, Device_, Layout> kernel, layer_output, dX, dW;

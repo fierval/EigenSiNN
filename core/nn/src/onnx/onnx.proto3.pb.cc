@@ -21,8 +21,7 @@ extern PROTOBUF_INTERNAL_EXPORT_onnx_2eproto3 ::PROTOBUF_NAMESPACE_ID::internal:
 extern PROTOBUF_INTERNAL_EXPORT_onnx_2eproto3 ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_TensorShapeProto_onnx_2eproto3;
 extern PROTOBUF_INTERNAL_EXPORT_onnx_2eproto3 ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_TensorShapeProto_Dimension_onnx_2eproto3;
 extern PROTOBUF_INTERNAL_EXPORT_onnx_2eproto3 ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_TrainingInfoProto_onnx_2eproto3;
-extern PROTOBUF_INTERNAL_EXPORT_onnx_2eproto3 ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_TypeProto_onnx_2eproto3;
-extern PROTOBUF_INTERNAL_EXPORT_onnx_2eproto3 ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_TypeProto_SparseTensor_onnx_2eproto3;
+extern PROTOBUF_INTERNAL_EXPORT_onnx_2eproto3 ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_TypeProto_onnx_2eproto3;
 extern PROTOBUF_INTERNAL_EXPORT_onnx_2eproto3 ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_TypeProto_Tensor_onnx_2eproto3;
 extern PROTOBUF_INTERNAL_EXPORT_onnx_2eproto3 ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_ValueInfoProto_onnx_2eproto3;
 namespace onnx {
@@ -92,17 +91,12 @@ class TypeProto_MapDefaultTypeInternal {
  public:
   ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<TypeProto_Map> _instance;
 } _TypeProto_Map_default_instance_;
-class TypeProto_SparseTensorDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<TypeProto_SparseTensor> _instance;
-} _TypeProto_SparseTensor_default_instance_;
 class TypeProtoDefaultTypeInternal {
  public:
   ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<TypeProto> _instance;
   const ::onnx::TypeProto_Tensor* tensor_type_;
   const ::onnx::TypeProto_Sequence* sequence_type_;
   const ::onnx::TypeProto_Map* map_type_;
-  const ::onnx::TypeProto_SparseTensor* sparse_tensor_type_;
 } _TypeProto_default_instance_;
 class OperatorSetIdProtoDefaultTypeInternal {
  public:
@@ -313,25 +307,9 @@ static void InitDefaultsscc_info_TypeProto_onnx_2eproto3() {
   ::onnx::TypeProto::InitAsDefaultInstance();
 }
 
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_TypeProto_onnx_2eproto3 =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 2, 0, InitDefaultsscc_info_TypeProto_onnx_2eproto3}, {
-      &scc_info_TypeProto_Tensor_onnx_2eproto3.base,
-      &scc_info_TypeProto_SparseTensor_onnx_2eproto3.base,}};
-
-static void InitDefaultsscc_info_TypeProto_SparseTensor_onnx_2eproto3() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::onnx::_TypeProto_SparseTensor_default_instance_;
-    new (ptr) ::onnx::TypeProto_SparseTensor();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::onnx::TypeProto_SparseTensor::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_TypeProto_SparseTensor_onnx_2eproto3 =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_TypeProto_SparseTensor_onnx_2eproto3}, {
-      &scc_info_TensorShapeProto_onnx_2eproto3.base,}};
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_TypeProto_onnx_2eproto3 =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_TypeProto_onnx_2eproto3}, {
+      &scc_info_TypeProto_Tensor_onnx_2eproto3.base,}};
 
 static void InitDefaultsscc_info_TypeProto_Tensor_onnx_2eproto3() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -678,14 +656,13 @@ bool Version_IsValid(int value) {
     case 5:
     case 6:
     case 7:
-    case 8:
       return true;
     default:
       return false;
   }
 }
 
-static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> Version_strings[9] = {};
+static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> Version_strings[8] = {};
 
 static const char Version_names[] =
   "IR_VERSION"
@@ -695,31 +672,28 @@ static const char Version_names[] =
   "IR_VERSION_2019_1_22"
   "IR_VERSION_2019_3_18"
   "IR_VERSION_2019_9_19"
-  "IR_VERSION_2020_5_8"
   "_START_VERSION";
 
 static const ::PROTOBUF_NAMESPACE_ID::internal::EnumEntry Version_entries[] = {
-  { {Version_names + 0, 10}, 8 },
+  { {Version_names + 0, 10}, 7 },
   { {Version_names + 10, 21}, 1 },
   { {Version_names + 31, 21}, 2 },
   { {Version_names + 52, 20}, 3 },
   { {Version_names + 72, 20}, 4 },
   { {Version_names + 92, 20}, 5 },
   { {Version_names + 112, 20}, 6 },
-  { {Version_names + 132, 19}, 7 },
-  { {Version_names + 151, 14}, 0 },
+  { {Version_names + 132, 14}, 0 },
 };
 
 static const int Version_entries_by_number[] = {
-  8, // 0 -> _START_VERSION
+  7, // 0 -> _START_VERSION
   1, // 1 -> IR_VERSION_2017_10_10
   2, // 2 -> IR_VERSION_2017_10_30
   3, // 3 -> IR_VERSION_2017_11_3
   4, // 4 -> IR_VERSION_2019_1_22
   5, // 5 -> IR_VERSION_2019_3_18
   6, // 6 -> IR_VERSION_2019_9_19
-  7, // 7 -> IR_VERSION_2020_5_8
-  0, // 8 -> IR_VERSION
+  0, // 7 -> IR_VERSION
 };
 
 const std::string& Version_Name(
@@ -728,12 +702,12 @@ const std::string& Version_Name(
       ::PROTOBUF_NAMESPACE_ID::internal::InitializeEnumStrings(
           Version_entries,
           Version_entries_by_number,
-          9, Version_strings);
+          8, Version_strings);
   (void) dummy;
   int idx = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumName(
       Version_entries,
       Version_entries_by_number,
-      9, value);
+      8, value);
   return idx == -1 ? ::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString() :
                      Version_strings[idx].get();
 }
@@ -741,7 +715,7 @@ bool Version_Parse(
     const std::string& name, Version* value) {
   int int_value;
   bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
-      Version_entries, 9, name, &int_value);
+      Version_entries, 8, name, &int_value);
   if (success) {
     *value = static_cast<Version>(int_value);
   }
@@ -5958,221 +5932,6 @@ std::string TypeProto_Map::GetTypeName() const {
 
 // ===================================================================
 
-void TypeProto_SparseTensor::InitAsDefaultInstance() {
-  ::onnx::_TypeProto_SparseTensor_default_instance_._instance.get_mutable()->shape_ = const_cast< ::onnx::TensorShapeProto*>(
-      ::onnx::TensorShapeProto::internal_default_instance());
-}
-class TypeProto_SparseTensor::_Internal {
- public:
-  static const ::onnx::TensorShapeProto& shape(const TypeProto_SparseTensor* msg);
-};
-
-const ::onnx::TensorShapeProto&
-TypeProto_SparseTensor::_Internal::shape(const TypeProto_SparseTensor* msg) {
-  return *msg->shape_;
-}
-TypeProto_SparseTensor::TypeProto_SparseTensor()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:onnx.TypeProto.SparseTensor)
-}
-TypeProto_SparseTensor::TypeProto_SparseTensor(const TypeProto_SparseTensor& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  if (from._internal_has_shape()) {
-    shape_ = new ::onnx::TensorShapeProto(*from.shape_);
-  } else {
-    shape_ = nullptr;
-  }
-  elem_type_ = from.elem_type_;
-  // @@protoc_insertion_point(copy_constructor:onnx.TypeProto.SparseTensor)
-}
-
-void TypeProto_SparseTensor::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_TypeProto_SparseTensor_onnx_2eproto3.base);
-  ::memset(&shape_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&elem_type_) -
-      reinterpret_cast<char*>(&shape_)) + sizeof(elem_type_));
-}
-
-TypeProto_SparseTensor::~TypeProto_SparseTensor() {
-  // @@protoc_insertion_point(destructor:onnx.TypeProto.SparseTensor)
-  SharedDtor();
-}
-
-void TypeProto_SparseTensor::SharedDtor() {
-  if (this != internal_default_instance()) delete shape_;
-}
-
-void TypeProto_SparseTensor::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
-}
-const TypeProto_SparseTensor& TypeProto_SparseTensor::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_TypeProto_SparseTensor_onnx_2eproto3.base);
-  return *internal_default_instance();
-}
-
-
-void TypeProto_SparseTensor::Clear() {
-// @@protoc_insertion_point(message_clear_start:onnx.TypeProto.SparseTensor)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  if (GetArenaNoVirtual() == nullptr && shape_ != nullptr) {
-    delete shape_;
-  }
-  shape_ = nullptr;
-  elem_type_ = 0;
-  _internal_metadata_.Clear();
-}
-
-const char* TypeProto_SparseTensor::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
-#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
-  while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
-    switch (tag >> 3) {
-      // int32 elem_type = 1;
-      case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
-          elem_type_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
-          CHK_(ptr);
-        } else goto handle_unusual;
-        continue;
-      // .onnx.TensorShapeProto shape = 2;
-      case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
-          ptr = ctx->ParseMessage(_internal_mutable_shape(), ptr);
-          CHK_(ptr);
-        } else goto handle_unusual;
-        continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
-    }  // switch
-  }  // while
-success:
-  return ptr;
-failure:
-  ptr = nullptr;
-  goto success;
-#undef CHK_
-}
-
-::PROTOBUF_NAMESPACE_ID::uint8* TypeProto_SparseTensor::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
-  // @@protoc_insertion_point(serialize_to_array_start:onnx.TypeProto.SparseTensor)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // int32 elem_type = 1;
-  if (this->elem_type() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(1, this->_internal_elem_type(), target);
-  }
-
-  // .onnx.TensorShapeProto shape = 2;
-  if (this->has_shape()) {
-    target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        2, _Internal::shape(this), target, stream);
-  }
-
-  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
-  }
-  // @@protoc_insertion_point(serialize_to_array_end:onnx.TypeProto.SparseTensor)
-  return target;
-}
-
-size_t TypeProto_SparseTensor::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:onnx.TypeProto.SparseTensor)
-  size_t total_size = 0;
-
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  // .onnx.TensorShapeProto shape = 2;
-  if (this->has_shape()) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *shape_);
-  }
-
-  // int32 elem_type = 1;
-  if (this->elem_type() != 0) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
-        this->_internal_elem_type());
-  }
-
-  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
-  }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
-  SetCachedSize(cached_size);
-  return total_size;
-}
-
-void TypeProto_SparseTensor::CheckTypeAndMergeFrom(
-    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const TypeProto_SparseTensor*>(
-      &from));
-}
-
-void TypeProto_SparseTensor::MergeFrom(const TypeProto_SparseTensor& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:onnx.TypeProto.SparseTensor)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  if (from.has_shape()) {
-    _internal_mutable_shape()->::onnx::TensorShapeProto::MergeFrom(from._internal_shape());
-  }
-  if (from.elem_type() != 0) {
-    _internal_set_elem_type(from._internal_elem_type());
-  }
-}
-
-void TypeProto_SparseTensor::CopyFrom(const TypeProto_SparseTensor& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:onnx.TypeProto.SparseTensor)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool TypeProto_SparseTensor::IsInitialized() const {
-  return true;
-}
-
-void TypeProto_SparseTensor::InternalSwap(TypeProto_SparseTensor* other) {
-  using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(shape_, other->shape_);
-  swap(elem_type_, other->elem_type_);
-}
-
-std::string TypeProto_SparseTensor::GetTypeName() const {
-  return "onnx.TypeProto.SparseTensor";
-}
-
-
-// ===================================================================
-
 void TypeProto::InitAsDefaultInstance() {
 }
 class TypeProto::_Internal {
@@ -6180,7 +5939,6 @@ class TypeProto::_Internal {
   static const ::onnx::TypeProto_Tensor& tensor_type(const TypeProto* msg);
   static const ::onnx::TypeProto_Sequence& sequence_type(const TypeProto* msg);
   static const ::onnx::TypeProto_Map& map_type(const TypeProto* msg);
-  static const ::onnx::TypeProto_SparseTensor& sparse_tensor_type(const TypeProto* msg);
 };
 
 const ::onnx::TypeProto_Tensor&
@@ -6194,10 +5952,6 @@ TypeProto::_Internal::sequence_type(const TypeProto* msg) {
 const ::onnx::TypeProto_Map&
 TypeProto::_Internal::map_type(const TypeProto* msg) {
   return *msg->value_.map_type_;
-}
-const ::onnx::TypeProto_SparseTensor&
-TypeProto::_Internal::sparse_tensor_type(const TypeProto* msg) {
-  return *msg->value_.sparse_tensor_type_;
 }
 void TypeProto::set_allocated_tensor_type(::onnx::TypeProto_Tensor* tensor_type) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaNoVirtual();
@@ -6241,20 +5995,6 @@ void TypeProto::set_allocated_map_type(::onnx::TypeProto_Map* map_type) {
   }
   // @@protoc_insertion_point(field_set_allocated:onnx.TypeProto.map_type)
 }
-void TypeProto::set_allocated_sparse_tensor_type(::onnx::TypeProto_SparseTensor* sparse_tensor_type) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaNoVirtual();
-  clear_value();
-  if (sparse_tensor_type) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena = nullptr;
-    if (message_arena != submessage_arena) {
-      sparse_tensor_type = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, sparse_tensor_type, submessage_arena);
-    }
-    set_has_sparse_tensor_type();
-    value_.sparse_tensor_type_ = sparse_tensor_type;
-  }
-  // @@protoc_insertion_point(field_set_allocated:onnx.TypeProto.sparse_tensor_type)
-}
 TypeProto::TypeProto()
   : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
   SharedCtor();
@@ -6280,10 +6020,6 @@ TypeProto::TypeProto(const TypeProto& from)
     }
     case kMapType: {
       _internal_mutable_map_type()->::onnx::TypeProto_Map::MergeFrom(from._internal_map_type());
-      break;
-    }
-    case kSparseTensorType: {
-      _internal_mutable_sparse_tensor_type()->::onnx::TypeProto_SparseTensor::MergeFrom(from._internal_sparse_tensor_type());
       break;
     }
     case VALUE_NOT_SET: {
@@ -6333,10 +6069,6 @@ void TypeProto::clear_value() {
     }
     case kMapType: {
       delete value_.map_type_;
-      break;
-    }
-    case kSparseTensorType: {
-      delete value_.sparse_tensor_type_;
       break;
     }
     case VALUE_NOT_SET: {
@@ -6392,13 +6124,6 @@ const char* TypeProto::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::
           auto str = _internal_mutable_denotation();
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, nullptr));
-          CHK_(ptr);
-        } else goto handle_unusual;
-        continue;
-      // .onnx.TypeProto.SparseTensor sparse_tensor_type = 8;
-      case 8:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 66)) {
-          ptr = ctx->ParseMessage(_internal_mutable_sparse_tensor_type(), ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -6462,14 +6187,6 @@ failure:
         6, this->_internal_denotation(), target);
   }
 
-  // .onnx.TypeProto.SparseTensor sparse_tensor_type = 8;
-  if (_internal_has_sparse_tensor_type()) {
-    target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        8, _Internal::sparse_tensor_type(this), target, stream);
-  }
-
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
         static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
@@ -6515,13 +6232,6 @@ size_t TypeProto::ByteSizeLong() const {
           *value_.map_type_);
       break;
     }
-    // .onnx.TypeProto.SparseTensor sparse_tensor_type = 8;
-    case kSparseTensorType: {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *value_.sparse_tensor_type_);
-      break;
-    }
     case VALUE_NOT_SET: {
       break;
     }
@@ -6562,10 +6272,6 @@ void TypeProto::MergeFrom(const TypeProto& from) {
     }
     case kMapType: {
       _internal_mutable_map_type()->::onnx::TypeProto_Map::MergeFrom(from._internal_map_type());
-      break;
-    }
-    case kSparseTensorType: {
-      _internal_mutable_sparse_tensor_type()->::onnx::TypeProto_SparseTensor::MergeFrom(from._internal_sparse_tensor_type());
       break;
     }
     case VALUE_NOT_SET: {
@@ -6858,9 +6564,6 @@ template<> PROTOBUF_NOINLINE ::onnx::TypeProto_Sequence* Arena::CreateMaybeMessa
 }
 template<> PROTOBUF_NOINLINE ::onnx::TypeProto_Map* Arena::CreateMaybeMessage< ::onnx::TypeProto_Map >(Arena* arena) {
   return Arena::CreateInternal< ::onnx::TypeProto_Map >(arena);
-}
-template<> PROTOBUF_NOINLINE ::onnx::TypeProto_SparseTensor* Arena::CreateMaybeMessage< ::onnx::TypeProto_SparseTensor >(Arena* arena) {
-  return Arena::CreateInternal< ::onnx::TypeProto_SparseTensor >(arena);
 }
 template<> PROTOBUF_NOINLINE ::onnx::TypeProto* Arena::CreateMaybeMessage< ::onnx::TypeProto >(Arena* arena) {
   return Arena::CreateInternal< ::onnx::TypeProto >(arena);

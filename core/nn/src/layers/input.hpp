@@ -2,6 +2,7 @@
 
 #include "layer_base.hpp"
 #include <ops/conversions.hpp>
+#include <onnx/common.h>
 
 using std::unique_ptr;
 
@@ -38,6 +39,10 @@ namespace EigenSinn {
     // Required overrides
     void forward(LayerBase<Scalar, Device_>& prev_layer_base) override {};
     void backward(LayerBase<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {};
+
+    std::vector<Index> get_dims() {
+      return dsizes2vector(input.dimensions());
+    }
 
   private:
 
