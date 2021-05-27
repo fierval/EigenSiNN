@@ -139,6 +139,8 @@ namespace EigenSinn
       if (Rank == 1) { return _data; }
 
       if (Layout != RowMajor) {
+
+        // swap_layout reverses dimensions, we'll need to shuffle them back
         array<Index, Rank> shuffle_dims;
         for (Index i = Rank - 1; i >= 0; i--) {
           shuffle_dims[Rank - 1 - i] = i;
