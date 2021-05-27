@@ -136,7 +136,8 @@ namespace EigenSinn
       Tensor<Scalar, Rank, Layout> host_t = to_host();
       Scalar* _data = host_t.data();
 
-      if (Rank == 1) { return _data; }
+      // we don't care about the layout if it's single-dimensional tensor
+      if (Rank <= 1) { return _data; }
 
       if (Layout != RowMajor) {
 
@@ -149,7 +150,7 @@ namespace EigenSinn
         Tensor<Scalar, Rank, RowMajor> row_weights = host_weights.swap_layout().shuffle(shuffle_dims);
         _data = row_weights.data();
       }
-      return (char *)_data;
+      return _data;
     }
 
     // resizing, setting values
