@@ -28,9 +28,12 @@ namespace EigenSinnTest {
       conv = std::make_shared<Conv2d<float, ThreadPoolDevice, RowMajor>>(cd.kernelDims);
       conv->init();
 
+
+
     }
 
     std::shared_ptr<Conv2d<float, ThreadPoolDevice, RowMajor>> conv;
+    ReLU<float, 4, ThreadPoolDevice, RowMajor> relu;
     Input<float, 4, ThreadPoolDevice, RowMajor> input;
     CommonData4d<ThreadPoolDevice, RowMajor> cd;
   };
@@ -38,11 +41,11 @@ namespace EigenSinnTest {
   TEST_F(OnnxSave, SaveModel) {
 
     // Model
-    EigenModel model;
-    model.add_input("input", input.get_dims(), data_type_from_scalar<float>());
-    model.add_output("output", conv->out_dims(), data_type_from_scalar<float>());
+    EigenModel<float> model;
 
-    // Node
-    std::unique_ptr<onnx::NodeProto> graph = std::make_unique<onnx::NodeProto>();
+    Conv2d<float, ThreadPoolDevice, RowMajor>& conv = *(this->conv);
+
+    model.add_input("input", input.get_dims(), data_type_from_scalar<float>());
+    model.add_output("output", conv.out_dims(), data_type_from_scalar<float>());
   }
 } // EigenSinnTest

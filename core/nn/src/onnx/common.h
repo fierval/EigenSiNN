@@ -59,6 +59,7 @@ namespace EigenSinn {
     assert(false);
   }
 
+  template <typename Scalar>
   class EigenModel {
 
     typedef std::vector<onnx::ValueInfoProto *> ValueInfos;
@@ -117,7 +118,53 @@ namespace EigenSinn {
       }
     }
 
+    // get a unique name for the tensor value
+    static inline std::string get_tensor_value_name() { 
+
+      std::lock_guard(value_mutex);
+      return std::to_string(current_name++); 
+    }
+
+    static inline std::string get_layer_suffix() {
+      std::lock_guard(suffix_mutex);
+      return std::to_string(current_layer_suffix++);
+    }
+
+    // adds a graph node with descriptions and references to inputs/outputs
+    inline onnx::NodeProto * add_graph_node(const char* prefix, const char* op_type, std::string& input_name) {
+
+      std::vector<std::string> names{ input_name };
+      return add_graph_node(prefix, op_type, names);
+    }
+
+    inline onnx::NodeProto* add_graph_node(const char* prefix, const char* op_type, std::vector<std::string>& input_names) {
+      std::string layer_name = std::string(prefix) + get_layer_suffix();
+      onnx::NodeProto * node = graph->add_node();
+
+      node->set_name(layer_name);
+      node->set_op_type(op_type);
+
+      std::for_each(input_names.begin(), input_names.end(), [&](std::string& n) {
+        auto * input = node->add_input();
+        *input = n;
+        });
+
+      std::string * output = node->add_output();
+      *output = get_tensor_value_name();
+
+      return node;
+    }
+
+    inline onnx::GraphProto* get_graph() { return graph; }
+
   protected:
+    
+    // current name for tensor value
+    static inline int current_value_name = 400;
+    static inline int current_layer_suffix = 0;
+    static inline std::mutex value_mutex;
+    static inline std::mutex suffix_mutex;
+
     std::shared_ptr<onnx::ModelProto> model;
     onnx::GraphProto * graph;
   };

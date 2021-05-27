@@ -188,6 +188,18 @@ namespace EigenSinn {
     // ONNX
     std::vector<Index> out_dims() { return  dsizes2vector(params->get_out_dims()); }
 
+    void add_onnx_node(EigenModel<Scalar>& model, std::string& input_name) {
+
+      std::string bias_name = EigenModel::get_tensor_value_name();
+      std::string weights_name = EigenModel::get_tensor_value_name();
+
+      std::vector<std::string> names{ input_name, weights_name, bias_name };
+      onnx::NodeProto* node = model.add_graph_node(prefix, op_type, names);
+
+      //TODO: single output
+      const std::string out_name = node->output().Get(0);
+    }
+
   private:
     DeviceTensor<Scalar, 4, Device_, Layout> kernel, layer_output, dX, dW;
     DeviceTensor<Scalar, 1, Device_, Layout> bias, loss_by_bias_derivative;
@@ -202,5 +214,9 @@ namespace EigenSinn {
     std::shared_ptr<CudnnWorkspace> cudnn_workspace;
 #endif
     bool is_cudnn;
+
+    // ONNX node prefix for node name: Conv_1, etc
+    static constexpr char prefix[] = "Conv_";
+    static constexpr char op_type[] = "Conv";
   };
 }
