@@ -198,6 +198,12 @@ namespace EigenSinn {
 
       //TODO: single output
       const std::string out_name = node->output().Get(0);
+
+
+      char* _bias, _weights;
+      _bias = bias.get_data_row_major();
+      _weights = kernel.get_data_row_major();
+
     }
 
   private:

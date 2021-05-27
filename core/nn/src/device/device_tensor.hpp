@@ -108,6 +108,13 @@ namespace EigenSinn
 
     Tensor<Scalar, Rank, Layout> to_host() const {
 
+#ifdef EIGEN_USE_GPU
+      if (!std::is_same<Device_, GpuDevice>::value) {
+#endif
+        return *tensor_view;
+#ifdef EIGEN_USE_GPU
+      }
+
       DefaultDevice host;
 
       size_t alloc_size = size() * sizeof(Scalar);
@@ -118,6 +125,29 @@ namespace EigenSinn
 
       host.deallocate(data);
       return out;
+#endif
+    }
+
+    // Give an device tensor return its data on the host in RowMajor layout
+    // For saving in ONNX format
+    char* get_data_row_major() {
+
+      // we want RowMajor layout
+      Tensor<Scalar, Rank, Layout> host_t = to_host();
+      Scalar* _data = host_t.data();
+
+      if (Rank == 1) { return _data; }
+
+      if (Layout != RowMajor) {
+        array<Index, Rank> shuffle_dims;
+        for (Index i = Rank - 1; i >= 0; i--) {
+          shuffle_dims[Rank - 1 - i] = i;
+        }
+
+        Tensor<Scalar, Rank, RowMajor> row_weights = host_weights.swap_layout().shuffle(shuffle_dims);
+        _data = row_weights.data();
+      }
+      return (char *)_data;
     }
 
     // resizing, setting values
