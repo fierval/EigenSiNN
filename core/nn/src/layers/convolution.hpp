@@ -188,8 +188,11 @@ namespace EigenSinn {
     // ONNX
     std::vector<Index> out_dims() { return  dsizes2vector(params->get_out_dims()); }
 
-    void add_onnx_node(EigenModel<Scalar>& model, std::string& input_name) {
+    // add ONNX node corresponding to this layer
+    // returns the name of the output in the serialized file
+    const std::string add_onnx_node(EigenModel<Scalar>& model, std::string& input_name) {
 
+      // 1. add ONNX node with its inputs, outputs, and names
       std::string bias_name = EigenModel::get_tensor_value_name();
       std::string weights_name = EigenModel::get_tensor_value_name();
 
@@ -198,12 +201,16 @@ namespace EigenSinn {
 
       //TODO: single output
       const std::string out_name = node->output().Get(0);
+      
+      // 2. create attributes
+      params->create_onnx_attributes(node);
 
+      // 3. Save initializers (raw data in row major format)
+      bias.save_onnx_initializer(model, bias_name);
+      kernel.save_onnx_initializer(model, weights_name);
 
-      char* _bias, _weights;
-      _bias = bias.get_data_row_major();
-      _weights = kernel.get_data_row_major();
-
+      // return output to pass as input to next node in graph
+      return out_name;
     }
 
   private:

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <ops/opsbase.hpp>
-#include <layers/input.hpp>
 #include "onnx.proto3.pb.h"
 
 namespace EigenSinn {

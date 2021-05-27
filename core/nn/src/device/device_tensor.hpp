@@ -3,6 +3,7 @@
 #include "device_helpers.hpp"
 #include "ops/opsbase.hpp"
 #include "tensor_adapter.hpp"
+#include "onnx/common.h"
 
 namespace EigenSinn
 {
@@ -128,31 +129,6 @@ namespace EigenSinn
 #endif
     }
 
-    // Give an device tensor return its data on the host in RowMajor layout
-    // For saving in ONNX format
-    char* get_data_row_major() {
-
-      // we want RowMajor layout
-      Tensor<Scalar, Rank, Layout> host_t = to_host();
-      Scalar* _data = host_t.data();
-
-      // we don't care about the layout if it's single-dimensional tensor
-      if (Rank <= 1) { return _data; }
-
-      if (Layout != RowMajor) {
-
-        // swap_layout reverses dimensions, we'll need to shuffle them back
-        array<Index, Rank> shuffle_dims;
-        for (Index i = Rank - 1; i >= 0; i--) {
-          shuffle_dims[Rank - 1 - i] = i;
-        }
-
-        Tensor<Scalar, Rank, RowMajor> row_weights = host_weights.swap_layout().shuffle(shuffle_dims);
-        _data = row_weights.data();
-      }
-      return _data;
-    }
-
     // resizing, setting values
     void resize(DSizes<Index, Rank> dims) {
       tensor_adapter.reset();
@@ -265,9 +241,9 @@ namespace EigenSinn
       out.set_from_device(tensor_adapter->data(), tensor_view->dimensions());
       return out;
     }
-    
+
     // switch layout
-    inline DeviceTensor<Scalar, Rank, Device_, (Layout ^ RowMajor)> swap_layout() const {
+    inline DeviceTensor<Scalar, Rank, Device_, (Layout^ RowMajor)> swap_layout() const {
 
       DeviceTensor<Scalar, Rank, Device_, Layout^ RowMajor> out_t(dimensions());
 
@@ -277,6 +253,22 @@ namespace EigenSinn
 
     ~DeviceTensor() {
       assert(true);
+    }
+
+    // ONNX
+    void save_onnx_initializer(EigenModel<Scalar>& model, const std::string& name) {
+
+      const byte* data = get_data_row_major();
+      auto graph = model.get_graph();
+      onnx::TensorProto* initializer = graph->add_initializer();
+      initializer->set_name(name);
+
+      for (Index i = 0; i < Rank; i++) {
+        initializer->add_dims(dimensions()[i]);
+      }
+
+      initializer->set_raw_data(data);
+      initializer->set_data_type(data_type_from_scalar<Scalar>());
     }
 
   private:
@@ -312,10 +304,44 @@ namespace EigenSinn
       tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), dims));
     }
 
+    // ONNX
+    // Give an device tensor return its data on the host in RowMajor layout
+    // For saving in ONNX format
+    const byte* get_data_row_major() {
+
+      // we want RowMajor layout
+      Tensor<Scalar, Rank, Layout> host_t = to_host();
+      Scalar* _data = host_t.data();
+
+      if (out_data.size() == 0) {
+        out_data.resize(sizeof(byte) * dimensions().TotalSize());
+      }
+
+      Tensor<Scalar, Rank, RowMajor> out_t;
+      DefaultDevice default_device;
+
+      // we don't care about the layout if it's single-dimensional tensor
+      if (Layout != RowMajor) {
+
+        // swap_layout reverses dimensions, we'll need to shuffle them back
+        array<Index, Rank> shuffle_dims;
+        for (Index i = Rank - 1; i >= 0; i--) {
+          shuffle_dims[Rank - 1 - i] = i;
+        }
+
+        out_t = host_weights.swap_layout().shuffle(shuffle_dims);
+      }
+
+      // everything is happening on the CPU
+      default_device.memcpy(out_data.data(), (byte*)out_t.data(), out_data.size());
+      return out_data.data();
+    }
+
     // for tensor ops
     OptionalTensorView<Scalar, Rank, Layout> tensor_view;
 
     // for passing tensors around
     std::shared_ptr<TensorAdapter<Scalar, Device_>> tensor_adapter;
+    std::vector<byte> out_data;
   };
 }

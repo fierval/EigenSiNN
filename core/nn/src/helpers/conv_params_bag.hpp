@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ops/opsbase.hpp"
+#include "onnx/common.h"
 
 using namespace Eigen;
 
@@ -97,6 +98,45 @@ namespace EigenSinn {
     const bool is_cudnn;
 
     std::vector<long> h_im_range, w_im_range, col_batches;
+
+    // serialize relevant attributes in the node
+    void create_onnx_attributes(onnx::NodeProto* node) {
+      // TODO: Not supporting group convolutions yet
+      auto group_attr = node->add_attribute();
+      group_attr->set_name("group");
+      group_attr->set_i(1);
+      group_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INT);
+
+      // dilations
+      auto dilations_attr = node->add_attribute();
+      dilations_attr->set_name("dilations");
+      dilations_attr->add_ints(dilation);
+      dilations_attr->add_ints(dilation);
+      dilations_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INTS);
+
+      // pads
+      auto pads_attr = node->add_attribute();
+      pads_attr->set_name("pads");
+      pads_attr->add_ints(1);
+      pads_attr->add_ints(1);
+      pads_attr->add_ints(padding.first);
+      pads_attr->add_ints(padding.second);
+      pads_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INTS);
+
+      // strides
+      auto strides_attr = node->add_attribute();
+      strides_attr->set_name("strides");
+      strides_attr->add_ints(stride);
+      strides_attr->add_ints(stride);
+      strides_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INTS);
+
+      // kernel_shape
+      auto dilations_attr = node->add_attribute();
+      dilations_attr->set_name("kernel_shape");
+      dilations_attr->add_ints(kernel_dims[ImageDims::height]);
+      dilations_attr->add_ints(kernel_dims[ImageDims::width]);
+      dilations_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INTS);
+    }
 
   protected:
     inline void get_output_dimensions() {
