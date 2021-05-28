@@ -133,6 +133,38 @@ namespace EigenSinn {
       bias = DeviceTensor<Scalar, 1, Device_, Layout>(v);
     }
 
+    const std::string add_onnx_node(EigenModel<Scalar>& model, const std::string& input_name) { 
+      
+      // 1. add ONNX node with its inputs, outputs, and names
+      std::string bias_name = EigenModel<Scalar>::get_tensor_value_name();
+      std::string weights_name = EigenModel<Scalar>::get_tensor_value_name();
+
+      std::vector<std::string> names{ input_name, weights_name, bias_name };
+      onnx::NodeProto* node = model.add_graph_node(prefix, op_type, names);
+
+      //TODO: single output
+      const std::string& out_name = node->output().Get(0);
+
+      // 2. create attributes
+      auto alpha_attr = node->add_attribute();
+      alpha_attr->set_name("alpha");
+      alpha_attr->set_f(1);
+      alpha_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_FLOAT);
+
+      auto beta_attr = node->add_attribute();
+      beta_attr->set_name("beta");
+      beta_attr->set_f(1);
+      beta_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_FLOAT);
+
+      // 3. Save initializers (raw data in row major format)
+      bias.save_onnx_initializer(model, bias_name);
+      weights.save_onnx_initializer(model, weights_name);
+
+      // return output to pass as input to next node in graph
+      return out_name;
+
+    }
+
   private:
 
     DeviceTensor<Scalar, 2, Device_, Layout> weights;
@@ -142,5 +174,11 @@ namespace EigenSinn {
     const int in_dim, out_dim;
     array<int, 2> broadcast_bias_dim;
     const array<int, 1> reduce_bias_dim = { 0 };
+
+    // ONNX node prefix for node name, e.g.: Conv_1, etc
+    static constexpr char prefix[] = "Gemm_";
+    // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md
+    static constexpr char op_type[] = "Gemm";
+
   };
 }

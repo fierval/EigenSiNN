@@ -229,6 +229,7 @@ namespace EigenSinn {
 
     // ONNX node prefix for node name: Conv_1, etc
     static constexpr char prefix[] = "Conv_";
+    // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md
     static constexpr char op_type[] = "Conv";
   };
 }
