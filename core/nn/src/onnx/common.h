@@ -64,7 +64,8 @@ namespace EigenSinn {
     typedef std::vector<onnx::ValueInfoProto *> ValueInfos;
 
   public:
-    EigenModel() {
+    EigenModel(bool _is_training = true)
+    : is_training(_is_training ) {
       
       model = std::make_shared<onnx::ModelProto>();
       onnx::OperatorSetIdProto * opset_id = model->add_opset_import();
@@ -159,6 +160,10 @@ namespace EigenSinn {
 
     inline onnx::GraphProto* get_graph() { return graph; }
 
+    // some layers like Dropout aren't needed if we are saving
+    // for inference
+    inline bool is_inference() { return !is_training; }
+
   protected:
     
     // current name for tensor value
@@ -169,6 +174,8 @@ namespace EigenSinn {
 
     std::shared_ptr<onnx::ModelProto> model;
     onnx::GraphProto * graph;
+
+    bool is_training;
   };
 
 } // namespace EigenSinn

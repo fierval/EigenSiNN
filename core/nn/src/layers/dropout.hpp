@@ -89,6 +89,32 @@ namespace EigenSinn {
       return is_training;
     }
 
+    const std::string add_onnx_node(EigenModel<Scalar>& model, const std::string& input_name) {
+
+      // Dropout is a noop during inference
+      if (model.is_inference()) {
+        return;
+      }
+
+      // Dropout spec saves everything as input
+      // So we need to wrap scalar values in tensors
+      DeviceTensor<float, 0> prob_tensor;
+      prob_tensor.setConstant(prob);
+      auto prob_name = EigenModel<Scalar>::get_tensor_value_name();
+
+      DeviceTensor<bool, 0> training_mode;
+      training_mode.setConstant(true);
+      auto training_mode_name = EigenModel<Scalar>::get_tensor_value_name();
+
+      // 1. Add inputs
+      auto* node = model.add_graph_node(op_type, {input_name, training_mode_name, prob_name});
+      const std::string out_name = node->output().Get(0);
+
+      // 2. Add initializers
+      prob_tensor.save_onnx_initializer(model, prob_name);
+      training_mode.save_onnx_initializer(model, training_mode_name);
+    }
+
   private:
     DeviceTensor<Scalar, Rank, Device_, Layout> mask;
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_gradient;
@@ -96,6 +122,10 @@ namespace EigenSinn {
     DeviceTensor<float, Rank, Device_, Layout> rands, then_tensor, else_tensor, prob_tensor;
     bool is_training, inited;
     const float prob;
+
+    // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Dropout
+    static constexpr char op_type[] = "Dropout";
+
   };
 
 }

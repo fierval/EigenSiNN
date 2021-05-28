@@ -227,7 +227,7 @@ namespace EigenSinn {
 #endif
     bool is_cudnn;
 
-    // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md
+    // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Conv
     static constexpr char op_type[] = "Conv";
   };
 }
