@@ -4,7 +4,6 @@
 #include "ops/convolutions.hpp"
 #include "ops/initializations.hpp"
 #include "helpers/conv_params_bag.hpp"
-#include <onnx/common.h>
 
 #ifdef __CUDACC__
 #include "cudnn/cudnn_workspace.hpp"
@@ -190,11 +189,11 @@ namespace EigenSinn {
 
     // add ONNX node corresponding to this layer
     // returns the name of the output in the serialized file
-    const std::string add_onnx_node(EigenModel<Scalar>& model, std::string& input_name) {
+    const std::string add_onnx_node(EigenModel<Scalar>& model, const std::string& input_name) override {
 
       // 1. add ONNX node with its inputs, outputs, and names
-      std::string bias_name = EigenModel::get_tensor_value_name();
-      std::string weights_name = EigenModel::get_tensor_value_name();
+      std::string bias_name = EigenModel<Scalar>::get_tensor_value_name();
+      std::string weights_name = EigenModel<Scalar>::get_tensor_value_name();
 
       std::vector<std::string> names{ input_name, weights_name, bias_name };
       onnx::NodeProto* node = model.add_graph_node(prefix, op_type, names);

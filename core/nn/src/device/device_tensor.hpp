@@ -258,7 +258,7 @@ namespace EigenSinn
     // ONNX
     void save_onnx_initializer(EigenModel<Scalar>& model, const std::string& name) {
 
-      const byte* data = get_data_row_major();
+      const char* data = get_data_row_major();
       auto graph = model.get_graph();
       onnx::TensorProto* initializer = graph->add_initializer();
       initializer->set_name(name);
@@ -307,14 +307,14 @@ namespace EigenSinn
     // ONNX
     // Give an device tensor return its data on the host in RowMajor layout
     // For saving in ONNX format
-    const byte* get_data_row_major() {
+    const char* get_data_row_major() {
 
       // we want RowMajor layout
       Tensor<Scalar, Rank, Layout> host_t = to_host();
       Scalar* _data = host_t.data();
 
       if (out_data.size() == 0) {
-        out_data.resize(sizeof(byte) * dimensions().TotalSize());
+        out_data.resize(dimensions().TotalSize());
       }
 
       Tensor<Scalar, Rank, RowMajor> out_t;
@@ -324,16 +324,18 @@ namespace EigenSinn
       if (Layout != RowMajor) {
 
         // swap_layout reverses dimensions, we'll need to shuffle them back
-        array<Index, Rank> shuffle_dims;
+        DSizes<Index, Rank> shuffle_dims, reverse_dims;
         for (Index i = Rank - 1; i >= 0; i--) {
-          shuffle_dims[Rank - 1 - i] = i;
+          shuffle_dims[Rank - 1 - i] = host_t.dimension(i);
+          reverse_dims[Rank - 1 - i] = i;
         }
 
-        out_t = host_weights.swap_layout().shuffle(shuffle_dims);
+        TensorView<Scalar, Rank, RowMajor> out_view(_data, shuffle_dims);
+        out_view = out_view.shuffle(reverse_dims);
       }
 
       // everything is happening on the CPU
-      default_device.memcpy(out_data.data(), (byte*)out_t.data(), out_data.size());
+      default_device.memcpy(out_data.data(), (char *)_data, out_data.size() * sizeof(char));
       return out_data.data();
     }
 
@@ -342,6 +344,6 @@ namespace EigenSinn
 
     // for passing tensors around
     std::shared_ptr<TensorAdapter<Scalar, Device_>> tensor_adapter;
-    std::vector<byte> out_data;
+    std::vector<char> out_data;
   };
 }

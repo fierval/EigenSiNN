@@ -27,9 +27,6 @@ namespace EigenSinnTest {
 
       conv = std::make_shared<Conv2d<float, ThreadPoolDevice, RowMajor>>(cd.kernelDims);
       conv->init();
-
-
-
     }
 
     std::shared_ptr<Conv2d<float, ThreadPoolDevice, RowMajor>> conv;
@@ -47,5 +44,7 @@ namespace EigenSinnTest {
 
     model.add_input("input", input.get_dims(), data_type_from_scalar<float>());
     model.add_output("output", conv.out_dims(), data_type_from_scalar<float>());
+
+    conv.add_onnx_node(model, "input");
   }
 } // EigenSinnTest

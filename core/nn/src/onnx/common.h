@@ -120,12 +120,12 @@ namespace EigenSinn {
     // get a unique name for the tensor value
     static inline std::string get_tensor_value_name() { 
 
-      std::lock_guard(value_mutex);
-      return std::to_string(current_name++); 
+      std::lock_guard guard(value_mutex);
+      return std::to_string(current_value_name++); 
     }
 
     static inline std::string get_layer_suffix() {
-      std::lock_guard(suffix_mutex);
+      std::lock_guard guard(suffix_mutex);
       return std::to_string(current_layer_suffix++);
     }
 

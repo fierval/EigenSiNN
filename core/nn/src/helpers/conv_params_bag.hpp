@@ -131,11 +131,11 @@ namespace EigenSinn {
       strides_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INTS);
 
       // kernel_shape
-      auto dilations_attr = node->add_attribute();
-      dilations_attr->set_name("kernel_shape");
-      dilations_attr->add_ints(kernel_dims[ImageDims::height]);
-      dilations_attr->add_ints(kernel_dims[ImageDims::width]);
-      dilations_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INTS);
+      auto kernel_shape_attr = node->add_attribute();
+      kernel_shape_attr->set_name("kernel_shape");
+      kernel_shape_attr->add_ints(kernel_dims[(int)ImageDims::height]);
+      kernel_shape_attr->add_ints(kernel_dims[(int)ImageDims::width]);
+      kernel_shape_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INTS);
     }
 
   protected:
