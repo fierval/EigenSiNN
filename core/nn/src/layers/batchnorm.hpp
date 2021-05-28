@@ -184,7 +184,57 @@ namespace EigenSinn {
       beta = DeviceTensor<Scalar, 1, Device_, Layout>(v);
     }
 
+    inline onnx::NodeProto* add_graph_node(const char* op_type, std::vector<std::string>& input_names) {
+
+      // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md
+      static constexpr char op_type[] = "BatchNormalization";
+
+      static constexpr char s_bias[] = "bias";
+      static constexpr char s_weight[] = "weight";
+      static constexpr char s_running_mean[] = "running_mean";
+      static constexpr char s_running_var[] = "running_var";
+
+      // 1. ADd ONNX node with inputs & outputs
+      std::string layer_idx = EigenModel::get_layer_suffix();
+
+      std::vector<std::string> names;
+      std::string _weight, _bias, _mean, _var;
+      names.push_back(_weight = get_input_name(layer_idx, s_weight));
+      names.push_back(_bias = get_input_name(layer_idx, s_bias));
+      names.push_back(_mean = get_input_name(layer_idx, s_running_mean));
+      names.push_back(_var = get_input_name(layer_idx, s_running_var));
+
+      onnx::NodeProto* node = model.add_graph_node(op_type, names);
+      const std::string out_name = node->output().Get(0);
+
+      // 2. Attributes
+      auto epsilon_attr = node->add_attribute();
+      epsilon_attr->set_name("epsilon");
+      epsilon_attr->set_f(eps);
+      epsilon_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_FLOAT);
+
+      auto epsilon_attr = node->add_attribute();
+      epsilon_attr->set_name("momentum");
+      epsilon_attr->set_f(momentum);
+      epsilon_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_FLOAT);
+
+      // 3. Initializers
+      gamma.save_onnx_initializer(model, _weight);
+      beta.save_onnx_initializer(model, _bias);
+      running_mean.save_onnx_initializer(model, _mean);
+      running_variance.save_onnx_initializer(model, _var);
+    }
+
   private:
+
+    inline std::string get_input_name(const std::string layer_idx, const char* suffix) {
+      static constexpr char s_batch[] = "batch";
+
+      std::ostringstream ss;
+      ss << s_batch << layer_idx << "." << suffix;
+      return ss.str();
+    }
+
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_gradient, xhat;
 
     DeviceTensor<Scalar, 1, Device_, Layout> gamma, beta, running_mean, running_variance, mu, var;

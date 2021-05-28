@@ -100,7 +100,7 @@ namespace EigenSinn {
     std::vector<long> h_im_range, w_im_range, col_batches;
 
     // serialize relevant attributes in the node
-    void create_onnx_attributes(onnx::NodeProto* node) {
+    inline void create_onnx_attributes(onnx::NodeProto* node) {
       // TODO: Not supporting group convolutions yet
       auto group_attr = node->add_attribute();
       group_attr->set_name("group");
@@ -114,6 +114,14 @@ namespace EigenSinn {
       dilations_attr->add_ints(dilation);
       dilations_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INTS);
 
+      create_onnx_attributes_common(node);
+
+    }
+
+  protected:
+
+    // ONNX: common attributes for convolution and maxpool
+    inline void create_onnx_attributes_common(onnx::NodeProto* node) {
       // pads
       auto pads_attr = node->add_attribute();
       pads_attr->set_name("pads");
@@ -136,9 +144,9 @@ namespace EigenSinn {
       kernel_shape_attr->add_ints(kernel_dims[(int)ImageDims::height]);
       kernel_shape_attr->add_ints(kernel_dims[(int)ImageDims::width]);
       kernel_shape_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INTS);
+
     }
 
-  protected:
     inline void get_output_dimensions() {
 
       if (!is_transposed) {
@@ -209,6 +217,12 @@ namespace EigenSinn {
       out_dims[(int)ImageDims::channel] = input_dims[(int)ImageDims::channel];
 
       set_parallel_range();
+    }
+
+    // serialize relevant attributes in the node
+    inline void create_onnx_attributes(onnx::NodeProto* node) {
+
+      create_onnx_attributes_common(node);
     }
 
     // range for parallel max_pooling

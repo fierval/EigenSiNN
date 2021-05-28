@@ -133,14 +133,14 @@ namespace EigenSinn {
       bias = DeviceTensor<Scalar, 1, Device_, Layout>(v);
     }
 
-    const std::string add_onnx_node(EigenModel<Scalar>& model, const std::string& input_name) { 
+    const std::string add_onnx_node(EigenModel<Scalar>& model, const std::string& input_name) override { 
       
       // 1. add ONNX node with its inputs, outputs, and names
       std::string bias_name = EigenModel<Scalar>::get_tensor_value_name();
       std::string weights_name = EigenModel<Scalar>::get_tensor_value_name();
 
       std::vector<std::string> names{ input_name, weights_name, bias_name };
-      onnx::NodeProto* node = model.add_graph_node(prefix, op_type, names);
+      onnx::NodeProto* node = model.add_graph_node(op_type, names);
 
       //TODO: single output
       const std::string& out_name = node->output().Get(0);
@@ -175,10 +175,7 @@ namespace EigenSinn {
     array<int, 2> broadcast_bias_dim;
     const array<int, 1> reduce_bias_dim = { 0 };
 
-    // ONNX node prefix for node name, e.g.: Conv_1, etc
-    static constexpr char prefix[] = "Gemm_";
     // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md
     static constexpr char op_type[] = "Gemm";
-
   };
 }

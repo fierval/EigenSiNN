@@ -182,6 +182,19 @@ PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
     }
 #endif
 
+    const std::string add_onnx_node(EigenModel<Scalar>& model, const std::string& input_name) override {
+
+      onnx::NodeProto* node = model.add_graph_node(op_type, input_name);
+
+      const std::string out_name = node->output().Get(0);
+
+      params->create_onnx_attributes(node);
+
+      // return output to pass as input to next node in graph
+      return out_name;
+
+    }
+
     MaxPoolParams<Rank>& get_maxpool_params() { return *params; }
   private:
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_gradient;
@@ -200,6 +213,10 @@ PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
 
     // concurrency
     std::mutex mtx;
+    
+    // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md
+    static constexpr char op_type[] = "MaxPool";
+
   };
 
 }
