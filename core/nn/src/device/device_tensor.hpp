@@ -10,7 +10,7 @@ namespace EigenSinn
   template<typename Scalar, typename Device_>
   using PtrTensorAdapter = std::shared_ptr<TensorAdapter<Scalar, Device_>>;
 
-  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class DeviceTensor {
 
   public:

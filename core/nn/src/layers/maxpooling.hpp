@@ -19,7 +19,7 @@ namespace EigenSinn {
   // For Linear (fully connected) layers: (N, C)
   // N - batch size
   // C - number of channels (1 for fully connected layers)
-  template <typename Scalar, Index Rank = 4, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template <typename Scalar, Index Rank = 4, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class MaxPooling : public LayerBase<Scalar, Device_> {
   public:
 

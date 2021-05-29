@@ -8,7 +8,7 @@ using namespace Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, typename Actual, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template <typename Scalar, typename Actual, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class LossBase {
 
   public:

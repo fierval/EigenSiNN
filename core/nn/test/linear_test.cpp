@@ -65,11 +65,11 @@ namespace EigenSinnTest {
     Linear<float> linear(in_dim, 512);
 
     linear.init();
-    Tensor<float, 2> weights(DeviceTensor<float, 2>((linear.get_weights())).to_host());
-    Tensor<float, 0> avg = weights.mean();
-    Tensor<float, 0> std = (weights - avg(0)).pow(2.).mean();
+    Tensor<float, 2, RowMajor> weights(DeviceTensor<float, 2>((linear.get_weights())).to_host());
+    Tensor<float, 0, RowMajor> avg = weights.mean();
+    Tensor<float, 0, RowMajor> std = (weights - avg(0)).pow(2.).mean();
 
-    Tensor<float, 0> std_expected;
+    Tensor<float, 0, RowMajor> std_expected;
     std_expected.setConstant(1. / in_dim);
 
     EXPECT_TRUE(is_elementwise_approx_eq(std_expected, std, 1e-4));

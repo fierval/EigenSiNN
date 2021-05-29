@@ -105,11 +105,11 @@ namespace EigenSinnTest {
     conv2d.init();
     DeviceTensor<float, 4, GpuDevice> weights(conv2d.get_weights());
 
-    Tensor<float, 0> avg = weights.to_host().mean();
+    Tensor<float, 0, RowMajor> avg = weights.to_host().mean();
     
-    Tensor<float, 0> var = (weights.to_host() - avg(0)).pow(2.).mean();
+    Tensor<float, 0, RowMajor> var = (weights.to_host() - avg(0)).pow(2.).mean();
 
-    Tensor<float, 0> var_expected;
+    Tensor<float, 0, RowMajor> var_expected;
     var_expected.setConstant(1. / (kdims[1] * kdims[2] * kdims[3]));
 
     EXPECT_TRUE(is_elementwise_approx_eq(var_expected, var, 1e-4));

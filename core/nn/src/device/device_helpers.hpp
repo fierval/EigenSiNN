@@ -30,7 +30,7 @@ namespace EigenSinn {
   /// <param name="device"></param>
   /// <param name="dims"></param>
   /// <returns></returns>
-  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   inline TensorView<Scalar, Rank, Layout> create_device_view(const DSizes<Index, Rank>& dims, Device_& device) {
 
     size_t alloc_size = dims.TotalSize() * sizeof(Scalar);
@@ -39,14 +39,14 @@ namespace EigenSinn {
     return out;
   }
 
-  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   inline void move_to(TensorView<Scalar, Rank, Layout>& dest, const TensorView<Scalar, Rank, Layout>& src, Device_& device) {
 
     assert(src.dimensions() == dest.dimensions());
     device.memcpyHostToDevice(dest.data(), src.data(), dest.dimensions().TotalSize() * sizeof(Scalar));
   }
 
-  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   inline void move_to(TensorView<Scalar, Rank, Layout>& dest, const Scalar* src, Device_& device) {
 
     device.memcpyHostToDevice(dest.data(), src, dest.dimensions().TotalSize() * sizeof(Scalar));
@@ -61,7 +61,7 @@ namespace EigenSinn {
   /// <param name="t"></param>
   /// <param name="val"></param>
   /// <param name="device"></param>
-  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   inline void setConstant(const TensorView<Scalar, Rank, Layout>& t, Scalar val, Device_& device) {
 
     assert(t.size());
@@ -73,12 +73,12 @@ namespace EigenSinn {
   }
 
 
-  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   inline void setZero(const TensorView<Scalar, Rank, Layout>& t, Device_& device) {
     setConstant(t, (Scalar)0, device);
   }
 
-  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   inline void setValues(TensorView<Scalar, Rank, Layout>& t, const Tensor<Scalar, Rank, Layout>& vals, Device_& device) {
 
     assert(t.size());
@@ -92,7 +92,7 @@ namespace EigenSinn {
   /// <param name="source_dim">Original dimensions</param>
   /// <param name="idx">Flat index</param>
   /// <returns>Offset along each dimension</returns>
-  template<typename IntIndex, int Rank, int Layout = ColMajor>
+  template<typename IntIndex, int Rank, int Layout = RowMajor>
   EIGEN_DEVICE_FUNC inline DSizes<IntIndex, Rank> from_flat_dim(const DSizes<IntIndex, Rank> source_dim, IntIndex idx) {
 
     DSizes<IntIndex, Rank> out;
@@ -119,7 +119,7 @@ namespace EigenSinn {
   /// <param name="source_dim">Original dimension</param>
   /// <param name="offsets">Offset</param>
   /// <returns>Flat index</returns>
-  template<typename IntIndex, int Rank, int Layout = ColMajor>
+  template<typename IntIndex, int Rank, int Layout = RowMajor>
   EIGEN_DEVICE_FUNC inline IntIndex to_flat_dim(const array<IntIndex, Rank> source_dim, const array<IntIndex, Rank> offsets) {
 
 #ifndef __CUDA_ARCH__

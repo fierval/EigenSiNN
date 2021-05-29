@@ -22,10 +22,10 @@ using namespace Eigen;
 
 namespace EigenSinn {
 
-  template<typename Scalar, Index Rank, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, int Layout = RowMajor>
   using TensorView = TensorMap<Tensor<Scalar, Rank, Layout>>;
   
-  template<typename Scalar, Index Rank, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, int Layout = RowMajor>
   using OptionalTensorView = std::optional<TensorView<Scalar, Rank, Layout>>;
 
   typedef array<std::pair<Index, Index>, 4> Padding;

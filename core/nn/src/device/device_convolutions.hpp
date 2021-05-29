@@ -6,7 +6,7 @@
 namespace EigenSinn {
 
 #ifdef __CUDACC__
-  template<typename Scalar, int Layout = ColMajor>
+  template<typename Scalar, int Layout = RowMajor>
   __global__ void dilate_tensor_kernel(long batches, long channels, long height, long width, long dilation,
     TensorView<Scalar, 4, Layout> dilated, TensorView<Scalar, 4, Layout> tensor) {
 
@@ -31,7 +31,7 @@ namespace EigenSinn {
     }
   }
 
-  template<typename Scalar, int Layout = ColMajor>
+  template<typename Scalar, int Layout = RowMajor>
   __global__ void set_col_kernel(long batches, Padding2D padding, int channels,
     int kernel_height, int kernel_width, int stride, int dilation,
     TensorView<Scalar, 2, Layout> output,
@@ -81,7 +81,7 @@ namespace EigenSinn {
     }
   }
 
-  template<typename Scalar, int Layout = ColMajor>
+  template<typename Scalar, int Layout = RowMajor>
   __global__ void add_and_set_kernel(long batch_size, long num_batches, long channels, int stride, Padding2D padding,
     int dilation, long kernel_height, long kernel_width, long padded_width,
     TensorView<Scalar, 4, Layout> out, TensorView<Scalar, 2, Layout> col) {
@@ -128,7 +128,7 @@ namespace EigenSinn {
 
 #endif
 
-  template<typename Scalar, int Layout = ColMajor, typename Device_>
+  template<typename Scalar, int Layout = RowMajor, typename Device_>
   void setColFromSlice(Index batches, Padding2D& padding, const Index& channels, const int& stride, const Index& dilation,
     const Index& h_im, const Index& w_im,
     const Index& kernel_height, const Index& kernel_width,

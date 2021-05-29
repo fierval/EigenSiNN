@@ -32,7 +32,7 @@ namespace EigenSinn {
   };
 
 
-  template<typename Scalar, Index Rank, typename Loss, typename Device_ = ThreadPoolDevice, int Layout = ColMajor, bool CuDnn = false>
+  template<typename Scalar, Index Rank, typename Loss, typename Device_ = ThreadPoolDevice, int Layout = RowMajor, bool CuDnn = false>
   class NetBase {
 
     typedef std::vector<NetworkNode<Scalar, Device_>> Network;

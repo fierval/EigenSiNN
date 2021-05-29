@@ -13,7 +13,7 @@ namespace EigenSinn {
 
   // REVIEW: Not implementing bias for now
   // Batch normalization layers can take care of bias
-  template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class TransConv2d : public LayerBase<Scalar, Device_> {
 
   public:

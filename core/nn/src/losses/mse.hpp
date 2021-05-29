@@ -5,7 +5,7 @@
 
 namespace EigenSinn {
 
-  template<typename Scalar, typename Actual, Index Rank = 2, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template<typename Scalar, typename Actual, Index Rank = 2, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class MseLoss : public LossBase<Scalar, Actual, Rank, Device_, Layout> {
   
   public:

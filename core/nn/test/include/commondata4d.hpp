@@ -7,7 +7,7 @@ using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
-  template <typename Device_, int Layout = ColMajor>
+  template <typename Device_, int Layout = RowMajor>
   struct CommonData4d {
 
     // data will be presented in NHWC format
