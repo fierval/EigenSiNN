@@ -12,22 +12,22 @@ using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
-  class FullyConnectedRowMajor : public ::testing::Test {
+  class FullyConnectedColMajor : public ::testing::Test {
   protected:
     void SetUp() override {
 
       cd.init();
     }
-    CommonData2d<ThreadPoolDevice, RowMajor> cd;
+    CommonData2d<ThreadPoolDevice, ColMajor> cd;
 
   };
 
-  TEST_F(FullyConnectedRowMajor, BackpropNoBias) {
+  TEST_F(FullyConnectedColMajor, BackpropNoBias) {
 
-    Input<float, 2, ThreadPoolDevice, RowMajor> input;
+    Input<float, 2, ThreadPoolDevice, ColMajor> input;
     input.set_input(cd.linearInput);
 
-    Linear<float, ThreadPoolDevice, RowMajor> linear(cd.dims[1], cd.out_dims[1]);
+    Linear<float, ThreadPoolDevice, ColMajor> linear(cd.dims[1], cd.out_dims[1]);
 
     linear.init(cd.weights.to_host());
     linear.forward(input);
@@ -38,12 +38,12 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dweights, linear.get_loss_by_weights_derivative()));
   }
 
-  TEST_F(FullyConnectedRowMajor, BackpropBias) {
+  TEST_F(FullyConnectedColMajor, BackpropBias) {
 
-    Input<float, 2, ThreadPoolDevice, RowMajor> input;
+    Input<float, 2, ThreadPoolDevice, ColMajor> input;
     input.set_input(cd.linearInput);
 
-    Linear<float, ThreadPoolDevice, RowMajor> linear(cd.dims[1], cd.out_dims[1]);
+    Linear<float, ThreadPoolDevice, ColMajor> linear(cd.dims[1], cd.out_dims[1]);
 
     linear.init(cd.weights.to_host(), cd.bias.to_host());
     linear.forward(input);
@@ -59,17 +59,17 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dbias, linear.get_loss_by_bias_derivative()));
   }
 
-  TEST_F(FullyConnectedRowMajor, Initialize) {
+  TEST_F(FullyConnectedColMajor, Initialize) {
 
     int in_dim = 1024;
-    Linear<float, ThreadPoolDevice, RowMajor> linear(in_dim, 512);
+    Linear<float, ThreadPoolDevice, ColMajor> linear(in_dim, 512);
 
     linear.init();
-    Tensor<float, 2, RowMajor> weights(DeviceTensor<float, 2, ThreadPoolDevice, RowMajor>((linear.get_weights())).to_host());
-    Tensor<float, 0, RowMajor> avg = weights.mean();
-    Tensor<float, 0, RowMajor> std = (weights - avg(0)).pow(2.).mean();
+    Tensor<float, 2, ColMajor> weights(DeviceTensor<float, 2, ThreadPoolDevice, ColMajor>((linear.get_weights())).to_host());
+    Tensor<float, 0, ColMajor> avg = weights.mean();
+    Tensor<float, 0, ColMajor> std = (weights - avg(0)).pow(2.).mean();
 
-    Tensor<float, 0, RowMajor> std_expected;
+    Tensor<float, 0, ColMajor> std_expected;
     std_expected.setConstant(1. / in_dim);
 
     EXPECT_TRUE(is_elementwise_approx_eq(std_expected, std, 1e-4));
