@@ -38,7 +38,7 @@ namespace EigenSinnTest {
   TEST_F(OnnxSave, SaveModel) {
 
     // Model
-    EigenModel<float> model;
+    EigenModel model;
 
     Conv2d<float, ThreadPoolDevice, RowMajor>& conv = *(this->conv);
 

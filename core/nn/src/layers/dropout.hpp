@@ -89,28 +89,23 @@ namespace EigenSinn {
       return is_training;
     }
 
-    const std::string add_onnx_node(EigenModel<Scalar>& model, const std::string& input_name) {
-
-      // Dropout is a noop during inference
-      if (model.is_inference()) {
-        return;
-      }
-
-      // 1. Add initializers
-      prob_tensor.save_onnx_initializer(model);
-      training_mode.save_onnx_initializer(model);
+    const std::string add_onnx_node(EigenModel& model, const std::string& input_name) {
 
       // Dropout spec saves everything as input
       // So we need to wrap scalar values in tensors
       DeviceTensor<float, 0> prob_tensor;
       prob_tensor.setConstant(prob);
 
-      DeviceTensor<bool, 0> training_mode;
-      training_mode.setConstant(true);
+      DeviceTensor<int, 0> training_mode;
+      training_mode.setConstant(1);
+
+      // 1. Add initializers
+      prob_tensor.save_onnx_initializer(model);
+      training_mode.save_onnx_initializer(model);
 
       // 2. Add inputs
-      auto* node = model.add_graph_node(op_type, {input_name, 
-        prob_tensor.get_onnx_input_name(), training_mode.get_onnx_input_name() });
+      auto* node = model.add_graph_node(op_type, 
+        std::vector<std::string>{input_name, prob_tensor.get_onnx_input_name(), training_mode.get_onnx_input_name() });
 
       const std::string out_name = node->output().Get(0);
       return out_name;

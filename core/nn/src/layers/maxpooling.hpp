@@ -182,7 +182,7 @@ PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
     }
 #endif
 
-    const std::string add_onnx_node(EigenModel<Scalar>& model, const std::string& input_name) override {
+    const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
 
       onnx::NodeProto* node = model.add_graph_node(op_type, input_name);
 

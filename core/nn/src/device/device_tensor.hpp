@@ -256,7 +256,7 @@ namespace EigenSinn
     }
 
     // ONNX
-    inline void save_onnx_initializer(EigenModel<Scalar>& model, const std::string& name) {
+    inline void save_onnx_initializer(EigenModel& model, const std::string& name) {
 
       const char* data = get_data_row_major();
       auto graph = model.get_graph();
@@ -276,14 +276,14 @@ namespace EigenSinn
       }
     }
 
-    inline void save_onnx_initializer(EigenModel<Scalar>& model) {
+    inline void save_onnx_initializer(EigenModel& model) {
       save_onnx_initializer(model, get_onnx_input_name());
     }
 
     inline std::string get_onnx_input_name() {
 
       if (node_input_name.empty()) {
-        node_input_name = EigenModel<Scalar>::get_tensor_value_name();
+        node_input_name = EigenModel::get_tensor_value_name();
       }
       return node_input_name;
     }
