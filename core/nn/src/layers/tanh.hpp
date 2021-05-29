@@ -82,6 +82,12 @@ namespace EigenSinn {
       is_cudnn = _is_cudnn;
     }
 
+    // ONNX
+    const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
+      onnx::NodeProto* node = model.add_graph_node(op_type, input_name);
+      return node->output().Get(0);
+    }
+
   private:
     void init_cached(const DeviceTensor<Scalar, Rank, Device_, Layout>& prev_layer)
     {
@@ -101,6 +107,10 @@ namespace EigenSinn {
 #endif // __CUDACC__
 
     DeviceTensor<Scalar, Rank, Device_, Layout> ones, layer_output, layer_grad;
+
+    // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Tanh
+    static constexpr char op_type[] = "Tanh";
+
   };
 
 
