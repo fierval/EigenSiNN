@@ -182,6 +182,28 @@ namespace EigenSinn {
       is_cudnn = _is_cudnn;
     }
 
+    // add ONNX node corresponding to this layer
+    // returns the name of the output in the serialized file
+    const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
+
+      // 1. Save initializers (raw data in row major format)
+      bias.save_onnx_initializer(model);
+      kernel.save_onnx_initializer(model);
+
+      // 2. add ONNX node with its inputs, outputs, and names
+      std::vector<std::string> names{ input_name, bias.get_onnx_input_name(), kernel.get_onnx_input_name() };
+      onnx::NodeProto* node = model.add_graph_node(op_type, names);
+
+      // single output
+      const std::string out_name = node->output().Get(0);
+
+      // 3. create attributes
+      params->create_onnx_attributes(node);
+
+      // return output to pass as input to next node in graph
+      return out_name;
+    }
+
   private:
     DeviceTensor<Scalar, 4, Device_, Layout> kernel, layer_output, dX, dW;
     DeviceTensor<Scalar, 1, Device_, Layout> bias, loss_by_bias_derivative;
@@ -195,5 +217,8 @@ namespace EigenSinn {
     std::shared_ptr<CudnnWorkspace> cudnn_workspace;
 #endif
     bool is_cudnn;
+
+    // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#ConvTranspose
+    static constexpr char op_type[] = "ConvTranspose";
   };
 }

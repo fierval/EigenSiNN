@@ -196,9 +196,6 @@ namespace EigenSinn {
       kernel.save_onnx_initializer(model);
 
       // 2. add ONNX node with its inputs, outputs, and names
-      std::string bias_name = EigenModel::get_tensor_value_name();
-      std::string weights_name = EigenModel::get_tensor_value_name();
-
       std::vector<std::string> names{ input_name, bias.get_onnx_input_name(), kernel.get_onnx_input_name()};
       onnx::NodeProto* node = model.add_graph_node(op_type, names);
 
