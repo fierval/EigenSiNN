@@ -77,7 +77,7 @@ namespace EigenSinn {
 
     // Save to ONNX
     const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
-      auto * node =  add_onnx_node_common(model, input_name);
+      auto * node = model.add_graph_node(op_type, input_name);
 
       auto alpha_attr = node->add_attribute();
       alpha_attr->set_name("alpha");
@@ -88,15 +88,6 @@ namespace EigenSinn {
     }
 
   protected:
-
-    onnx::NodeProto* add_onnx_node_common(EigenModel& model, const std::string& input_name) {
-      onnx::NodeProto* node = model.add_graph_node(op_type, input_name);
-
-      const std::string out_name = node->output().Get(0);
-
-      // return output to pass as input to next node in graph
-      return node;
-    }
 
     float thresh;
     DeviceTensor<Scalar, Rank, Device_, Layout> mask;
@@ -121,7 +112,7 @@ namespace EigenSinn {
     }
 
     const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
-      auto * node = add_onnx_node_common(model, input_name);
+      auto * node = model.add_graph_node(op_type, input_name);
 
       return node->output().Get(0);
     }
