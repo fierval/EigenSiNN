@@ -215,7 +215,7 @@ namespace EigenSinn {
     // concurrency
     std::mutex mtx;
 
-    // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md
+    // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#MaxPool
     static constexpr char op_type[] = "MaxPool";
 
   };

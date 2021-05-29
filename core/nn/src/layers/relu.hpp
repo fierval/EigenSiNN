@@ -75,7 +75,29 @@ namespace EigenSinn {
       is_cudnn = _is_cudnn;
     }
 
+    // Save to ONNX
+    const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
+      auto * node =  add_onnx_node_common(model, input_name);
+
+      auto alpha_attr = node->add_attribute();
+      alpha_attr->set_name("alpha");
+      alpha_attr->set_f(thresh);
+      alpha_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_FLOAT);
+
+      return node->output().Get(0);
+    }
+
   protected:
+
+    onnx::NodeProto* add_onnx_node_common(EigenModel& model, const std::string& input_name) {
+      onnx::NodeProto* node = model.add_graph_node(op_type, input_name);
+
+      const std::string out_name = node->output().Get(0);
+
+      // return output to pass as input to next node in graph
+      return node;
+    }
+
     float thresh;
     DeviceTensor<Scalar, Rank, Device_, Layout> mask;
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_grad;
@@ -86,15 +108,28 @@ namespace EigenSinn {
     std::shared_ptr<CudnnActivations<Scalar, Rank>> cudnn_act;
 #endif // __CUDACC__
 
+  private:
+    // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Relu
+    static constexpr char op_type[] = "LeakyRelu";
+
   };
 
   template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class ReLU : public LeakyReLU<Scalar, Rank, Device_, Layout> {
   public:
     ReLU() : LeakyReLU<Scalar, Rank, Device_, Layout>(0) {
-
-
     }
+
+    const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
+      auto * node = add_onnx_node_common(model, input_name);
+
+      return node->output().Get(0);
+    }
+
+  private:
+    // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Relu
+    static constexpr char op_type[] = "Relu";
+
   };
 
 }
