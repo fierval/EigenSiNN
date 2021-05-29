@@ -98,8 +98,8 @@ namespace EigenSinn {
           }
           layer_output->data()[out_index] = max_val;
           mask->data()[out_index] = max_idx;
-      });
-    }
+          });
+      }
       else {
 #else
       if (is_cudnn && !cudnn_pooling) {
@@ -123,7 +123,7 @@ namespace EigenSinn {
 #ifndef __CUDACC__
       }
 #endif
-  }
+    }
 
   // for derivations
   void backward(LayerBase<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {
@@ -139,8 +139,8 @@ namespace EigenSinn {
 
         std::lock_guard<std::mutex> lck(mtx);
         layer_gradient->data()[idx] += x->data()[out_index];
-  });
-}
+        });
+    }
     else {
 #else
 
@@ -163,39 +163,40 @@ namespace EigenSinn {
 #endif
   }
 
-PtrTensorAdapter<Scalar, Device_> get_output() override {
-  return layer_output.raw();
-}
+  PtrTensorAdapter<Scalar, Device_> get_output() override {
+    return layer_output.raw();
+  }
 
-PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
-  return layer_gradient.raw();
-}
+  PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
+    return layer_gradient.raw();
+  }
 
 #ifdef __CUDACC__
-    std::shared_ptr<CudnnPooling<Scalar, Rank>> cudnn_pooling;
-    inline void set_cudnn(bool _is_cudnn) {
-
-      if (Rank < 4) { return; }
-      assert(!_is_cudnn || Rank > 2 && Layout == RowMajor);
-
-      is_cudnn = _is_cudnn;
-    }
+  std::shared_ptr<CudnnPooling<Scalar, Rank>> cudnn_pooling;
 #endif
 
-    const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
+  inline void set_cudnn(bool _is_cudnn) {
 
-      onnx::NodeProto* node = model.add_graph_node(op_type, input_name);
+    if (Rank < 4) { return; }
+    assert(!_is_cudnn || Rank > 2 && Layout == RowMajor);
 
-      const std::string out_name = node->output().Get(0);
+    is_cudnn = _is_cudnn;
+  }
 
-      params->create_onnx_attributes(node);
+  const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
 
-      // return output to pass as input to next node in graph
-      return out_name;
+    onnx::NodeProto* node = model.add_graph_node(op_type, input_name);
 
-    }
+    const std::string out_name = node->output().Get(0);
 
-    MaxPoolParams<Rank>& get_maxpool_params() { return *params; }
+    params->create_onnx_attributes(node);
+
+    // return output to pass as input to next node in graph
+    return out_name;
+  }
+
+  MaxPoolParams<Rank>& get_maxpool_params() { return *params; }
+
   private:
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_gradient;
     DeviceTensor<Index, Rank, Device_, Layout> mask;
@@ -213,7 +214,7 @@ PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
 
     // concurrency
     std::mutex mtx;
-    
+
     // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md
     static constexpr char op_type[] = "MaxPool";
 
