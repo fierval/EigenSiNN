@@ -256,7 +256,7 @@ namespace EigenSinn
     }
 
     // ONNX
-    void save_onnx_initializer(EigenModel<Scalar>& model, const std::string& name) {
+    inline void save_onnx_initializer(EigenModel<Scalar>& model, const std::string& name) {
 
       const char* data = get_data_row_major();
       auto graph = model.get_graph();
@@ -269,6 +269,23 @@ namespace EigenSinn
 
       initializer->set_raw_data(data);
       initializer->set_data_type(data_type_from_scalar<Scalar>());
+
+      // we may pass a fancy name instead of a generated number
+      if (node_input_name.empty()) {
+        node_input_name = name;
+      }
+    }
+
+    inline void save_onnx_initializer(EigenModel<Scalar>& model) {
+      save_onnx_initializer(model, get_onnx_input_name());
+    }
+
+    inline std::string get_onnx_input_name() {
+
+      if (node_input_name.empty()) {
+        node_input_name = EigenModel<Scalar>::get_tensor_value_name();
+      }
+      return node_input_name;
     }
 
   private:
@@ -305,7 +322,7 @@ namespace EigenSinn
     }
 
     // ONNX
-    // Give an device tensor return its data on the host in RowMajor layout
+    // Given device tensor return its data on the host in RowMajor layout
     // For saving in ONNX format
     const char* get_data_row_major() {
 
@@ -345,5 +362,8 @@ namespace EigenSinn
     // for passing tensors around
     std::shared_ptr<TensorAdapter<Scalar, Device_>> tensor_adapter;
     std::vector<char> out_data;
+
+    // name for ONNX node input/initializer
+    std::string node_input_name;
   };
 }

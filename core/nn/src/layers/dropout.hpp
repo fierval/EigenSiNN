@@ -96,23 +96,24 @@ namespace EigenSinn {
         return;
       }
 
+      // 1. Add initializers
+      prob_tensor.save_onnx_initializer(model);
+      training_mode.save_onnx_initializer(model);
+
       // Dropout spec saves everything as input
       // So we need to wrap scalar values in tensors
       DeviceTensor<float, 0> prob_tensor;
       prob_tensor.setConstant(prob);
-      auto prob_name = EigenModel<Scalar>::get_tensor_value_name();
 
       DeviceTensor<bool, 0> training_mode;
       training_mode.setConstant(true);
-      auto training_mode_name = EigenModel<Scalar>::get_tensor_value_name();
 
-      // 1. Add inputs
-      auto* node = model.add_graph_node(op_type, {input_name, training_mode_name, prob_name});
+      // 2. Add inputs
+      auto* node = model.add_graph_node(op_type, {input_name, 
+        prob_tensor.get_onnx_input_name(), training_mode.get_onnx_input_name() });
+
       const std::string out_name = node->output().Get(0);
-
-      // 2. Add initializers
-      prob_tensor.save_onnx_initializer(model, prob_name);
-      training_mode.save_onnx_initializer(model, training_mode_name);
+      return out_name;
     }
 
   private:

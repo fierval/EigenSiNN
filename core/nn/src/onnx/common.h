@@ -144,7 +144,7 @@ namespace EigenSinn {
       
       onnx::NodeProto * node = graph->add_node();
 
-      node->set_name(layer_name.str());
+      node->set_name(layer_name_stream.str());
       node->set_op_type(op_type);
 
       std::for_each(input_names.begin(), input_names.end(), [&](std::string& n) {

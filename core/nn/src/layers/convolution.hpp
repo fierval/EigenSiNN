@@ -191,22 +191,22 @@ namespace EigenSinn {
     // returns the name of the output in the serialized file
     const std::string add_onnx_node(EigenModel<Scalar>& model, const std::string& input_name) override {
 
-      // 1. add ONNX node with its inputs, outputs, and names
+      // 1. Save initializers (raw data in row major format)
+      bias.save_onnx_initializer(model);
+      kernel.save_onnx_initializer(model);
+
+      // 2. add ONNX node with its inputs, outputs, and names
       std::string bias_name = EigenModel<Scalar>::get_tensor_value_name();
       std::string weights_name = EigenModel<Scalar>::get_tensor_value_name();
 
-      std::vector<std::string> names{ input_name, weights_name, bias_name };
+      std::vector<std::string> names{ input_name, bias.get_onnx_input_name(), kernel.get_onnx_input_name()};
       onnx::NodeProto* node = model.add_graph_node(op_type, names);
 
       // single output
       const std::string out_name = node->output().Get(0);
       
-      // 2. create attributes
+      // 3. create attributes
       params->create_onnx_attributes(node);
-
-      // 3. Save initializers (raw data in row major format)
-      bias.save_onnx_initializer(model, bias_name);
-      kernel.save_onnx_initializer(model, weights_name);
 
       // return output to pass as input to next node in graph
       return out_name;
