@@ -2,6 +2,10 @@
 
 #include <ops/opsbase.hpp>
 #include "onnx.proto3.pb.h"
+#include <fstream>
+#include <google/protobuf/text_format.h>
+
+namespace gp = google::protobuf;
 
 namespace EigenSinn {
 
@@ -63,16 +67,16 @@ namespace EigenSinn {
     typedef std::vector<onnx::ValueInfoProto *> ValueInfos;
 
   public:
-    EigenModel(bool _is_training = true)
+    EigenModel(const std::string name, bool _is_training = true)
     : is_training(_is_training ) {
       
-      model = std::make_shared<onnx::ModelProto>();
+      model = new onnx::ModelProto();
       onnx::OperatorSetIdProto * opset_id = model->add_opset_import();
 
       // https://github.com/onnx/onnx/blob/master/docs/Versioning.md
-      opset_id->set_version(14);
+      opset_id->set_version(9);
 
-      model->set_ir_version(onnx::Version::IR_VERSION);
+      model->set_ir_version(onnx::Version::IR_VERSION_2019_9_19);
 
       std::string docstring = "EigenSiNN Model Format";
       model->set_doc_string(docstring);
@@ -84,20 +88,25 @@ namespace EigenSinn {
       model->set_producer_version(version);
 
       // allocate graph & pass ownership to model
-      graph = new onnx::GraphProto();
-      model->set_allocated_graph(graph);
-
+      auto graph = model->mutable_graph();
+      graph->set_name(name);
+      std::string out_str;
+      gp::TextFormat::PrintToString(*model, &out_str);
     }
 
     // add input/output tensor descriptors to the graph
     inline void add_input(const std::string& name, std::vector<Index>& dims, onnx::TensorProto_DataType data_type) {
 
+      auto graph = get_graph();
       auto value_proto = graph->add_input();
+      //auto* v = new onnx::ValueInfoProto();
       add_value_proto(name, value_proto, dims, data_type);
+      //add_value_proto(name, v, dims, data_type);
     }
 
     inline void add_output(const std::string& name, std::vector<Index>& dims, onnx::TensorProto_DataType data_type) {
 
+      auto graph = get_graph();
       auto value_proto = graph->add_output();
       add_value_proto(name, value_proto, dims, data_type);
     }
@@ -105,16 +114,26 @@ namespace EigenSinn {
     inline void add_value_proto(const std::string& name, onnx::ValueInfoProto* value_proto, std::vector<Index>& dims, onnx::TensorProto_DataType data_type) {
 
       value_proto->set_name(name);
-      onnx::TypeProto* type = new onnx::TypeProto();
-      value_proto->set_allocated_type(type);
+      onnx::TypeProto* type = value_proto->mutable_type();
 
-      onnx::TypeProto_Tensor *tensor_type = new onnx::TypeProto_Tensor();
+      auto * tensor_type = type->mutable_tensor_type();
       tensor_type->set_elem_type(data_type);
-      onnx::TensorShapeProto * shape  = tensor_type->mutable_shape();
 
+      onnx::TensorShapeProto * shape = tensor_type->mutable_shape();
       for (int i = 0; i < dims.size(); i++) {
-        shape->add_dim()->set_dim_value(dims[i]);
+        auto * dim = shape->add_dim();
+        dim->set_dim_value(dims[i]);
       }
+
+      auto nm = value_proto->name();
+      auto tp = value_proto->type().tensor_type();
+      auto dim = value_proto->type().tensor_type().shape().dim().Get(1).dim_value();
+      
+      std::string dbg = value_proto->DebugString();
+      std::ofstream out("c:\\temp\\value_proto.onnx");
+      value_proto->SerializePartialToOstream(&out);
+      out.flush();
+      out.close();
     }
 
     // get a unique name for the tensor value
@@ -140,7 +159,8 @@ namespace EigenSinn {
 
       std::ostringstream layer_name_stream;
       layer_name_stream << op_type << "_" << get_layer_suffix();
-      
+
+      auto graph = get_graph();
       onnx::NodeProto * node = graph->add_node();
 
       node->set_name(layer_name_stream.str());
@@ -157,11 +177,21 @@ namespace EigenSinn {
       return node;
     }
 
-    inline onnx::GraphProto* get_graph() { return graph; }
+    inline onnx::GraphProto * get_graph() { return model->mutable_graph(); }
 
     // some layers like Dropout aren't needed if we are saving
     // for inference
     inline bool is_inference() { return !is_training; }
+
+    inline void flush(std::ofstream* out) {
+
+      model->SerializeToOstream(out);
+      out->flush();
+    }
+
+    inline std::string to_str() {
+      return model->SerializeAsString();
+    }
 
   protected:
     
@@ -171,9 +201,7 @@ namespace EigenSinn {
     static inline std::mutex value_mutex;
     static inline std::mutex suffix_mutex;
 
-    std::shared_ptr<onnx::ModelProto> model;
-    onnx::GraphProto * graph;
-
+    onnx::ModelProto* model;
     bool is_training;
   };
 

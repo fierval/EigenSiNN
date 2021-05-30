@@ -201,7 +201,7 @@ namespace EigenSinn {
 
       // single output
       const std::string out_name = node->output().Get(0);
-      
+
       // 3. create attributes
       params->create_onnx_attributes(node);
 
