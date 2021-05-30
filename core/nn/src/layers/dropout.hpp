@@ -91,6 +91,9 @@ namespace EigenSinn {
 
     const std::string add_onnx_node(EigenModel& model, const std::string& input_name) {
 
+      // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Dropout
+      static constexpr char op_type[] = "Dropout";
+
       // Dropout spec saves everything as input
       // So we need to wrap scalar values in tensors
       DeviceTensor<float, 0> prob_tensor;
@@ -118,10 +121,6 @@ namespace EigenSinn {
     DeviceTensor<float, Rank, Device_, Layout> rands, then_tensor, else_tensor, prob_tensor;
     bool is_training, inited;
     const float prob;
-
-    // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Dropout
-    static constexpr char op_type[] = "Dropout";
-
   };
 
 }

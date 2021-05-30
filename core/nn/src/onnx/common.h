@@ -70,28 +70,25 @@ namespace EigenSinn {
     EigenModel(const std::string name, bool _is_training = true)
     : is_training(_is_training ) {
       
-      model = new onnx::ModelProto();
-      onnx::OperatorSetIdProto * opset_id = model->add_opset_import();
+      onnx::OperatorSetIdProto * opset_id = model.add_opset_import();
 
       // https://github.com/onnx/onnx/blob/master/docs/Versioning.md
-      opset_id->set_version(9);
+      opset_id->set_version(14);
 
-      model->set_ir_version(onnx::Version::IR_VERSION_2019_9_19);
+      model.set_ir_version(onnx::Version::IR_VERSION);
 
       std::string docstring = "EigenSiNN Model Format";
-      model->set_doc_string(docstring);
+      model.set_doc_string(docstring);
 
       std::string producer = "EigenSiNN";
       std::string version = "0.1.2";
 
-      model->set_producer_name(producer);
-      model->set_producer_version(version);
+      model.set_producer_name(producer);
+      model.set_producer_version(version);
 
       // allocate graph & pass ownership to model
-      auto graph = model->mutable_graph();
+      auto graph = model.mutable_graph();
       graph->set_name(name);
-      std::string out_str;
-      gp::TextFormat::PrintToString(*model, &out_str);
     }
 
     // add input/output tensor descriptors to the graph
@@ -124,20 +121,6 @@ namespace EigenSinn {
         auto * dim = shape->add_dim();
         dim->set_dim_value(dims[i]);
       }
-
-      auto nm = value_proto->name();
-      auto tp = value_proto->type().tensor_type();
-      auto dim = value_proto->type().tensor_type().shape().dim().Get(1).dim_value();
-      
-      std::string dbg = value_proto->DebugString();
-      std::ofstream out("c:\\temp\\value_proto.onnx");
-      value_proto->SerializePartialToOstream(&out);
-      out.flush();
-      out.close();
-
-      std::string out_str;
-      gp::TextFormat::PrintToString(*model, &out_str);
-
     }
 
     // get a unique name for the tensor value
@@ -147,9 +130,20 @@ namespace EigenSinn {
       return std::to_string(current_value_name++); 
     }
 
-    static inline std::string get_layer_suffix() {
+    static inline std::vector<std::string> get_cool_display_tensor_value_names(const char* prefix, std::vector<const char*> suffixes) {
+
+      int layer_idx = EigenModel::get_layer_suffix();
+
+      std::vector<std::string> out(suffixes.size());
+      for (int i = 0; i < out.size(); i++) {
+        out[i] = EigenModel::get_cool_display_tensor_value_name(prefix, layer_idx, suffixes[i]);
+      }
+      return out;
+    }
+
+    static inline int get_layer_suffix() {
       std::lock_guard<std::mutex> guard(suffix_mutex);
-      return std::to_string(current_layer_suffix++);
+      return current_layer_suffix++;
     }
 
     // adds a graph node with descriptions and references to inputs/outputs
@@ -181,34 +175,48 @@ namespace EigenSinn {
       return node;
     }
 
-    inline onnx::GraphProto * get_graph() { return model->mutable_graph(); }
+    inline onnx::GraphProto * get_graph() { return model.mutable_graph(); }
 
     // some layers like Dropout aren't needed if we are saving
     // for inference
     inline bool is_inference() { return !is_training; }
 
-    inline void flush(std::ofstream* out) {
+    // serialize to file
+    inline void flush(const std::string& file_name) {
+      std::ofstream out(file_name, std::ofstream::binary);
 
-      std::string out_str;
-      gp::TextFormat::PrintToString(*model, &out_str);
-
-      model->SerializeToOstream(out);
-      out->flush();
+      model.SerializeToOstream(&out);
     }
 
-    inline std::string to_str() {
-      return model->SerializeAsString();
+    // dump text of the model to a text file (good for debugging)
+    inline void dump(const std::string& file_name) {
+
+      std::ofstream out(file_name);
+
+      std::string data;
+      gp::TextFormat::PrintToString(model, &data);
+      out << data;
     }
 
-  protected:
-    
+  private:
+
+    // an alternative to the above when we want input names
+    // to be more descriptive
+    static inline std::string get_cool_display_tensor_value_name(const char* prefix, int layer_idx, const char* suffix) {
+
+      std::ostringstream ss;
+      ss << prefix << layer_idx << "." << suffix;
+      return ss.str();
+
+    }
+
     // current name for tensor value
     static inline int current_value_name = 400;
     static inline int current_layer_suffix = 0;
     static inline std::mutex value_mutex;
     static inline std::mutex suffix_mutex;
 
-    onnx::ModelProto* model;
+    onnx::ModelProto model;
     bool is_training;
   };
 

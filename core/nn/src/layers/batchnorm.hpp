@@ -186,23 +186,13 @@ namespace EigenSinn {
 
     inline onnx::NodeProto* add_graph_node(const char* op_type, std::vector<std::string>& input_names) {
 
-      // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md
+      // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#BatchNormalization
       static constexpr char op_type[] = "BatchNormalization";
-
-      static constexpr char s_bias[] = "bias";
-      static constexpr char s_weight[] = "weight";
-      static constexpr char s_running_mean[] = "running_mean";
-      static constexpr char s_running_var[] = "running_var";
+      static constexpr char s_batch[] = "batch";
 
       // 1. ADd ONNX node with inputs & outputs
-      std::string layer_idx = EigenModel::get_layer_suffix();
-
-      std::vector<std::string> names;
-      std::string _weight, _bias, _mean, _var;
-      names.push_back(_weight = get_input_name(layer_idx, s_weight));
-      names.push_back(_bias = get_input_name(layer_idx, s_bias));
-      names.push_back(_mean = get_input_name(layer_idx, s_running_mean));
-      names.push_back(_var = get_input_name(layer_idx, s_running_var));
+      std::vector<const char*> suffixes{ "weight", "bias", "running_mean", "running_var" };
+      std::vector<std::string> names = EigenModel::get_cool_display_tensor_value_names(s_batch, suffixes);
 
       onnx::NodeProto* node = model.add_graph_node(op_type, names);
       const std::string out_name = node->output().Get(0);
@@ -219,20 +209,18 @@ namespace EigenSinn {
       epsilon_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_FLOAT);
 
       // 3. Initializers
-      gamma.save_onnx_initializer(model, _weight);
-      beta.save_onnx_initializer(model, _bias);
-      running_mean.save_onnx_initializer(model, _mean);
-      running_variance.save_onnx_initializer(model, _var);
+      gamma.save_onnx_initializer(model, names[0]);
+      beta.save_onnx_initializer(model, names[1]);
+      running_mean.save_onnx_initializer(model, names[2]);
+      running_variance.save_onnx_initializer(model, names[3]);
     }
 
   private:
 
-    inline std::string get_input_name(const std::string layer_idx, const char* suffix) {
+    inline std::string get_input_name(int layer_idx, const char* suffix) {
       static constexpr char s_batch[] = "batch";
-
-      std::ostringstream ss;
-      ss << s_batch << layer_idx << "." << suffix;
-      return ss.str();
+      
+      return EigenModel::get_cool_display_tensor_value_name(s_batch, layer_idx, suffix);
     }
 
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_gradient, xhat;

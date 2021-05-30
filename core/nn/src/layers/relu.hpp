@@ -77,6 +77,10 @@ namespace EigenSinn {
 
     // Save to ONNX
     const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
+
+      // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Relu
+      static constexpr char op_type[] = "LeakyRelu";
+
       auto * node = model.add_graph_node(op_type, input_name);
 
       auto alpha_attr = node->add_attribute();
@@ -98,11 +102,6 @@ namespace EigenSinn {
     cudnnActivationMode_t cudnn_act_mode = CUDNN_ACTIVATION_RELU;
     std::shared_ptr<CudnnActivations<Scalar, Rank>> cudnn_act;
 #endif // __CUDACC__
-
-  private:
-    // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Relu
-    static constexpr char op_type[] = "LeakyRelu";
-
   };
 
   template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
@@ -112,15 +111,15 @@ namespace EigenSinn {
     }
 
     const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
+      // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Relu
+      static constexpr char op_type[] = "Relu";
+
       auto * node = model.add_graph_node(op_type, input_name);
 
       return node->output().Get(0);
     }
 
   private:
-    // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Relu
-    static constexpr char op_type[] = "Relu";
-
   };
 
 }

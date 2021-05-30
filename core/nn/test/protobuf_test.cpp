@@ -45,10 +45,12 @@ namespace EigenSinnTest {
     Conv2d<float, ThreadPoolDevice, RowMajor>& conv = *(this->conv);
 
     model.add_input("input", input.get_dims(), data_type_from_scalar<float>());
-    model.add_output("402", conv.out_dims(), data_type_from_scalar<float>());
 
-    conv.add_onnx_node(model, "input");
-    std::ofstream out("c:\\temp\\test.onnx");
-    model.flush(&out);
+    auto output_name = conv.add_onnx_node(model, "input");
+
+    model.add_output(output_name, conv.out_dims(), data_type_from_scalar<float>());
+
+    model.flush("c:\\temp\\test.onnx");
+    model.dump("c:\\temp\\test.txt");
   }
 } // EigenSinnTest

@@ -79,6 +79,10 @@ namespace EigenSinn {
     // Save to ONNX
     // TODO: For the 2-dim softmax
     const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
+
+      // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Softmax
+      static constexpr char op_type[] = "Softmax";
+
       auto* node = model.add_graph_node(op_type, input_name);
 
       auto alpha_attr = node->add_attribute();
@@ -111,10 +115,6 @@ namespace EigenSinn {
     DeviceTensor<Scalar, 1, Device_, Layout> exp_sum;
     array<Index, Rank - 1> reduction_axes;
     array<Index, Rank> broadcast_dims, reshape_dims, dims, ones_dims;
-
-    // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Softmax
-    static constexpr char op_type[] = "Softmax";
-
   };
 
 
