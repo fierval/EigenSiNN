@@ -125,8 +125,8 @@ namespace EigenSinn {
       // pads
       auto pads_attr = node->add_attribute();
       pads_attr->set_name("pads");
-      pads_attr->add_ints(1);
-      pads_attr->add_ints(1);
+      pads_attr->add_ints(0);
+      pads_attr->add_ints(0);
       pads_attr->add_ints(padding.first);
       pads_attr->add_ints(padding.second);
       pads_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INTS);

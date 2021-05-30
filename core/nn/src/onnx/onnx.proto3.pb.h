@@ -26,11 +26,13 @@
 #include <google/protobuf/generated_message_table_driven.h>
 #include <google/protobuf/generated_message_util.h>
 #include <google/protobuf/inlined_string_field.h>
-#include <google/protobuf/metadata_lite.h>
-#include <google/protobuf/message_lite.h>
+#include <google/protobuf/metadata.h>
+#include <google/protobuf/generated_message_reflection.h>
+#include <google/protobuf/message.h>
 #include <google/protobuf/repeated_field.h>  // IWYU pragma: export
 #include <google/protobuf/extension_set.h>  // IWYU pragma: export
-#include <google/protobuf/generated_enum_util.h>
+#include <google/protobuf/generated_enum_reflection.h>
+#include <google/protobuf/unknown_field_set.h>
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
 #define PROTOBUF_INTERNAL_EXPORT_onnx_2eproto3
@@ -52,6 +54,7 @@ struct TableStruct_onnx_2eproto3 {
   static const ::PROTOBUF_NAMESPACE_ID::internal::SerializationTable serialization_table[];
   static const ::PROTOBUF_NAMESPACE_ID::uint32 offsets[];
 };
+extern const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_onnx_2eproto3;
 namespace onnx {
 class AttributeProto;
 class AttributeProtoDefaultTypeInternal;
@@ -152,16 +155,20 @@ constexpr AttributeProto_AttributeType AttributeProto_AttributeType_AttributeTyp
 constexpr AttributeProto_AttributeType AttributeProto_AttributeType_AttributeType_MAX = AttributeProto_AttributeType_SPARSE_TENSORS;
 constexpr int AttributeProto_AttributeType_AttributeType_ARRAYSIZE = AttributeProto_AttributeType_AttributeType_MAX + 1;
 
-const std::string& AttributeProto_AttributeType_Name(AttributeProto_AttributeType value);
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* AttributeProto_AttributeType_descriptor();
 template<typename T>
 inline const std::string& AttributeProto_AttributeType_Name(T enum_t_value) {
   static_assert(::std::is_same<T, AttributeProto_AttributeType>::value ||
     ::std::is_integral<T>::value,
     "Incorrect type passed to function AttributeProto_AttributeType_Name.");
-  return AttributeProto_AttributeType_Name(static_cast<AttributeProto_AttributeType>(enum_t_value));
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    AttributeProto_AttributeType_descriptor(), enum_t_value);
 }
-bool AttributeProto_AttributeType_Parse(
-    const std::string& name, AttributeProto_AttributeType* value);
+inline bool AttributeProto_AttributeType_Parse(
+    const std::string& name, AttributeProto_AttributeType* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<AttributeProto_AttributeType>(
+    AttributeProto_AttributeType_descriptor(), name, value);
+}
 enum TensorProto_DataType : int {
   TensorProto_DataType_UNDEFINED = 0,
   TensorProto_DataType_FLOAT = 1,
@@ -188,16 +195,20 @@ constexpr TensorProto_DataType TensorProto_DataType_DataType_MIN = TensorProto_D
 constexpr TensorProto_DataType TensorProto_DataType_DataType_MAX = TensorProto_DataType_BFLOAT16;
 constexpr int TensorProto_DataType_DataType_ARRAYSIZE = TensorProto_DataType_DataType_MAX + 1;
 
-const std::string& TensorProto_DataType_Name(TensorProto_DataType value);
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* TensorProto_DataType_descriptor();
 template<typename T>
 inline const std::string& TensorProto_DataType_Name(T enum_t_value) {
   static_assert(::std::is_same<T, TensorProto_DataType>::value ||
     ::std::is_integral<T>::value,
     "Incorrect type passed to function TensorProto_DataType_Name.");
-  return TensorProto_DataType_Name(static_cast<TensorProto_DataType>(enum_t_value));
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    TensorProto_DataType_descriptor(), enum_t_value);
 }
-bool TensorProto_DataType_Parse(
-    const std::string& name, TensorProto_DataType* value);
+inline bool TensorProto_DataType_Parse(
+    const std::string& name, TensorProto_DataType* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<TensorProto_DataType>(
+    TensorProto_DataType_descriptor(), name, value);
+}
 enum TensorProto_DataLocation : int {
   TensorProto_DataLocation_DEFAULT = 0,
   TensorProto_DataLocation_EXTERNAL = 1,
@@ -209,16 +220,20 @@ constexpr TensorProto_DataLocation TensorProto_DataLocation_DataLocation_MIN = T
 constexpr TensorProto_DataLocation TensorProto_DataLocation_DataLocation_MAX = TensorProto_DataLocation_EXTERNAL;
 constexpr int TensorProto_DataLocation_DataLocation_ARRAYSIZE = TensorProto_DataLocation_DataLocation_MAX + 1;
 
-const std::string& TensorProto_DataLocation_Name(TensorProto_DataLocation value);
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* TensorProto_DataLocation_descriptor();
 template<typename T>
 inline const std::string& TensorProto_DataLocation_Name(T enum_t_value) {
   static_assert(::std::is_same<T, TensorProto_DataLocation>::value ||
     ::std::is_integral<T>::value,
     "Incorrect type passed to function TensorProto_DataLocation_Name.");
-  return TensorProto_DataLocation_Name(static_cast<TensorProto_DataLocation>(enum_t_value));
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    TensorProto_DataLocation_descriptor(), enum_t_value);
 }
-bool TensorProto_DataLocation_Parse(
-    const std::string& name, TensorProto_DataLocation* value);
+inline bool TensorProto_DataLocation_Parse(
+    const std::string& name, TensorProto_DataLocation* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<TensorProto_DataLocation>(
+    TensorProto_DataLocation_descriptor(), name, value);
+}
 enum Version : int {
   _START_VERSION = 0,
   IR_VERSION_2017_10_10 = 1,
@@ -236,20 +251,24 @@ constexpr Version Version_MIN = _START_VERSION;
 constexpr Version Version_MAX = IR_VERSION;
 constexpr int Version_ARRAYSIZE = Version_MAX + 1;
 
-const std::string& Version_Name(Version value);
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* Version_descriptor();
 template<typename T>
 inline const std::string& Version_Name(T enum_t_value) {
   static_assert(::std::is_same<T, Version>::value ||
     ::std::is_integral<T>::value,
     "Incorrect type passed to function Version_Name.");
-  return Version_Name(static_cast<Version>(enum_t_value));
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    Version_descriptor(), enum_t_value);
 }
-bool Version_Parse(
-    const std::string& name, Version* value);
+inline bool Version_Parse(
+    const std::string& name, Version* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<Version>(
+    Version_descriptor(), name, value);
+}
 // ===================================================================
 
 class AttributeProto :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:onnx.AttributeProto) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:onnx.AttributeProto) */ {
  public:
   AttributeProto();
   virtual ~AttributeProto();
@@ -273,6 +292,15 @@ class AttributeProto :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
   static const AttributeProto& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
@@ -300,8 +328,8 @@ class AttributeProto :
   AttributeProto* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
     return CreateMaybeMessage<AttributeProto>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)
-    final;
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void CopyFrom(const AttributeProto& from);
   void MergeFrom(const AttributeProto& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
@@ -311,13 +339,12 @@ class AttributeProto :
   const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
   ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
       ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  void DiscardUnknownFields();
   int GetCachedSize() const final { return _cached_size_.Get(); }
 
   private:
   inline void SharedCtor();
   inline void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(AttributeProto* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
@@ -332,7 +359,14 @@ class AttributeProto :
   }
   public:
 
-  std::string GetTypeName() const final;
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_onnx_2eproto3);
+    return ::descriptor_table_onnx_2eproto3.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
 
   // nested types ----------------------------------------------------
 
@@ -372,6 +406,10 @@ class AttributeProto :
     AttributeProto_AttributeType_AttributeType_MAX;
   static constexpr int AttributeType_ARRAYSIZE =
     AttributeProto_AttributeType_AttributeType_ARRAYSIZE;
+  static inline const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor*
+  AttributeType_descriptor() {
+    return AttributeProto_AttributeType_descriptor();
+  }
   template<typename T>
   static inline const std::string& AttributeType_Name(T enum_t_value) {
     static_assert(::std::is_same<T, AttributeType>::value ||
@@ -666,7 +704,7 @@ class AttributeProto :
  private:
   class _Internal;
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedField< float > floats_;
   mutable std::atomic<int> _floats_cached_byte_size_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::int64 > ints_;
@@ -691,7 +729,7 @@ class AttributeProto :
 // -------------------------------------------------------------------
 
 class ValueInfoProto :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:onnx.ValueInfoProto) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:onnx.ValueInfoProto) */ {
  public:
   ValueInfoProto();
   virtual ~ValueInfoProto();
@@ -715,6 +753,15 @@ class ValueInfoProto :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
   static const ValueInfoProto& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
@@ -742,8 +789,8 @@ class ValueInfoProto :
   ValueInfoProto* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
     return CreateMaybeMessage<ValueInfoProto>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)
-    final;
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void CopyFrom(const ValueInfoProto& from);
   void MergeFrom(const ValueInfoProto& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
@@ -753,13 +800,12 @@ class ValueInfoProto :
   const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
   ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
       ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  void DiscardUnknownFields();
   int GetCachedSize() const final { return _cached_size_.Get(); }
 
   private:
   inline void SharedCtor();
   inline void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(ValueInfoProto* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
@@ -774,7 +820,14 @@ class ValueInfoProto :
   }
   public:
 
-  std::string GetTypeName() const final;
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_onnx_2eproto3);
+    return ::descriptor_table_onnx_2eproto3.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
 
   // nested types ----------------------------------------------------
 
@@ -836,7 +889,7 @@ class ValueInfoProto :
  private:
   class _Internal;
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr doc_string_;
   ::onnx::TypeProto* type_;
@@ -846,7 +899,7 @@ class ValueInfoProto :
 // -------------------------------------------------------------------
 
 class NodeProto :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:onnx.NodeProto) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:onnx.NodeProto) */ {
  public:
   NodeProto();
   virtual ~NodeProto();
@@ -870,6 +923,15 @@ class NodeProto :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
   static const NodeProto& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
@@ -897,8 +959,8 @@ class NodeProto :
   NodeProto* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
     return CreateMaybeMessage<NodeProto>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)
-    final;
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void CopyFrom(const NodeProto& from);
   void MergeFrom(const NodeProto& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
@@ -908,13 +970,12 @@ class NodeProto :
   const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
   ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
       ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  void DiscardUnknownFields();
   int GetCachedSize() const final { return _cached_size_.Get(); }
 
   private:
   inline void SharedCtor();
   inline void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(NodeProto* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
@@ -929,7 +990,14 @@ class NodeProto :
   }
   public:
 
-  std::string GetTypeName() const final;
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_onnx_2eproto3);
+    return ::descriptor_table_onnx_2eproto3.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
 
   // nested types ----------------------------------------------------
 
@@ -1078,7 +1146,7 @@ class NodeProto :
  private:
   class _Internal;
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string> input_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string> output_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::onnx::AttributeProto > attribute_;
@@ -1092,7 +1160,7 @@ class NodeProto :
 // -------------------------------------------------------------------
 
 class TrainingInfoProto :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TrainingInfoProto) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:onnx.TrainingInfoProto) */ {
  public:
   TrainingInfoProto();
   virtual ~TrainingInfoProto();
@@ -1116,6 +1184,15 @@ class TrainingInfoProto :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
   static const TrainingInfoProto& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
@@ -1143,8 +1220,8 @@ class TrainingInfoProto :
   TrainingInfoProto* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
     return CreateMaybeMessage<TrainingInfoProto>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)
-    final;
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void CopyFrom(const TrainingInfoProto& from);
   void MergeFrom(const TrainingInfoProto& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
@@ -1154,13 +1231,12 @@ class TrainingInfoProto :
   const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
   ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
       ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  void DiscardUnknownFields();
   int GetCachedSize() const final { return _cached_size_.Get(); }
 
   private:
   inline void SharedCtor();
   inline void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(TrainingInfoProto* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
@@ -1175,7 +1251,14 @@ class TrainingInfoProto :
   }
   public:
 
-  std::string GetTypeName() const final;
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_onnx_2eproto3);
+    return ::descriptor_table_onnx_2eproto3.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
 
   // nested types ----------------------------------------------------
 
@@ -1257,7 +1340,7 @@ class TrainingInfoProto :
  private:
   class _Internal;
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::onnx::StringStringEntryProto > initialization_binding_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::onnx::StringStringEntryProto > update_binding_;
   ::onnx::GraphProto* initialization_;
@@ -1268,7 +1351,7 @@ class TrainingInfoProto :
 // -------------------------------------------------------------------
 
 class ModelProto :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:onnx.ModelProto) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:onnx.ModelProto) */ {
  public:
   ModelProto();
   virtual ~ModelProto();
@@ -1292,6 +1375,15 @@ class ModelProto :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
   static const ModelProto& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
@@ -1319,8 +1411,8 @@ class ModelProto :
   ModelProto* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
     return CreateMaybeMessage<ModelProto>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)
-    final;
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void CopyFrom(const ModelProto& from);
   void MergeFrom(const ModelProto& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
@@ -1330,13 +1422,12 @@ class ModelProto :
   const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
   ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
       ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  void DiscardUnknownFields();
   int GetCachedSize() const final { return _cached_size_.Get(); }
 
   private:
   inline void SharedCtor();
   inline void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(ModelProto* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
@@ -1351,7 +1442,14 @@ class ModelProto :
   }
   public:
 
-  std::string GetTypeName() const final;
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_onnx_2eproto3);
+    return ::descriptor_table_onnx_2eproto3.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
 
   // nested types ----------------------------------------------------
 
@@ -1524,7 +1622,7 @@ class ModelProto :
  private:
   class _Internal;
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::onnx::OperatorSetIdProto > opset_import_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::onnx::StringStringEntryProto > metadata_props_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::onnx::TrainingInfoProto > training_info_;
@@ -1541,7 +1639,7 @@ class ModelProto :
 // -------------------------------------------------------------------
 
 class StringStringEntryProto :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:onnx.StringStringEntryProto) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:onnx.StringStringEntryProto) */ {
  public:
   StringStringEntryProto();
   virtual ~StringStringEntryProto();
@@ -1565,6 +1663,15 @@ class StringStringEntryProto :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
   static const StringStringEntryProto& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
@@ -1592,8 +1699,8 @@ class StringStringEntryProto :
   StringStringEntryProto* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
     return CreateMaybeMessage<StringStringEntryProto>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)
-    final;
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void CopyFrom(const StringStringEntryProto& from);
   void MergeFrom(const StringStringEntryProto& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
@@ -1603,13 +1710,12 @@ class StringStringEntryProto :
   const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
   ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
       ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  void DiscardUnknownFields();
   int GetCachedSize() const final { return _cached_size_.Get(); }
 
   private:
   inline void SharedCtor();
   inline void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(StringStringEntryProto* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
@@ -1624,7 +1730,14 @@ class StringStringEntryProto :
   }
   public:
 
-  std::string GetTypeName() const final;
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_onnx_2eproto3);
+    return ::descriptor_table_onnx_2eproto3.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
 
   // nested types ----------------------------------------------------
 
@@ -1670,7 +1783,7 @@ class StringStringEntryProto :
  private:
   class _Internal;
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr key_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr value_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
@@ -1679,7 +1792,7 @@ class StringStringEntryProto :
 // -------------------------------------------------------------------
 
 class TensorAnnotation :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TensorAnnotation) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:onnx.TensorAnnotation) */ {
  public:
   TensorAnnotation();
   virtual ~TensorAnnotation();
@@ -1703,6 +1816,15 @@ class TensorAnnotation :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
   static const TensorAnnotation& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
@@ -1730,8 +1852,8 @@ class TensorAnnotation :
   TensorAnnotation* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
     return CreateMaybeMessage<TensorAnnotation>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)
-    final;
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void CopyFrom(const TensorAnnotation& from);
   void MergeFrom(const TensorAnnotation& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
@@ -1741,13 +1863,12 @@ class TensorAnnotation :
   const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
   ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
       ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  void DiscardUnknownFields();
   int GetCachedSize() const final { return _cached_size_.Get(); }
 
   private:
   inline void SharedCtor();
   inline void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(TensorAnnotation* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
@@ -1762,7 +1883,14 @@ class TensorAnnotation :
   }
   public:
 
-  std::string GetTypeName() const final;
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_onnx_2eproto3);
+    return ::descriptor_table_onnx_2eproto3.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
 
   // nested types ----------------------------------------------------
 
@@ -1810,7 +1938,7 @@ class TensorAnnotation :
  private:
   class _Internal;
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::onnx::StringStringEntryProto > quant_parameter_tensor_names_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr tensor_name_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
@@ -1819,7 +1947,7 @@ class TensorAnnotation :
 // -------------------------------------------------------------------
 
 class GraphProto :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:onnx.GraphProto) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:onnx.GraphProto) */ {
  public:
   GraphProto();
   virtual ~GraphProto();
@@ -1843,6 +1971,15 @@ class GraphProto :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
   static const GraphProto& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
@@ -1870,8 +2007,8 @@ class GraphProto :
   GraphProto* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
     return CreateMaybeMessage<GraphProto>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)
-    final;
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void CopyFrom(const GraphProto& from);
   void MergeFrom(const GraphProto& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
@@ -1881,13 +2018,12 @@ class GraphProto :
   const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
   ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
       ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  void DiscardUnknownFields();
   int GetCachedSize() const final { return _cached_size_.Get(); }
 
   private:
   inline void SharedCtor();
   inline void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(GraphProto* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
@@ -1902,7 +2038,14 @@ class GraphProto :
   }
   public:
 
-  std::string GetTypeName() const final;
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_onnx_2eproto3);
+    return ::descriptor_table_onnx_2eproto3.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
 
   // nested types ----------------------------------------------------
 
@@ -2081,7 +2224,7 @@ class GraphProto :
  private:
   class _Internal;
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::onnx::NodeProto > node_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::onnx::TensorProto > initializer_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::onnx::ValueInfoProto > input_;
@@ -2097,7 +2240,7 @@ class GraphProto :
 // -------------------------------------------------------------------
 
 class TensorProto_Segment :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TensorProto.Segment) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:onnx.TensorProto.Segment) */ {
  public:
   TensorProto_Segment();
   virtual ~TensorProto_Segment();
@@ -2121,6 +2264,15 @@ class TensorProto_Segment :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
   static const TensorProto_Segment& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
@@ -2148,8 +2300,8 @@ class TensorProto_Segment :
   TensorProto_Segment* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
     return CreateMaybeMessage<TensorProto_Segment>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)
-    final;
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void CopyFrom(const TensorProto_Segment& from);
   void MergeFrom(const TensorProto_Segment& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
@@ -2159,13 +2311,12 @@ class TensorProto_Segment :
   const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
   ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
       ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  void DiscardUnknownFields();
   int GetCachedSize() const final { return _cached_size_.Get(); }
 
   private:
   inline void SharedCtor();
   inline void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(TensorProto_Segment* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
@@ -2180,7 +2331,14 @@ class TensorProto_Segment :
   }
   public:
 
-  std::string GetTypeName() const final;
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_onnx_2eproto3);
+    return ::descriptor_table_onnx_2eproto3.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
 
   // nested types ----------------------------------------------------
 
@@ -2212,7 +2370,7 @@ class TensorProto_Segment :
  private:
   class _Internal;
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::PROTOBUF_NAMESPACE_ID::int64 begin_;
   ::PROTOBUF_NAMESPACE_ID::int64 end_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
@@ -2221,7 +2379,7 @@ class TensorProto_Segment :
 // -------------------------------------------------------------------
 
 class TensorProto :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TensorProto) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:onnx.TensorProto) */ {
  public:
   TensorProto();
   virtual ~TensorProto();
@@ -2245,6 +2403,15 @@ class TensorProto :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
   static const TensorProto& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
@@ -2272,8 +2439,8 @@ class TensorProto :
   TensorProto* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
     return CreateMaybeMessage<TensorProto>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)
-    final;
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void CopyFrom(const TensorProto& from);
   void MergeFrom(const TensorProto& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
@@ -2283,13 +2450,12 @@ class TensorProto :
   const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
   ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
       ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  void DiscardUnknownFields();
   int GetCachedSize() const final { return _cached_size_.Get(); }
 
   private:
   inline void SharedCtor();
   inline void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(TensorProto* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
@@ -2304,7 +2470,14 @@ class TensorProto :
   }
   public:
 
-  std::string GetTypeName() const final;
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_onnx_2eproto3);
+    return ::descriptor_table_onnx_2eproto3.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
 
   // nested types ----------------------------------------------------
 
@@ -2354,6 +2527,10 @@ class TensorProto :
     TensorProto_DataType_DataType_MAX;
   static constexpr int DataType_ARRAYSIZE =
     TensorProto_DataType_DataType_ARRAYSIZE;
+  static inline const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor*
+  DataType_descriptor() {
+    return TensorProto_DataType_descriptor();
+  }
   template<typename T>
   static inline const std::string& DataType_Name(T enum_t_value) {
     static_assert(::std::is_same<T, DataType>::value ||
@@ -2380,6 +2557,10 @@ class TensorProto :
     TensorProto_DataLocation_DataLocation_MAX;
   static constexpr int DataLocation_ARRAYSIZE =
     TensorProto_DataLocation_DataLocation_ARRAYSIZE;
+  static inline const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor*
+  DataLocation_descriptor() {
+    return TensorProto_DataLocation_descriptor();
+  }
   template<typename T>
   static inline const std::string& DataLocation_Name(T enum_t_value) {
     static_assert(::std::is_same<T, DataLocation>::value ||
@@ -2669,7 +2850,7 @@ class TensorProto :
  private:
   class _Internal;
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::int64 > dims_;
   mutable std::atomic<int> _dims_cached_byte_size_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedField< float > float_data_;
@@ -2696,7 +2877,7 @@ class TensorProto :
 // -------------------------------------------------------------------
 
 class SparseTensorProto :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:onnx.SparseTensorProto) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:onnx.SparseTensorProto) */ {
  public:
   SparseTensorProto();
   virtual ~SparseTensorProto();
@@ -2720,6 +2901,15 @@ class SparseTensorProto :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
   static const SparseTensorProto& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
@@ -2747,8 +2937,8 @@ class SparseTensorProto :
   SparseTensorProto* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
     return CreateMaybeMessage<SparseTensorProto>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)
-    final;
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void CopyFrom(const SparseTensorProto& from);
   void MergeFrom(const SparseTensorProto& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
@@ -2758,13 +2948,12 @@ class SparseTensorProto :
   const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
   ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
       ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  void DiscardUnknownFields();
   int GetCachedSize() const final { return _cached_size_.Get(); }
 
   private:
   inline void SharedCtor();
   inline void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(SparseTensorProto* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
@@ -2779,7 +2968,14 @@ class SparseTensorProto :
   }
   public:
 
-  std::string GetTypeName() const final;
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_onnx_2eproto3);
+    return ::descriptor_table_onnx_2eproto3.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
 
   // nested types ----------------------------------------------------
 
@@ -2846,7 +3042,7 @@ class SparseTensorProto :
  private:
   class _Internal;
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::int64 > dims_;
   mutable std::atomic<int> _dims_cached_byte_size_;
   ::onnx::TensorProto* values_;
@@ -2857,7 +3053,7 @@ class SparseTensorProto :
 // -------------------------------------------------------------------
 
 class TensorShapeProto_Dimension :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TensorShapeProto.Dimension) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:onnx.TensorShapeProto.Dimension) */ {
  public:
   TensorShapeProto_Dimension();
   virtual ~TensorShapeProto_Dimension();
@@ -2881,6 +3077,15 @@ class TensorShapeProto_Dimension :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
   static const TensorShapeProto_Dimension& default_instance();
 
   enum ValueCase {
@@ -2914,8 +3119,8 @@ class TensorShapeProto_Dimension :
   TensorShapeProto_Dimension* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
     return CreateMaybeMessage<TensorShapeProto_Dimension>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)
-    final;
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void CopyFrom(const TensorShapeProto_Dimension& from);
   void MergeFrom(const TensorShapeProto_Dimension& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
@@ -2925,13 +3130,12 @@ class TensorShapeProto_Dimension :
   const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
   ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
       ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  void DiscardUnknownFields();
   int GetCachedSize() const final { return _cached_size_.Get(); }
 
   private:
   inline void SharedCtor();
   inline void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(TensorShapeProto_Dimension* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
@@ -2946,7 +3150,14 @@ class TensorShapeProto_Dimension :
   }
   public:
 
-  std::string GetTypeName() const final;
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_onnx_2eproto3);
+    return ::descriptor_table_onnx_2eproto3.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
 
   // nested types ----------------------------------------------------
 
@@ -3015,7 +3226,7 @@ class TensorShapeProto_Dimension :
   inline bool has_value() const;
   inline void clear_has_value();
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr denotation_;
   union ValueUnion {
     ValueUnion() {}
@@ -3030,7 +3241,7 @@ class TensorShapeProto_Dimension :
 // -------------------------------------------------------------------
 
 class TensorShapeProto :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TensorShapeProto) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:onnx.TensorShapeProto) */ {
  public:
   TensorShapeProto();
   virtual ~TensorShapeProto();
@@ -3054,6 +3265,15 @@ class TensorShapeProto :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
   static const TensorShapeProto& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
@@ -3081,8 +3301,8 @@ class TensorShapeProto :
   TensorShapeProto* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
     return CreateMaybeMessage<TensorShapeProto>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)
-    final;
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void CopyFrom(const TensorShapeProto& from);
   void MergeFrom(const TensorShapeProto& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
@@ -3092,13 +3312,12 @@ class TensorShapeProto :
   const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
   ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
       ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  void DiscardUnknownFields();
   int GetCachedSize() const final { return _cached_size_.Get(); }
 
   private:
   inline void SharedCtor();
   inline void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(TensorShapeProto* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
@@ -3113,7 +3332,14 @@ class TensorShapeProto :
   }
   public:
 
-  std::string GetTypeName() const final;
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_onnx_2eproto3);
+    return ::descriptor_table_onnx_2eproto3.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
 
   // nested types ----------------------------------------------------
 
@@ -3146,7 +3372,7 @@ class TensorShapeProto :
  private:
   class _Internal;
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::onnx::TensorShapeProto_Dimension > dim_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_onnx_2eproto3;
@@ -3154,7 +3380,7 @@ class TensorShapeProto :
 // -------------------------------------------------------------------
 
 class TypeProto_Tensor :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TypeProto.Tensor) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:onnx.TypeProto.Tensor) */ {
  public:
   TypeProto_Tensor();
   virtual ~TypeProto_Tensor();
@@ -3178,6 +3404,15 @@ class TypeProto_Tensor :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
   static const TypeProto_Tensor& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
@@ -3205,8 +3440,8 @@ class TypeProto_Tensor :
   TypeProto_Tensor* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
     return CreateMaybeMessage<TypeProto_Tensor>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)
-    final;
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void CopyFrom(const TypeProto_Tensor& from);
   void MergeFrom(const TypeProto_Tensor& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
@@ -3216,13 +3451,12 @@ class TypeProto_Tensor :
   const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
   ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
       ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  void DiscardUnknownFields();
   int GetCachedSize() const final { return _cached_size_.Get(); }
 
   private:
   inline void SharedCtor();
   inline void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(TypeProto_Tensor* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
@@ -3237,7 +3471,14 @@ class TypeProto_Tensor :
   }
   public:
 
-  std::string GetTypeName() const final;
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_onnx_2eproto3);
+    return ::descriptor_table_onnx_2eproto3.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
 
   // nested types ----------------------------------------------------
 
@@ -3275,7 +3516,7 @@ class TypeProto_Tensor :
  private:
   class _Internal;
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::onnx::TensorShapeProto* shape_;
   ::PROTOBUF_NAMESPACE_ID::int32 elem_type_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
@@ -3284,7 +3525,7 @@ class TypeProto_Tensor :
 // -------------------------------------------------------------------
 
 class TypeProto_Sequence :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TypeProto.Sequence) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:onnx.TypeProto.Sequence) */ {
  public:
   TypeProto_Sequence();
   virtual ~TypeProto_Sequence();
@@ -3308,6 +3549,15 @@ class TypeProto_Sequence :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
   static const TypeProto_Sequence& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
@@ -3335,8 +3585,8 @@ class TypeProto_Sequence :
   TypeProto_Sequence* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
     return CreateMaybeMessage<TypeProto_Sequence>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)
-    final;
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void CopyFrom(const TypeProto_Sequence& from);
   void MergeFrom(const TypeProto_Sequence& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
@@ -3346,13 +3596,12 @@ class TypeProto_Sequence :
   const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
   ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
       ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  void DiscardUnknownFields();
   int GetCachedSize() const final { return _cached_size_.Get(); }
 
   private:
   inline void SharedCtor();
   inline void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(TypeProto_Sequence* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
@@ -3367,7 +3616,14 @@ class TypeProto_Sequence :
   }
   public:
 
-  std::string GetTypeName() const final;
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_onnx_2eproto3);
+    return ::descriptor_table_onnx_2eproto3.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
 
   // nested types ----------------------------------------------------
 
@@ -3395,7 +3651,7 @@ class TypeProto_Sequence :
  private:
   class _Internal;
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::onnx::TypeProto* elem_type_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_onnx_2eproto3;
@@ -3403,7 +3659,7 @@ class TypeProto_Sequence :
 // -------------------------------------------------------------------
 
 class TypeProto_Map :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TypeProto.Map) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:onnx.TypeProto.Map) */ {
  public:
   TypeProto_Map();
   virtual ~TypeProto_Map();
@@ -3427,6 +3683,15 @@ class TypeProto_Map :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
   static const TypeProto_Map& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
@@ -3454,8 +3719,8 @@ class TypeProto_Map :
   TypeProto_Map* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
     return CreateMaybeMessage<TypeProto_Map>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)
-    final;
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void CopyFrom(const TypeProto_Map& from);
   void MergeFrom(const TypeProto_Map& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
@@ -3465,13 +3730,12 @@ class TypeProto_Map :
   const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
   ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
       ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  void DiscardUnknownFields();
   int GetCachedSize() const final { return _cached_size_.Get(); }
 
   private:
   inline void SharedCtor();
   inline void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(TypeProto_Map* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
@@ -3486,7 +3750,14 @@ class TypeProto_Map :
   }
   public:
 
-  std::string GetTypeName() const final;
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_onnx_2eproto3);
+    return ::descriptor_table_onnx_2eproto3.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
 
   // nested types ----------------------------------------------------
 
@@ -3524,7 +3795,7 @@ class TypeProto_Map :
  private:
   class _Internal;
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::onnx::TypeProto* value_type_;
   ::PROTOBUF_NAMESPACE_ID::int32 key_type_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
@@ -3533,7 +3804,7 @@ class TypeProto_Map :
 // -------------------------------------------------------------------
 
 class TypeProto :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TypeProto) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:onnx.TypeProto) */ {
  public:
   TypeProto();
   virtual ~TypeProto();
@@ -3557,6 +3828,15 @@ class TypeProto :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
   static const TypeProto& default_instance();
 
   enum ValueCase {
@@ -3591,8 +3871,8 @@ class TypeProto :
   TypeProto* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
     return CreateMaybeMessage<TypeProto>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)
-    final;
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void CopyFrom(const TypeProto& from);
   void MergeFrom(const TypeProto& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
@@ -3602,13 +3882,12 @@ class TypeProto :
   const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
   ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
       ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  void DiscardUnknownFields();
   int GetCachedSize() const final { return _cached_size_.Get(); }
 
   private:
   inline void SharedCtor();
   inline void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(TypeProto* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
@@ -3623,7 +3902,14 @@ class TypeProto :
   }
   public:
 
-  std::string GetTypeName() const final;
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_onnx_2eproto3);
+    return ::descriptor_table_onnx_2eproto3.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
 
   // nested types ----------------------------------------------------
 
@@ -3712,7 +3998,7 @@ class TypeProto :
   inline bool has_value() const;
   inline void clear_has_value();
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr denotation_;
   union ValueUnion {
     ValueUnion() {}
@@ -3728,7 +4014,7 @@ class TypeProto :
 // -------------------------------------------------------------------
 
 class OperatorSetIdProto :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:onnx.OperatorSetIdProto) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:onnx.OperatorSetIdProto) */ {
  public:
   OperatorSetIdProto();
   virtual ~OperatorSetIdProto();
@@ -3752,6 +4038,15 @@ class OperatorSetIdProto :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
   static const OperatorSetIdProto& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
@@ -3779,8 +4074,8 @@ class OperatorSetIdProto :
   OperatorSetIdProto* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
     return CreateMaybeMessage<OperatorSetIdProto>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)
-    final;
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void CopyFrom(const OperatorSetIdProto& from);
   void MergeFrom(const OperatorSetIdProto& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
@@ -3790,13 +4085,12 @@ class OperatorSetIdProto :
   const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
   ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
       ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  void DiscardUnknownFields();
   int GetCachedSize() const final { return _cached_size_.Get(); }
 
   private:
   inline void SharedCtor();
   inline void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(OperatorSetIdProto* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
@@ -3811,7 +4105,14 @@ class OperatorSetIdProto :
   }
   public:
 
-  std::string GetTypeName() const final;
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_onnx_2eproto3);
+    return ::descriptor_table_onnx_2eproto3.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
 
   // nested types ----------------------------------------------------
 
@@ -3850,7 +4151,7 @@ class OperatorSetIdProto :
  private:
   class _Internal;
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr domain_;
   ::PROTOBUF_NAMESPACE_ID::int64 version_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
@@ -8261,9 +8562,25 @@ inline void OperatorSetIdProto::set_version(::PROTOBUF_NAMESPACE_ID::int64 value
 PROTOBUF_NAMESPACE_OPEN
 
 template <> struct is_proto_enum< ::onnx::AttributeProto_AttributeType> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::onnx::AttributeProto_AttributeType>() {
+  return ::onnx::AttributeProto_AttributeType_descriptor();
+}
 template <> struct is_proto_enum< ::onnx::TensorProto_DataType> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::onnx::TensorProto_DataType>() {
+  return ::onnx::TensorProto_DataType_descriptor();
+}
 template <> struct is_proto_enum< ::onnx::TensorProto_DataLocation> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::onnx::TensorProto_DataLocation>() {
+  return ::onnx::TensorProto_DataLocation_descriptor();
+}
 template <> struct is_proto_enum< ::onnx::Version> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::onnx::Version>() {
+  return ::onnx::Version_descriptor();
+}
 
 PROTOBUF_NAMESPACE_CLOSE
 

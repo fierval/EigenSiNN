@@ -134,6 +134,10 @@ namespace EigenSinn {
       value_proto->SerializePartialToOstream(&out);
       out.flush();
       out.close();
+
+      std::string out_str;
+      gp::TextFormat::PrintToString(*model, &out_str);
+
     }
 
     // get a unique name for the tensor value
@@ -184,6 +188,9 @@ namespace EigenSinn {
     inline bool is_inference() { return !is_training; }
 
     inline void flush(std::ofstream* out) {
+
+      std::string out_str;
+      gp::TextFormat::PrintToString(*model, &out_str);
 
       model->SerializeToOstream(out);
       out->flush();

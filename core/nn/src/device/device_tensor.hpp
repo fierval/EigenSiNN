@@ -258,7 +258,7 @@ namespace EigenSinn
     // ONNX
     inline void save_onnx_initializer(EigenModel& model, const std::string& name) {
 
-      const char* data = get_data_row_major();
+      const std::string data = get_data_row_major();
       auto graph = model.get_graph();
       onnx::TensorProto* initializer = graph->add_initializer();
       initializer->set_name(name);
@@ -324,15 +324,14 @@ namespace EigenSinn
     // ONNX
     // Given device tensor return its data on the host in RowMajor layout
     // For saving in ONNX format
-    const char* get_data_row_major() {
+    const std::string get_data_row_major() {
 
       // we want RowMajor layout
       Tensor<Scalar, Rank, Layout> host_t = to_host();
       Scalar* _data = host_t.data();
 
-      if (out_data.size() == 0) {
-        out_data.resize(dimensions().TotalSize());
-      }
+      std::vector<char> out_data;
+      out_data.resize(dimensions().TotalSize() * sizeof(Scalar));
 
       Tensor<Scalar, Rank, RowMajor> out_t;
       DefaultDevice default_device;
@@ -349,11 +348,13 @@ namespace EigenSinn
 
         TensorView<Scalar, Rank, RowMajor> out_view(_data, shuffle_dims);
         out_view = out_view.shuffle(reverse_dims);
+        _data = out_view.data();
       }
 
       // everything is happening on the CPU
-      default_device.memcpy(out_data.data(), (char *)_data, out_data.size() * sizeof(char));
-      return out_data.data();
+      default_device.memcpy(out_data.data(), (char *)_data, out_data.size());
+      std::string out(out_data.begin(), out_data.end());
+      return out;
     }
 
     // for tensor ops
@@ -361,7 +362,6 @@ namespace EigenSinn
 
     // for passing tensors around
     std::shared_ptr<TensorAdapter<Scalar, Device_>> tensor_adapter;
-    std::vector<char> out_data;
 
     // name for ONNX node input/initializer
     std::string node_input_name;
