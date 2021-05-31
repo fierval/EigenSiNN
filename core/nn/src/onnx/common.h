@@ -1,8 +1,7 @@
 #pragma once
 
-#include <ops/opsbase.hpp>
-#include "onnx.proto3.pb.h"
 #include <fstream>
+#include "supported_layers.h"
 #include <google/protobuf/text_format.h>
 
 namespace gp = google::protobuf;
@@ -197,7 +196,31 @@ namespace EigenSinn {
       out << data;
     }
 
+    inline std::string to_string() {
+      std::string data;
+      gp::TextFormat::PrintToString(model, &data);
+      return data;
+    }
+
+
+    static inline std::shared_ptr<EigenModel> LoadOnnxModel(const std::string& data) {
+
+      onnx::ModelProto _model;
+      instance = std::make_shared<EigenModel>(std::move(_model));
+      instance->model.ParseFromString(data);
+
+      return instance;
+    }
+
   private:
+
+    // ctor for parsing
+    EigenModel(onnx::ModelProto&& _model) : model(_model) {
+      
+    }
+
+    // instance for parsing
+    static inline std::shared_ptr<EigenModel> instance;
 
     // an alternative to the above when we want input names
     // to be more descriptive

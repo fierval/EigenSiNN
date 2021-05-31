@@ -16,6 +16,7 @@ using namespace Eigen;
 using namespace EigenSinn;
 
 namespace EigenSinn {
+
   template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   struct NetworkNode {
     std::unique_ptr<LayerBase<Scalar, Device_>> layer;
@@ -115,29 +116,53 @@ namespace EigenSinn {
     }
 
     inline Scalar get_loss() { return loss.get_output(); }
-    Network network;
 
-    inline void save_to_onnx() {
+    inline void save_to_onnx(EigenModel& model) {
 
-      EigenModel model;
-      auto * inp_layer = dynamic_cast<Input<Scalar, 4, Device_, Layout>*>(network[0].layer.get());
+      auto * inp_layer = dynamic_cast<Input<Scalar, Rank, Device_, Layout>*>(network[0].layer.get());
 
       std::string output_name = "input.1";
-      model.add_input(output_name, inp_layer->get_dims(), onnx_data_type_from_scalar<Scalar>());
+      DSizes<Index, 4> input_dims = inp_layer->get_dims();
 
-      for (int i = 0; i < network.size(); i++) {
+      // when saving for inference we
+      // set the 0th dimension to 1 
+      // as inference is mostly done 1 image/time
+      if (model.is_inference()) {
+        input_dims[0] = 1;
+      }
+      // 1. Input layer
+      model.add_input(output_name, input_dims, onnx_data_type_from_scalar<Scalar>());
+
+      // 2. Serialize each layer
+      for (int i = 1; i < network.size(); i++) {
         auto& node = network[i];
         LayerBase<Scalar, Device_>* layer = node.layer.get();
         output_name = layer->add_onnx_node(model, output_name);
       }
       
+      // 3. Output layer
       model.add_output(output_name, network[network.size() - 1].layer->onnx_out_dims(), onnx_data_type_from_scalar<Scalar>());
     }
+
+    // create network by loading it from a byte string
+    public static void load_from_onnx(const std::string& data) {
+
+      auto model = EigenModel::LoadOnnxModel(data);
+
+      // create input layer
+      add(new Input<float, Rank, Device_, Layout>);
+
+      onnx::GraphProto* graph = model->get_graph();
+      for (auto& node : graph->node()) {
+      }
+
+    }
+
   protected:
 
     inline void set_input(DeviceTensor<Scalar, Rank, Device_, Layout>& tensor) {
 
-      auto inp_layer = dynamic_cast<Input<Scalar, 4, Device_, Layout>*>(network[0].layer.get());
+      auto inp_layer = dynamic_cast<Input<Scalar, Rank, Device_, Layout>*>(network[0].layer.get());
       inp_layer->set_input(tensor);
     }
 
@@ -168,6 +193,7 @@ namespace EigenSinn {
       return res;
     }
 
+    Network network;
     Loss loss;
     bool inited;
   };
