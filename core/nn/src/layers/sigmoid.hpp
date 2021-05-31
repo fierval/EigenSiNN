@@ -90,6 +90,10 @@ namespace EigenSinn {
       return node->output().Get(0);
     }
 
+    const std::vector<Index> onnx_out_dims() override {
+      return layer_output.vec_dims();
+    }
+
   private:
     void init_cached(const DeviceTensor<Scalar, Rank, Device_, Layout>& prev_layer)
     {

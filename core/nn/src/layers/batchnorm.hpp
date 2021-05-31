@@ -184,35 +184,43 @@ namespace EigenSinn {
       beta = DeviceTensor<Scalar, 1, Device_, Layout>(v);
     }
 
-    inline onnx::NodeProto* add_graph_node(const char* op_type, std::vector<std::string>& input_names) {
+    inline const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
 
       // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#BatchNormalization
       static constexpr char op_type[] = "BatchNormalization";
       static constexpr char s_batch[] = "batch";
 
       // 1. ADd ONNX node with inputs & outputs
-      std::vector<const char*> suffixes{ "weight", "bias", "running_mean", "running_var" };
+      std::vector<const char*> suffixes{"weight", "bias", "input_mean", "input_var" };
       std::vector<std::string> names = EigenModel::get_cool_display_tensor_value_names(s_batch, suffixes);
+      
+      names.insert(names.begin(), input_name);
 
       onnx::NodeProto* node = model.add_graph_node(op_type, names);
       const std::string out_name = node->output().Get(0);
 
       // 2. Attributes
-      auto epsilon_attr = node->add_attribute();
+      auto * epsilon_attr = node->add_attribute();
       epsilon_attr->set_name("epsilon");
       epsilon_attr->set_f(eps);
       epsilon_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_FLOAT);
 
-      auto epsilon_attr = node->add_attribute();
-      epsilon_attr->set_name("momentum");
-      epsilon_attr->set_f(momentum);
-      epsilon_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_FLOAT);
+      auto * momentum_attr = node->add_attribute();
+      momentum_attr->set_name("momentum");
+      momentum_attr->set_f(momentum);
+      momentum_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_FLOAT);
 
       // 3. Initializers
       gamma.save_onnx_initializer(model, names[0]);
       beta.save_onnx_initializer(model, names[1]);
       running_mean.save_onnx_initializer(model, names[2]);
       running_variance.save_onnx_initializer(model, names[3]);
+
+      return out_name;
+    }
+
+    const std::vector<Index> onnx_out_dims() override {
+      return layer_output.vec_dims();
     }
 
   private:

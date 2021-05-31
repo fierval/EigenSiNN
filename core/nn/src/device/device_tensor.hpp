@@ -210,6 +210,10 @@ namespace EigenSinn
       return tensor_view.value().dimensions();
     }
 
+    const std::vector<Index> vec_dims() const{
+      return dsizes2vector(dimensions());
+    }
+
     Index dimension(Index i) const {
       return tensor_view.value().dimension(i);
     }
@@ -268,7 +272,7 @@ namespace EigenSinn
       }
 
       initializer->set_raw_data(data);
-      initializer->set_data_type(data_type_from_scalar<Scalar>());
+      initializer->set_data_type(onnx_data_type_from_scalar<Scalar>());
 
       // we may pass a fancy name instead of a generated number
       if (node_input_name.empty()) {

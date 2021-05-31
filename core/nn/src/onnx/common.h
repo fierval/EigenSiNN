@@ -21,7 +21,7 @@ namespace EigenSinn {
   }
 
   template<typename Scalar>
-  onnx::TensorProto_DataType data_type_from_scalar() {
+  onnx::TensorProto_DataType onnx_data_type_from_scalar() {
 
     if (std::is_same<Scalar, float>::value) {
       return onnx::TensorProto_DataType::TensorProto_DataType_FLOAT;
@@ -67,7 +67,7 @@ namespace EigenSinn {
     typedef std::vector<onnx::ValueInfoProto *> ValueInfos;
 
   public:
-    EigenModel(const std::string name, bool _is_training = true)
+    EigenModel(bool _is_training = true)
     : is_training(_is_training ) {
       
       onnx::OperatorSetIdProto * opset_id = model.add_opset_import();
@@ -88,7 +88,6 @@ namespace EigenSinn {
 
       // allocate graph & pass ownership to model
       auto graph = model.mutable_graph();
-      graph->set_name(name);
     }
 
     // add input/output tensor descriptors to the graph
@@ -101,14 +100,14 @@ namespace EigenSinn {
       //add_value_proto(name, v, dims, data_type);
     }
 
-    inline void add_output(const std::string& name, std::vector<Index>& dims, onnx::TensorProto_DataType data_type) {
+    inline void add_output(const std::string& name, const std::vector<Index>& dims, onnx::TensorProto_DataType data_type) {
 
       auto graph = get_graph();
       auto value_proto = graph->add_output();
       add_value_proto(name, value_proto, dims, data_type);
     }
 
-    inline void add_value_proto(const std::string& name, onnx::ValueInfoProto* value_proto, std::vector<Index>& dims, onnx::TensorProto_DataType data_type) {
+    inline void add_value_proto(const std::string& name, onnx::ValueInfoProto* value_proto, const std::vector<Index>& dims, onnx::TensorProto_DataType data_type) {
 
       value_proto->set_name(name);
       onnx::TypeProto* type = value_proto->mutable_type();

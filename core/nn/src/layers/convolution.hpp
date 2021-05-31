@@ -185,7 +185,10 @@ namespace EigenSinn {
     ConvolutionParams<4>& get_convolution_params() { return *params; }
 
     // ONNX
-    std::vector<Index> out_dims() { return  dsizes2vector(params->get_out_dims()); }
+    const std::vector<Index> onnx_out_dims() override {
+      return layer_output.vec_dims();
+    }
+
 
     // add ONNX node corresponding to this layer
     // returns the name of the output in the serialized file

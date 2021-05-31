@@ -89,7 +89,7 @@ namespace EigenSinn {
       return is_training;
     }
 
-    const std::string add_onnx_node(EigenModel& model, const std::string& input_name) {
+    const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
 
       // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Dropout
       static constexpr char op_type[] = "Dropout";
@@ -112,6 +112,11 @@ namespace EigenSinn {
 
       const std::string out_name = node->output().Get(0);
       return out_name;
+    }
+
+
+    const std::vector<Index> onnx_out_dims() override {
+      return layer_output.vec_dims();
     }
 
   private:

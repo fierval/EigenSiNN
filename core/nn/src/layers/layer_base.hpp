@@ -44,5 +44,6 @@ namespace EigenSinn {
     virtual void set_cudnn(bool _is_cudnn) {}
 
     virtual const std::string add_onnx_node(EigenModel& model, const std::string& input_name) { return std::string(""); }
+    virtual const std::vector<Index> onnx_out_dims() { return std::vector<Index>(); }
   };
 }

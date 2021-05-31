@@ -198,6 +198,10 @@ namespace EigenSinn {
     return out_name;
   }
 
+  const std::vector<Index> onnx_out_dims() override {
+    return layer_output.vec_dims();
+  }
+
   MaxPoolParams<Rank>& get_maxpool_params() { return *params; }
 
   private:

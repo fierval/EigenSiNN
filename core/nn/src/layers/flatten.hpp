@@ -58,6 +58,10 @@ namespace EigenSinn {
       return out_name;
     }
 
+    const std::vector<Index> onnx_out_dims() override {
+      return unfolded.vec_dims();
+    }
+
   private:
     DeviceTensor<Scalar, 4, Device_, Layout> folded;
     DeviceTensor<Scalar, 2, Device_, Layout> unfolded;

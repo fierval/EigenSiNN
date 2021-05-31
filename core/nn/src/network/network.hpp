@@ -10,6 +10,7 @@
 #include <layers/linear.hpp>
 #include <layers/relu.hpp>
 #include <layers/input.hpp>
+#include <onnx/common.h>
 
 using namespace Eigen;
 using namespace EigenSinn;
@@ -106,7 +107,7 @@ namespace EigenSinn {
 
     inline void set_input(DeviceTensor<Scalar, Rank, Device_, Layout>& tensor) {
 
-      auto inp_layer = dynamic_cast<Input<float, 4, Device_, Layout>*>(network[0].layer.get());
+      auto inp_layer = dynamic_cast<Input<Scalar, 4, Device_, Layout>*>(network[0].layer.get());
       inp_layer->set_input(tensor);
     }
 
@@ -122,6 +123,22 @@ namespace EigenSinn {
     inline Scalar get_loss() { return loss.get_output(); }
     Network network;
 
+    inline void save_to_onnx() {
+
+      EigenModel model;
+      auto * inp_layer = dynamic_cast<Input<Scalar, 4, Device_, Layout>*>(network[0].layer.get());
+
+      std::string output_name = "input.1";
+      model.add_input(output_name, inp_layer->get_dims(), onnx_data_type_from_scalar<Scalar>());
+
+      for (int i = 0; i < network.size(); i++) {
+        auto& node = network[i];
+        LayerBase<Scalar, Device_>* layer = node.layer;
+        output_name = layer->add_onnx_node(model, output_name);
+      }
+      
+      model.add_output(output_name, network[i - 1].layer->onnx_out_dims(), onnx_data_type_from_scalar<Scalar>());
+    }
   protected:
 
     // assuming that the last layer of the network is Flatten, we can get the flattened dimension

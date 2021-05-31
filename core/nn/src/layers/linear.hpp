@@ -164,6 +164,10 @@ namespace EigenSinn {
 
     }
 
+    const std::vector<Index> onnx_out_dims() override {
+      return layer_output.vec_dims();
+    }
+
   private:
 
     DeviceTensor<Scalar, 2, Device_, Layout> weights;
