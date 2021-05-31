@@ -89,7 +89,7 @@ namespace EigenSinn {
     inline void step(DeviceTensor<Scalar, Rank, Device_, Layout>& batch_tensor, DeviceTensor<Actual, OutputRank, Device_, Layout>& label_tensor) {
 
       // get the input
-      dynamic_cast<Input<Scalar, Rank, Device_, Layout>*>(network[0].layer.get())->set_input(batch_tensor);
+      set_input(batch_tensor);
 
       // forward step
       forward();
@@ -103,12 +103,6 @@ namespace EigenSinn {
 
       // optimizer steop
       optimizer();
-    }
-
-    inline void set_input(DeviceTensor<Scalar, Rank, Device_, Layout>& tensor) {
-
-      auto inp_layer = dynamic_cast<Input<Scalar, 4, Device_, Layout>*>(network[0].layer.get());
-      inp_layer->set_input(tensor);
     }
 
     inline PtrTensorAdapter<Scalar, Device_> get_output() {
@@ -140,6 +134,12 @@ namespace EigenSinn {
       model.add_output(output_name, network[network.size() - 1].layer->onnx_out_dims(), onnx_data_type_from_scalar<Scalar>());
     }
   protected:
+
+    inline void set_input(DeviceTensor<Scalar, Rank, Device_, Layout>& tensor) {
+
+      auto inp_layer = dynamic_cast<Input<Scalar, 4, Device_, Layout>*>(network[0].layer.get());
+      inp_layer->set_input(tensor);
+    }
 
     // assuming that the last layer of the network is Flatten, we can get the flattened dimension
     inline int get_flat_dimension(const array<Index, Rank>& input_dims) {
