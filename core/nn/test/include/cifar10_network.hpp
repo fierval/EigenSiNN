@@ -1,6 +1,7 @@
 #pragma once
 
 #include <network/network.hpp>
+#include <losses/crossentropyloss.hpp>
 
 using namespace EigenSinn;
 
@@ -9,7 +10,7 @@ namespace EigenSinnTest {
   class Cifar10 : public NetBase<float, 4, CrossEntropyLoss<float, uint8_t, 2, Device_, Layout>, Device_, Layout, CuDNN> {
 
   public:
-    Cifar10(DSizes<Index, 4> input_dims, int num_classes, float learning_rate) {
+    Cifar10(const DSizes<Index, 4>& input_dims, int num_classes, float learning_rate) {
 
       // push back rvalues so we don't have to invoke the copy constructor
       add(new Input<float, 4, Device_, Layout>);

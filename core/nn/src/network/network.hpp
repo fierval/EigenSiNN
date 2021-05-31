@@ -133,11 +133,11 @@ namespace EigenSinn {
 
       for (int i = 0; i < network.size(); i++) {
         auto& node = network[i];
-        LayerBase<Scalar, Device_>* layer = node.layer;
+        LayerBase<Scalar, Device_>* layer = node.layer.get();
         output_name = layer->add_onnx_node(model, output_name);
       }
       
-      model.add_output(output_name, network[i - 1].layer->onnx_out_dims(), onnx_data_type_from_scalar<Scalar>());
+      model.add_output(output_name, network[network.size() - 1].layer->onnx_out_dims(), onnx_data_type_from_scalar<Scalar>());
     }
   protected:
 
