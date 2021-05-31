@@ -34,7 +34,7 @@ namespace cifar {
    * \tparam Image The type of image
    * \tparam Label The type of label
    */
-  template <template <typename...> class Container, typename Image, typename Label, int Layout = ColMajor>
+  template <template <typename...> class Container, typename Image, typename Label, int Layout = RowMajor>
   struct CIFAR10_dataset {
     Container<Image> training_images; ///< The training images
     Container<Image> test_images;     ///< The test images
@@ -201,7 +201,7 @@ namespace cifar {
     read_training<Images, Labels, Layout>(CIFAR_DATA_LOCATION, limit, images, labels);
   }
     
-  template <template <typename...> class Container, typename Image, typename Label = uint8_t, int Layout = ColMajor>
+  template <template <typename...> class Container, typename Image, typename Label = uint8_t, int Layout = RowMajor>
   CIFAR10_dataset<Container, Image, Label, Layout> read_dataset_3d(std::size_t training_limit = 0, std::size_t test_limit = 0) {
 
     CIFAR10_dataset<Container, Image, Label, Layout> dataset;

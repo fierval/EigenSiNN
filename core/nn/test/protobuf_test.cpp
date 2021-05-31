@@ -7,6 +7,8 @@
 #include "include/testutils.hpp"
 #include "ops/comparisons.hpp"
 
+#include <network/network.hpp>
+
 #include <onnx/onnx.proto3.pb.h>
 #include <onnx/common.h>
 
@@ -53,4 +55,5 @@ namespace EigenSinnTest {
     model.flush("c:\\temp\\test.onnx");
     model.dump("c:\\temp\\test.txt");
   }
+
 } // EigenSinnTest

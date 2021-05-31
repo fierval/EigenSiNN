@@ -11,18 +11,16 @@
 #include <layers/relu.hpp>
 #include <layers/input.hpp>
 
-#include "helpers.h"
-
 using namespace Eigen;
 using namespace EigenSinn;
 
 namespace EigenSinn {
-  template <typename Scalar, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   struct NetworkNode {
     std::unique_ptr<LayerBase<Scalar, Device_>> layer;
-    std::unique_ptr<OptimizerBase<Scalar, Device_>> optimizer;
+    std::unique_ptr<OptimizerBase<Scalar, Device_, Layout>> optimizer;
 
-    NetworkNode(LayerBase<Scalar, Device_>* _layer, OptimizerBase<Scalar, Device_, 0>* _optimizer = nullptr) : layer(_layer), optimizer(_optimizer) {}
+    NetworkNode(LayerBase<Scalar, Device_>* _layer, OptimizerBase<Scalar, Device_, Layout>* _optimizer = nullptr) : layer(_layer), optimizer(_optimizer) {}
 
     NetworkNode(NetworkNode<Scalar, Device_>&& other)  noexcept {
       layer = std::move(other.layer);
@@ -116,7 +114,7 @@ namespace EigenSinn {
       return network.rbegin()->layer.get()->get_output();
     }
 
-    inline void add(LayerBase<Scalar, Device_>* n, OptimizerBase<Scalar, Device_>* opt = nullptr) {
+    inline void add(LayerBase<Scalar, Device_>* n, OptimizerBase<Scalar, Device_, Layout>* opt = nullptr) {
       n->set_cudnn(CuDnn);
       network.push_back(NetworkNode<Scalar, Device_>(n, opt));
     }
