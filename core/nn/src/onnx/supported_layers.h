@@ -23,13 +23,18 @@ namespace EigenSinn {
   template<typename Scalar, typename Device_>
   struct SupportedLayers {
 
+    SupportedLayers(onnx::GraphProto& _graph) 
+      : graph(_graph) {
+
+    }
+
     enum Layers : int {
       BatchNormalization, Conv, ConvTranspose, Dropout, Flatten, Gemm, MaxPool, LeakyRelu, Relu, Sigmoid, Softmax, Tanh
     };
 
     std::vector<std::string> layers = {"BatchNormalization", "Conv", "ConvTranspose", "Dropout", "Flatten", "Gemm", "MaxPool", "LeakyRelu", "Relu", "Sigmoid",  "Softmax", "Tanh"};
         
-    static inline LayerBase<Scalar, Device_> * CreateFromOnnxNode(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_> * create_from_node(const onnx::NodeProto& node) {
       
       const std::string& op_type = node.op_type();
 
@@ -78,6 +83,7 @@ namespace EigenSinn {
 
       case: Layers::Tanh :
         return Tanh(node);
+
       default:
         return nullptr;
       }
@@ -85,42 +91,45 @@ namespace EigenSinn {
     }
 
   protected:
-    static inline LayerBase<Scalar, Device_>* BatchNormalization(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* BatchNormalization(const onnx::NodeProto& node) {
+
 
     }
-    static inline LayerBase<Scalar, Device_>* Conv(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* Conv(const onnx::NodeProto& node) {
 
     }
-    static inline LayerBase<Scalar, Device_>* ConvTranspose(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* ConvTranspose(const onnx::NodeProto& node) {
 
     }
-    static inline LayerBase<Scalar, Device_>* Dropout(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* Dropout(const onnx::NodeProto& node) {
 
     }
-    static inline LayerBase<Scalar, Device_>* Flatten(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* Flatten(const onnx::NodeProto& node) {
 
     }
-    static inline LayerBase<Scalar, Device_>* Gemm(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* Gemm(const onnx::NodeProto& node) {
 
     }
 
-    static inline LayerBase<Scalar, Device_>* MaxPool(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* MaxPool(const onnx::NodeProto& node) {
 
     }
-    static inline LayerBase<Scalar, Device_>* LeakyRelu(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LeakyRelu(const onnx::NodeProto& node) {
 
     }
-    static inline LayerBase<Scalar, Device_>* Relu(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* Relu(const onnx::NodeProto& node) {
 
     }
-    static inline LayerBase<Scalar, Device_>* Sigmoid(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* Sigmoid(const onnx::NodeProto& node) {
 
     }
-    static inline LayerBase<Scalar, Device_>* Softmax(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* Softmax(const onnx::NodeProto& node) {
 
     }
-    static inline LayerBase<Scalar, Device_>* Tanh(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* Tanh(const onnx::NodeProto& node) {
 
     }
+
+    onnx::GraphProto& graph;
   };
 }

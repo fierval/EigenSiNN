@@ -211,7 +211,7 @@ namespace EigenSinn
     }
 
     const std::vector<Index> vec_dims() const{
-      return dsizes2vector(dimensions());
+      return dims2vec(dimensions());
     }
 
     Index dimension(Index i) const {

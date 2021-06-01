@@ -13,7 +13,6 @@
 #include <onnx/common.h>
 
 using namespace Eigen;
-using namespace EigenSinn;
 
 namespace EigenSinn {
 
@@ -153,6 +152,8 @@ namespace EigenSinn {
       add(new Input<float, Rank, Device_, Layout>);
 
       onnx::GraphProto* graph = model->get_graph();
+      SupportedLayers onnx_layers(*graph);
+
       for (auto& node : graph->node()) {
       }
 

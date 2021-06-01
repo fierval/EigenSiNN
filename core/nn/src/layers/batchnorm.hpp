@@ -223,6 +223,22 @@ namespace EigenSinn {
       return layer_output.vec_dims();
     }
 
+    // in the order they appear in the ONNX file
+    inline void set_from_onnx(std::vector<Scalar*> data_vector, std::vector<std::vector<Index>> dims_vector) override {
+
+      std::vector<DeviceTensor<Scalar, 1, Device_, Layout>&> data{ gamma, beta, running_mean, running_variance };
+      for (int i = 0; i < data_vector.size(); i++) {
+        
+        DSizes<Index, 1> dim = vec2dims(dims_vector[i]);
+        data[i].set_from_host(data_vector[i], dim);
+      }
+    }
+
+    inline void set_from_onnx(std::vector<Scalar> data_vector) override {
+      eps = data_vector[0];
+      momentum = data_vector[1];
+    }
+
   private:
 
     inline std::string get_input_name(int layer_idx, const char* suffix) {
@@ -235,7 +251,7 @@ namespace EigenSinn {
 
     DeviceTensor<Scalar, 1, Device_, Layout> gamma, beta, running_mean, running_variance, mu, var;
     DeviceTensor<Scalar, 1, Device_, Layout> dbeta, dgamma;
-    float momentum, eps;
+    Scalar momentum, eps;
     bool is_training;
 
   };

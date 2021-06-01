@@ -45,5 +45,8 @@ namespace EigenSinn {
 
     virtual const std::string add_onnx_node(EigenModel& model, const std::string& input_name) { return std::string(""); }
     virtual const std::vector<Index> onnx_out_dims() { return std::vector<Index>(); }
+
+    virtual void set_from_onnx(std::vector<Scalar*>& data_vector, std::vector<std::vector<Index>> dims_vector) {}
+    virtual void set_from_onnx(std::vector<Scalar>& data_vector) {}
   };
 }

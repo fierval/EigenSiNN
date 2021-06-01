@@ -8,16 +8,6 @@ namespace gp = google::protobuf;
 
 namespace EigenSinn {
 
-  template<int Rank>
-  std::vector<Index> dsizes2vector(DSizes<Index, Rank> dims) {
-
-    std::vector<Index> out(Rank);
-    for (int i = 0; i < Rank; i++) {
-      out[i] = dims[i];
-    }
-    
-    return out;
-  }
 
   template<typename Scalar>
   onnx::TensorProto_DataType onnx_data_type_from_scalar() {

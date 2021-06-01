@@ -216,6 +216,13 @@ namespace EigenSinn {
       return out_name;
     }
 
+    // in the order they appear in the ONNX file
+    inline void set_from_onnx(std::vector<Scalar*> data_vector, std::vector<std::vector<Index>> dims_vector) override {
+      
+      kernel.set_from_host(data_vector[0], vec2dims(dims_vector[0]));
+      bias.set_from_host(data_vector[1], vec2dims(dims_vector[1]));
+    }
+
   private:
     DeviceTensor<Scalar, 4, Device_, Layout> kernel, layer_output, dX, dW;
     DeviceTensor<Scalar, 1, Device_, Layout> bias, loss_by_bias_derivative;

@@ -41,7 +41,7 @@ namespace EigenSinn {
     void backward(LayerBase<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {};
 
     std::vector<Index> get_dims() {
-      return dsizes2vector(input.dimensions());
+      return dims2vec(input.dimensions());
     }
 
   private:
