@@ -113,8 +113,30 @@ namespace EigenSinn {
 
     inline LayerBase<Scalar, Device_>* Conv(const onnx::NodeProto& node) {
 
+      auto attrs = get_node_attributes();
+      
+      DSizes<Index, 4> kernel_dims = vec2dims<4>(get_attr_dims(*attrs["kernel_shape"]);
+      Padding2D padding{ attrs["padding"]->ints().Get(2), attrs["padding"]->ints().Get(3) };
+      int stride = attrs["strides"]->ints().Get(0);
+      int dilation = attrs["dilations"]->ints().Get(0);
+
+      auto* out = new Conv2d(kernel_dims, padding, stride, dilation);
+      out->load_onnx_data(model, get_node_inputs(node));
+      return out;
+
     }
     inline LayerBase<Scalar, Device_>* ConvTranspose(const onnx::NodeProto& node) {
+
+      auto attrs = get_node_attributes();
+
+      DSizes<Index, 4> kernel_dims = vec2dims<4>(get_attr_dims(*attrs["kernel_shape"]);
+      Padding2D padding{ attrs["padding"]->ints().Get(2), attrs["padding"]->ints().Get(3) };
+      int stride = attrs["strides"]->ints().Get(0);
+      int dilation = attrs["dilations"]->ints().Get(0);
+
+      auto * out = new TransConv2d(kernel_dims, padding, stride, dilation);
+      out->load_onnx_data(model, get_node_inputs(node));
+      return out;
 
     }
     inline LayerBase<Scalar, Device_>* Dropout(const onnx::NodeProto& node) {
@@ -153,6 +175,21 @@ namespace EigenSinn {
       std::transform(node.input().begin(), node.input().end(), out.begin(), [](std::string& s) {return s; });
       return out;
     }
+
+    std::map<std::string, onnx::AttributeProto*> get_node_attributes(const onnx::NodeProto& node) {
+
+      std::map<std::string, onnx::AttributeProto*> attr;
+
+      std::transform(node.attribute().begin(), node.attribute().end(), std::back_inserter(attr), [](onnx::AttributeProto& a) {return std::pair<std::string, onnx::AttributeProto*>(a.name(), &a); });
+      return out;
+    }
+
+    const std::vector<Index> get_attr_dims(onnx::AttributeProto& attr) {
+      std::vector<Index> dims(attr.ints().size());
+      std::transform(attr.ints().begin(), attr.ints().end(), dims.begin(), [](Index i) {return i; });
+      return dims;
+    }
+
     const EigenModel& model;
   };
 }

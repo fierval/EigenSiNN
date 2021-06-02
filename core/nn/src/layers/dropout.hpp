@@ -99,21 +99,31 @@ namespace EigenSinn {
       DeviceTensor<float, 0> prob_tensor;
       prob_tensor.setConstant(prob);
 
-      DeviceTensor<int, 0> training_mode;
-      training_mode.setConstant(1);
-
       // 1. Add initializers
       prob_tensor.save_onnx_initializer(model);
-      training_mode.save_onnx_initializer(model);
 
       // 2. Add inputs
       auto* node = model.add_graph_node(op_type, 
-        std::vector<std::string>{input_name, prob_tensor.get_onnx_input_name(), training_mode.get_onnx_input_name() });
+        std::vector<std::string>{input_name, prob_tensor.get_onnx_input_name()});
 
       const std::string out_name = node->output().Get(0);
       return out_name;
     }
 
+
+    // in the order they appear in the ONNX file
+    inline void load_onnx_data(EigenModel& model, std::vector<std::string>& inputs) override {
+
+      std::vector<Scalar*> values;
+      std::vector<std::vector<Index>> dimensions;
+
+      // just one value and dims = 0 
+      std::tie(values, dimensions) = model.get_input_data_and_dimensions(inputs);
+
+      // recover probability
+      prob = *values[0];
+
+    }
 
     const std::vector<Index> onnx_out_dims() override {
       return layer_output.vec_dims();

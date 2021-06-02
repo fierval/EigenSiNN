@@ -208,10 +208,16 @@ namespace EigenSinn {
     }
 
     // in the order they appear in the ONNX file
-    inline void set_from_onnx(std::vector<Scalar*> data_vector, std::vector<std::vector<Index>> dims_vector) override {
+    // in the order they appear in the ONNX file
+    inline void load_onnx_data(EigenModel& model, std::vector<std::string>& inputs) override {
 
-      kernel.set_from_host(data_vector[0], vec2dims(dims_vector[0]));
-      bias.set_from_host(data_vector[1], vec2dims(dims_vector[1]));
+      std::vector<std::vector<Index>> dimensions;
+      std::vector<Scalar*> values;
+
+      std::tie(values, dimensions) = model.get_input_data_and_dimensions(inputs);
+
+      kernel.set_from_host(values[0], vec2dims<1>(dimensions[0]));
+      bias.set_from_host(values[1], vec2dims<1>(dimensions[1]));
     }
 
     const std::vector<Index> onnx_out_dims() override {

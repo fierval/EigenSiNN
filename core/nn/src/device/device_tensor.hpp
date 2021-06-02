@@ -210,7 +210,7 @@ namespace EigenSinn
       return tensor_view.value().dimensions();
     }
 
-    const std::vector<Index> vec_dims() const{
+    const std::vector<Index> vec_dims() const {
       return dims2vec(dimensions());
     }
 
@@ -267,7 +267,10 @@ namespace EigenSinn
       onnx::TensorProto* initializer = graph->add_initializer();
       initializer->set_name(name);
 
-      for (Index i = 0; i < Rank; i++) {
+      // Case of Rank = 0
+      const int rank = Rank > 0 ? Rank : 1;
+
+      for (Index i = 0; i < rank; i++) {
         initializer->add_dims(dimensions()[i]);
       }
 
@@ -356,7 +359,7 @@ namespace EigenSinn
       }
 
       // everything is happening on the CPU
-      default_device.memcpy(out_data.data(), (char *)_data, out_data.size());
+      default_device.memcpy(out_data.data(), (char*)_data, out_data.size());
       std::string out(out_data.begin(), out_data.end());
       return out;
     }

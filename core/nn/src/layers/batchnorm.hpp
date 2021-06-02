@@ -239,11 +239,6 @@ namespace EigenSinn {
 
     }
 
-    inline void set_from_onnx(std::vector<Scalar> data_vector) override {
-      eps = data_vector[0];
-      momentum = data_vector[1];
-    }
-
   private:
 
     inline std::string get_input_name(int layer_idx, const char* suffix) {
