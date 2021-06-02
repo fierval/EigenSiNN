@@ -4,6 +4,7 @@
 #include <fstream>
 #include <google/protobuf/text_format.h>
 #include "onnx.proto3.pb.h"
+#include <stdexcept>
 
 namespace gp = google::protobuf;
 
@@ -195,7 +196,6 @@ namespace EigenSinn {
       return data;
     }
 
-
     static inline std::shared_ptr<EigenModel> LoadOnnxModel(const std::string& data) {
 
       onnx::ModelProto _model;
@@ -205,11 +205,38 @@ namespace EigenSinn {
       return instance;
     }
 
+    // given input name find its dimensions
+    std::vector<Index> get_input_dimensions(const std::string input_name) {
+
+      const onnx::TensorProto& initializer = find_initializer(input_name);
+      std::vector<Index> out(initializer.dims_size());
+      std::transform(initializer.dims().begin(), initializer.dims().end(), out.begin(), [](int i) { return i; });
+      return out;
+    }
+
   private:
 
     // ctor for parsing
     EigenModel(onnx::ModelProto&& _model) : model(_model) {
       
+    }
+
+    inline const onnx::TensorProto& find_initializer(const std::string name) {
+
+      auto graph = *get_graph();
+
+      auto initializers = graph.initializer();
+      auto it = initializers.begin();
+      for (; it != initializers.end(); it++) {
+        if (it->name() == name) {
+          break;
+        }
+      }
+
+      if (it == initializers.end()) {
+        throw std::logic_error("Name not found in ONNX file");
+      }
+      return *it;
     }
 
     // instance for parsing

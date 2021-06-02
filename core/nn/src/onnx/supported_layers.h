@@ -1,7 +1,5 @@
 #pragma once
 
-#include "onnx.proto3.pb.h"
-
 #include <layers/batchnorm.hpp>
 #include <layers/convolution.hpp>
 #include <layers/convolutiontrans.hpp>
@@ -17,6 +15,8 @@
 
 #include <map>
 #include <set>
+#include "common.h"
+
 using namespace Eigen;
 
 namespace EigenSinn {
@@ -24,8 +24,9 @@ namespace EigenSinn {
   template<typename Scalar, typename Device_>
   struct SupportedLayers {
 
-    SupportedLayers(onnx::GraphProto& _graph) 
-      : graph(_graph) {
+    SupportedLayers(const EigenModel& model) 
+      : graph(*model.get_graph())
+    , model(model) {
 
     }
 
@@ -94,8 +95,21 @@ namespace EigenSinn {
   protected:
     inline LayerBase<Scalar, Device_>* BatchNormalization(const onnx::NodeProto& node) {
 
+      // epsilon
+      auto eps = node.attribute(0).f();
 
+      // momentum
+      auto momentum = node.attribute(1).f();
+
+      // find out the number of features by looking into the initializers
+      // and figuring out what the weight dimension is
+      const std::string& weight_name = node.input().Get(1);
+      Index num_features = model.get_input_dimensions(weight_name)[0];
+      
+      // create layer
+      return new BatchNormalizationLayer<Scalar, Rank, Device, RowMajor>(num_features, eps, momentum);
     }
+
     inline LayerBase<Scalar, Device_>* Conv(const onnx::NodeProto& node) {
 
     }
@@ -131,6 +145,7 @@ namespace EigenSinn {
 
     }
 
-    onnx::GraphProto& graph;
+    const onnx::GraphProto& graph;
+    const EigenModel& model;
   };
 }
