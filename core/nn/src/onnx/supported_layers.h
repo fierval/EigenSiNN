@@ -107,7 +107,9 @@ namespace EigenSinn {
       Index num_features = model.get_input_dimensions(weight_name)[0];
       
       // create layer
-      return new BatchNormalizationLayer<Scalar, Rank, Device, RowMajor>(num_features, eps, momentum);
+      auto * out =  new BatchNormalizationLayer<Scalar, Rank, Device, RowMajor>(num_features, eps, momentum);
+      out->load_onnx_data(model, node);
+      return out;
     }
 
     inline LayerBase<Scalar, Device_>* Conv(const onnx::NodeProto& node) {

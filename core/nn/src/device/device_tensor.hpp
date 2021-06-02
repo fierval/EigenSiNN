@@ -280,6 +280,7 @@ namespace EigenSinn
       }
     }
 
+    inline void load_onnx_data(EigenModel& model, )
     inline void save_onnx_initializer(EigenModel& model) {
       save_onnx_initializer(model, get_onnx_input_name());
     }

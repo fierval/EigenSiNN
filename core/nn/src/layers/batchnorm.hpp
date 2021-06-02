@@ -224,7 +224,7 @@ namespace EigenSinn {
     }
 
     // in the order they appear in the ONNX file
-    inline void set_from_onnx(std::vector<Scalar*> data_vector, std::vector<std::vector<Index>> dims_vector) override {
+    inline void load_onnx_data(std::vector<Scalar*> data_vector, std::vector<std::vector<Index>> dims_vector) override {
 
       std::vector<DeviceTensor<Scalar, 1, Device_, Layout>&> data{ gamma, beta, running_mean, running_variance };
       for (int i = 0; i < data_vector.size(); i++) {
