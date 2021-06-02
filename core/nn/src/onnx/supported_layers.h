@@ -25,8 +25,7 @@ namespace EigenSinn {
   struct SupportedLayers {
 
     SupportedLayers(const EigenModel& model) 
-      : graph(*model.get_graph())
-    , model(model) {
+     : model(model) {
 
     }
 
@@ -108,7 +107,7 @@ namespace EigenSinn {
       
       // create layer
       auto * out =  new BatchNormalizationLayer<Scalar, Device_, RowMajor>(num_features, eps, momentum);
-      out->load_onnx_data(model, node);
+      out->load_onnx_data(model, get_node_inputs(node));
       return out;
     }
 
@@ -147,7 +146,13 @@ namespace EigenSinn {
 
     }
 
-    const onnx::GraphProto& graph;
+    std::vector<std::string> get_node_inputs(const onnx::NodeProto& node) {
+
+      std::vector<std::string> out(node.input_size());
+
+      std::transform(node.input().begin(), node.input().end(), out.begin(), [](std::string& s) {return s; });
+      return out;
+    }
     const EigenModel& model;
   };
 }

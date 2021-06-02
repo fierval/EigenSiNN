@@ -49,6 +49,6 @@ namespace EigenSinn {
     virtual void set_from_onnx(std::vector<Scalar*>& data_vector, std::vector<std::vector<Index>> dims_vector) {}
     virtual void set_from_onnx(std::vector<Scalar>& data_vector) {}
 
-    virtual void load_onnx_data(EigenModel& model, onnx::NodeProto& node) {}
+    virtual void load_onnx_data(EigenModel& model, std::vector<std::string>& inputs) {}
   };
 }

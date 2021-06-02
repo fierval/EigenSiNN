@@ -224,14 +224,19 @@ namespace EigenSinn {
     }
 
     // in the order they appear in the ONNX file
-    inline void load_onnx_data(std::vector<Scalar*> data_vector, std::vector<std::vector<Index>> dims_vector) override {
+    inline void load_onnx_data(EigenModel& model, std::vector<std::string>& inputs) override {
 
-      std::vector<DeviceTensor<Scalar, 1, Device_, Layout>&> data{ gamma, beta, running_mean, running_variance };
-      for (int i = 0; i < data_vector.size(); i++) {
-        
-        DSizes<Index, 1> dim = vec2dims(dims_vector[i]);
-        data[i].set_from_host(data_vector[i], dim);
-      }
+      std::vector<std::vector<Index>> dimensions;
+      std::vector<Scalar*> values;
+
+      std::tie(values, dimensions) = model.get_input_data_and_dimensions(inputs);
+
+      // even though all dimensions are the same, we iterate over them for completeness
+      gamma.set_from_host(values[0], vec2dims<1>(dimensions[0]));
+      beta.set_from_host(values[1], vec2dims<1>(dimensions[1]));
+      running_mean.set_from_host(values[2], vec2dims<1>(dimensions[2]));
+      running_variance.set_from_host(values[3], vec2dims<1>(dimensions[3]));
+
     }
 
     inline void set_from_onnx(std::vector<Scalar> data_vector) override {
