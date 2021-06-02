@@ -12,6 +12,8 @@
 #include <layers/input.hpp>
 #include <onnx/common.h>
 
+#include <onnx/supported_layers.h>
+
 using namespace Eigen;
 
 namespace EigenSinn {
@@ -193,6 +195,8 @@ namespace EigenSinn {
       inited = false;
       return res;
     }
+
+    inline virtual OptimizerBase<Scalar, Device_, Layout>* get_optimizer(float learning_rate) = 0;
 
     Network network;
     Loss loss;

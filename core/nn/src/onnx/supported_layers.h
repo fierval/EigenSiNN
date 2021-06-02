@@ -17,6 +17,7 @@
 
 #include <map>
 #include <set>
+using namespace Eigen;
 
 namespace EigenSinn {
 

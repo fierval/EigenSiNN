@@ -3,9 +3,7 @@
 #include <network/network.hpp>
 #include <losses/crossentropyloss.hpp>
 
-using namespace EigenSinn;
-
-namespace EigenSinnTest {
+namespace EigenSinn {
   template<typename Device_ = ThreadPoolDevice, int Layout = RowMajor, bool CuDNN = false>
   class Cifar10 : public NetBase<float, 4, CrossEntropyLoss<float, uint8_t, 2, Device_, Layout>, Device_, Layout, CuDNN> {
 
@@ -41,7 +39,7 @@ namespace EigenSinnTest {
 
   protected:
     template <Index Rank>
-    inline auto get_optimizer(float learning_rate) {
+    inline OptimizerBase<float, Device_, Layout>* get_optimizer(float learning_rate) override {
       return dynamic_cast<OptimizerBase<float, Device_, Layout>*>(new SGD<float, Rank, Device_, Layout>(learning_rate, 0, false));
     }
   };

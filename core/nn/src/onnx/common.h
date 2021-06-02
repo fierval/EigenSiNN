@@ -1,10 +1,13 @@
 #pragma once
 
+#include <ops/opsbase.hpp>
 #include <fstream>
-#include "supported_layers.h"
 #include <google/protobuf/text_format.h>
+#include "onnx.proto3.pb.h"
 
 namespace gp = google::protobuf;
+
+using namespace Eigen;
 
 namespace EigenSinn {
 
