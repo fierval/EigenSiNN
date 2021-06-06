@@ -179,25 +179,35 @@ namespace EigenSinn {
 
     inline LayerBase<Scalar, Device_>* LoadMaxPool(const onnx::NodeProto& node) {
       // TODO: How do we deal with Rank?
-      auto* out = new MaxPooling<Scalar, 4, Device_, RowMajor>(*prob_data[0]);
+      auto* out = new MaxPooling<Scalar, 4, Device_, RowMajor>();
       return out;
 
     }
 
     inline LayerBase<Scalar, Device_>* LoadLeakyRelu(const onnx::NodeProto& node) {
-
+      
+      auto attrs = get_node_attributes(node);
+      // TODO: How do we deal with Rank?
+      return new EigenSinn::LeakyReLU<Scalar, 4, Device_, RowMajor>(attrs["alpha"]->f());
     }
+
     inline LayerBase<Scalar, Device_>* LoadRelu(const onnx::NodeProto& node) {
 
+      // TODO: How do we deal with Rank?
+      return new EigenSinn::ReLU<Scalar, 4, Device_, RowMajor>();
     }
+
     inline LayerBase<Scalar, Device_>* LoadSigmoid(const onnx::NodeProto& node) {
+      return new EigenSinn::Sigmoid<Scalar, 4, Device_, RowMajor>();
 
     }
     inline LayerBase<Scalar, Device_>* LoadSoftmax(const onnx::NodeProto& node) {
+      return new EigenSinn::Softmax<Scalar, 4, Device_, RowMajor>();
 
     }
-    inline LayerBase<Scalar, Device_>* LoadTanh(const onnx::NodeProto& node) {
 
+    inline LayerBase<Scalar, Device_>* LoadTanh(const onnx::NodeProto& node) {
+      return new EigenSinn::Tanh<Scalar, 4, Device_, RowMajor>();
     }
 
     std::vector<std::string> get_node_inputs(const onnx::NodeProto& node) {
@@ -205,7 +215,6 @@ namespace EigenSinn {
       std::vector<std::string> out(node.input_size());
 
       std::transform(node.input().begin(), node.input().end(), out.begin(), [](std::string& s) {return s; });
-      return out;
     }
 
     std::map<std::string, onnx::AttributeProto*> get_node_attributes(const onnx::NodeProto& node) {
