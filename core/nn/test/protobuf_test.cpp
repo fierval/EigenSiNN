@@ -3,7 +3,7 @@
 #include "include/testutils.hpp"
 #include "ops/comparisons.hpp"
 
-#include "include/cifar10_network.hpp"
+#include "network/cifar10_network.hpp"
 
 using namespace EigenSinn;
 

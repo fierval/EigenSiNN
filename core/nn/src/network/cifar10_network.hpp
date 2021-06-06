@@ -39,7 +39,7 @@ namespace EigenSinn {
 
   protected:
     template <Index Rank>
-    inline OptimizerBase<float, Device_, Layout>* get_optimizer(float learning_rate) override {
+    inline OptimizerBase<float, Device_, Layout>* get_optimizer(float learning_rate) {
       return dynamic_cast<OptimizerBase<float, Device_, Layout>*>(new SGD<float, Rank, Device_, Layout>(learning_rate, 0, false));
     }
   };

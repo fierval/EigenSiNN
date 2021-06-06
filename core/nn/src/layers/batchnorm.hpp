@@ -229,7 +229,7 @@ namespace EigenSinn {
       std::vector<std::vector<Index>> dimensions;
       std::vector<Scalar*> values;
 
-      std::tie(values, dimensions) = model.get_input_data_and_dimensions(inputs);
+      std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
 
       // even though all dimensions are the same, we iterate over them for completeness
       gamma.set_from_host(values[0], vec2dims<1>(dimensions[0]));

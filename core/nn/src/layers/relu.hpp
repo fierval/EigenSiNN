@@ -91,11 +91,6 @@ namespace EigenSinn {
       return node->output().Get(0);
     }
 
-    // in the order they appear in the ONNX file
-    inline void set_from_onnx(std::vector<Scalar>& data_vector) override {
-      thresh = data_vector[0];
-    }
-
     const std::vector<Index> onnx_out_dims() override {
       return layer_output.vec_dims();
     }

@@ -50,40 +50,40 @@ namespace EigenSinn {
       switch (layer_type)
       {
       case: Layers::BatchNormalization :
-        return BatchNormalization(node);
+        return LoadBatchNormalization(node);
 
       case: Layers::Conv :
-        return Conv(node);
+        return LoadConv(node);
 
       case: Layers::ConvTranspose :
-        return ConvTranspose(node);
+        return LoadConvTranspose(node);
 
       case: Layers::Dropout :
-        return Dropout(node);
+        return LoadDropout(node);
 
       case: Layers::Flatten :
-        return Flatten(node);
+        return LoadFlatten(node);
 
       case: Layers::Gemm :
-        return Gemm(node);
+        return LoadGemm(node);
 
       case: Layers::MaxPool :
-        return MaxPool(node);
+        return LoadMaxPool(node);
 
       case: Layers::LeakyRelu :
-        return LeakyRelu(node);
+        return LoadLeakyRelu(node);
 
       case: Layers::Relu :
-        return Relu(node);
+        return LoadRelu(node);
 
       case: Layers::Sigmoid :
-        return Sigmoid(node);
+        return LoadSigmoid(node);
 
       case: Layers::Softmax :
-        return Softmax(node);
+        return LoadSoftmax(node);
 
       case: Layers::Tanh :
-        return Tanh(node);
+        return LoadTanh(node);
 
       default:
         return nullptr;
@@ -92,7 +92,7 @@ namespace EigenSinn {
     }
 
   protected:
-    inline LayerBase<Scalar, Device_>* BatchNormalization(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadBatchNormalization(const onnx::NodeProto& node) {
 
       // epsilon
       auto eps = node.attribute(0).f();
@@ -111,11 +111,11 @@ namespace EigenSinn {
       return out;
     }
 
-    inline LayerBase<Scalar, Device_>* Conv(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadConv(const onnx::NodeProto& node) {
 
       auto attrs = get_node_attributes();
       
-      DSizes<Index, 4> kernel_dims = vec2dims<4>(get_attr_dims(*attrs["kernel_shape"]);
+      DSizes<Index, 4> kernel_dims = vec2dims<4>(get_attr_dims(*attrs["kernel_shape"]));
       Padding2D padding{ attrs["padding"]->ints().Get(2), attrs["padding"]->ints().Get(3) };
       int stride = attrs["strides"]->ints().Get(0);
       int dilation = attrs["dilations"]->ints().Get(0);
@@ -125,11 +125,13 @@ namespace EigenSinn {
       return out;
 
     }
-    inline LayerBase<Scalar, Device_>* ConvTranspose(const onnx::NodeProto& node) {
+
+    inline LayerBase<Scalar, Device_>* LoadConvTranspose(const onnx::NodeProto& node) {
 
       auto attrs = get_node_attributes();
 
-      DSizes<Index, 4> kernel_dims = vec2dims<4>(get_attr_dims(*attrs["kernel_shape"]);
+      DSizes<Index, 4> kernel_dims = vec2dims<4>(get_attr_dims(*attrs["kernel_shape"]));
+
       Padding2D padding{ attrs["padding"]->ints().Get(2), attrs["padding"]->ints().Get(3) };
       int stride = attrs["strides"]->ints().Get(0);
       int dilation = attrs["dilations"]->ints().Get(0);
@@ -139,32 +141,32 @@ namespace EigenSinn {
       return out;
 
     }
-    inline LayerBase<Scalar, Device_>* Dropout(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadDropout(const onnx::NodeProto& node) {
 
     }
-    inline LayerBase<Scalar, Device_>* Flatten(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadFlatten(const onnx::NodeProto& node) {
 
     }
-    inline LayerBase<Scalar, Device_>* Gemm(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadGemm(const onnx::NodeProto& node) {
 
     }
 
-    inline LayerBase<Scalar, Device_>* MaxPool(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadMaxPool(const onnx::NodeProto& node) {
 
     }
-    inline LayerBase<Scalar, Device_>* LeakyRelu(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadLeakyRelu(const onnx::NodeProto& node) {
 
     }
-    inline LayerBase<Scalar, Device_>* Relu(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadRelu(const onnx::NodeProto& node) {
 
     }
-    inline LayerBase<Scalar, Device_>* Sigmoid(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadSigmoid(const onnx::NodeProto& node) {
 
     }
-    inline LayerBase<Scalar, Device_>* Softmax(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadSoftmax(const onnx::NodeProto& node) {
 
     }
-    inline LayerBase<Scalar, Device_>* Tanh(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadTanh(const onnx::NodeProto& node) {
 
     }
 

@@ -1,7 +1,5 @@
 #include <gtest/gtest.h>
 #include <layers/batchnorm.hpp>
-#include <iostream>
-#include <ops/conversions.hpp>
 #include <ops/comparisons.hpp>
 
 #include "include/commondata4d.hpp"

@@ -5,7 +5,7 @@
 #include "ops/initializations.hpp"
 #include "helpers/conv_params_bag.hpp"
 
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
 #include "cudnn/cudnn_workspace.hpp"
 #endif
 
@@ -69,7 +69,7 @@ namespace EigenSinn {
       //add bias to each channel
       bias_broadcast = { out_dims[0], 1, out_dims[2], out_dims[3] };
 
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
 
       if (is_cudnn) {
         // data forward
@@ -79,7 +79,7 @@ namespace EigenSinn {
 
       }
       else {
-#endif // EIGEN_USE_GPU
+#endif // __CUDACC__
 
         DeviceTensor<Scalar, 2, Device_, Layout> inp_reshaped = unfold_conv_res<Scalar, Device_, Layout>(prev_layer);
 
@@ -93,7 +93,7 @@ namespace EigenSinn {
 
         // re-format into the image of output dimensions
         col2im(X_col, layer_output, *params, true);
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
       }
 #endif
 
@@ -109,7 +109,7 @@ namespace EigenSinn {
       //bias
       loss_by_bias_derivative.view() = next_layer_grad->sum(array<Index, 3>{0, 2, 3});
 
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
       if (is_cudnn) {
 
         // data backwards
@@ -127,7 +127,7 @@ namespace EigenSinn {
 
         return;
       }
-#endif // EIGEN_USE_GPU
+#endif // __CUDACC__
 
       // dX: kernel.T.T * dout which is just a regular convolution
       dX = convolve<Scalar, 4, Layout, Device_>(next_layer_grad, kernel, *params);
@@ -214,9 +214,9 @@ namespace EigenSinn {
       std::vector<std::vector<Index>> dimensions;
       std::vector<Scalar*> values;
 
-      std::tie(values, dimensions) = model.get_input_data_and_dimensions(inputs);
+      std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
 
-      kernel.set_from_host(values[0], vec2dims<1>(dimensions[0]));
+      kernel.set_from_host(values[0], vec2dims<4>(dimensions[0]));
       bias.set_from_host(values[1], vec2dims<1>(dimensions[1]));
     }
 
@@ -233,7 +233,7 @@ namespace EigenSinn {
     array<Index, 4> bias_broadcast;
     std::shared_ptr<ConvolutionParams<4>> params;
 
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
     std::shared_ptr<CudnnWorkspace> cudnn_workspace;
 #endif
     bool is_cudnn;

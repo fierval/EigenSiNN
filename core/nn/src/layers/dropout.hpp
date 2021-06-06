@@ -118,7 +118,7 @@ namespace EigenSinn {
       std::vector<std::vector<Index>> dimensions;
 
       // just one value and dims = 0 
-      std::tie(values, dimensions) = model.get_input_data_and_dimensions(inputs);
+      std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
 
       // recover probability
       prob = *values[0];
@@ -135,7 +135,7 @@ namespace EigenSinn {
     DeviceTensor<bool, Rank, Device_, Layout> if_tensor;
     DeviceTensor<float, Rank, Device_, Layout> rands, then_tensor, else_tensor, prob_tensor;
     bool is_training, inited;
-    const float prob;
+    float prob;
   };
 
 }

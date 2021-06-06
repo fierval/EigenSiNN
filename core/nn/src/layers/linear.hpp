@@ -164,13 +164,6 @@ namespace EigenSinn {
 
     }
 
-    // in the order they appear in the ONNX file
-    inline void set_from_onnx(std::vector<Scalar*> data_vector, std::vector<std::vector<Index>> dims_vector) override {
-
-      weights.set_from_host(data_vector[0], vec2dims(dims_vector[0]));
-      bias.set_from_host(data_vector[1], vec2dims(dims_vector[1]));
-    }
-
     const std::vector<Index> onnx_out_dims() override {
       return layer_output.vec_dims();
     }

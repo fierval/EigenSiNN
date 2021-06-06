@@ -123,7 +123,7 @@ namespace EigenSinn {
       auto * inp_layer = dynamic_cast<Input<Scalar, Rank, Device_, Layout>*>(network[0].layer.get());
 
       std::string output_name = "input.1";
-      DSizes<Index, 4> input_dims = inp_layer->get_dims();
+      auto input_dims = inp_layer->get_dims();
 
       // when saving for inference we
       // set the 0th dimension to 1 
@@ -146,7 +146,7 @@ namespace EigenSinn {
     }
 
     // create network by loading it from a byte string
-    public static void load_from_onnx(const std::string& data) {
+    static inline void load_from_onnx(const std::string& data) {
 
       auto model = EigenModel::LoadOnnxModel(data);
 
@@ -196,7 +196,10 @@ namespace EigenSinn {
       return res;
     }
 
-    inline virtual OptimizerBase<Scalar, Device_, Layout>* get_optimizer(float learning_rate) = 0;
+    template <Index Rank>
+    inline OptimizerBase<float, Device_, Layout>* get_optimizer(float learning_rate) {
+      return dynamic_cast<OptimizerBase<float, Device_, Layout>*>(new SGD<float, Rank, Device_, Layout>(learning_rate, 0, false));
+    }
 
     Network network;
     Loss loss;
