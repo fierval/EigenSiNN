@@ -10,9 +10,8 @@
 #include <layers/linear.hpp>
 #include <layers/relu.hpp>
 #include <layers/input.hpp>
-#include <onnx/common.h>
 
-#include <onnx/supported_layers.h>
+#include <onnx/loader.h>
 
 using namespace Eigen;
 

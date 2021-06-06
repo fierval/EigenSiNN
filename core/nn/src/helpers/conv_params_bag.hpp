@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ops/opsbase.hpp"
-#include "onnx/common.h"
+#include "onnx/model.h"
 
 using namespace Eigen;
 

@@ -2,7 +2,7 @@
 
 #include "layer_base.hpp"
 #include <ops/conversions.hpp>
-#include <onnx/common.h>
+#include <onnx/model.h>
 
 using std::unique_ptr;
 

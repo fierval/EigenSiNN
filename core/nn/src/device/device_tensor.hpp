@@ -3,7 +3,7 @@
 #include "device_helpers.hpp"
 #include "ops/opsbase.hpp"
 #include "tensor_adapter.hpp"
-#include "onnx/common.h"
+#include "onnx/model.h"
 
 namespace EigenSinn
 {

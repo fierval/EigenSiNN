@@ -15,16 +15,16 @@
 
 #include <map>
 #include <set>
-#include "common.h"
+#include "model.h"
 
 using namespace Eigen;
 
 namespace EigenSinn {
 
   template<typename Scalar, typename Device_>
-  struct SupportedLayers {
+  struct OnnxLoader {
 
-    SupportedLayers(const EigenModel& model) 
+    OnnxLoader(const EigenModel& model) 
      : model(model) {
 
     }

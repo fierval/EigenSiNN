@@ -4,7 +4,7 @@
 #include <ops/opsbase.hpp>
 #include <ops/conversions.hpp>
 #include <device/device_tensor.hpp>
-#include <onnx/common.h>
+#include <onnx/model.h>
 
 using namespace Eigen;
 
