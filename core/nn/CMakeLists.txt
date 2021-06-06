@@ -16,11 +16,11 @@ set(TEST_SOURCES
 #    "test/sigmoid_test.cpp"
 #     "test/maxpooling4d_gpu_test.cu"
 #    "test/cudnn_test.cu"
-#    "test/convlayer_test.cpp"
-#    "test/convlayer_cudnn_test.cu"
+    "test/convlayer_test.cpp"
+    "test/convlayer_cudnn_test.cu"
 #    "test/convlayer_gpu_test.cu"
 #    "test/memory_test_gpu.cu"
-#    "test/convlayer_trans_test.cpp"
+    "test/convlayer_trans_test.cpp"
 #    "test/convlayer_trans_gpu_test.cu"
 #    "test/convlayer_trans_cudnn_test.cu"
 #    "test/maxpooling4d_test.cpp"
@@ -52,7 +52,7 @@ target_compile_definitions(${TEST_EXE} PRIVATE EIGEN_USE_THREADS EIGEN_USE_GPU E
 target_include_directories(${TEST_EXE} PRIVATE "src" ${EIGEN_PATH} ${Boost_INCLUDE_DIRS} ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} ${Protobuf_INCLUDE_DIRS})
 
 target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${Boost_LIBRARIES} ${Protobuf_LIBRARIES})
-#target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${Boost_LIBRARIES} ${Protobuf_LIBRARIES} cudnn)
+target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${Boost_LIBRARIES} ${Protobuf_LIBRARIES} cudnn)
 
 # gtest specific
 set(gtest_force_shared_crt ON)

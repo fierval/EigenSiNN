@@ -113,12 +113,12 @@ namespace EigenSinn {
 
     inline LayerBase<Scalar, Device_>* LoadConv(const onnx::NodeProto& node) {
 
-      auto attrs = get_node_attributes();
-      
-      DSizes<Index, 4> kernel_dims = vec2dims<4>(get_attr_dims(*attrs["kernel_shape"]));
-      Padding2D padding{ attrs["padding"]->ints().Get(2), attrs["padding"]->ints().Get(3) };
-      int stride = attrs["strides"]->ints().Get(0);
-      int dilation = attrs["dilations"]->ints().Get(0);
+      DSizes<Index, 4> kernel_dims;
+      Padding2D padding;
+      int stride;
+      int dilation;
+
+      std::tie(kernel_dims, padding, stride, dilation) = get_conv_node_attributes(node);
 
       auto* out = new Conv2d(kernel_dims, padding, stride, dilation);
       out->load_onnx_data(model, get_node_inputs(node));
@@ -128,13 +128,12 @@ namespace EigenSinn {
 
     inline LayerBase<Scalar, Device_>* LoadConvTranspose(const onnx::NodeProto& node) {
 
-      auto attrs = get_node_attributes();
+      DSizes<Index, 4> kernel_dims;
+      Padding2D padding;
+      int stride;
+      int dilation;
 
-      DSizes<Index, 4> kernel_dims = vec2dims<4>(get_attr_dims(*attrs["kernel_shape"]));
-
-      Padding2D padding{ attrs["padding"]->ints().Get(2), attrs["padding"]->ints().Get(3) };
-      int stride = attrs["strides"]->ints().Get(0);
-      int dilation = attrs["dilations"]->ints().Get(0);
+      std::tie(kernel_dims, padding, stride, dilation) = get_conv_node_attributes(node);
 
       auto * out = new TransConv2d(kernel_dims, padding, stride, dilation);
       out->load_onnx_data(model, get_node_inputs(node));
@@ -184,6 +183,19 @@ namespace EigenSinn {
 
       std::transform(node.attribute().begin(), node.attribute().end(), std::back_inserter(attr), [](onnx::AttributeProto& a) {return std::pair<std::string, onnx::AttributeProto*>(a.name(), &a); });
       return out;
+    }
+
+    std::tuple<DSizes<Index, 4>, Padding2D, int, int> get_conv_node_attributes(const onnx::NodeProto& node) {
+
+      auto attrs = get_node_attributes(node);
+
+      DSizes<Index, 4> kernel_dims = vec2dims<4>(get_attr_dims(*attrs["kernel_shape"]));
+      Padding2D padding{ attrs["padding"]->ints().Get(2), attrs["padding"]->ints().Get(3) };
+      int stride = attrs["strides"]->ints().Get(0);
+      int dilation = attrs["dilations"]->ints().Get(0);
+
+      return std::make_tuple(kernel_dims, padding, stride, dilation);
+
     }
 
     const std::vector<Index> get_attr_dims(onnx::AttributeProto& attr) {
