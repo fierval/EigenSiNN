@@ -120,7 +120,7 @@ namespace EigenSinn {
 
       std::tie(kernel_dims, padding, stride, dilation) = get_conv_node_attributes(node);
 
-      auto* out = new Conv2d(kernel_dims, padding, stride, dilation);
+      auto* out = new Conv2d<Scalar, Device_, RowMajor>(kernel_dims, padding, stride, dilation);
       out->load_onnx_data(model, get_node_inputs(node));
       return out;
 
@@ -135,24 +135,55 @@ namespace EigenSinn {
 
       std::tie(kernel_dims, padding, stride, dilation) = get_conv_node_attributes(node);
 
-      auto * out = new TransConv2d(kernel_dims, padding, stride, dilation);
+      auto * out = new TransConv2d<Scalar, Device_, RowMajor>(kernel_dims, padding, stride, dilation);
       out->load_onnx_data(model, get_node_inputs(node));
       return out;
 
     }
+
     inline LayerBase<Scalar, Device_>* LoadDropout(const onnx::NodeProto& node) {
 
-    }
-    inline LayerBase<Scalar, Device_>* LoadFlatten(const onnx::NodeProto& node) {
+      // dropout probability is saved as input
+      auto inputs = get_node_inputs(node);
+      std::vector<Scalar*> prob_data;
+      std::vector<std::vector<Index>> prob_data_dims;
 
+      std::tie(prob_data, prob_data_dims) = model.get_input_data_and_dimensions(inputs);
+
+      // TODO: How do we deal with Rank?
+      auto* out = new EigenSinn::Dropout<Scalar, 4, Device_, RowMajor>(*prob_data[0]);
+      return out;
     }
+
+    inline LayerBase<Scalar, Device_>* LoadFlatten(const onnx::NodeProto& node) {
+      // flatten is always agains dim 1
+      return new EigenSinn::Flatten<Scalar, Device_, RowMajor>();
+    }
+
     inline LayerBase<Scalar, Device_>* LoadGemm(const onnx::NodeProto& node) {
 
+      auto inputs = get_node_inputs(node);
+
+      std::vector<Scalar*> data;
+      std::vector<std::vector<Index>> dims;
+
+      std::tie(data, dims) = model.get_input_data_and_dimensions(inputs);
+
+      // dimesions of the weight tensor
+      int in_dim = data[1][0], out_dim[1][1];
+      auto* out = new Linear<Scalar, Device_, RowMajor>(in_dim, out_dim);
+      out->load_onnx_data(model, inputs);
+
+      return out;
     }
 
     inline LayerBase<Scalar, Device_>* LoadMaxPool(const onnx::NodeProto& node) {
+      // TODO: How do we deal with Rank?
+      auto* out = new MaxPooling<Scalar, 4, Device_, RowMajor>(*prob_data[0]);
+      return out;
 
     }
+
     inline LayerBase<Scalar, Device_>* LoadLeakyRelu(const onnx::NodeProto& node) {
 
     }
