@@ -145,28 +145,28 @@ namespace EigenSinn {
     }
 
     // create network by loading it from a byte string
-    static inline void load_from_onnx(const std::string& data) {
+    inline void load_from_onnx(const std::string& data) {
 
-      auto model = EigenModel::LoadOnnxModel(data);
+      EigenModel model(data);
 
       // create input layer
       add(new Input<float, Rank, Device_, Layout>);
 
-      onnx::GraphProto* graph = model->get_graph();
-      SupportedLayers onnx_layers(*graph);
+      onnx::GraphProto* graph = model.get_graph();
+      OnnxLoader<Scalar, Device_> onnx_layers(model);
 
       for (auto& node : graph->node()) {
       }
 
     }
 
-  protected:
-
     inline void set_input(DeviceTensor<Scalar, Rank, Device_, Layout>& tensor) {
 
       auto inp_layer = dynamic_cast<Input<Scalar, Rank, Device_, Layout>*>(network[0].layer.get());
       inp_layer->set_input(tensor);
     }
+
+  protected:
 
     // assuming that the last layer of the network is Flatten, we can get the flattened dimension
     inline int get_flat_dimension(const array<Index, Rank>& input_dims) {

@@ -78,9 +78,11 @@ namespace EigenSinn {
 
       model.set_producer_name(producer);
       model.set_producer_version(version);
+    }
 
-      // allocate graph & pass ownership to model
-      auto graph = model.mutable_graph();
+    EigenModel(const std::string& data) {
+      model.ParseFromString(data);
+
     }
 
     // add input/output tensor descriptors to the graph
@@ -196,15 +198,6 @@ namespace EigenSinn {
       return data;
     }
 
-    static inline std::shared_ptr<EigenModel> LoadOnnxModel(const std::string& data) {
-
-      onnx::ModelProto _model;
-      instance.reset(new EigenModel(std::move(_model)));
-      instance->model.ParseFromString(data);
-
-      return instance;
-    }
-
     inline onnx::TensorProto* find_initializer(const std::string name) {
 
       auto graph = *get_graph();
@@ -224,7 +217,8 @@ namespace EigenSinn {
     }
 
     // given input name find its dimensions
-    std::vector<Index> get_input_dimensions(const std::string input_name) {
+    // REVIEW: NVCC doesn't like std::string&!!
+    std::vector<Index> get_input_dimensions(std::string input_name) {
 
       const onnx::TensorProto * initializer = find_initializer(input_name);
       return get_input_dimensions(*initializer);
@@ -270,9 +264,6 @@ namespace EigenSinn {
     EigenModel(onnx::ModelProto&& _model) : model(_model) {
       
     }
-
-    // instance for parsing
-    static inline std::shared_ptr<EigenModel> instance;
 
     // an alternative to the above when we want input names
     // to be more descriptive

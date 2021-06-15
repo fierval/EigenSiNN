@@ -24,7 +24,7 @@ namespace EigenSinn {
   template<typename Scalar, typename Device_>
   struct OnnxLoader {
 
-    OnnxLoader(const EigenModel& model) 
+    OnnxLoader(EigenModel& model) 
      : model(model) {
 
     }
@@ -49,40 +49,40 @@ namespace EigenSinn {
       Layers layer_type = static_cast<Layers>(it - layers.begin());
       switch (layer_type)
       {
-      case: Layers::BatchNormalization :
+      case Layers::BatchNormalization:
         return LoadBatchNormalization(node);
 
-      case: Layers::Conv :
+      case Layers::Conv:
         return LoadConv(node);
 
-      case: Layers::ConvTranspose :
+      case Layers::ConvTranspose:
         return LoadConvTranspose(node);
 
-      case: Layers::Dropout :
+      case Layers::Dropout:
         return LoadDropout(node);
 
-      case: Layers::Flatten :
+      case Layers::Flatten:
         return LoadFlatten(node);
 
-      case: Layers::Gemm :
+      case Layers::Gemm:
         return LoadGemm(node);
 
-      case: Layers::MaxPool :
+      case Layers::MaxPool:
         return LoadMaxPool(node);
 
-      case: Layers::LeakyRelu :
+      case Layers::LeakyRelu:
         return LoadLeakyRelu(node);
 
-      case: Layers::Relu :
+      case Layers::Relu:
         return LoadRelu(node);
 
-      case: Layers::Sigmoid :
+      case Layers::Sigmoid:
         return LoadSigmoid(node);
 
-      case: Layers::Softmax :
+      case Layers::Softmax:
         return LoadSoftmax(node);
 
-      case: Layers::Tanh :
+      case Layers::Tanh:
         return LoadTanh(node);
 
       default:
@@ -102,11 +102,10 @@ namespace EigenSinn {
 
       // find out the number of features by looking into the initializers
       // and figuring out what the weight dimension is
-      const std::string& weight_name = node.input().Get(1);
-      Index num_features = model.get_input_dimensions(weight_name)[0];
+      Index num_features = model.get_input_dimensions(node.input().Get(1))[0];
       
       // create layer
-      auto * out =  new BatchNormalizationLayer<Scalar, Device_, RowMajor>(num_features, eps, momentum);
+      auto * out =  new BatchNormalizationLayer<Scalar, 4, Device_, RowMajor>(num_features, eps, momentum);
       out->load_onnx_data(model, get_node_inputs(node));
       return out;
     }
@@ -244,6 +243,6 @@ namespace EigenSinn {
       return dims;
     }
 
-    const EigenModel& model;
+    EigenModel& model;
   };
 }

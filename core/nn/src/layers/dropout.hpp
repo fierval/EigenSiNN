@@ -54,7 +54,7 @@ namespace EigenSinn {
       }
 
       // generate random uniform values
-      rands.setRandom<internal::UniformRandomGenerator<float>>();
+      rands.template setRandom<internal::UniformRandomGenerator<float>>();
             
       // create condition
       if_tensor.view() = *rands >= *prob_tensor;
@@ -85,7 +85,7 @@ namespace EigenSinn {
       is_training = _is_training;
     }
 
-    const bool get_training() {
+    bool get_training() {
       return is_training;
     }
 
