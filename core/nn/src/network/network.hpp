@@ -115,6 +115,10 @@ namespace EigenSinn {
       network.push_back(NetworkNode<Scalar, Device_>(n, opt));
     }
 
+    inline void clear() {
+      network.clear();
+    }
+
     inline Scalar get_loss() { return loss.get_output(); }
 
     inline void save_to_onnx(EigenModel& model) {
@@ -158,6 +162,7 @@ namespace EigenSinn {
       for (auto& node : graph->node()) {
         auto* layer = onnx_layers.create_from_node(node);
         add(layer);
+        layer->set_cudnn(CuDnn);
       }
 
     }

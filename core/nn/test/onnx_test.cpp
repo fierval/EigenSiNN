@@ -46,6 +46,10 @@ namespace EigenSinnTest {
 
   TEST_F(OnnxTest, RoundTripTest) {
 
+    net->clear();
+
+    auto str_model = model.flush_to_string();
+    net->load_from_onnx(str_model);
   }
 
 } // EigenSinnTest

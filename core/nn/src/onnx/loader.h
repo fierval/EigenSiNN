@@ -18,6 +18,8 @@
 #include "model.h"
 #include "op_defs.h"
 
+#define make_func(a) std::bind((&OnnxLoader<Scalar, Device_>::a), this, std::placeholders::_1)
+
 using namespace Eigen;
 
 namespace EigenSinn {
@@ -28,18 +30,18 @@ namespace EigenSinn {
     OnnxLoader(EigenModel& model) 
      : model(model) {
 
-      layer_loaders.insert(std::make_pair(batch_norm_op, &LoadBatchNormalization));
-      layer_loaders.insert(std::make_pair(conv_op, &LoadConv));
-      layer_loaders.insert(std::make_pair(conv_transpose_op, &LoadConvTranspose));
-      layer_loaders.insert(std::make_pair(dropout_op, &LoadDropout));
-      layer_loaders.insert(std::make_pair(flatten_op, &LoadFlatten));
-      layer_loaders.insert(std::make_pair(gemm_op, &LoadGemm));
-      layer_loaders.insert(std::make_pair(maxpool_op, &LoadMaxPool));
-      layer_loaders.insert(std::make_pair(leakyrelu_op, &LoadLeakyRelu));
-      layer_loaders.insert(std::make_pair(relu_op, &LoadRelu));
-      layer_loaders.insert(std::make_pair(sigmoid_op, &LoadSigmoid));
-      layer_loaders.insert(std::make_pair(softmax_op, &LoadSoftmax));
-      layer_loaders.insert(std::make_pair(tansh_op, &LoadTanh));
+      layer_loaders.insert(std::make_pair(batch_norm_op, make_func(LoadBatchNormalization)));
+      layer_loaders.insert(std::make_pair(conv_op, make_func(LoadConv)));
+      layer_loaders.insert(std::make_pair(conv_transpose_op, make_func(LoadConvTranspose)));
+      layer_loaders.insert(std::make_pair(dropout_op, make_func(LoadDropout)));
+      layer_loaders.insert(std::make_pair(flatten_op, make_func(LoadFlatten)));
+      layer_loaders.insert(std::make_pair(gemm_op, make_func(LoadGemm)));
+      layer_loaders.insert(std::make_pair(maxpool_op, make_func(LoadMaxPool)));
+      layer_loaders.insert(std::make_pair(leakyrelu_op, make_func(LoadLeakyRelu)));
+      layer_loaders.insert(std::make_pair(relu_op, make_func(LoadRelu)));
+      layer_loaders.insert(std::make_pair(sigmoid_op, make_func(LoadSigmoid)));
+      layer_loaders.insert(std::make_pair(softmax_op, make_func(LoadSoftmax)));
+      layer_loaders.insert(std::make_pair(tanh_op, make_func(LoadTanh)));
     }
 
     inline LayerBase<Scalar, Device_> * create_from_node(const onnx::NodeProto& node) {
@@ -47,12 +49,12 @@ namespace EigenSinn {
       const std::string& op_type = node.op_type();
 
       // unsopported layer!
-      if (layer_loaders.find(op_type) == layer_loaders.end()) {
+      if (layer_loaders.find(op_type.c_str()) == layer_loaders.end()) {
         return nullptr;
       }
 
       // get the actual layer
-      return layer_loders[op_type](node);
+      return layer_loaders[op_type.c_str()](node);
     }
 
   protected:
@@ -76,30 +78,54 @@ namespace EigenSinn {
 
     inline LayerBase<Scalar, Device_>* LoadConv(const onnx::NodeProto& node) {
 
-      DSizes<Index, 4> kernel_dims;
+      DSizes<Index, 2> kernel_dims;
       Padding2D padding;
       int stride;
       int dilation;
 
       std::tie(kernel_dims, padding, stride, dilation) = get_conv_node_attributes(node);
 
-      auto* out = new Conv2d<Scalar, Device_, RowMajor>(kernel_dims, padding, stride, dilation);
-      out->load_onnx_data(model, get_node_inputs(node));
+      auto inputs = get_node_inputs(node);
+
+      std::vector<std::vector<Index>> dimensions;
+      std::vector<Scalar*> values;
+
+      // kernel dimensions are second
+      DSizes<Index, 4> real_kernel_dims;
+      std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
+
+      // consistent between attributes and actual dimensions
+      assert(kernel_dims[0] == real_kernel_dims[2] && kernel_dims[1] == real_kernel_dims[3]);
+
+      auto* out = new Conv2d<Scalar, Device_, RowMajor>(real_kernel_dims, padding, stride, dilation);
+      out->load_onnx_data(model, inputs);
       return out;
 
     }
 
     inline LayerBase<Scalar, Device_>* LoadConvTranspose(const onnx::NodeProto& node) {
 
-      DSizes<Index, 4> kernel_dims;
+      DSizes<Index, 2> kernel_dims;
       Padding2D padding;
       int stride;
       int dilation;
 
       std::tie(kernel_dims, padding, stride, dilation) = get_conv_node_attributes(node);
 
-      auto * out = new TransConv2d<Scalar, Device_, RowMajor>(kernel_dims, padding, stride, dilation);
-      out->load_onnx_data(model, get_node_inputs(node));
+      auto inputs = get_node_inputs(node);
+
+      std::vector<std::vector<Index>> dimensions;
+      std::vector<Scalar*> values;
+
+      // kernel dimensions are second
+      DSizes<Index, 4> real_kernel_dims;
+      std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
+
+      // consistent between attributes and actual dimensions
+      assert(kernel_dims[0] == real_kernel_dims[2] && kernel_dims[1] == real_kernel_dims[3]);
+
+      auto * out = new TransConv2d<Scalar, Device_, RowMajor>(real_kernel_dims, padding, stride, dilation);
+      out->load_onnx_data(model, inputs);
       return out;
 
     }
@@ -111,7 +137,7 @@ namespace EigenSinn {
       std::vector<Scalar*> prob_data;
       std::vector<std::vector<Index>> prob_data_dims;
 
-      std::tie(prob_data, prob_data_dims) = model.get_input_data_and_dimensions(inputs);
+      std::tie(prob_data, prob_data_dims) = model.get_input_data_and_dimensions<Scalar>(inputs);
 
       // TODO: How do we deal with Rank?
       auto* out = new EigenSinn::Dropout<Scalar, 4, Device_, RowMajor>(*prob_data[0]);
@@ -127,13 +153,13 @@ namespace EigenSinn {
 
       auto inputs = get_node_inputs(node);
 
-      std::vector<Scalar*> data;
-      std::vector<std::vector<Index>> dims;
+      std::vector<std::vector<Index>> dimensions;
+      std::vector<Scalar*> values;
 
-      std::tie(data, dims) = model.get_input_data_and_dimensions(inputs);
+      std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
 
       // dimesions of the weight tensor
-      int in_dim = data[1][0], out_dim[1][1];
+      int in_dim = dimensions[1][0], out_dim = dimensions[1][1];
       auto* out = new Linear<Scalar, Device_, RowMajor>(in_dim, out_dim);
       out->load_onnx_data(model, inputs);
 
@@ -141,8 +167,15 @@ namespace EigenSinn {
     }
 
     inline LayerBase<Scalar, Device_>* LoadMaxPool(const onnx::NodeProto& node) {
+
+      DSizes<Index, 2> kernel_dims;
+      Padding2D padding;
+      int stride;
+      
+      std::tie(kernel_dims, padding, stride) = get_conv_node_common_attributes(node);
+
       // TODO: How do we deal with Rank?
-      auto* out = new MaxPooling<Scalar, 4, Device_, RowMajor>();
+      auto* out = new MaxPooling<Scalar, 4, Device_, RowMajor>(kernel_dims, stride, padding);
       return out;
 
     }
@@ -151,7 +184,7 @@ namespace EigenSinn {
       
       auto attrs = get_node_attributes(node);
       // TODO: How do we deal with Rank?
-      return new EigenSinn::LeakyReLU<Scalar, 4, Device_, RowMajor>(attrs["alpha"]->f());
+      return new EigenSinn::LeakyReLU<Scalar, 4, Device_, RowMajor>(attrs["alpha"].f());
     }
 
     inline LayerBase<Scalar, Device_>* LoadRelu(const onnx::NodeProto& node) {
@@ -177,31 +210,49 @@ namespace EigenSinn {
 
       std::vector<std::string> out(node.input_size());
 
-      std::transform(node.input().begin(), node.input().end(), out.begin(), [](std::string& s) {return s; });
-    }
-
-    std::map<std::string, onnx::AttributeProto*> get_node_attributes(const onnx::NodeProto& node) {
-
-      std::map<std::string, onnx::AttributeProto*> attr;
-
-      std::transform(node.attribute().begin(), node.attribute().end(), std::back_inserter(attr), [](onnx::AttributeProto& a) {return std::pair<std::string, onnx::AttributeProto*>(a.name(), &a); });
+      std::transform(node.input().begin(), node.input().end(), out.begin(), [](const std::string& s) {return s; });
       return out;
     }
 
-    std::tuple<DSizes<Index, 4>, Padding2D, int, int> get_conv_node_attributes(const onnx::NodeProto& node) {
+    std::map<const std::string, onnx::AttributeProto> get_node_attributes(const onnx::NodeProto& node) {
+
+      std::map<const std::string, onnx::AttributeProto> attr;
+
+      std::transform(node.attribute().begin(), node.attribute().end(), std::inserter(attr, attr.begin()), [](const onnx::AttributeProto& a) {return std::pair<const std::string, onnx::AttributeProto>(a.name(), a); });
+      return attr;
+    }
+
+    // kernel_shape is only good for debugging as we don't get all the dimensions
+    std::tuple<DSizes<Index, 2>, Padding2D, int, int> get_conv_node_attributes(const onnx::NodeProto& node) {
 
       auto attrs = get_node_attributes(node);
 
-      DSizes<Index, 4> kernel_dims = vec2dims<4>(get_attr_dims(*attrs["kernel_shape"]));
-      Padding2D padding{ attrs["padding"]->ints().Get(2), attrs["padding"]->ints().Get(3) };
-      int stride = attrs["strides"]->ints().Get(0);
-      int dilation = attrs["dilations"]->ints().Get(0);
+      DSizes<Index, 2> kernel_dims;
+
+      Padding2D padding;
+      int stride;
+
+      std::tie(kernel_dims, padding, stride) = get_conv_node_common_attributes(node);
+      int dilation = attrs["dilations"].ints().Get(0);
 
       return std::make_tuple(kernel_dims, padding, stride, dilation);
 
     }
 
-    const std::vector<Index> get_attr_dims(onnx::AttributeProto& attr) {
+    // Attributes in common for maxpool and conv
+    std::tuple<DSizes<Index, 2>, Padding2D, int> get_conv_node_common_attributes(const onnx::NodeProto& node) {
+
+      auto attrs = get_node_attributes(node);
+
+      DSizes<Index, 2> kernel_dims = vec2dims<2>(get_attr_dims(attrs["kernel_shape"]));
+      Padding2D padding{ (long)attrs["pads"].ints().Get(2), (long)attrs["pads"].ints().Get(3) };
+      int stride = attrs["strides"].ints().Get(0);
+
+      return std::make_tuple(kernel_dims, padding, stride);
+
+    }
+
+    const std::vector<Index> get_attr_dims(const onnx::AttributeProto& attr) {
       std::vector<Index> dims(attr.ints().size());
       std::transform(attr.ints().begin(), attr.ints().end(), dims.begin(), [](Index i) {return i; });
       return dims;
@@ -209,7 +260,7 @@ namespace EigenSinn {
 
     EigenModel& model;
 
-    std::map<std::string, std::function<LayerBase<Scalar, Device_>* (const onnx::NodeProto&)>> layer_loaders;
+    std::map<const char*, std::function<LayerBase<Scalar, Device_>* (const onnx::NodeProto&)>> layer_loaders;
 
   };
 }
