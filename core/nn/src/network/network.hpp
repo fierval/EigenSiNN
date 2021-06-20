@@ -156,6 +156,8 @@ namespace EigenSinn {
       OnnxLoader<Scalar, Device_> onnx_layers(model);
 
       for (auto& node : graph->node()) {
+        auto* layer = onnx_layers.create_from_node(node);
+        add(layer);
       }
 
     }

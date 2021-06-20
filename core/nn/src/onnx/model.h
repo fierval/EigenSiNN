@@ -198,6 +198,11 @@ namespace EigenSinn {
       return data;
     }
 
+    inline std::string flush_to_string() {
+
+      return model.SerializeAsString();
+    }
+
     inline onnx::TensorProto* find_initializer(const std::string name) {
 
       auto graph = *get_graph();
