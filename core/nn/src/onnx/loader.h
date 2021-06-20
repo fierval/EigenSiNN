@@ -16,6 +16,7 @@
 #include <map>
 #include <set>
 #include "model.h"
+#include "op_defs.h"
 
 using namespace Eigen;
 
@@ -27,68 +28,31 @@ namespace EigenSinn {
     OnnxLoader(EigenModel& model) 
      : model(model) {
 
+      layer_loaders.insert(std::make_pair(batch_norm_op, &LoadBatchNormalization));
+      layer_loaders.insert(std::make_pair(conv_op, &LoadConv));
+      layer_loaders.insert(std::make_pair(conv_transpose_op, &LoadConvTranspose));
+      layer_loaders.insert(std::make_pair(dropout_op, &LoadDropout));
+      layer_loaders.insert(std::make_pair(flatten_op, &LoadFlatten));
+      layer_loaders.insert(std::make_pair(gemm_op, &LoadGemm));
+      layer_loaders.insert(std::make_pair(maxpool_op, &LoadMaxPool));
+      layer_loaders.insert(std::make_pair(leakyrelu_op, &LoadLeakyRelu));
+      layer_loaders.insert(std::make_pair(relu_op, &LoadRelu));
+      layer_loaders.insert(std::make_pair(sigmoid_op, &LoadSigmoid));
+      layer_loaders.insert(std::make_pair(softmax_op, &LoadSoftmax));
+      layer_loaders.insert(std::make_pair(tansh_op, &LoadTanh));
     }
 
-    enum Layers : int {
-      BatchNormalization, Conv, ConvTranspose, Dropout, Flatten, Gemm, MaxPool, LeakyRelu, Relu, Sigmoid, Softmax, Tanh
-    };
-
-    std::vector<std::string> layers = {"BatchNormalization", "Conv", "ConvTranspose", "Dropout", "Flatten", "Gemm", "MaxPool", "LeakyRelu", "Relu", "Sigmoid",  "Softmax", "Tanh"};
-        
     inline LayerBase<Scalar, Device_> * create_from_node(const onnx::NodeProto& node) {
       
       const std::string& op_type = node.op_type();
 
       // unsopported layer!
-      auto it = std::find(layers.begin(), layers.end(), op_type);
-      if (it == layers.end()) {
+      if (layer_loaders.find(op_type) == layer_loaders.end()) {
         return nullptr;
       }
 
       // get the actual layer
-      Layers layer_type = static_cast<Layers>(it - layers.begin());
-      switch (layer_type)
-      {
-      case Layers::BatchNormalization:
-        return LoadBatchNormalization(node);
-
-      case Layers::Conv:
-        return LoadConv(node);
-
-      case Layers::ConvTranspose:
-        return LoadConvTranspose(node);
-
-      case Layers::Dropout:
-        return LoadDropout(node);
-
-      case Layers::Flatten:
-        return LoadFlatten(node);
-
-      case Layers::Gemm:
-        return LoadGemm(node);
-
-      case Layers::MaxPool:
-        return LoadMaxPool(node);
-
-      case Layers::LeakyRelu:
-        return LoadLeakyRelu(node);
-
-      case Layers::Relu:
-        return LoadRelu(node);
-
-      case Layers::Sigmoid:
-        return LoadSigmoid(node);
-
-      case Layers::Softmax:
-        return LoadSoftmax(node);
-
-      case Layers::Tanh:
-        return LoadTanh(node);
-
-      default:
-        return nullptr;
-      }
-
+      return layer_loders[op_type](node);
     }
 
   protected:
@@ -244,5 +208,8 @@ namespace EigenSinn {
     }
 
     EigenModel& model;
+
+    std::map<std::string, std::function<LayerBase<Scalar, Device_>* (const onnx::NodeProto&)>> layer_loaders;
+
   };
 }

@@ -4,6 +4,8 @@
 #include <ops/batchnorm.hpp>
 #include <device/device_tensor.hpp>
 
+#include <onnx/op_defs.h>
+
 using namespace  Eigen;
 using std::unique_ptr;
 using std::make_unique;
@@ -187,7 +189,6 @@ namespace EigenSinn {
     inline const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
 
       // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#BatchNormalization
-      static constexpr char op_type[] = "BatchNormalization";
       static constexpr char s_batch[] = "batch";
 
       // 1. ADd ONNX node with inputs & outputs
@@ -196,7 +197,7 @@ namespace EigenSinn {
       
       names.insert(names.begin(), input_name);
 
-      onnx::NodeProto* node = model.add_graph_node(op_type, names);
+      onnx::NodeProto* node = model.add_graph_node(batch_norm_op, names);
       const std::string out_name = node->output().Get(0);
 
       // 2. Attributes

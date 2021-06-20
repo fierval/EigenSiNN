@@ -7,6 +7,8 @@
 #include <helpers/conv_params_bag.hpp>
 #include <limits>
 
+#include <onnx/op_defs.h>
+
 #ifdef __CUDACC__
 #include "cudnn/cudnn_pooling.hpp"
 #endif
@@ -186,9 +188,7 @@ namespace EigenSinn {
   const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
 
     // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#MaxPool
-    static constexpr char op_type[] = "MaxPool";
-
-    onnx::NodeProto* node = model.add_graph_node(op_type, input_name);
+    onnx::NodeProto* node = model.add_graph_node(maxpool_op, input_name);
 
     const std::string out_name = node->output().Get(0);
 

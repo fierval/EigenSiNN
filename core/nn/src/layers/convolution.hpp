@@ -4,6 +4,7 @@
 #include "ops/convolutions.hpp"
 #include "ops/initializations.hpp"
 #include "helpers/conv_params_bag.hpp"
+#include <onnx/op_defs.h>
 
 #ifdef __CUDACC__
 #include "cudnn/cudnn_workspace.hpp"
@@ -195,8 +196,6 @@ namespace EigenSinn {
     const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
 
       // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Conv
-      static constexpr char op_type[] = "Conv";
-
       // 1. Save initializers (raw data in row major format)
       kernel.save_onnx_initializer(model);
       bias.save_onnx_initializer(model);
@@ -204,7 +203,7 @@ namespace EigenSinn {
       // 2. add ONNX node with its inputs, outputs, and names
       // order matters!
       std::vector<std::string> names{ input_name, kernel.get_onnx_input_name(), bias.get_onnx_input_name()};
-      onnx::NodeProto* node = model.add_graph_node(op_type, names);
+      onnx::NodeProto* node = model.add_graph_node(conv_op, names);
 
       // single output
       const std::string out_name = node->output().Get(0);

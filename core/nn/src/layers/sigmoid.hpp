@@ -2,6 +2,7 @@
 
 #include "layer_base.hpp"
 #include "ops/relu.hpp"
+#include <onnx/op_defs.h>
 
 #ifdef __CUDACC__
 #include "cudnn/cudnn_activations.hpp"
@@ -84,9 +85,7 @@ namespace EigenSinn {
     const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
 
       // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Sigmoid
-      static constexpr char op_type[] = "Sigmoid";
-
-      onnx::NodeProto* node = model.add_graph_node(op_type, input_name);
+      onnx::NodeProto* node = model.add_graph_node(sigmoid_op, input_name);
       return node->output().Get(0);
     }
 
