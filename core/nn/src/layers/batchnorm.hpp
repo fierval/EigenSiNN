@@ -201,15 +201,11 @@ namespace EigenSinn {
       const std::string out_name = node->output().Get(0);
 
       // 2. Attributes
-      auto * epsilon_attr = node->add_attribute();
-      epsilon_attr->set_name("epsilon");
-      epsilon_attr->set_f(eps);
-      epsilon_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_FLOAT);
+      model.add_attr(node, "epsilon", eps);
+      model.add_attr(node, "momentum", momentum);
 
-      auto * momentum_attr = node->add_attribute();
-      momentum_attr->set_name("momentum");
-      momentum_attr->set_f(momentum);
-      momentum_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_FLOAT);
+      // Rank attribute (not part of ONNX)
+      model.add_attr(node, "rank", Rank);
 
       // 3. Initializers
       gamma.save_onnx_initializer(model, names[0]);

@@ -99,6 +99,9 @@ namespace EigenSinn {
       auto* node = model.add_graph_node(dropout_op, 
         std::vector<std::string>{input_name, prob_tensor.get_onnx_input_name()});
 
+      // save rank, not part of ONNX but necessary for loading
+      model.add_attr(node, "rank", Rank);
+
       const std::string out_name = node->output().Get(0);
       return out_name;
     }

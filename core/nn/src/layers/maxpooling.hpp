@@ -194,6 +194,10 @@ namespace EigenSinn {
 
     params->create_onnx_attributes(node);
 
+    // save rank, not part of ONNX but necessary for loading
+    model.add_attr(node, "rank", Rank);
+
+
     // return output to pass as input to next node in graph
     return out_name;
   }

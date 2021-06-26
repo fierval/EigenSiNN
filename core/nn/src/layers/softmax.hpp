@@ -84,10 +84,10 @@ namespace EigenSinn {
       // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Softmax
       auto* node = model.add_graph_node(softmax_op, input_name);
 
-      auto alpha_attr = node->add_attribute();
-      alpha_attr->set_name("axis");
-      alpha_attr->set_f(1);
-      alpha_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INT);
+      model.add_attr(node, "axis", 1);
+
+      // not part of ONNX but necessary for loading
+      model.add_attr(node, "rank", Rank);
 
       return node->output().Get(0);
     }

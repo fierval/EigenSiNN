@@ -82,10 +82,9 @@ namespace EigenSinn {
       // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Relu
       auto * node = model.add_graph_node(leakyrelu_op, input_name);
 
-      auto alpha_attr = node->add_attribute();
-      alpha_attr->set_name("alpha");
-      alpha_attr->set_f(thresh);
-      alpha_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_FLOAT);
+      model.add_attr(node, "alpha", thresh);
+      // save rank, not part of ONNX but necessary for loading
+      model.add_attr(node, "rank", Rank);
 
       return node->output().Get(0);
     }
@@ -116,6 +115,8 @@ namespace EigenSinn {
     const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
       // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Relu
       auto * node = model.add_graph_node(relu_op, input_name);
+
+      model.add_attr(node, "rank", Rank);
 
       return node->output().Get(0);
     }

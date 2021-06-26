@@ -86,6 +86,10 @@ namespace EigenSinn {
 
       // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Sigmoid
       onnx::NodeProto* node = model.add_graph_node(sigmoid_op, input_name);
+
+      // not part of ONNX but necessary for loading
+      model.add_attr(node, "rank", Rank);
+
       return node->output().Get(0);
     }
 

@@ -263,6 +263,29 @@ namespace EigenSinn {
 
       return std::make_tuple(values, dimensions);
     }
+
+    template<typename T>
+    void add_attr(onnx::NodeProto * node, const std::string& name, T value) {
+
+      if (name.empty()) { throw std::runtime_error("Empty attribute name"); }
+
+      auto* new_attr = node->add_attribute();
+      new_attr->set_name(name);
+
+      if (std::is_same<T, float>::value || std::is_same<T, double>::value) {
+        new_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_FLOAT);
+        new_attr->set_f(value);
+        return;
+      }
+
+      if (std::is_same<T, int>::value) {
+        new_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INT);
+        new_attr->set_i(value);
+        return;
+      }
+      throw std::runtime_error("Undkonwn attribute type");
+    }
+
   private:
 
     // ctor for parsing
