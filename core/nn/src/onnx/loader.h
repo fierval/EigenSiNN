@@ -70,8 +70,25 @@ namespace EigenSinn {
       // and figuring out what the weight dimension is
       Index num_features = model.get_input_dimensions(node.input().Get(1))[0];
       
+      auto rank_attr = get_node_attributes(node)["rank"].i();
+
       // create layer
-      auto * out =  new BatchNormalizationLayer<Scalar, 4, Device_, RowMajor>(num_features, eps, momentum);
+      LayerBase<Scalar, Device_>* out;
+      
+      switch (rank_attr)
+      {
+      case 2:
+        out = new BatchNormalizationLayer<Scalar, 2, Device_, RowMajor>(num_features, eps, momentum);
+        break;
+      case 4:
+        out = new BatchNormalizationLayer<Scalar, 4, Device_, RowMajor>(num_features, eps, momentum);
+        break;
+
+      default:
+        throw std::logic_error("Unsupported rank");
+        break;
+      }
+      
       out->load_onnx_data(model, get_node_inputs(node));
       return out;
     }
@@ -137,10 +154,28 @@ namespace EigenSinn {
       std::vector<Scalar*> prob_data;
       std::vector<std::vector<Index>> prob_data_dims;
 
+      // TODO: BUG!!! There may not be an initializer. Change to get_input_dimensions()
       std::tie(prob_data, prob_data_dims) = model.get_input_data_and_dimensions<Scalar>(inputs);
 
-      // TODO: How do we deal with Rank?
-      auto* out = new EigenSinn::Dropout<Scalar, 4, Device_, RowMajor>(*prob_data[0]);
+      auto rank_attr = get_node_attributes(node)["rank"].i();
+
+      // create layer
+      LayerBase<Scalar, Device_>* out;
+
+      switch (rank_attr)
+      {
+      case 2:
+        out = new Dropout<Scalar, 2, Device_, RowMajor>(*prob_data[0]);
+        break;
+      case 4:
+        out = new Dropout<Scalar, 4, Device_, RowMajor>(*prob_data[0]);
+        break;
+
+      default:
+        throw std::logic_error("Unsupported rank");
+        break;
+      }
+
       return out;
     }
 
@@ -174,8 +209,25 @@ namespace EigenSinn {
       
       std::tie(kernel_dims, padding, stride) = get_conv_node_common_attributes(node);
 
-      // TODO: How do we deal with Rank?
-      auto* out = new MaxPooling<Scalar, 4, Device_, RowMajor>(kernel_dims, stride, padding);
+      auto rank_attr = get_node_attributes(node)["rank"].i();
+
+      // create layer
+      LayerBase<Scalar, Device_>* out;
+
+      switch (rank_attr)
+      {
+      case 2:
+        out = new MaxPooling<Scalar, 4, Device_, RowMajor>(kernel_dims, stride, padding);
+        break;
+      case 4:
+        out = new MaxPooling<Scalar, 4, Device_, RowMajor>(kernel_dims, stride, padding);
+        break;
+
+      default:
+        throw std::logic_error("Unsupported rank");
+        break;
+      }
+
       return out;
 
     }
@@ -183,27 +235,117 @@ namespace EigenSinn {
     inline LayerBase<Scalar, Device_>* LoadLeakyRelu(const onnx::NodeProto& node) {
       
       auto attrs = get_node_attributes(node);
-      // TODO: How do we deal with Rank?
-      return new EigenSinn::LeakyReLU<Scalar, 4, Device_, RowMajor>(attrs["alpha"].f());
+      auto rank_attr = attrs["rank"].i();
+
+      // create layer
+      LayerBase<Scalar, Device_>* out;
+
+      switch (rank_attr)
+      {
+      case 2:
+        out = new LeakyReLU<Scalar, 2, Device_, RowMajor>(attrs["alpha"].f());
+        break;
+      case 4:
+        out = new LeakyReLU<Scalar, 4, Device_, RowMajor>(attrs["alpha"].f());
+        break;
+
+      default:
+        throw std::logic_error("Unsupported rank");
+        break;
+      }
+
+      return out;
     }
 
     inline LayerBase<Scalar, Device_>* LoadRelu(const onnx::NodeProto& node) {
 
-      // TODO: How do we deal with Rank?
-      return new EigenSinn::ReLU<Scalar, 4, Device_, RowMajor>();
+      auto rank_attr = get_node_attributes(node)["rank"].i();
+
+      // create layer
+      LayerBase<Scalar, Device_>* out;
+
+      switch (rank_attr)
+      {
+      case 2:
+        out = new ReLU<Scalar, 2, Device_, RowMajor>();
+        break;
+      case 4:
+        out = new ReLU<Scalar, 4, Device_, RowMajor>();
+        break;
+
+      default:
+        throw std::logic_error("Unsupported rank");
+        break;
+      }
+
+      return out;
     }
 
     inline LayerBase<Scalar, Device_>* LoadSigmoid(const onnx::NodeProto& node) {
-      return new EigenSinn::Sigmoid<Scalar, 4, Device_, RowMajor>();
+      auto rank_attr = get_node_attributes(node)["rank"].i();
+
+      // create layer
+      LayerBase<Scalar, Device_>* out;
+
+      switch (rank_attr)
+      {
+      case 2:
+        out = new Sigmoid<Scalar, 2, Device_, RowMajor>();
+        break;
+      case 4:
+        out = new Sigmoid<Scalar, 4, Device_, RowMajor>();
+        break;
+
+      default:
+        throw std::logic_error("Unsupported rank");
+        break;
+      }
+      return out;
 
     }
-    inline LayerBase<Scalar, Device_>* LoadSoftmax(const onnx::NodeProto& node) {
-      return new EigenSinn::Softmax<Scalar, 4, Device_, RowMajor>();
 
+    inline LayerBase<Scalar, Device_>* LoadSoftmax(const onnx::NodeProto& node) {
+      auto rank_attr = get_node_attributes(node)["rank"].i();
+
+      // create layer
+      LayerBase<Scalar, Device_>* out;
+
+      switch (rank_attr)
+      {
+      case 2:
+        out = new Softmax<Scalar, 2, Device_, RowMajor>();
+          break;
+      case 4:
+        out = new Softmax<Scalar, 4, Device_, RowMajor>();
+          break;
+
+      default:
+        throw std::logic_error("Unsupported rank");
+        break;
+      }
+      return out;
     }
 
     inline LayerBase<Scalar, Device_>* LoadTanh(const onnx::NodeProto& node) {
-      return new EigenSinn::Tanh<Scalar, 4, Device_, RowMajor>();
+      auto rank_attr = get_node_attributes(node)["rank"].i();
+
+      // create layer
+      LayerBase<Scalar, Device_>* out;
+
+      switch (rank_attr)
+      {
+      case 2:
+        out = new Tanh<Scalar, 2, Device_, RowMajor>();
+          break;
+      case 4:
+        out = new Tanh<Scalar, 4, Device_, RowMajor>();
+          break;
+
+      default:
+        throw std::logic_error("Unsupported rank");
+        break;
+      }
+      return out;
     }
 
     std::vector<std::string> get_node_inputs(const onnx::NodeProto& node) {
