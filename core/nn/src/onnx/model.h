@@ -80,7 +80,9 @@ namespace EigenSinn {
       model.set_producer_version(version);
     }
 
-    EigenModel(const std::string& data) {
+    EigenModel(const std::string& data, bool _is_training = true) 
+      : is_training(_is_training)    {
+
       model.ParseFromString(data);
 
     }
@@ -278,20 +280,15 @@ namespace EigenSinn {
         return;
       }
 
-      if (std::is_same<T, int>::value) {
+      if (std::is_same<T, int>::value || std::is_same<T, Index>::value) {
         new_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INT);
         new_attr->set_i(value);
         return;
       }
-      throw std::runtime_error("Undkonwn attribute type");
+      throw std::runtime_error("Unkonwn attribute type");
     }
 
   private:
-
-    // ctor for parsing
-    EigenModel(onnx::ModelProto&& _model) : model(_model) {
-      
-    }
 
     // an alternative to the above when we want input names
     // to be more descriptive
