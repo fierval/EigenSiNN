@@ -110,14 +110,14 @@ namespace EigenSinn {
     // in the order they appear in the ONNX file
     inline void load_onnx_data(EigenModel& model, std::vector<std::string>& inputs) override {
 
-      std::vector<Scalar*> values;
+      std::vector<onnx::TensorProto> values;
       std::vector<std::vector<Index>> dimensions;
 
       // just one value and dims = 0 
       std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
 
       // recover probability
-      prob = *values[0];
+      prob = *model.get_input_data<Scalar>(values[0]);
 
     }
 

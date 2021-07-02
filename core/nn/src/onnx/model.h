@@ -205,7 +205,7 @@ namespace EigenSinn {
       return model.SerializeAsString();
     }
 
-    inline onnx::TensorProto* find_initializer(const std::string name) {
+    inline onnx::TensorProto find_initializer(const std::string name) {
 
       auto graph = *get_graph();
 
@@ -220,15 +220,15 @@ namespace EigenSinn {
       if (it == initializers.end()) {
         throw std::logic_error("Name not found in ONNX file");
       }
-      return &*it;
+      return *it;
     }
 
     // given input name find its dimensions
     // REVIEW: NVCC doesn't like std::string&!!
     std::vector<Index> get_input_dimensions(std::string input_name) {
 
-      const onnx::TensorProto * initializer = find_initializer(input_name);
-      return get_input_dimensions(*initializer);
+      const onnx::TensorProto  initializer = find_initializer(input_name);
+      return get_input_dimensions(initializer);
     }
 
     std::vector<Index> get_input_dimensions(const onnx::TensorProto& initializer) {
@@ -246,24 +246,26 @@ namespace EigenSinn {
     }
 
     template<typename Scalar>
-    std::tuple<std::vector<Scalar*>, std::vector<std::vector<Index>>> get_input_data_and_dimensions(std::vector<std::string>& inputs) {
+    std::tuple<std::vector<onnx::TensorProto>, std::vector<std::vector<Index>>> get_input_data_and_dimensions(std::vector<std::string>& inputs) {
 
       // get all the inputs not counting the previous layer input
-      std::vector<onnx::TensorProto*> initializers(inputs.size() - 1);
+      std::vector<onnx::TensorProto> initializers = get_all_initializers(inputs);
       std::vector<std::vector<Index>> dimensions(initializers.size());
-      std::vector<Scalar*> values(initializers.size());
+
+      std::transform(initializers.begin(), initializers.end(), dimensions.begin(),
+        [&](onnx::TensorProto& i) {return get_input_dimensions(i); });
+
+      return std::make_tuple(initializers, dimensions);
+    }
+
+    std::vector<onnx::TensorProto> get_all_initializers(std::vector<std::string>& inputs) {
+
+      std::vector<onnx::TensorProto> initializers(inputs.size() - 1);
 
       std::transform(inputs.begin() + 1, inputs.end(), initializers.begin(),
         [&](std::string& name) {return find_initializer(name); });
 
-
-      std::transform(initializers.begin(), initializers.end(), dimensions.begin(),
-        [&](onnx::TensorProto * i) {return get_input_dimensions(*i); });
-
-      std::transform(initializers.begin(), initializers.end(), values.begin(),
-        [&](onnx::TensorProto * i) {return get_input_data<Scalar>(*i); });
-
-      return std::make_tuple(values, dimensions);
+      return initializers;
     }
 
     template<typename T>

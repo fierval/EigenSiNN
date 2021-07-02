@@ -224,15 +224,15 @@ namespace EigenSinn {
     inline void load_onnx_data(EigenModel& model, std::vector<std::string>& inputs) override {
 
       std::vector<std::vector<Index>> dimensions;
-      std::vector<Scalar*> values;
+      std::vector<onnx::TensorProto> values;
 
       std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
 
       // even though all dimensions are the same, we iterate over them for completeness
-      gamma.set_from_host(values[0], vec2dims<1>(dimensions[0]));
-      beta.set_from_host(values[1], vec2dims<1>(dimensions[1]));
-      running_mean.set_from_host(values[2], vec2dims<1>(dimensions[2]));
-      running_variance.set_from_host(values[3], vec2dims<1>(dimensions[3]));
+      gamma.set_from_host(model.get_input_data<Scalar>(values[0]), vec2dims<1>(dimensions[0]));
+      beta.set_from_host(model.get_input_data<Scalar>(values[1]), vec2dims<1>(dimensions[1]));
+      running_mean.set_from_host(model.get_input_data<Scalar>(values[2]), vec2dims<1>(dimensions[2]));
+      running_variance.set_from_host(model.get_input_data<Scalar>(values[3]), vec2dims<1>(dimensions[3]));
 
     }
 

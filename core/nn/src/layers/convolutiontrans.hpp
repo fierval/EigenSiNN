@@ -211,12 +211,12 @@ namespace EigenSinn {
     inline void load_onnx_data(EigenModel& model, std::vector<std::string>& inputs) override {
 
       std::vector<std::vector<Index>> dimensions;
-      std::vector<Scalar*> values;
+      std::vector<onnx::TensorProto> values;
 
       std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
 
-      kernel.set_from_host(values[0], vec2dims<4>(dimensions[0]));
-      bias.set_from_host(values[1], vec2dims<1>(dimensions[1]));
+      kernel.set_from_host(model.get_input_data<Scalar>(values[0]), vec2dims<4>(dimensions[0]));
+      bias.set_from_host(model.get_input_data<Scalar>(values[1]), vec2dims<1>(dimensions[1]));
     }
 
     const std::vector<Index> onnx_out_dims() override {

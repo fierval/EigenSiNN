@@ -105,11 +105,13 @@ namespace EigenSinn {
       auto inputs = get_node_inputs(node);
 
       std::vector<std::vector<Index>> dimensions;
-      std::vector<Scalar*> values;
+      std::vector<onnx::TensorProto> values;
 
       // kernel dimensions are second
       DSizes<Index, 4> real_kernel_dims;
       std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
+
+      real_kernel_dims = vec2dims<4>(dimensions[0]);
 
       // consistent between attributes and actual dimensions
       assert(kernel_dims[0] == real_kernel_dims[2] && kernel_dims[1] == real_kernel_dims[3]);
@@ -132,7 +134,7 @@ namespace EigenSinn {
       auto inputs = get_node_inputs(node);
 
       std::vector<std::vector<Index>> dimensions;
-      std::vector<Scalar*> values;
+      std::vector<onnx::TensorProto> values;
 
       // kernel dimensions are second
       DSizes<Index, 4> real_kernel_dims;
@@ -151,7 +153,7 @@ namespace EigenSinn {
 
       // dropout probability is saved as input
       auto inputs = get_node_inputs(node);
-      std::vector<Scalar*> prob_data;
+      std::vector<onnx::TensorProto> prob_data;
       std::vector<std::vector<Index>> prob_data_dims;
 
       // TODO: BUG!!! There may not be an initializer. Change to get_input_dimensions()
@@ -165,10 +167,10 @@ namespace EigenSinn {
       switch (rank_attr)
       {
       case 2:
-        out = new Dropout<Scalar, 2, Device_, RowMajor>(*prob_data[0]);
+        out = new Dropout<Scalar, 2, Device_, RowMajor>(*model.get_input_data<Scalar>(prob_data[0]));
         break;
       case 4:
-        out = new Dropout<Scalar, 4, Device_, RowMajor>(*prob_data[0]);
+        out = new Dropout<Scalar, 4, Device_, RowMajor>(*model.get_input_data<Scalar>(prob_data[0]));
         break;
 
       default:
@@ -189,7 +191,7 @@ namespace EigenSinn {
       auto inputs = get_node_inputs(node);
 
       std::vector<std::vector<Index>> dimensions;
-      std::vector<Scalar*> values;
+      std::vector<onnx::TensorProto> values;
 
       std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
 
@@ -402,7 +404,15 @@ namespace EigenSinn {
 
     EigenModel& model;
 
-    std::map<const char*, std::function<LayerBase<Scalar, Device_>* (const onnx::NodeProto&)>> layer_loaders;
+    struct cmp_str
+    {
+      bool operator()(char const* a, char const* b) const
+      {
+        return std::strcmp(a, b) < 0;
+      }
+    };
+
+    std::map<const char*, std::function<LayerBase<Scalar, Device_>* (const onnx::NodeProto&)>, cmp_str> layer_loaders;
 
   };
 }
