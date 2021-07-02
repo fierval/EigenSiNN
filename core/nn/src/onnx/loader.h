@@ -95,6 +95,21 @@ namespace EigenSinn {
 
     inline LayerBase<Scalar, Device_>* LoadConv(const onnx::NodeProto& node) {
 
+      DSizes<Index, 4> real_kernel_dims;
+      Padding2D padding;
+      int stride;
+      int dilation;
+      std::vector<std::string> inputs;
+
+      std::tie(inputs, real_kernel_dims, padding, stride, dilation) = common_conv_params(node);
+
+      auto* out = new Conv2d<Scalar, Device_, RowMajor>(real_kernel_dims, padding, stride, dilation);
+      out->load_onnx_data(model, inputs);
+      return out;
+
+    }
+
+    std::tuple<std::vector<std::string>, DSizes<Index, 4>, Padding2D, int, int> common_conv_params(const onnx::NodeProto& node) {
       DSizes<Index, 2> kernel_dims;
       Padding2D padding;
       int stride;
@@ -116,32 +131,19 @@ namespace EigenSinn {
       // consistent between attributes and actual dimensions
       assert(kernel_dims[0] == real_kernel_dims[2] && kernel_dims[1] == real_kernel_dims[3]);
 
-      auto* out = new Conv2d<Scalar, Device_, RowMajor>(real_kernel_dims, padding, stride, dilation);
-      out->load_onnx_data(model, inputs);
-      return out;
+      return std::make_tuple(inputs, real_kernel_dims, padding, stride, dilation);
 
     }
 
     inline LayerBase<Scalar, Device_>* LoadConvTranspose(const onnx::NodeProto& node) {
 
-      DSizes<Index, 2> kernel_dims;
+      DSizes<Index, 4> real_kernel_dims;
       Padding2D padding;
       int stride;
       int dilation;
+      std::vector<std::string> inputs;
 
-      std::tie(kernel_dims, padding, stride, dilation) = get_conv_node_attributes(node);
-
-      auto inputs = get_node_inputs(node);
-
-      std::vector<std::vector<Index>> dimensions;
-      std::vector<onnx::TensorProto> values;
-
-      // kernel dimensions are second
-      DSizes<Index, 4> real_kernel_dims;
-      std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
-
-      // consistent between attributes and actual dimensions
-      assert(kernel_dims[0] == real_kernel_dims[2] && kernel_dims[1] == real_kernel_dims[3]);
+      std::tie(inputs, real_kernel_dims, padding, stride, dilation) = common_conv_params(node);
 
       auto * out = new TransConv2d<Scalar, Device_, RowMajor>(real_kernel_dims, padding, stride, dilation);
       out->load_onnx_data(model, inputs);
