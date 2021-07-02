@@ -295,6 +295,10 @@ namespace EigenSinn
       return node_input_name;
     }
 
+    inline void set_node_input_name(const std::string& name) {
+      node_input_name = name;
+    }
+
   private:
 
     inline void reset_view() {
