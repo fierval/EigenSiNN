@@ -89,7 +89,12 @@ namespace EigenSinn {
         break;
       }
       
-      out->load_onnx_data(model, get_node_inputs(node));
+      std::vector<std::string> inputs = get_node_inputs(node);
+
+      // inputs are stored weights only, exclude the actual input tensor
+      std::vector <std::string> inps(inputs.begin() + 1, inputs.end());
+
+      out->load_onnx_data(model, inps);
       return out;
     }
 
@@ -131,7 +136,10 @@ namespace EigenSinn {
       // consistent between attributes and actual dimensions
       assert(kernel_dims[0] == real_kernel_dims[2] && kernel_dims[1] == real_kernel_dims[3]);
 
-      return std::make_tuple(inputs, real_kernel_dims, padding, stride, dilation);
+      // inputs are stored weights only, exclude the actual input tensor
+      std::vector<std::string> inps(inputs.begin() + 1, inputs.end());
+
+      return std::make_tuple(inps, real_kernel_dims, padding, stride, dilation);
 
     }
 
