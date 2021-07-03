@@ -20,7 +20,8 @@ namespace EigenSinn {
   public:
 
     TransConv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const Index _stride = 1, const Index _dilation = 1)
-      : kernel(kernelDims)
+      : LayerBase<Scalar, Device_>(conv_transpose_op)
+      , kernel(kernelDims)
       , padding(_padding)
       , stride(_stride)
       , dilation(_dilation)

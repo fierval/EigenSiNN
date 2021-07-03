@@ -12,7 +12,8 @@ namespace EigenSinn {
   class Softmax : public LayerBase<Scalar, Device_> {
   public:
     Softmax() 
-      : inited(false)
+      : LayerBase<Scalar, Device_>(softmax_op)
+      , inited(false)
     {
       for (Index i = 0; i < Rank - 1; i++) {
           reduction_axes[i] = i + 1;

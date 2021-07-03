@@ -20,6 +20,10 @@ namespace EigenSinn {
   class LayerBase {
 
   public:
+    LayerBase(const char* _op_name) : op_name(_op_name) {
+      
+    }
+
     virtual void init() {};
 
     virtual void forward(LayerBase<Scalar, Device_>& prev_layer_base) = 0;
@@ -48,7 +52,10 @@ namespace EigenSinn {
 
     virtual void load_onnx_data(EigenModel& model, std::vector<std::string>& inputs) {}
 
+    std::string& get_op_name() { return op_name; }
+
   protected:
     bool is_cudnn = false;
+    std::string op_name;
   };
 }

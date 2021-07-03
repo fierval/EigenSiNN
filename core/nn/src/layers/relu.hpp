@@ -17,7 +17,8 @@ namespace EigenSinn {
   public:
     // leaky relu if necessary
     LeakyReLU(float _thresh = 0.01)
-      : thresh(_thresh)  {
+      : LayerBase<Scalar, Device_>(leakyrelu_op)
+      , thresh(_thresh)  {
 
     }
 
@@ -108,6 +109,7 @@ namespace EigenSinn {
   class ReLU : public LeakyReLU<Scalar, Rank, Device_, Layout> {
   public:
     ReLU() : LeakyReLU<Scalar, Rank, Device_, Layout>(0) {
+      op_name = std::string(relu_op);
     }
 
     const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {

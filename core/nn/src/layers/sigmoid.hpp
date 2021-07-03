@@ -17,7 +17,8 @@ namespace EigenSinn {
   public:
     // leaky relu if necessary
     Sigmoid()
-      : inited(false) {
+      : LayerBase<Scalar, Device_>(sigmoid_op)
+      , inited(false) {
 
     }
 

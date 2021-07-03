@@ -17,7 +17,8 @@ namespace EigenSinn {
   public:
     // leaky relu if necessary
     Tanh()
-      : inited(false)  {
+      : LayerBase<Scalar, Device_>(tanh_op)
+      , inited(false)  {
 
     }
 

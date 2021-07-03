@@ -13,7 +13,7 @@ namespace EigenSinn {
 
   public:
 
-    Input() = default;
+    Input() : LayerBase<Scalar, Device_>("Input") {};
 
     PtrTensorAdapter<Scalar, Device_> get_output() {
       return input.raw();

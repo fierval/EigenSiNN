@@ -23,6 +23,7 @@ namespace EigenSinn {
 
   public:
     Linear(int _in_dim, int _out_dim) :
+      LayerBase<Scalar, Device_>(gemm_op),
       layer_grad_loss_by_weight(_in_dim, _out_dim),
       weights(_in_dim, _out_dim),
       loss_by_bias_derivative(_out_dim),

@@ -19,7 +19,8 @@ namespace EigenSinn {
   public:
 
     Conv2d(const array<Index, 4>& kernelDims, const Padding2D& _padding = { 0, 0 }, const int _stride = 1, const int _dilation = 1)
-      : kernel(kernelDims)
+      : LayerBase<Scalar, Device_>(conv_op)
+      ,  kernel(kernelDims)
       , padding(_padding)
       , stride(_stride)
       , dilation(_dilation)

@@ -13,7 +13,9 @@ namespace EigenSinn {
   class Flatten : public LayerBase<Scalar, Device_> {
 
   public:
-    Flatten() = default;
+    Flatten() : LayerBase<Scalar, Device_>(flatten_op) {
+    
+    }
 
     void forward(LayerBase<Scalar, Device_>& prev_layer_any) {
       

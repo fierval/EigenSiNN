@@ -26,7 +26,8 @@ namespace EigenSinn {
   public:
 
     MaxPooling(const DSizes<Index, Rank / 2>& _extents, Index _stride, Padding2D _padding = { 0, 0 }, int _dilation = 1)
-      : extents(_extents)
+      : LayerBase<Scalar, Device_>(maxpool_op)
+      , extents(_extents)
       , stride(_stride)
       , padding(_padding)
       , dilation(_dilation) {
