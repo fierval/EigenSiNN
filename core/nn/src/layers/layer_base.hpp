@@ -53,9 +53,16 @@ namespace EigenSinn {
     virtual void load_onnx_data(EigenModel& model, std::vector<std::string>& inputs) {}
 
     std::string& get_op_name() { return op_name; }
+    std::string& get_layer_name() { return layer_name; }
+    
+    void set_layer_name(std::string& name) {
+      assert(!name.empty());
+      layer_name = name;
+    }
 
   protected:
     bool is_cudnn = false;
     std::string op_name;
+    std::string layer_name;
   };
 }

@@ -120,25 +120,23 @@ namespace EigenSinn {
     }
 
     // get a unique name for the tensor value
-    static inline std::string get_tensor_value_name() { 
+    inline std::string get_tensor_value_name() { 
 
-      std::lock_guard<std::mutex> guard(value_mutex);
       return std::to_string(current_value_name++); 
     }
 
-    static inline std::vector<std::string> get_cool_display_tensor_value_names(const char* prefix, std::vector<const char*> suffixes) {
+    inline std::vector<std::string> get_cool_display_tensor_value_names(const char* prefix, std::vector<const char*> suffixes) {
 
-      int layer_idx = EigenModel::get_layer_suffix();
+      int layer_idx = get_layer_suffix();
 
       std::vector<std::string> out(suffixes.size());
       for (int i = 0; i < out.size(); i++) {
-        out[i] = EigenModel::get_cool_display_tensor_value_name(prefix, layer_idx, suffixes[i]);
+        out[i] = get_cool_display_tensor_value_name(prefix, layer_idx, suffixes[i]);
       }
       return out;
     }
 
-    static inline int get_layer_suffix() {
-      std::lock_guard<std::mutex> guard(suffix_mutex);
+    inline int get_layer_suffix() {
       return current_layer_suffix++;
     }
 
@@ -294,7 +292,7 @@ namespace EigenSinn {
 
     // an alternative to the above when we want input names
     // to be more descriptive
-    static inline std::string get_cool_display_tensor_value_name(const char* prefix, int layer_idx, const char* suffix) {
+    inline std::string get_cool_display_tensor_value_name(const char* prefix, int layer_idx, const char* suffix) {
 
       std::ostringstream ss;
       ss << prefix << layer_idx << "." << suffix;
@@ -303,10 +301,8 @@ namespace EigenSinn {
     }
 
     // current name for tensor value
-    static inline int current_value_name = 400;
-    static inline int current_layer_suffix = 0;
-    static inline std::mutex value_mutex;
-    static inline std::mutex suffix_mutex;
+    int current_value_name = 400;
+    int current_layer_suffix = 0;
 
     onnx::ModelProto model;
     bool is_training;

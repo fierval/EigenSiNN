@@ -284,13 +284,13 @@ namespace EigenSinn
     }
 
     inline void save_onnx_initializer(EigenModel& model) {
-      save_onnx_initializer(model, get_onnx_input_name());
+      save_onnx_initializer(model, get_onnx_input_name(model));
     }
 
-    inline std::string get_onnx_input_name() {
+    inline std::string get_onnx_input_name(EigenModel& model) {
 
       if (node_input_name.empty()) {
-        node_input_name = EigenModel::get_tensor_value_name();
+        node_input_name = model.get_tensor_value_name();
       }
       return node_input_name;
     }

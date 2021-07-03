@@ -143,7 +143,7 @@ namespace EigenSinn {
       weights.save_onnx_initializer(model);
       bias.save_onnx_initializer(model);
 
-      std::vector<std::string> names{ input_name, weights.get_onnx_input_name(), bias.get_onnx_input_name() };
+      std::vector<std::string> names{ input_name, weights.get_onnx_input_name(model), bias.get_onnx_input_name(model) };
       onnx::NodeProto* node = model.add_graph_node(gemm_op, names);
 
       //TODO: single output

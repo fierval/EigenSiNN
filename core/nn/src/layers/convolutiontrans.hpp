@@ -193,7 +193,7 @@ namespace EigenSinn {
       bias.save_onnx_initializer(model);
 
       // 2. add ONNX node with its inputs, outputs, and names
-      std::vector<std::string> names{ input_name, kernel.get_onnx_input_name(), bias.get_onnx_input_name() };
+      std::vector<std::string> names{ input_name, kernel.get_onnx_input_name(model), bias.get_onnx_input_name(model) };
       onnx::NodeProto* node = model.add_graph_node(conv_transpose_op, names);
 
       // single output

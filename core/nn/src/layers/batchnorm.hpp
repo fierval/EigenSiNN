@@ -193,7 +193,7 @@ namespace EigenSinn {
 
       // 1. ADd ONNX node with inputs & outputs
       std::vector<const char*> suffixes{"weight", "bias", "input_mean", "input_var" };
-      std::vector<std::string> names = EigenModel::get_cool_display_tensor_value_names(s_batch, suffixes);
+      std::vector<std::string> names = model.get_cool_display_tensor_value_names(s_batch, suffixes);
       
       names.insert(names.begin(), input_name);
 
@@ -243,12 +243,6 @@ namespace EigenSinn {
     }
 
   private:
-
-    inline std::string get_input_name(int layer_idx, const char* suffix) {
-      static constexpr char s_batch[] = "batch";
-      
-      return EigenModel::get_cool_display_tensor_value_name(s_batch, layer_idx, suffix);
-    }
 
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_gradient, xhat;
 
