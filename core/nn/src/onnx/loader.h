@@ -160,7 +160,7 @@ namespace EigenSinn {
       std::vector<onnx::TensorProto> prob_data;
       std::vector<std::vector<Index>> prob_data_dims;
 
-      // TODO: BUG!!! There may not be an initializer. Change to get_input_dimensions()
+      // probability is stored as a tensor
       std::tie(prob_data, prob_data_dims) = model.get_input_data_and_dimensions<Scalar>(inputs);
 
       auto rank_attr = get_node_attributes(node)["rank"].i();
