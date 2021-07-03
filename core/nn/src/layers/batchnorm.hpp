@@ -234,10 +234,11 @@ namespace EigenSinn {
       running_mean.set_from_host(model.get_input_data<Scalar>(values[2]), vec2dims<1>(dimensions[2]));
       running_variance.set_from_host(model.get_input_data<Scalar>(values[3]), vec2dims<1>(dimensions[3]));
 
-      gamma.set_node_input_name(inputs[0]);
-      beta.set_node_input_name(inputs[1]);
-      running_mean.set_node_input_name(inputs[2]);
-      running_variance.set_node_input_name(inputs[3]);
+      // inputs are stored weights only, exclude the actual input tensor
+      gamma.set_node_input_name(inputs[1]);
+      beta.set_node_input_name(inputs[2]);
+      running_mean.set_node_input_name(inputs[3]);
+      running_variance.set_node_input_name(inputs[4]);
 
     }
 
