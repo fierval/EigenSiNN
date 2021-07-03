@@ -14,7 +14,7 @@
 #include <boost/property_map/property_map.hpp>
 #include <boost/graph/graph_utility.hpp>
 
-using namespace boost;
+#include <network/network_graph.hpp>
 
 TEST(Boost, Create) {
 

@@ -29,8 +29,7 @@ namespace EigenSinn {
       : extents(_extents)
       , stride(_stride)
       , padding(_padding)
-      , dilation(_dilation)
-      , is_cudnn(false) {
+      , dilation(_dilation) {
 
       static_assert(Rank == 4, "MaxPooling is implemented only for Rank == 4");
 
@@ -219,7 +218,6 @@ namespace EigenSinn {
     const int stride;
     const Padding2D padding;
     const int dilation;
-    bool is_cudnn;
 
     std::shared_ptr<MaxPoolParams<Rank>> params;
 

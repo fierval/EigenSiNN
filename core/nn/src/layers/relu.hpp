@@ -17,8 +17,7 @@ namespace EigenSinn {
   public:
     // leaky relu if necessary
     LeakyReLU(float _thresh = 0.01)
-      : thresh(_thresh)
-      , is_cudnn(false) {
+      : thresh(_thresh)  {
 
     }
 
@@ -98,7 +97,6 @@ namespace EigenSinn {
     Scalar thresh;
     DeviceTensor<Scalar, Rank, Device_, Layout> mask;
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_grad;
-    bool is_cudnn;
 
 #ifdef __CUDACC__
     cudnnActivationMode_t cudnn_act_mode = CUDNN_ACTIVATION_RELU;
@@ -120,8 +118,6 @@ namespace EigenSinn {
 
       return node->output().Get(0);
     }
-
-  private:
   };
 
 }

@@ -47,5 +47,8 @@ namespace EigenSinn {
     virtual const std::vector<Index> onnx_out_dims() { return std::vector<Index>(); }
 
     virtual void load_onnx_data(EigenModel& model, std::vector<std::string>& inputs) {}
+
+  protected:
+    bool is_cudnn = false;
   };
 }

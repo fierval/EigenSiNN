@@ -25,8 +25,7 @@ namespace EigenSinn {
       , dilation(_dilation)
       , bias(kernelDims[0])
       , bias_broadcast({ 0, 0, 0, 0 })
-      , loss_by_bias_derivative(kernelDims[0])
-      , is_cudnn(false) {
+      , loss_by_bias_derivative(kernelDims[0]) {
 
     }
 
@@ -244,6 +243,5 @@ namespace EigenSinn {
 #ifdef __CUDACC__
     std::shared_ptr<CudnnWorkspace> cudnn_workspace;
 #endif
-    bool is_cudnn;
   };
 }

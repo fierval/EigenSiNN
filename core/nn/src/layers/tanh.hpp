@@ -17,8 +17,7 @@ namespace EigenSinn {
   public:
     // leaky relu if necessary
     Tanh()
-      : inited(false)
-      , is_cudnn(false) {
+      : inited(false)  {
 
     }
 
@@ -110,7 +109,6 @@ namespace EigenSinn {
     }
 
     bool inited;
-    bool is_cudnn;
 
 #ifdef __CUDACC__
     cudnnActivationMode_t cudnn_act_mode = CUDNN_ACTIVATION_TANH;
