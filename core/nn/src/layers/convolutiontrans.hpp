@@ -4,8 +4,9 @@
 #include "ops/convolutions.hpp"
 #include "ops/initializations.hpp"
 #include "helpers/conv_params_bag.hpp"
+#include <onnx/op_defs.h>
 
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
 #include "cudnn/cudnn_workspace.hpp"
 #endif
 
@@ -13,7 +14,7 @@ namespace EigenSinn {
 
   // REVIEW: Not implementing bias for now
   // Batch normalization layers can take care of bias
-  template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class TransConv2d : public LayerBase<Scalar, Device_> {
 
   public:
@@ -69,7 +70,7 @@ namespace EigenSinn {
       //add bias to each channel
       bias_broadcast = { out_dims[0], 1, out_dims[2], out_dims[3] };
 
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
 
       if (is_cudnn) {
         // data forward
@@ -79,7 +80,7 @@ namespace EigenSinn {
 
       }
       else {
-#endif // EIGEN_USE_GPU
+#endif // __CUDACC__
 
         DeviceTensor<Scalar, 2, Device_, Layout> inp_reshaped = unfold_conv_res<Scalar, Device_, Layout>(prev_layer);
 
@@ -93,7 +94,7 @@ namespace EigenSinn {
 
         // re-format into the image of output dimensions
         col2im(X_col, layer_output, *params, true);
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
       }
 #endif
 
@@ -109,7 +110,7 @@ namespace EigenSinn {
       //bias
       loss_by_bias_derivative.view() = next_layer_grad->sum(array<Index, 3>{0, 2, 3});
 
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
       if (is_cudnn) {
 
         // data backwards
@@ -127,7 +128,7 @@ namespace EigenSinn {
 
         return;
       }
-#endif // EIGEN_USE_GPU
+#endif // __CUDACC__
 
       // dX: kernel.T.T * dout which is just a regular convolution
       dX = convolve<Scalar, 4, Layout, Device_>(next_layer_grad, kernel, *params);
@@ -182,6 +183,50 @@ namespace EigenSinn {
       is_cudnn = _is_cudnn;
     }
 
+    // add ONNX node corresponding to this layer
+    // returns the name of the output in the serialized file
+    const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
+
+      // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#ConvTranspose
+      // 1. Save initializers (raw data in row major format)
+      kernel.save_onnx_initializer(model);
+      bias.save_onnx_initializer(model);
+
+      // 2. add ONNX node with its inputs, outputs, and names
+      std::vector<std::string> names{ input_name, kernel.get_onnx_input_name(), bias.get_onnx_input_name() };
+      onnx::NodeProto* node = model.add_graph_node(conv_transpose_op, names);
+
+      // single output
+      const std::string out_name = node->output().Get(0);
+
+      // 3. create attributes
+      params->create_onnx_attributes(node);
+
+      // return output to pass as input to next node in graph
+      return out_name;
+    }
+
+    // in the order they appear in the ONNX file
+    // in the order they appear in the ONNX file
+    inline void load_onnx_data(EigenModel& model, std::vector<std::string>& inputs) override {
+
+      std::vector<std::vector<Index>> dimensions;
+      std::vector<onnx::TensorProto> values;
+
+      std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
+
+      kernel.set_from_host(model.get_input_data<Scalar>(values[0]), vec2dims<4>(dimensions[0]));
+      bias.set_from_host(model.get_input_data<Scalar>(values[1]), vec2dims<1>(dimensions[1]));
+
+      // inputs are stored weights only, exclude the actual input tensor
+      kernel.set_node_input_name(inputs[1]);
+      bias.set_node_input_name(inputs[2]);
+    }
+
+    const std::vector<Index> onnx_out_dims() override {
+      return layer_output.vec_dims();
+    }
+
   private:
     DeviceTensor<Scalar, 4, Device_, Layout> kernel, layer_output, dX, dW;
     DeviceTensor<Scalar, 1, Device_, Layout> bias, loss_by_bias_derivative;
@@ -191,7 +236,7 @@ namespace EigenSinn {
     array<Index, 4> bias_broadcast;
     std::shared_ptr<ConvolutionParams<4>> params;
 
-#ifdef EIGEN_USE_GPU
+#ifdef __CUDACC__
     std::shared_ptr<CudnnWorkspace> cudnn_workspace;
 #endif
     bool is_cudnn;

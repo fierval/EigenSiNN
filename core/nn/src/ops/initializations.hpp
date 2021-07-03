@@ -29,7 +29,7 @@ namespace EigenSinn {
 
   }
 
-  template <typename Scalar, Index Rank, int Layout = ColMajor, typename Device_ = ThreadPoolDevice>
+  template <typename Scalar, Index Rank, int Layout = RowMajor, typename Device_ = ThreadPoolDevice>
   inline DeviceTensor<Scalar, Rank, Device_, Layout> generate_xavier(DSizes<Index, Rank> layer_dims) {
 
     assert(Rank == 2 || Rank == 4);

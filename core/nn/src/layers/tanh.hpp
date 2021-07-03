@@ -2,6 +2,7 @@
 
 #include "layer_base.hpp"
 #include "ops/relu.hpp"
+#include <onnx/op_defs.h>
 
 #ifdef __CUDACC__
 #include "cudnn/cudnn_activations.hpp"
@@ -11,7 +12,7 @@ using namespace  Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class Tanh : public LayerBase<Scalar, Device_> {
   public:
     // leaky relu if necessary
@@ -80,6 +81,22 @@ namespace EigenSinn {
       if (Rank < 4) { return; }
       assert(!_is_cudnn || (Layout == RowMajor && Rank > 2));
       is_cudnn = _is_cudnn;
+    }
+
+    // ONNX
+    const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
+
+      // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Tanh
+      onnx::NodeProto* node = model.add_graph_node(tanh_op, input_name);
+
+      // not part of ONNX but necessary for loading
+      model.add_attr(node, "rank", Rank);
+
+      return node->output().Get(0);
+    }
+
+    const std::vector<Index> onnx_out_dims() override {
+      return layer_output.vec_dims();
     }
 
   private:

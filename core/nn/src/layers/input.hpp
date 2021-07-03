@@ -2,12 +2,13 @@
 
 #include "layer_base.hpp"
 #include <ops/conversions.hpp>
+#include <onnx/model.h>
 
 using std::unique_ptr;
 
 namespace EigenSinn {
 
-  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class Input : public LayerBase<Scalar, Device_> {
 
   public:
@@ -38,6 +39,10 @@ namespace EigenSinn {
     // Required overrides
     void forward(LayerBase<Scalar, Device_>& prev_layer_base) override {};
     void backward(LayerBase<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {};
+
+    std::vector<Index> get_dims() {
+      return dims2vec(input.dimensions());
+    }
 
   private:
 

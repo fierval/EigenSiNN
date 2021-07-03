@@ -11,18 +11,18 @@
 #include <layers/relu.hpp>
 #include <layers/input.hpp>
 
-#include "helpers.h"
+#include <onnx/loader.h>
 
 using namespace Eigen;
-using namespace EigenSinn;
 
 namespace EigenSinn {
-  template <typename Scalar, typename Device_ = ThreadPoolDevice>
+
+  template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   struct NetworkNode {
     std::unique_ptr<LayerBase<Scalar, Device_>> layer;
-    std::unique_ptr<OptimizerBase<Scalar, Device_>> optimizer;
+    std::unique_ptr<OptimizerBase<Scalar, Device_, Layout>> optimizer;
 
-    NetworkNode(LayerBase<Scalar, Device_>* _layer, OptimizerBase<Scalar, Device_, 0>* _optimizer = nullptr) : layer(_layer), optimizer(_optimizer) {}
+    NetworkNode(LayerBase<Scalar, Device_>* _layer, OptimizerBase<Scalar, Device_, Layout>* _optimizer = nullptr) : layer(_layer), optimizer(_optimizer) {}
 
     NetworkNode(NetworkNode<Scalar, Device_>&& other)  noexcept {
       layer = std::move(other.layer);
@@ -32,7 +32,7 @@ namespace EigenSinn {
   };
 
 
-  template<typename Scalar, Index Rank, typename Loss, typename Device_ = ThreadPoolDevice, int Layout = ColMajor, bool CuDnn = false>
+  template<typename Scalar, Index Rank, typename Loss, typename Device_ = ThreadPoolDevice, int Layout = RowMajor, bool CuDnn = false>
   class NetBase {
 
     typedef std::vector<NetworkNode<Scalar, Device_>> Network;
@@ -90,7 +90,7 @@ namespace EigenSinn {
     inline void step(DeviceTensor<Scalar, Rank, Device_, Layout>& batch_tensor, DeviceTensor<Actual, OutputRank, Device_, Layout>& label_tensor) {
 
       // get the input
-      dynamic_cast<Input<Scalar, Rank, Device_, Layout>*>(network[0].layer.get())->set_input(batch_tensor);
+      set_input(batch_tensor);
 
       // forward step
       forward();
@@ -106,23 +106,72 @@ namespace EigenSinn {
       optimizer();
     }
 
-    inline void set_input(DeviceTensor<Scalar, Rank, Device_, Layout>& tensor) {
-
-      auto inp_layer = dynamic_cast<Input<float, 4, Device_, Layout>*>(network[0].layer.get());
-      inp_layer->set_input(tensor);
-    }
-
     inline PtrTensorAdapter<Scalar, Device_> get_output() {
       return network.rbegin()->layer.get()->get_output();
     }
 
-    inline void add(LayerBase<Scalar, Device_>* n, OptimizerBase<Scalar, Device_>* opt = nullptr) {
+    inline void add(LayerBase<Scalar, Device_>* n, OptimizerBase<Scalar, Device_, Layout>* opt = nullptr) {
       n->set_cudnn(CuDnn);
       network.push_back(NetworkNode<Scalar, Device_>(n, opt));
     }
 
+    inline void clear() {
+      network.clear();
+    }
+
     inline Scalar get_loss() { return loss.get_output(); }
-    Network network;
+
+    inline void save_to_onnx(EigenModel& model) {
+
+      auto * inp_layer = dynamic_cast<Input<Scalar, Rank, Device_, Layout>*>(network[0].layer.get());
+
+      std::string output_name = "input.1";
+      auto input_dims = inp_layer->get_dims();
+
+      // when saving for inference we
+      // set the 0th dimension to 1 
+      // as inference is mostly done 1 image/time
+      if (model.is_inference()) {
+        input_dims[0] = 1;
+      }
+      // 1. Input layer
+      model.add_input(output_name, input_dims, onnx_data_type_from_scalar<Scalar>());
+
+      // 2. Serialize each layer
+      for (int i = 1; i < network.size(); i++) {
+        auto& node = network[i];
+        LayerBase<Scalar, Device_>* layer = node.layer.get();
+        output_name = layer->add_onnx_node(model, output_name);
+      }
+      
+      // 3. Output layer
+      model.add_output(output_name, network[network.size() - 1].layer->onnx_out_dims(), onnx_data_type_from_scalar<Scalar>());
+    }
+
+    // create network by loading it from a byte string
+    inline void load_from_onnx(const std::string& data) {
+
+      EigenModel model(data);
+
+      // create input layer
+      add(new Input<float, Rank, Device_, Layout>);
+
+      onnx::GraphProto* graph = model.get_graph();
+      OnnxLoader<Scalar, Device_> onnx_layers(model);
+
+      for (auto& node : graph->node()) {
+        auto* layer = onnx_layers.create_from_node(node);
+        add(layer);
+        layer->set_cudnn(CuDnn);
+      }
+
+    }
+
+    inline void set_input(DeviceTensor<Scalar, Rank, Device_, Layout>& tensor) {
+
+      auto inp_layer = dynamic_cast<Input<Scalar, Rank, Device_, Layout>*>(network[0].layer.get());
+      inp_layer->set_input(tensor);
+    }
 
   protected:
 
@@ -153,6 +202,12 @@ namespace EigenSinn {
       return res;
     }
 
+    template <Index Rank>
+    inline OptimizerBase<float, Device_, Layout>* get_optimizer(float learning_rate) {
+      return dynamic_cast<OptimizerBase<float, Device_, Layout>*>(new SGD<float, Rank, Device_, Layout>(learning_rate, 0, false));
+    }
+
+    Network network;
     Loss loss;
     bool inited;
   };

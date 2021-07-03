@@ -7,6 +7,8 @@
 #include <helpers/conv_params_bag.hpp>
 #include <limits>
 
+#include <onnx/op_defs.h>
+
 #ifdef __CUDACC__
 #include "cudnn/cudnn_pooling.hpp"
 #endif
@@ -19,7 +21,7 @@ namespace EigenSinn {
   // For Linear (fully connected) layers: (N, C)
   // N - batch size
   // C - number of channels (1 for fully connected layers)
-  template <typename Scalar, Index Rank = 4, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template <typename Scalar, Index Rank = 4, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class MaxPooling : public LayerBase<Scalar, Device_> {
   public:
 
@@ -98,8 +100,8 @@ namespace EigenSinn {
           }
           layer_output->data()[out_index] = max_val;
           mask->data()[out_index] = max_idx;
-      });
-    }
+          });
+      }
       else {
 #else
       if (is_cudnn && !cudnn_pooling) {
@@ -123,7 +125,7 @@ namespace EigenSinn {
 #ifndef __CUDACC__
       }
 #endif
-  }
+    }
 
   // for derivations
   void backward(LayerBase<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {
@@ -139,8 +141,8 @@ namespace EigenSinn {
 
         std::lock_guard<std::mutex> lck(mtx);
         layer_gradient->data()[idx] += x->data()[out_index];
-  });
-}
+        });
+    }
     else {
 #else
 
@@ -163,26 +165,49 @@ namespace EigenSinn {
 #endif
   }
 
-PtrTensorAdapter<Scalar, Device_> get_output() override {
-  return layer_output.raw();
-}
+  PtrTensorAdapter<Scalar, Device_> get_output() override {
+    return layer_output.raw();
+  }
 
-PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
-  return layer_gradient.raw();
-}
+  PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
+    return layer_gradient.raw();
+  }
 
 #ifdef __CUDACC__
-    std::shared_ptr<CudnnPooling<Scalar, Rank>> cudnn_pooling;
-    inline void set_cudnn(bool _is_cudnn) {
-
-      if (Rank < 4) { return; }
-      assert(!_is_cudnn || Rank > 2 && Layout == RowMajor);
-
-      is_cudnn = _is_cudnn;
-    }
+  std::shared_ptr<CudnnPooling<Scalar, Rank>> cudnn_pooling;
 #endif
 
-    MaxPoolParams<Rank>& get_maxpool_params() { return *params; }
+  inline void set_cudnn(bool _is_cudnn) {
+
+    if (Rank < 4) { return; }
+    assert(!_is_cudnn || Rank > 2 && Layout == RowMajor);
+
+    is_cudnn = _is_cudnn;
+  }
+
+  const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
+
+    // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#MaxPool
+    onnx::NodeProto* node = model.add_graph_node(maxpool_op, input_name);
+
+    const std::string out_name = node->output().Get(0);
+
+    params->create_onnx_attributes(node);
+
+    // save rank, not part of ONNX but necessary for loading
+    model.add_attr(node, "rank", Rank);
+
+
+    // return output to pass as input to next node in graph
+    return out_name;
+  }
+
+  const std::vector<Index> onnx_out_dims() override {
+    return layer_output.vec_dims();
+  }
+
+  MaxPoolParams<Rank>& get_maxpool_params() { return *params; }
+
   private:
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_gradient;
     DeviceTensor<Index, Rank, Device_, Layout> mask;

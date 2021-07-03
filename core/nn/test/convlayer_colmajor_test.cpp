@@ -10,7 +10,7 @@ using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
-  class ConvolutionRowMajor : public ::testing::Test {
+  class ConvolutionColMajor : public ::testing::Test {
 
   protected:
     void SetUp() {
@@ -18,19 +18,19 @@ namespace EigenSinnTest {
       cd1p.init();
     }
 
-    CommonData4d<ThreadPoolDevice, RowMajor> cd;
-    ConvDataWith1Padding<ThreadPoolDevice, RowMajor> cd1p;
+    CommonData4d<ThreadPoolDevice, ColMajor> cd;
+    ConvDataWith1Padding<ThreadPoolDevice, ColMajor> cd1p;
 
     const Padding2D padding = { 0, 0 };
   };
 
   
-  TEST_F(ConvolutionRowMajor, Forward) {
+  TEST_F(ConvolutionColMajor, Forward) {
 
-    Input<float, 4, ThreadPoolDevice, RowMajor> input;
+    Input<float, 4, ThreadPoolDevice, ColMajor> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float, ThreadPoolDevice, RowMajor> conv2d(cd.kernelDims);
+    Conv2d<float, ThreadPoolDevice, ColMajor> conv2d(cd.kernelDims);
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
@@ -38,12 +38,12 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(cd.output, conv2d.get_output()));
   }
 
-  TEST_F(ConvolutionRowMajor, Backward) {
+  TEST_F(ConvolutionColMajor, Backward) {
 
-    Input<float, 4, ThreadPoolDevice, RowMajor> input;
+    Input<float, 4, ThreadPoolDevice, ColMajor> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float, ThreadPoolDevice, RowMajor> conv2d(cd.kernelDims);
+    Conv2d<float, ThreadPoolDevice, ColMajor> conv2d(cd.kernelDims);
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
@@ -56,14 +56,14 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dweight, conv2d.get_loss_by_weights_derivative()));
   }
 
-  TEST_F(ConvolutionRowMajor, BackwardBias) {
+  TEST_F(ConvolutionColMajor, BackwardBias) {
 
     cd.init_with_bias();
 
-    Input<float, 4, ThreadPoolDevice, RowMajor> input;
+    Input<float, 4, ThreadPoolDevice, ColMajor> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float, ThreadPoolDevice, RowMajor> conv2d(cd.kernelDims);
+    Conv2d<float, ThreadPoolDevice, ColMajor> conv2d(cd.kernelDims);
 
     conv2d.init(cd.convWeights.to_host(), cd.bias.to_host());
     conv2d.forward(input);
@@ -77,25 +77,25 @@ namespace EigenSinnTest {
   }
 
 
-  TEST_F(ConvolutionRowMajor, Initialization) {
+  TEST_F(ConvolutionColMajor, Initialization) {
 
     array<Index, 4> kdims = { 1, 512, 3, 3 };
-    Conv2d<float, ThreadPoolDevice, RowMajor> conv2d(kdims);
+    Conv2d<float, ThreadPoolDevice, ColMajor> conv2d(kdims);
 
     conv2d.init();
-    DeviceTensor<float, 4, ThreadPoolDevice, RowMajor> weights(conv2d.get_weights());
+    DeviceTensor<float, 4, ThreadPoolDevice, ColMajor> weights(conv2d.get_weights());
 
-    Tensor<float, 0, RowMajor> avg = weights.to_host().mean();
+    Tensor<float, 0, ColMajor> avg = weights.to_host().mean();
     
-    Tensor<float, 0, RowMajor> var = (weights.to_host() - avg(0)).pow(2.).mean();
+    Tensor<float, 0, ColMajor> var = (weights.to_host() - avg(0)).pow(2.).mean();
 
-    Tensor<float, 0, RowMajor> var_expected;
+    Tensor<float, 0, ColMajor> var_expected;
     var_expected.setConstant(1. / (kdims[1] * kdims[2] * kdims[3]));
 
     EXPECT_TRUE(is_elementwise_approx_eq(var_expected, var, 1e-4));
   }
 
-  TEST_F(ConvolutionRowMajor, UnfoldKernel) {
+  TEST_F(ConvolutionColMajor, UnfoldKernel) {
 
     auto unf_kernel = unfold_kernel(cd.convWeights);
     auto folded_kernel = fold_kernel(unf_kernel, cd.kernelDims);
@@ -103,12 +103,12 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(folded_kernel, cd.convWeights));
   }
 
-  TEST_F(ConvolutionRowMajor, Backward1Padding) {
+  TEST_F(ConvolutionColMajor, Backward1Padding) {
 
-    Input<float, 4, ThreadPoolDevice, RowMajor> input;
+    Input<float, 4, ThreadPoolDevice, ColMajor> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float, ThreadPoolDevice, RowMajor> conv2d(cd.kernelDims, { 1, 1 });
+    Conv2d<float, ThreadPoolDevice, ColMajor> conv2d(cd.kernelDims, { 1, 1 });
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
@@ -119,22 +119,22 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(cd1p.dweight, conv2d.get_loss_by_weights_derivative()));
   }
 
-  TEST_F(ConvolutionRowMajor, FoldUnfold) {
-    auto output = DeviceTensor<float, 4, ThreadPoolDevice, RowMajor>(cd.output);
+  TEST_F(ConvolutionColMajor, FoldUnfold) {
+    auto output = DeviceTensor<float, 4, ThreadPoolDevice, ColMajor>(cd.output);
     auto unf_fold = fold_conv_res(unfold_conv_res(output), output.dimensions());
 
     EXPECT_TRUE(is_elementwise_approx_eq(output, unf_fold));
   }
 
-  TEST_F(ConvolutionRowMajor, Backward1Padding2Dilated) {
-    Input<float, 4, ThreadPoolDevice, RowMajor> input;
+  TEST_F(ConvolutionColMajor, Backward1Padding2Dilated) {
+    Input<float, 4, ThreadPoolDevice, ColMajor> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float, ThreadPoolDevice, RowMajor> conv2d(cd.kernelDims, { 1, 1 }, 1, 2);
+    Conv2d<float, ThreadPoolDevice, ColMajor> conv2d(cd.kernelDims, { 1, 1 }, 1, 2);
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
-    DeviceTensor<float, 4, ThreadPoolDevice, RowMajor> conv2dout(conv2d.get_output());
+    DeviceTensor<float, 4, ThreadPoolDevice, ColMajor> conv2dout(conv2d.get_output());
     EXPECT_TRUE(is_elementwise_approx_eq(cd.outputDilated2Padded1, conv2dout));
 
     conv2d.backward(input, cd.convLoss.raw());
@@ -144,15 +144,15 @@ namespace EigenSinnTest {
 
   }
 
-  TEST_F(ConvolutionRowMajor, Forward1Padding2Dilated) {
-    Input<float, 4, ThreadPoolDevice, RowMajor> input;
+  TEST_F(ConvolutionColMajor, Forward1Padding2Dilated) {
+    Input<float, 4, ThreadPoolDevice, ColMajor> input;
     input.set_input(cd.convInput);
 
-    Conv2d<float, ThreadPoolDevice, RowMajor> conv2d(cd.kernelDims, { 1, 1 }, 1, 2);
+    Conv2d<float, ThreadPoolDevice, ColMajor> conv2d(cd.kernelDims, { 1, 1 }, 1, 2);
 
     conv2d.init(cd.convWeights.to_host());
     conv2d.forward(input);
-    DeviceTensor<float, 4, ThreadPoolDevice, RowMajor> conv2dout(conv2d.get_output());
+    DeviceTensor<float, 4, ThreadPoolDevice, ColMajor> conv2dout(conv2d.get_output());
     EXPECT_TRUE(is_elementwise_approx_eq(cd.outputDilated2Padded1, conv2dout));
   }
 }

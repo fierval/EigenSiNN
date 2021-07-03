@@ -4,6 +4,7 @@
 #include "ops/convolutions.hpp"
 #include "ops/initializations.hpp"
 #include "helpers/conv_params_bag.hpp"
+#include <onnx/op_defs.h>
 
 #ifdef __CUDACC__
 #include "cudnn/cudnn_workspace.hpp"
@@ -12,7 +13,7 @@
 namespace EigenSinn {
 
   // Batch normalization layers can take care of bias
-  template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class Conv2d : public LayerBase<Scalar, Device_> {
 
   public:
@@ -182,7 +183,53 @@ namespace EigenSinn {
       is_cudnn = _is_cudnn;
     }
 
-    ConvolutionParams<4>& get_maxpool_params() { return *params; }
+    ConvolutionParams<4>& get_convolution_params() { return *params; }
+
+    // ONNX
+    const std::vector<Index> onnx_out_dims() override {
+      return layer_output.vec_dims();
+    }
+
+
+    // add ONNX node corresponding to this layer
+    // returns the name of the output in the serialized file
+    const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
+
+      // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Conv
+      // 1. Save initializers (raw data in row major format)
+      kernel.save_onnx_initializer(model);
+      bias.save_onnx_initializer(model);
+
+      // 2. add ONNX node with its inputs, outputs, and names
+      // order matters!
+      std::vector<std::string> names{ input_name, kernel.get_onnx_input_name(), bias.get_onnx_input_name()};
+      onnx::NodeProto* node = model.add_graph_node(conv_op, names);
+
+      // single output
+      const std::string out_name = node->output().Get(0);
+
+      // 3. create attributes
+      params->create_onnx_attributes(node);
+
+      // return output to pass as input to next node in graph
+      return out_name;
+    }
+
+    // in the order they appear in the ONNX file
+    inline void load_onnx_data(EigenModel& model, std::vector<std::string>& inputs) override {
+
+      std::vector<std::vector<Index>> dimensions;
+      std::vector<onnx::TensorProto> values;
+
+      std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
+
+      kernel.set_from_host(model.get_input_data<Scalar>(values[0]), vec2dims<4>(dimensions[0]));
+      bias.set_from_host(model.get_input_data<Scalar>(values[1]), vec2dims<1>(dimensions[1]));
+
+      // inputs are stored weights only, exclude the actual input tensor
+      kernel.set_node_input_name(inputs[1]);
+      bias.set_node_input_name(inputs[2]);
+    }
 
   private:
     DeviceTensor<Scalar, 4, Device_, Layout> kernel, layer_output, dX, dW;

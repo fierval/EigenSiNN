@@ -16,7 +16,7 @@ namespace EigenSinn {
     return flat_dim;
   }
 
-  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   inline auto leaky_relu(DeviceTensor<Scalar, Rank, Device_, Layout>& t, Scalar threshold) {
 
     auto flat_dim = get_flat_dims(t);
@@ -38,7 +38,7 @@ namespace EigenSinn {
     return Tuple(std::move(mask), std::move(output));
   }
 
-  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   inline auto leaky_relu_back(DeviceTensor<Scalar, Rank, Device_, Layout>& next_layer_grad, DeviceTensor<Scalar, Rank, Device_, Layout>& mask) {
 
     DeviceTensor<Scalar, Rank, Device_, Layout> output(next_layer_grad.dimensions());

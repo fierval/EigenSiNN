@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ops/opsbase.hpp"
+#include "onnx/model.h"
 
 using namespace Eigen;
 
@@ -98,7 +99,54 @@ namespace EigenSinn {
 
     std::vector<long> h_im_range, w_im_range, col_batches;
 
+    // serialize relevant attributes in the node
+    inline void create_onnx_attributes(onnx::NodeProto* node) {
+      // TODO: Not supporting group convolutions yet
+      auto group_attr = node->add_attribute();
+      group_attr->set_name("group");
+      group_attr->set_i(1);
+      group_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INT);
+
+      // dilations
+      auto dilations_attr = node->add_attribute();
+      dilations_attr->set_name("dilations");
+      dilations_attr->add_ints(dilation);
+      dilations_attr->add_ints(dilation);
+      dilations_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INTS);
+
+      create_onnx_attributes_common(node);
+
+    }
+
   protected:
+
+    // ONNX: common attributes for convolution and maxpool
+    inline void create_onnx_attributes_common(onnx::NodeProto* node) {
+      // pads
+      auto pads_attr = node->add_attribute();
+      pads_attr->set_name("pads");
+      pads_attr->add_ints(0);
+      pads_attr->add_ints(0);
+      pads_attr->add_ints(padding.first);
+      pads_attr->add_ints(padding.second);
+      pads_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INTS);
+
+      // strides
+      auto strides_attr = node->add_attribute();
+      strides_attr->set_name("strides");
+      strides_attr->add_ints(stride);
+      strides_attr->add_ints(stride);
+      strides_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INTS);
+
+      // kernel_shape
+      auto kernel_shape_attr = node->add_attribute();
+      kernel_shape_attr->set_name("kernel_shape");
+      kernel_shape_attr->add_ints(kernel_dims[(int)ImageDims::height]);
+      kernel_shape_attr->add_ints(kernel_dims[(int)ImageDims::width]);
+      kernel_shape_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INTS);
+
+    }
+
     inline void get_output_dimensions() {
 
       if (!is_transposed) {
@@ -169,6 +217,12 @@ namespace EigenSinn {
       out_dims[(int)ImageDims::channel] = input_dims[(int)ImageDims::channel];
 
       set_parallel_range();
+    }
+
+    // serialize relevant attributes in the node
+    inline void create_onnx_attributes(onnx::NodeProto* node) {
+
+      create_onnx_attributes_common(node);
     }
 
     // range for parallel max_pooling

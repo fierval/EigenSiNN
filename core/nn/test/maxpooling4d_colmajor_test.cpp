@@ -10,7 +10,7 @@ using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
-  class Pool4dRowMajor : public ::testing::Test {
+  class Pool4dColMajor : public ::testing::Test {
 
   protected:
 
@@ -179,8 +179,8 @@ namespace EigenSinnTest {
             {0.86051500, 0.96253598, 0.99673647}}} });
 
     }
-    CommonData4d<ThreadPoolDevice, RowMajor> cd;
-    DeviceTensor<float, 4, ThreadPoolDevice, RowMajor> output, dinput, fakeloss;
+    CommonData4d<ThreadPoolDevice, ColMajor> cd;
+    DeviceTensor<float, 4, ThreadPoolDevice, ColMajor> output, dinput, fakeloss;
     const DSizes<Index, 2> extents2d{ 2, 2 };
     const DSizes<Index, 1> extents1d{ 2 };
 
@@ -188,9 +188,9 @@ namespace EigenSinnTest {
 
   };
 
-  TEST_F(Pool4dRowMajor, Validate) {
+  TEST_F(Pool4dColMajor, Validate) {
 
-    DeviceTensor<float, 4, ThreadPoolDevice, RowMajor> t(1, 3, 4, 4);
+    DeviceTensor<float, 4, ThreadPoolDevice, ColMajor> t(1, 3, 4, 4);
     t.setConstant(1);
 
     auto dims = t.dimensions();
@@ -202,9 +202,9 @@ namespace EigenSinnTest {
     EXPECT_TRUE(res);
   }
 
-  TEST_F(Pool4dRowMajor, BadExtent) {
+  TEST_F(Pool4dColMajor, BadExtent) {
 
-    DeviceTensor<float, 2, ThreadPoolDevice, RowMajor> t(4, 4);
+    DeviceTensor<float, 2, ThreadPoolDevice, ColMajor> t(4, 4);
     t.setConstant(1);
 
     auto dims = t.dimensions();
@@ -216,9 +216,9 @@ namespace EigenSinnTest {
     EXPECT_FALSE(res);
   }
 
-  TEST_F(Pool4dRowMajor, BadStride4d) {
+  TEST_F(Pool4dColMajor, BadStride4d) {
 
-    DeviceTensor<float, 4, ThreadPoolDevice, RowMajor> t(3, 4, 10, 10);
+    DeviceTensor<float, 4, ThreadPoolDevice, ColMajor> t(3, 4, 10, 10);
     t.setConstant(1);
 
     auto dims = t.dimensions();
@@ -230,12 +230,12 @@ namespace EigenSinnTest {
     EXPECT_FALSE(res);
   }
 
-  TEST_F(Pool4dRowMajor, Backward) {
+  TEST_F(Pool4dColMajor, Backward) {
 
-    Input<float, 4, ThreadPoolDevice, RowMajor> input;
+    Input<float, 4, ThreadPoolDevice, ColMajor> input;
     input.set_input(cd.convInput);
 
-    MaxPooling<float, 4, ThreadPoolDevice, RowMajor> pl(extents2d, stride);
+    MaxPooling<float, 4, ThreadPoolDevice, ColMajor> pl(extents2d, stride);
 
     pl.init();
     pl.forward(input);
@@ -245,15 +245,15 @@ namespace EigenSinnTest {
     EXPECT_TRUE(is_elementwise_approx_eq(pl.get_loss_by_input_derivative(), dinput));
   }
 
-  TEST_F(Pool4dRowMajor, BackwardStride1) {
+  TEST_F(Pool4dColMajor, BackwardStride1) {
 
-    Input<float, 4, ThreadPoolDevice, RowMajor> input;
+    Input<float, 4, ThreadPoolDevice, ColMajor> input;
     input.set_input(cd.convInput);
 
     SetUpStride1();
 
     int stride1 = 1;
-    MaxPooling<float, 4, ThreadPoolDevice, RowMajor> pl(extents2d, stride1);
+    MaxPooling<float, 4, ThreadPoolDevice, ColMajor> pl(extents2d, stride1);
 
     pl.init();
     pl.forward(input);

@@ -140,20 +140,21 @@ namespace EigenSinn {
         input_desc, filter_desc, conv_desc, output_desc,
         conv_fwd_algo, &temp_size));
 
+#undef max
       // There is an Eigen::max constant set to 0 which causes the following line(s) to be ignored.
       // Should therefore specify the global namespace explicitly!!!
-      cur_workspace_size = ::max(cur_workspace_size, temp_size);
+      cur_workspace_size = std::max(cur_workspace_size, temp_size);
 
       checkCudnnErrors(cudnnGetConvolutionBackwardFilterWorkspaceSize(cudnn(),
         input_desc, output_desc, conv_desc, filter_desc,
         conv_bwd_filter_algo, &temp_size));
-      cur_workspace_size = ::max(cur_workspace_size, temp_size);
+      cur_workspace_size = std::max(cur_workspace_size, temp_size);
 
       checkCudnnErrors(cudnnGetConvolutionBackwardDataWorkspaceSize(cudnn(),
         filter_desc, output_desc, conv_desc, input_desc,
         conv_bwd_data_algo, &temp_size));
 
-      cur_workspace_size = ::max(cur_workspace_size, temp_size);
+      cur_workspace_size = std::max(cur_workspace_size, temp_size);
       
       if (cur_workspace_size > workspace_size)
       {

@@ -6,7 +6,7 @@
 namespace EigenSinn {
 
   // TODO: Add support for any rank
-  template<typename Scalar, typename Actual, Index Rank = 2, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template<typename Scalar, typename Actual, Index Rank = 2, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class CrossEntropyLoss : public LossBase<Scalar, Actual, Rank, Device_, Layout> {
 
   public:

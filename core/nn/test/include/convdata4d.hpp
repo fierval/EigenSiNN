@@ -8,7 +8,7 @@ using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
-  template<typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template<typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   struct ConvDataWith1Padding {
 
     void init() {

@@ -7,7 +7,7 @@ using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
-  template <typename Device_, int Layout = ColMajor>
+  template <typename Device_, int Layout = RowMajor>
   struct CommonData4d {
 
     // data will be presented in NHWC format
@@ -502,7 +502,7 @@ namespace EigenSinnTest {
     void init_with_bias();
 
     // 4d testa
-    const array<Index, 4> dims = { 2, 3, 4, 4 }, poolDims = { 2, 3, 2, 2 }, kernelDims = { 5, 3, 3, 3 }, convOutDims = { 2, 5, 2, 2 };
+    const DSizes<Index, 4> dims{ 2, 3, 4, 4 }, poolDims{ 2, 3, 2, 2 }, kernelDims{ 5, 3, 3, 3 }, convOutDims{ 2, 5, 2, 2 };
     DeviceTensor<float, 4, Device_, Layout> convInput, convLoss, batchNormLoss, convWeights, dweight, dinput, output, dinputDilated2Padded1, dweightsDilated2Padded1, outputDilated2Padded1;
     DeviceTensor<float, 2, Device_, Layout> convInputUnrolledPad0Stride1;
     DeviceTensor<float, 1, Device_, Layout> bias;

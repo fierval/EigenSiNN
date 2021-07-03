@@ -35,7 +35,7 @@ namespace EigenSinnTest {
   TEST_F(DeviceTensorTestGpu, CreateValue) {
     DeviceTensor<float, 4, GpuDevice> d(cd.convInput);
 
-    Tensor<float, 4> h_tensor = d.to_host();
+    Tensor<float, 4, RowMajor> h_tensor = d.to_host();
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.convInput.to_host(), h_tensor));
   }
@@ -45,7 +45,7 @@ namespace EigenSinnTest {
 
     sum_tensor.view() = *d1 + *d2;
 
-    Tensor<float, 4> convsum = cd.convInput.to_host() + cd.convInput.to_host();
+    Tensor<float, 4, RowMajor> convsum = cd.convInput.to_host() + cd.convInput.to_host();
 
     EXPECT_TRUE(is_elementwise_approx_eq(convsum, sum_tensor));
   }
@@ -55,7 +55,7 @@ namespace EigenSinnTest {
 
     res_tensor.view() = *d1 * *d2;
 
-    Tensor<float, 4> expected = cd.convInput.to_host() * cd.convInput.to_host();
+    Tensor<float, 4, RowMajor> expected = cd.convInput.to_host() * cd.convInput.to_host();
 
     EXPECT_TRUE(is_elementwise_approx_eq(expected, res_tensor));
   }
@@ -65,7 +65,7 @@ namespace EigenSinnTest {
 
     res_tensor.view() = d1->sqrt() + *d2;
 
-    Tensor<float, 4> expected = cd.convInput.to_host().sqrt() + cd.dinput.to_host();
+    Tensor<float, 4, RowMajor> expected = cd.convInput.to_host().sqrt() + cd.dinput.to_host();
 
     EXPECT_TRUE(is_elementwise_approx_eq(expected, res_tensor.to_host()));
   }
@@ -86,10 +86,10 @@ namespace EigenSinnTest {
     DeviceTensor<float, 4, GpuDevice> t1(4, 4, 4, 4);
     t1.setConstant(1);
 
-    Tensor<float, 4> expected(4, 4, 4, 4);
+    Tensor<float, 4, RowMajor> expected(4, 4, 4, 4);
     expected.setConstant(1);
 
-    Tensor<float, 4> h_tensor = t1.to_host();
+    Tensor<float, 4, RowMajor> h_tensor = t1.to_host();
 
     EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
 
@@ -100,10 +100,10 @@ namespace EigenSinnTest {
     DeviceTensor<float, 4, GpuDevice> t1(4, 4, 4, 4);
     t1.setZero();
 
-    Tensor<float, 4> expected(4, 4, 4, 4);
+    Tensor<float, 4, RowMajor> expected(4, 4, 4, 4);
     expected.setZero();
 
-    Tensor<float, 4> h_tensor = t1.to_host();
+    Tensor<float, 4, RowMajor> h_tensor = t1.to_host();
 
     EXPECT_TRUE(is_elementwise_approx_eq(expected, h_tensor.data()));
 

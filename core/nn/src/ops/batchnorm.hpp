@@ -9,7 +9,7 @@ using std::unique_ptr;
 namespace EigenSinn {
 
   template <typename Scalar>
-  using TensorSingleDim = Eigen::Tensor<Scalar, 1>;
+  using TensorSingleDim = Eigen::Tensor<Scalar, 1, RowMajor>;
 
   template<typename Scalar, Index Dim>
   inline auto get_broadcast_and_reduction_dims(TensorView<Scalar, Dim> x) {

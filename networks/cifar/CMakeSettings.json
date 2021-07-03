@@ -22,6 +22,11 @@
                     "name": "VCPKG_TARGET_TRIPLET",
                     "value": "x64-windows",
                     "type": "STRING"
+                },
+                {
+                    "name": "Protobuf_ROOT",
+                    "value": "C:/git/NN/EigenSiNN/protobuf/install/cmake",
+                    "type": "PATH"
                 }
             ]
         },
@@ -47,6 +52,11 @@
                     "name": "VCPKG_TARGET_TRIPLET",
                     "value": "x64-windows",
                     "type": "STRING"
+                },
+                {
+                    "name": "Protobuf_ROOT",
+                    "value": "C:/git/NN/EigenSiNN/protobuf/install/cmake",
+                    "type": "PATH"
                 }
             ]
 

@@ -7,7 +7,7 @@ using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
-  template <typename Device_, int Layout = ColMajor>
+  template <typename Device_, int Layout = RowMajor>
   class ReluData4d {
 
   public:

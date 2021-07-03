@@ -17,12 +17,12 @@ namespace EigenSinnTest {
 
     DSizes<Index, 4> dims(10000, 3, 32, 32);
 
-    Tensor<float, 4> large_expected(dims);
+    Tensor<float, 4, RowMajor> large_expected(dims);
     large_expected.setRandom();
 
     DeviceTensor<float, 4, GpuDevice> large_gpu(large_expected);
 
-    Tensor<float, 4> actual = large_gpu.to_host();
+    Tensor<float, 4, RowMajor> actual = large_gpu.to_host();
 
     EXPECT_TRUE(is_elementwise_approx_eq(large_expected, actual));
 

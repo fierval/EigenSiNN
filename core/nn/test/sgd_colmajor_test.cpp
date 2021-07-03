@@ -11,7 +11,7 @@ using namespace EigenSinn;
 
 namespace EigenSinnTest {
 
-  class SGDRowMajor : public ::testing::Test {
+  class SGDColMajor : public ::testing::Test {
   protected:
     void SetUp() override {
       cd.init();
@@ -22,15 +22,15 @@ namespace EigenSinnTest {
 
     auto PropagateGradient(int epochs, float momentum = 0.0, bool nesterov = false) {
 
-      Input<float, 2, ThreadPoolDevice, RowMajor> input;
+      Input<float, 2, ThreadPoolDevice, ColMajor> input;
       input.set_input(cd.linearInput);
 
       // create fully connected layer
-      Linear<float, ThreadPoolDevice, RowMajor> linear(cd.dims[1], cd.out_dims[1]);
+      Linear<float, ThreadPoolDevice, ColMajor> linear(cd.dims[1], cd.out_dims[1]);
       linear.init(cd.weights.to_host());
 
       // create loss function
-      CrossEntropyLoss<float, float, 2, ThreadPoolDevice, RowMajor> loss_func;
+      CrossEntropyLoss<float, float, 2, ThreadPoolDevice, ColMajor> loss_func;
 
       // create  optimizer
       EigenSinn::SGD<float, 2> sgd(lr, momentum, nesterov);
@@ -40,14 +40,14 @@ namespace EigenSinnTest {
         // propagate forward through the model
         linear.forward(input);
 
-        DeviceTensor<float, 2, ThreadPoolDevice, RowMajor> output(linear.get_output());
+        DeviceTensor<float, 2, ThreadPoolDevice, ColMajor> output(linear.get_output());
 
         // compute loss
         // start propagating back
         // 1. compute dL/dy
         loss_func.step(output, cd.target);
 
-        DeviceTensor<float, 2, ThreadPoolDevice, RowMajor> dloss(loss_func.get_loss_derivative_by_input());
+        DeviceTensor<float, 2, ThreadPoolDevice, ColMajor> dloss(loss_func.get_loss_derivative_by_input());
 
         // propagate back through the fc layer
         // compute dL/dw, dL/db, dL/dx
@@ -62,16 +62,16 @@ namespace EigenSinnTest {
 
     }
 
-    DeviceTensor<float, 2, ThreadPoolDevice, RowMajor> new_weights;
-    DeviceTensor<float, 1, ThreadPoolDevice, RowMajor> new_bias;
-    CommonData2d<ThreadPoolDevice, RowMajor> cd;
+    DeviceTensor<float, 2, ThreadPoolDevice, ColMajor> new_weights;
+    DeviceTensor<float, 1, ThreadPoolDevice, ColMajor> new_bias;
+    CommonData2d<ThreadPoolDevice, ColMajor> cd;
     float lr;
   };
 
 
-  TEST_F(SGDRowMajor, ZeroMomentum) {
+  TEST_F(SGDColMajor, ZeroMomentum) {
 
-    DeviceTensor<float, 2, ThreadPoolDevice, RowMajor> tmp(cd.weight_dims);
+    DeviceTensor<float, 2, ThreadPoolDevice, ColMajor> tmp(cd.weight_dims);
     tmp.setValues({ { 0.32386121,  0.16082032,  0.08126653,  0.30421251, -0.00304944,
          -0.08350309,  0.16417494, -0.35673440},
         { 0.20838137, -0.26138818,  0.29403499, -0.00155395, -0.17344446,
@@ -87,9 +87,9 @@ namespace EigenSinnTest {
     PropagateGradient(1, 0, false);
   }
 
-  TEST_F(SGDRowMajor, Momentum1Step) {
+  TEST_F(SGDColMajor, Momentum1Step) {
 
-    DeviceTensor<float, 2, ThreadPoolDevice, RowMajor> tmp(cd.weight_dims);
+    DeviceTensor<float, 2, ThreadPoolDevice, ColMajor> tmp(cd.weight_dims);
     tmp.setValues({ { 3.37926388e-01,  1.59690693e-01,  1.02176636e-01,  2.84526557e-01,
          -2.26725824e-04, -9.27660763e-02,  1.64573103e-01, -3.61379057e-01},
         { 2.25439876e-01, -2.75997013e-01,  3.18087339e-01,  2.55925790e-03,
@@ -105,9 +105,9 @@ namespace EigenSinnTest {
     PropagateGradient(2, 0.1, false);
   }
 
-  TEST_F(SGDRowMajor, Momentum1StepNesterov) {
+  TEST_F(SGDColMajor, Momentum1StepNesterov) {
 
-    DeviceTensor<float, 2, ThreadPoolDevice, RowMajor> tmp(cd.weight_dims);
+    DeviceTensor<float, 2, ThreadPoolDevice, ColMajor> tmp(cd.weight_dims);
     tmp.setValues({ { 3.39028239e-01,  1.59707010e-01,  1.03905559e-01,  2.82974273e-01,
           2.06110999e-05, -9.34924558e-02,  1.64605826e-01, -3.61862838e-01},
         { 2.26916432e-01, -2.77127922e-01,  3.20312917e-01,  2.97543406e-03,

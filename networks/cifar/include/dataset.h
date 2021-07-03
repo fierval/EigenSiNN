@@ -13,12 +13,12 @@
 
 using namespace Eigen;
 
-template<int Layout = ColMajor>
+template<int Layout = RowMajor>
 using ImageContainer =  std::vector<Tensor<float, 3, Layout>>;
 
 typedef std::vector<uint8_t> LabelContainer;
 
-template<int Layout = ColMajor>
+template<int Layout = RowMajor>
 inline cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Layout>, uint8_t, Layout> read_cifar_dataset() {
 
   auto dataset = cifar::read_dataset_3d<std::vector, Tensor<float, 3, Layout>, uint8_t, Layout>();
@@ -26,7 +26,7 @@ inline cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Layout>, uint8_t, La
 }
 
 // convert loss class into categorical representation and convert to the network data type
-template<typename Loss, int Layout = ColMajor>
+template<typename Loss, int Layout = RowMajor>
 inline Tensor<Loss, 2, Layout> create_2d_label_tensor(std::vector<Loss>& labels, int start, int batch_size, Index n_categories) {
 
   array<Index, 2> dims{ (Index)batch_size, n_categories };
@@ -43,7 +43,7 @@ inline Tensor<Loss, 2, Layout> create_2d_label_tensor(std::vector<Loss>& labels,
 
 }
 
-template<typename Loss, int Layout = ColMajor>
+template<typename Loss, int Layout = RowMajor>
 inline Tensor<Loss, 1, Layout> create_1d_label_tensor(std::vector<Loss>& labels) {
 
   Tensor<Loss, 1, Layout> out = TensorMap<Tensor<Loss, 1, Layout>>(labels.data(), labels.size());
@@ -52,7 +52,7 @@ inline Tensor<Loss, 1, Layout> create_1d_label_tensor(std::vector<Loss>& labels)
 
 }
 
-template<typename Scalar, Index Rank, int Layout = ColMajor>
+template<typename Scalar, Index Rank, int Layout = RowMajor>
 inline Tensor<Scalar, Rank + 1, Layout> create_batch_tensor(std::vector<Tensor<Scalar, Rank, Layout>>& images, int start, int batch_size) {
 
   array<Index, Rank + 1> out_dims;
@@ -70,7 +70,7 @@ inline Tensor<Scalar, Rank + 1, Layout> create_batch_tensor(std::vector<Tensor<S
   return std::move(output);
 }
 
-template <typename Scalar, typename Loss, int Layout = ColMajor>
+template <typename Scalar, typename Loss, int Layout = RowMajor>
 inline void shuffle(ImageContainer<Layout>& images, LabelContainer& labels, bool should_shuffle = true) {
 
   if (!should_shuffle) { return; }
@@ -102,7 +102,7 @@ inline void shuffle(ImageContainer<Layout>& images, LabelContainer& labels, bool
 }
 
 // explore the dataset
-template<int Layout = ColMajor>
+template<int Layout = RowMajor>
 inline void explore(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Layout>, uint8_t, Layout>& dataset, bool should_explore = false) {
 
   if (!should_explore) {

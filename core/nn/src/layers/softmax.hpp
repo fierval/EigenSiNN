@@ -2,12 +2,13 @@
 
 #include "layer_base.hpp"
 #include "ops/relu.hpp"
+#include <onnx/op_defs.h>
 
 using namespace  Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class Softmax : public LayerBase<Scalar, Device_> {
   public:
     Softmax() 
@@ -75,6 +76,25 @@ namespace EigenSinn {
     PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() override {
       return layer_grad.raw();
     };
+
+    // Save to ONNX
+    // TODO: For the 2-dim softmax
+    const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
+
+      // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Softmax
+      auto* node = model.add_graph_node(softmax_op, input_name);
+
+      model.add_attr(node, "axis", 1);
+
+      // not part of ONNX but necessary for loading
+      model.add_attr(node, "rank", Rank);
+
+      return node->output().Get(0);
+    }
+
+    const std::vector<Index> onnx_out_dims() override {
+      return layer_output.vec_dims();
+    }
 
   private:
     void init_cached(const DeviceTensor<Scalar, Rank, Device_, Layout>& prev_layer)

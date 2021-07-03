@@ -51,7 +51,7 @@ namespace EigenSinnTest {
     MseLoss<float, float, 2> loss_func;
     loss_func.step(output, cd.target);
 
-    EXPECT_EQ(loss, loss_func.get_output());
+    EXPECT_TRUE(std::abs(loss_func.get_output() - loss) < 1e-5);
     EXPECT_TRUE(is_elementwise_approx_eq(dloss, loss_func.get_loss_derivative_by_input()));
   }
 

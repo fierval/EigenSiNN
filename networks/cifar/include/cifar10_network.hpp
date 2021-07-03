@@ -4,7 +4,7 @@
 
 using namespace EigenSinn;
 
-template<typename Device_ = ThreadPoolDevice, int Layout = ColMajor, bool CuDNN = false>
+template<typename Device_ = ThreadPoolDevice, int Layout = RowMajor, bool CuDNN = false>
 class Cifar10 : public NetBase<float, 4, CrossEntropyLoss<float, uint8_t, 2, Device_, Layout>, Device_, Layout, CuDNN> {
 
 public:
@@ -40,6 +40,6 @@ public:
 protected:
   template <Index Rank>
   inline auto get_optimizer(float learning_rate) {
-    return dynamic_cast<OptimizerBase<float, Device_>*>(new SGD<float, Rank, Device_>(learning_rate, 0, false));
+    return dynamic_cast<OptimizerBase<float, Device_, Layout>*>(new SGD<float, Rank, Device_, Layout>(learning_rate, 0, false));
   }
 };

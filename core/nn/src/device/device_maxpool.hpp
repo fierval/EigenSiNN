@@ -7,7 +7,7 @@ namespace EigenSinn {
 
 #ifdef __CUDACC__
 
-  template<typename Scalar, int Layout = ColMajor>
+  template<typename Scalar, int Layout = RowMajor>
   __global__ void maxpool_forward_kernel(long h_offset, long w_offset, long kernel_height, long kernel_width, long stride, long dilation, TensorView<Scalar, 4, Layout> input, TensorView<Scalar, 4, Layout> layer_output, TensorView<Index, 4, Layout> mask) {
 
     DSizes<long, 4> out_dims = dimensions_cast<long>(layer_output.dimensions());
@@ -45,7 +45,7 @@ namespace EigenSinn {
 
   }
 
-  template<typename Scalar, int Layout = ColMajor>
+  template<typename Scalar, int Layout = RowMajor>
   __global__ void maxpool_backward_kernel(long h_offset, long w_offset, long kernel_h, long kernel_w, int stride, int dilation, TensorView<Scalar, 4, Layout> next_layer_grad, TensorView<Index, 4, Layout> mask, TensorView<Scalar, 4, Layout> layer_gradient)
   {
 

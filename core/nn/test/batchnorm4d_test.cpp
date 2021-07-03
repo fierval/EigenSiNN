@@ -1,7 +1,5 @@
 #include <gtest/gtest.h>
 #include <layers/batchnorm.hpp>
-#include <iostream>
-#include <ops/conversions.hpp>
 #include <ops/comparisons.hpp>
 
 #include "include/commondata4d.hpp"
@@ -96,7 +94,7 @@ namespace EigenSinnTest {
      //void TearDown() override {}
 
       DeviceTensor<float, 4> input, loss, dinput, output;
-      Tensor<float, 1> beta, gamma;
+      Tensor<float, 1, RowMajor> beta, gamma;
       const float eps = 1e-5, momentum = 0.9;
 
       CommonData4d<ThreadPoolDevice> cd;

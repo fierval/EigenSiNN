@@ -6,6 +6,8 @@
 #include "ops/initializations.hpp"
 #include "layer_base.hpp"
 
+#include <onnx/op_defs.h>
+
 using namespace Eigen;
 
 /*
@@ -16,7 +18,7 @@ _in_dim - input dimension (D)
 namespace EigenSinn {
 
 
-  template<typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template<typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class Linear : public LayerBase<Scalar, Device_> {
 
   public:
@@ -131,6 +133,53 @@ namespace EigenSinn {
 
     void set_bias(PtrTensorAdapter<Scalar, Device_>& v) override {
       bias = DeviceTensor<Scalar, 1, Device_, Layout>(v);
+    }
+
+    const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override { 
+
+      // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md
+      // 1. Save initializers (raw data in row major format)
+      weights.save_onnx_initializer(model);
+      bias.save_onnx_initializer(model);
+
+      std::vector<std::string> names{ input_name, weights.get_onnx_input_name(), bias.get_onnx_input_name() };
+      onnx::NodeProto* node = model.add_graph_node(gemm_op, names);
+
+      //TODO: single output
+      const std::string& out_name = node->output().Get(0);
+
+      // 2. create attributes
+      auto alpha_attr = node->add_attribute();
+      alpha_attr->set_name("alpha");
+      alpha_attr->set_f(1);
+      alpha_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_FLOAT);
+
+      auto beta_attr = node->add_attribute();
+      beta_attr->set_name("beta");
+      beta_attr->set_f(1);
+      beta_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_FLOAT);
+
+      // return output to pass as input to next node in graph
+      return out_name;
+
+    }
+
+    inline void load_onnx_data(EigenModel& model, std::vector<std::string>& inputs) override {
+
+      std::vector<std::vector<Index>> dimensions;
+      std::vector<onnx::TensorProto> values;
+
+      std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
+
+      weights.set_from_host(model.get_input_data<Scalar>(values[0]), vec2dims<2>(dimensions[0]));
+      bias.set_from_host(model.get_input_data<Scalar>(values[1]), vec2dims<1>(dimensions[1]));
+
+      weights.set_node_input_name(inputs[1]);
+      bias.set_node_input_name(inputs[2]);
+    }
+
+    const std::vector<Index> onnx_out_dims() override {
+      return layer_output.vec_dims();
     }
 
   private:

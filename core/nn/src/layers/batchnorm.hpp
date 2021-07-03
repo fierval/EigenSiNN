@@ -4,6 +4,8 @@
 #include <ops/batchnorm.hpp>
 #include <device/device_tensor.hpp>
 
+#include <onnx/op_defs.h>
+
 using namespace  Eigen;
 using std::unique_ptr;
 using std::make_unique;
@@ -14,7 +16,7 @@ namespace EigenSinn {
   // For Linear (fully connected) layers: (N, C)
   // N - batch size
   // C - number of channels (1 for fully connected layers)
-  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class BatchNormalizationLayer : public LayerBase<Scalar, Device_> {
   public:
 
@@ -184,12 +186,75 @@ namespace EigenSinn {
       beta = DeviceTensor<Scalar, 1, Device_, Layout>(v);
     }
 
+    inline const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
+
+      // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#BatchNormalization
+      static constexpr char s_batch[] = "batch";
+
+      // 1. ADd ONNX node with inputs & outputs
+      std::vector<const char*> suffixes{"weight", "bias", "input_mean", "input_var" };
+      std::vector<std::string> names = EigenModel::get_cool_display_tensor_value_names(s_batch, suffixes);
+      
+      names.insert(names.begin(), input_name);
+
+      onnx::NodeProto* node = model.add_graph_node(batch_norm_op, names);
+      const std::string out_name = node->output().Get(0);
+
+      // 2. Attributes
+      model.add_attr(node, "epsilon", eps);
+      model.add_attr(node, "momentum", momentum);
+
+      // Rank attribute (not part of ONNX)
+      model.add_attr(node, "rank", Rank);
+
+      // 3. Initializers
+      gamma.save_onnx_initializer(model, names[0]);
+      beta.save_onnx_initializer(model, names[1]);
+      running_mean.save_onnx_initializer(model, names[2]);
+      running_variance.save_onnx_initializer(model, names[3]);
+
+      return out_name;
+    }
+
+    const std::vector<Index> onnx_out_dims() override {
+      return layer_output.vec_dims();
+    }
+
+    // in the order they appear in the ONNX file
+    inline void load_onnx_data(EigenModel& model, std::vector<std::string>& inputs) override {
+
+      std::vector<std::vector<Index>> dimensions;
+      std::vector<onnx::TensorProto> values;
+
+      std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
+
+      // even though all dimensions are the same, we iterate over them for completeness
+      gamma.set_from_host(model.get_input_data<Scalar>(values[0]), vec2dims<1>(dimensions[0]));
+      beta.set_from_host(model.get_input_data<Scalar>(values[1]), vec2dims<1>(dimensions[1]));
+      running_mean.set_from_host(model.get_input_data<Scalar>(values[2]), vec2dims<1>(dimensions[2]));
+      running_variance.set_from_host(model.get_input_data<Scalar>(values[3]), vec2dims<1>(dimensions[3]));
+
+      // inputs are stored weights only, exclude the actual input tensor
+      gamma.set_node_input_name(inputs[1]);
+      beta.set_node_input_name(inputs[2]);
+      running_mean.set_node_input_name(inputs[3]);
+      running_variance.set_node_input_name(inputs[4]);
+
+    }
+
   private:
+
+    inline std::string get_input_name(int layer_idx, const char* suffix) {
+      static constexpr char s_batch[] = "batch";
+      
+      return EigenModel::get_cool_display_tensor_value_name(s_batch, layer_idx, suffix);
+    }
+
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_gradient, xhat;
 
     DeviceTensor<Scalar, 1, Device_, Layout> gamma, beta, running_mean, running_variance, mu, var;
     DeviceTensor<Scalar, 1, Device_, Layout> dbeta, dgamma;
-    float momentum, eps;
+    Scalar momentum, eps;
     bool is_training;
 
   };

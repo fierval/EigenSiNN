@@ -2,18 +2,13 @@
 
 #include "layer_base.hpp"
 #include <ops/conversions.hpp>
-#include <cstdlib>
-#include <algorithm>
-#include <execution>
-#include <numeric>
-#include <vector>
-#include <limits>
+#include <onnx/op_defs.h>
 
 using namespace  Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = ColMajor>
+  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class Dropout : public LayerBase<Scalar, Device_> {
   public:
 
@@ -54,7 +49,7 @@ namespace EigenSinn {
       }
 
       // generate random uniform values
-      rands.setRandom<internal::UniformRandomGenerator<float>>();
+      rands.template setRandom<internal::UniformRandomGenerator<float>>();
             
       // create condition
       if_tensor.view() = *rands >= *prob_tensor;
@@ -85,8 +80,49 @@ namespace EigenSinn {
       is_training = _is_training;
     }
 
-    const bool get_training() {
+    bool get_training() {
       return is_training;
+    }
+
+    const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
+
+      // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Dropout
+      // Dropout spec saves everything as input
+      // So we need to wrap scalar values in tensors
+      DeviceTensor<float, 0> prob_tensor;
+      prob_tensor.setConstant(prob);
+
+      // 1. Add initializers
+      prob_tensor.save_onnx_initializer(model);
+
+      // 2. Add inputs
+      auto* node = model.add_graph_node(dropout_op, 
+        std::vector<std::string>{input_name, prob_tensor.get_onnx_input_name()});
+
+      // save rank, not part of ONNX but necessary for loading
+      model.add_attr(node, "rank", Rank);
+
+      const std::string out_name = node->output().Get(0);
+      return out_name;
+    }
+
+
+    // in the order they appear in the ONNX file
+    inline void load_onnx_data(EigenModel& model, std::vector<std::string>& inputs) override {
+
+      std::vector<onnx::TensorProto> values;
+      std::vector<std::vector<Index>> dimensions;
+
+      // just one value and dims = 0 
+      std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
+
+      // recover probability
+      prob = *model.get_input_data<Scalar>(values[0]);
+
+    }
+
+    const std::vector<Index> onnx_out_dims() override {
+      return layer_output.vec_dims();
     }
 
   private:
@@ -95,7 +131,7 @@ namespace EigenSinn {
     DeviceTensor<bool, Rank, Device_, Layout> if_tensor;
     DeviceTensor<float, Rank, Device_, Layout> rands, then_tensor, else_tensor, prob_tensor;
     bool is_training, inited;
-    const float prob;
+    float prob;
   };
 
 }

@@ -12,6 +12,17 @@ find_package(OpenCV REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+# Protobuf
+# From stackoverflow: https://stackoverflow.com/questions/53651181/cmake-find-protobuf-package-in-custom-directory
+include(${Protobuf_ROOT}/protobuf-config.cmake)
+include(${Protobuf_ROOT}/protobuf-module.cmake)
+include(${Protobuf_ROOT}/protobuf-options.cmake)
+include(${Protobuf_ROOT}/protobuf-targets.cmake)
+
+find_package(Protobuf REQUIRED HINTS ${Protobuf_ROOT})
+
+include_directories(${Protobuf_INCLUDE_DIRS})
+
 get_filename_component(EIGEN3_INCLUDE_DIRS "../../core/eigen" ABSOLUTE)
 get_filename_component(EIGENSINN_INCLUDE_DIR "../../core/nn/src" ABSOLUTE)
 get_filename_component(CUR_INCLUDE_DIR "include" ABSOLUTE)
@@ -47,6 +58,7 @@ if(WITH_GPU)
 
 endif()
 
+set(APP_SOURCES ${APP_SOURCES} "${EIGENSINN_INCLUDE_DIR}/onnx/onnx.proto3.pb.cc")
 message(STATUS "Sources: ${APP_SOURCES}")
 
 # build app exe
@@ -65,5 +77,5 @@ if(WITH_GPU)
 endif()
 
 target_compile_definitions(${APP_EXE} PRIVATE ${COMPILE_DEFS})
-target_include_directories(${APP_EXE} PRIVATE ${OpenCV_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS} ${EIGENSINN_INCLUDE_DIR} ${CUR_INCLUDE_DIR})
-target_link_libraries(${APP_EXE} PUBLIC ${OpenCV_LIBS} cudnn)
+target_include_directories(${APP_EXE} PRIVATE ${OpenCV_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS} ${EIGENSINN_INCLUDE_DIR} ${CUR_INCLUDE_DIR} ${Protobuf_INCLUDE_DIRS})
+target_link_libraries(${APP_EXE} PUBLIC ${OpenCV_LIBS} ${Protobuf_LIBRARIES} cudnn)
