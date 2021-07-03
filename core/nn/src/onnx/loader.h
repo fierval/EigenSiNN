@@ -200,7 +200,7 @@ namespace EigenSinn {
       std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
 
       // dimesions of the weight tensor
-      int in_dim = dimensions[1][0], out_dim = dimensions[1][1];
+      int in_dim = dimensions[0][0], out_dim = dimensions[0][1];
       auto* out = new Linear<Scalar, Device_, RowMajor>(in_dim, out_dim);
       out->load_onnx_data(model, inputs);
 

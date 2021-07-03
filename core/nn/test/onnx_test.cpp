@@ -46,6 +46,9 @@ namespace EigenSinnTest {
 
   TEST_F(OnnxTest, RoundTripTest) {
 
+    model.flush("c:\\temp\\cifar10.onnx");
+    model.dump("c:\\temp\\cifar10.txt");
+
     net->clear();
 
     auto str_model = model.flush_to_string();

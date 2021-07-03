@@ -174,8 +174,8 @@ namespace EigenSinn {
       weights.set_from_host(model.get_input_data<Scalar>(values[0]), vec2dims<2>(dimensions[0]));
       bias.set_from_host(model.get_input_data<Scalar>(values[1]), vec2dims<1>(dimensions[1]));
 
-      weights.set_node_input_name(inputs[0]);
-      bias.set_node_input_name(inputs[1]);
+      weights.set_node_input_name(inputs[1]);
+      bias.set_node_input_name(inputs[2]);
     }
 
     const std::vector<Index> onnx_out_dims() override {
