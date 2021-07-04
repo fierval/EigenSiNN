@@ -26,7 +26,7 @@ namespace EigenSinnTest {
 
   TEST_F(ReLU4dGpu, Backward) {
 
-    Input<float, 4, GpuDevice, RowMajor> input;
+    Input<float, GpuDevice> input;
     input.set_input(rd.input);
 
     ReLU<float, 4, GpuDevice, RowMajor> rl;
@@ -40,7 +40,7 @@ namespace EigenSinnTest {
 
   TEST_F(ReLU4dGpu, BackwardCudnn) {
 
-    Input<float, 4, GpuDevice, RowMajor> input;
+    Input<float, GpuDevice> input;
     input.set_input(rd.input);
 
     ReLU<float, 4, GpuDevice, RowMajor> rl;
@@ -57,7 +57,7 @@ namespace EigenSinnTest {
 
   TEST_F(ReLU4dGpu, BackwardLeakyRelu) {
 
-    Input<float, 4, GpuDevice, RowMajor> input;
+    Input<float, GpuDevice> input;
     input.set_input(rd.input);
 
     LeakyReLU<float, 4, GpuDevice, RowMajor> rl(rd.leaky_thres);

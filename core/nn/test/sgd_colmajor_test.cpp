@@ -22,7 +22,7 @@ namespace EigenSinnTest {
 
     auto PropagateGradient(int epochs, float momentum = 0.0, bool nesterov = false) {
 
-      Input<float, 2, ThreadPoolDevice, ColMajor> input;
+      Input<float, ThreadPoolDevice> input;
       input.set_input(cd.linearInput);
 
       // create fully connected layer

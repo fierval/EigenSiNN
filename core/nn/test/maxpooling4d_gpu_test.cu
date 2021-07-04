@@ -103,7 +103,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4dGpu, Forward) {
 
-    Input<float, 4, GpuDevice, RowMajor> input;
+    Input<float, GpuDevice> input;
     input.set_input(cd.convInput);
 
     MaxPooling<float, 4, GpuDevice, RowMajor> pl(extents2d, stride);
@@ -116,7 +116,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4dGpu, Backward) {
 
-    Input<float, 4, GpuDevice, RowMajor> input;
+    Input<float, GpuDevice> input;
     input.set_input(cd.convInput);
 
     MaxPooling<float, 4, GpuDevice, RowMajor> pl(extents2d, stride);
@@ -131,7 +131,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4dGpu, BackwardCudnn) {
 
-    Input<float, 4, GpuDevice, RowMajor> input;
+    Input<float, GpuDevice> input;
     input.set_input(cd.convInput);
 
     MaxPooling<float, 4, GpuDevice, RowMajor> pl(extents2d, stride);

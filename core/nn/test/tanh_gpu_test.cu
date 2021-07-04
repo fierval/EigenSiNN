@@ -41,7 +41,7 @@ namespace EigenSinnTest {
 
   TEST_F(TanhGpu, Backward) {
 
-    Input<float, 2, GpuDevice> input;
+    Input<float, GpuDevice> input;
     input.set_input(cd.linearInput);
 
     EigenSinn::Tanh<float, 2, GpuDevice> tanh;

@@ -232,7 +232,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4d, Backward) {
 
-    Input<float, 4> input;
+    Input<float> input;
     input.set_input(cd.convInput);
 
     MaxPooling<float, 4> pl(extents2d, stride);
@@ -247,7 +247,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4d, Forward) {
 
-    Input<float, 4> input;
+    Input<float> input;
     input.set_input(cd.convInput);
 
     MaxPooling<float, 4> pl(extents2d, stride);
@@ -260,7 +260,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4d, BackwardStride1) {
 
-    Input<float, 4> input;
+    Input<float> input;
     input.set_input(cd.convInput);
 
     SetUpStride1();

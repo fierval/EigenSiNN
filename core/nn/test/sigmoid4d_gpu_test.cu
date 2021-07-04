@@ -89,7 +89,7 @@ namespace EigenSinnTest {
 
   TEST_F(Sigmoid4dGpu, Backward) {
 
-    Input<float, 4, GpuDevice, RowMajor> input;
+    Input<float, GpuDevice> input;
     input.set_input(cd.convInput);
 
     EigenSinn::Sigmoid<float, 4, GpuDevice, RowMajor> sg;
@@ -103,7 +103,7 @@ namespace EigenSinnTest {
 
   TEST_F(Sigmoid4dGpu, BackwardCudnn) {
 
-    Input<float, 4, GpuDevice, RowMajor> input;
+    Input<float, GpuDevice> input;
     input.set_input(cd.convInput);
 
     EigenSinn::Sigmoid<float, 4, GpuDevice, RowMajor> sg;

@@ -41,7 +41,7 @@ namespace EigenSinnTest {
 
   TEST_F(Sigmoid, Backward) {
 
-    Input<float, 2> input;
+    Input<float> input;
     input.set_input(cd.linearInput);
 
     EigenSinn::Sigmoid<float, 2> sg;

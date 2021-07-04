@@ -27,7 +27,7 @@ namespace EigenSinnTest {
 
   TEST_F(ConvolutionColMajorGpu, Forward) {
 
-    Input<float, 4, GpuDevice, ColMajor> input;
+    Input<float, GpuDevice> input;
     input.set_input(cd.convInput);
 
     Conv2d<float, GpuDevice, ColMajor> conv2d(cd.kernelDims);
@@ -40,7 +40,7 @@ namespace EigenSinnTest {
   }
 
   TEST_F(ConvolutionColMajorGpu, Backward1Padding2Dilated) {
-    Input<float, 4, GpuDevice, ColMajor> input;
+    Input<float, GpuDevice> input;
     input.set_input(cd.convInput);
 
     Conv2d<float, GpuDevice, ColMajor> conv2d(cd.kernelDims, { 1, 1 }, 1, 2);
@@ -61,7 +61,7 @@ namespace EigenSinnTest {
 
   TEST_F(ConvolutionColMajorGpu, Backward) {
 
-    Input<float, 4, GpuDevice, ColMajor> input;
+    Input<float, GpuDevice> input;
     input.set_input(cd.convInput);
 
     Conv2d<float, GpuDevice, ColMajor> conv2d(cd.kernelDims);
@@ -81,7 +81,7 @@ namespace EigenSinnTest {
 
     cd.init_with_bias();
 
-    Input<float, 4, GpuDevice, ColMajor> input;
+    Input<float, GpuDevice> input;
     input.set_input(cd.convInput);
 
     Conv2d<float, GpuDevice, ColMajor> conv2d(cd.kernelDims);
@@ -125,7 +125,7 @@ namespace EigenSinnTest {
 
   TEST_F(ConvolutionColMajorGpu, Backward1Padding) {
 
-    Input<float, 4, GpuDevice, ColMajor> input;
+    Input<float, GpuDevice> input;
     input.set_input(cd.convInput);
 
     Conv2d<float, GpuDevice, ColMajor> conv2d(cd.kernelDims, { 1, 1 });

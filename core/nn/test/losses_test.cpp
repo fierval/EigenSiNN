@@ -35,7 +35,7 @@ namespace EigenSinnTest {
     DeviceTensor<float, 2> dloss;
     CommonData2d<ThreadPoolDevice> cd;
     Linear<float>* fc;
-    Input<float, 2> inp;
+    Input<float> inp;
   };
 
   TEST_F(Loss, MSE) {

@@ -27,7 +27,7 @@ namespace EigenSinnTest {
   
   TEST_F(ConvolutionColMajor, Forward) {
 
-    Input<float, 4, ThreadPoolDevice, ColMajor> input;
+    Input<float, ThreadPoolDevice> input;
     input.set_input(cd.convInput);
 
     Conv2d<float, ThreadPoolDevice, ColMajor> conv2d(cd.kernelDims);
@@ -40,7 +40,7 @@ namespace EigenSinnTest {
 
   TEST_F(ConvolutionColMajor, Backward) {
 
-    Input<float, 4, ThreadPoolDevice, ColMajor> input;
+    Input<float, ThreadPoolDevice> input;
     input.set_input(cd.convInput);
 
     Conv2d<float, ThreadPoolDevice, ColMajor> conv2d(cd.kernelDims);
@@ -60,7 +60,7 @@ namespace EigenSinnTest {
 
     cd.init_with_bias();
 
-    Input<float, 4, ThreadPoolDevice, ColMajor> input;
+    Input<float, ThreadPoolDevice> input;
     input.set_input(cd.convInput);
 
     Conv2d<float, ThreadPoolDevice, ColMajor> conv2d(cd.kernelDims);
@@ -105,7 +105,7 @@ namespace EigenSinnTest {
 
   TEST_F(ConvolutionColMajor, Backward1Padding) {
 
-    Input<float, 4, ThreadPoolDevice, ColMajor> input;
+    Input<float, ThreadPoolDevice> input;
     input.set_input(cd.convInput);
 
     Conv2d<float, ThreadPoolDevice, ColMajor> conv2d(cd.kernelDims, { 1, 1 });
@@ -127,7 +127,7 @@ namespace EigenSinnTest {
   }
 
   TEST_F(ConvolutionColMajor, Backward1Padding2Dilated) {
-    Input<float, 4, ThreadPoolDevice, ColMajor> input;
+    Input<float, ThreadPoolDevice> input;
     input.set_input(cd.convInput);
 
     Conv2d<float, ThreadPoolDevice, ColMajor> conv2d(cd.kernelDims, { 1, 1 }, 1, 2);
@@ -145,7 +145,7 @@ namespace EigenSinnTest {
   }
 
   TEST_F(ConvolutionColMajor, Forward1Padding2Dilated) {
-    Input<float, 4, ThreadPoolDevice, ColMajor> input;
+    Input<float, ThreadPoolDevice> input;
     input.set_input(cd.convInput);
 
     Conv2d<float, ThreadPoolDevice, ColMajor> conv2d(cd.kernelDims, { 1, 1 }, 1, 2);

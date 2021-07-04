@@ -41,7 +41,7 @@ namespace EigenSinnTest {
 
   TEST_F(Tanh, Backward) {
 
-    Input<float, 2> input;
+    Input<float> input;
     input.set_input(cd.linearInput);
 
     EigenSinn::Tanh<float, 2> tanh;

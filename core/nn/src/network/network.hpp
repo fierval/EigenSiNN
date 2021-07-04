@@ -123,7 +123,7 @@ namespace EigenSinn {
 
     inline void save_to_onnx(EigenModel& model) {
 
-      auto * inp_layer = dynamic_cast<Input<Scalar, Rank, Device_, Layout>*>(network[0].layer.get());
+      auto * inp_layer = dynamic_cast<Input<Scalar,Device_>*>(network[0].layer.get());
 
       std::string output_name = "input.1";
       auto input_dims = inp_layer->get_dims();
@@ -154,7 +154,7 @@ namespace EigenSinn {
       EigenModel model(data);
 
       // create input layer
-      add(new Input<float, Rank, Device_, Layout>);
+      add(new Input<float, Device_>);
 
       onnx::GraphProto* graph = model.get_graph();
       OnnxLoader<Scalar, Device_> onnx_layers(model);
@@ -169,7 +169,7 @@ namespace EigenSinn {
 
     inline void set_input(DeviceTensor<Scalar, Rank, Device_, Layout>& tensor) {
 
-      auto inp_layer = dynamic_cast<Input<Scalar, Rank, Device_, Layout>*>(network[0].layer.get());
+      auto inp_layer = dynamic_cast<Input<Scalar, Device_>*>(network[0].layer.get());
       inp_layer->set_input(tensor);
     }
 
@@ -184,7 +184,7 @@ namespace EigenSinn {
       DeviceTensor<Scalar, Rank, Device_, Layout> inp(input_dims);
       inp.setZero();
 
-      dynamic_cast<Input<Scalar, Rank, Device_, Layout>*>(network[0].layer.get())->set_input(inp);
+      dynamic_cast<Input<Scalar, Device_>*>(network[0].layer.get())->set_input(inp);
 
       forward();
 

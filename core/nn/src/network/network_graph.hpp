@@ -8,6 +8,7 @@
 #include <boost/graph/named_function_params.hpp>
 
 #include <layers/layer_base.hpp>
+#include <layers/input.hpp>
 #include <optimizers/optimizer_base.hpp>
 
 // the predefined property types are listed here:
@@ -47,12 +48,17 @@ namespace EigenSinn {
   template <typename Scalar, typename Device_>
   class NetworkBase {
 
+    typedef std::vector<VertexData<Scalar, Device_>> VertexList;
+
   public:
     NetworkBase() {
     }
 
+    std::string add(Input<Scalar, Device_>* inp_layer) {
+      return std::string();
+    }
+
     // add one edge to the future graph
-    template<typename OptimizerType>
     std::string add(const std::string& input_name, LayerBase<Scalar, Device_>* layer) {
 
       // name the current vertex if it doesn't yet have a name
@@ -73,6 +79,7 @@ namespace EigenSinn {
         vertices.insert(vertex, std::vector< VertexData<Scalar, Device_>>);
       }
 
+      graph_capacity++;
       vertices[input_name].push_back(vertex);
 
       return out_name;
@@ -81,6 +88,16 @@ namespace EigenSinn {
     // walk the vertices and create an actual graph
     void compile() {
 
+      if (graph.has_value()) {
+        throw std::logic_error("Graph already created");
+      }
+
+      create_graph();
+      for(auto& inp_to_vertex : vertices)
+      {
+        VertexList& out_vertices = inp_to_vertex.second;
+        
+      }
     }
 
   protected:
@@ -92,11 +109,20 @@ namespace EigenSinn {
       return ss.str();
     }
 
+    void add_vertices(VertexData<Scalar, Device_>& vertex, VertexList& out_vertices) {
+
+      assert(graph);
+      std::for_each(out_vertices.begin(), out_vertices.end(), [&](VertexData<Scalar, Device_>& v) {
+        boost::add_edge(vertex, v, *grpah);
+        });
+    }
+
     void create_graph() {
       assert(!graph.has_value());
       assert(vertices.size() > 0);
+      assert(graph_capacity > 0);
 
-      graph = OptionalNetworkGraph<Scalar, Device_>(vertices.size());
+      graph = OptionalNetworkGraph<Scalar, Device_>(graph_capacity);
     }
 
   private:
@@ -107,6 +133,7 @@ namespace EigenSinn {
     // structure to build the graph from
     std::map<std::string, std::vector<VertexData<Scalar, Device_>>> vertices;
     
+    int graph_capacity = 0;
   };
 
 } // namespace EigenSinn

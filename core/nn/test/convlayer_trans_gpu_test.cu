@@ -27,7 +27,7 @@ namespace EigenSinnTest {
 
   TEST_F(TransConvolutionGpu, Backward1Padding2Dilated) {
 
-    Input<float, 4, GpuDevice> input;
+    Input<float, GpuDevice> input;
     input.set_input(cd1p.input_trans);
 
     TransConv2d<float, GpuDevice> conv2d(cd1p.kernelDims, padding, stride, dilation);

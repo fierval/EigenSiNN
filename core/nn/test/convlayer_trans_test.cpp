@@ -27,7 +27,7 @@ namespace EigenSinnTest {
 
   TEST_F(TransConvolution, Backward1Padding2Dilated) {
 
-    Input<float, 4> input;
+    Input<float> input;
     input.set_input(cd1p.input_trans);
 
     TransConv2d<float> conv2d(cd1p.kernelDims, padding, stride, dilation);
@@ -42,7 +42,7 @@ namespace EigenSinnTest {
 
   TEST_F(TransConvolution, Forward1Padding2Dilated) {
 
-    Input<float, 4> input;
+    Input<float> input;
     input.set_input(cd1p.input_trans);
 
     TransConv2d<float> conv2d(cd1p.kernelDims, padding, stride, dilation);

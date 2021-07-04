@@ -24,7 +24,7 @@ namespace EigenSinnTest {
 
   TEST_F(FullyConnected, BackpropNoBias) {
 
-    Input<float, 2> input;
+    Input<float> input;
     input.set_input(cd.linearInput);
 
     Linear<float> linear(cd.dims[1], cd.out_dims[1]);
@@ -40,7 +40,7 @@ namespace EigenSinnTest {
 
   TEST_F(FullyConnected, BackpropBias) {
 
-    Input<float, 2> input;
+    Input<float> input;
     input.set_input(cd.linearInput);
 
     Linear<float> linear(cd.dims[1], cd.out_dims[1]);

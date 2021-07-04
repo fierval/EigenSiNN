@@ -42,7 +42,7 @@ namespace EigenSinnTest {
 
   TEST_F(Softmax, Backward) {
 
-    Input<float, 2> input;
+    Input<float> input;
     input.set_input(cd.linearInput);
 
     EigenSinn::Softmax<float, 2> softmax;

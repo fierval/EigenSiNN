@@ -87,7 +87,7 @@ namespace EigenSinnTest {
 
   TEST_F(Tanh4dGpu, Backward) {
 
-    Input<float, 4, GpuDevice, RowMajor> input;
+    Input<float, GpuDevice> input;
     input.set_input(cd.convInput);
 
     Tanh<float, 4, GpuDevice, RowMajor> tanh;
@@ -101,7 +101,7 @@ namespace EigenSinnTest {
 
   TEST_F(Tanh4dGpu, BackwardCudnn) {
 
-    Input<float, 4, GpuDevice, RowMajor> input;
+    Input<float, GpuDevice> input;
     input.set_input(cd.convInput);
 
     Tanh<float, 4, GpuDevice, RowMajor> tanh;

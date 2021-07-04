@@ -62,7 +62,7 @@ namespace EigenSinnTest {
 
   TEST_F(ReLU2d, Backward) {
     
-    Input<float, 2> input;
+    Input<float> input;
     input.set_input(cd.linearInput);
 
     ReLU<float, 2> rl;
@@ -75,7 +75,7 @@ namespace EigenSinnTest {
 
   TEST_F(ReLU2d, LeakyBackward) {
 
-    Input<float, 2> input;
+    Input<float> input;
     input.set_input(cd.linearInput);
 
     LeakyReLU<float, 2> rl(thresh);

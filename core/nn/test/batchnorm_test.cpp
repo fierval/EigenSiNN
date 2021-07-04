@@ -43,7 +43,7 @@ namespace EigenSinnTest {
 
   TEST_F(Batchnorm1dTest, Backward) {
 
-    Input<float, 2> input_layer;
+    Input<float> input_layer;
     input_layer.set_input(input);
 
     BatchNormalizationLayer<float, 2> bn(cols, eps, momentum);

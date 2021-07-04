@@ -41,7 +41,7 @@ namespace EigenSinnTest {
 
   TEST_F(SigmoidGpu, Backward) {
 
-    Input<float, 2, GpuDevice> input;
+    Input<float, GpuDevice> input;
     input.set_input(cd.linearInput);
 
     EigenSinn::Sigmoid<float, 2, GpuDevice> sg;

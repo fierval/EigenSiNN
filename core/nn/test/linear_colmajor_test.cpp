@@ -24,7 +24,7 @@ namespace EigenSinnTest {
 
   TEST_F(FullyConnectedColMajor, BackpropNoBias) {
 
-    Input<float, 2, ThreadPoolDevice, ColMajor> input;
+    Input<float, ThreadPoolDevice> input;
     input.set_input(cd.linearInput);
 
     Linear<float, ThreadPoolDevice, ColMajor> linear(cd.dims[1], cd.out_dims[1]);
@@ -40,7 +40,7 @@ namespace EigenSinnTest {
 
   TEST_F(FullyConnectedColMajor, BackpropBias) {
 
-    Input<float, 2, ThreadPoolDevice, ColMajor> input;
+    Input<float, ThreadPoolDevice> input;
     input.set_input(cd.linearInput);
 
     Linear<float, ThreadPoolDevice, ColMajor> linear(cd.dims[1], cd.out_dims[1]);

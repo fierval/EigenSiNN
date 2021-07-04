@@ -23,7 +23,7 @@ namespace EigenSinnTest {
 
   TEST_F(Dropout, Forward) {
 
-    Input<float, 2> input;
+    Input<float> input;
     input.set_input(cd.linearInput);
 
     EigenSinn::Dropout<float, 2> dropout;
@@ -53,7 +53,7 @@ namespace EigenSinnTest {
 
   TEST_F(Dropout, Backward) {
 
-    Input<float, 2> input;
+    Input<float> input;
     input.set_input(cd.linearInput);
     auto linearLoss = cd.linearLoss.to_host();
 

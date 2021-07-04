@@ -232,7 +232,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4dColMajor, Backward) {
 
-    Input<float, 4, ThreadPoolDevice, ColMajor> input;
+    Input<float, ThreadPoolDevice> input;
     input.set_input(cd.convInput);
 
     MaxPooling<float, 4, ThreadPoolDevice, ColMajor> pl(extents2d, stride);
@@ -247,7 +247,7 @@ namespace EigenSinnTest {
 
   TEST_F(Pool4dColMajor, BackwardStride1) {
 
-    Input<float, 4, ThreadPoolDevice, ColMajor> input;
+    Input<float, ThreadPoolDevice> input;
     input.set_input(cd.convInput);
 
     SetUpStride1();

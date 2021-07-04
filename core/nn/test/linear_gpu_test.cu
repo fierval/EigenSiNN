@@ -23,7 +23,7 @@ namespace EigenSinnTest {
 
   TEST_F(FullyConnectedGpu, BackpropNoBias) {
 
-    Input<float, 2, GpuDevice> input;
+    Input<float, GpuDevice> input;
     input.set_input(cd.linearInput);
 
     Linear<float, GpuDevice> linear(cd.dims[1], cd.out_dims[1]);
@@ -39,7 +39,7 @@ namespace EigenSinnTest {
 
   TEST_F(FullyConnectedGpu, BackpropBias) {
 
-    Input<float, 2, GpuDevice> input;
+    Input<float, GpuDevice> input;
     input.set_input(cd.linearInput);
 
     Linear<float, GpuDevice> linear(cd.dims[1], cd.out_dims[1]);
