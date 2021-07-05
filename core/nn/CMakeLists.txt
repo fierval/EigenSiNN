@@ -11,7 +11,7 @@ set(TEST_SOURCES
     "src/onnx/onnx.proto3.pb.cc"
     "test/onnx_test.cpp"
     "test/batchnorm4d_test.cpp"
-    "test/boost_graph_test.cpp"
+    "test/network_graph_test.cpp"
 #    "test/sigmoid_gpu_test.cu"
 #    "test/sigmoid4d_gpu_test.cu"
 #    "test/sigmoid_test.cpp"
