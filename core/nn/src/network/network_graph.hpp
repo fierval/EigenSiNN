@@ -29,6 +29,11 @@ namespace EigenSinn {
 
     PtrLayer<Scalar, Device_> layer;
 
+    // to be able to store it in a set
+    inline bool operator< (const VertexData d) {
+      return layer->get_layer_name() < d.layer->get_layer_name();
+    }
+
     VertexData(LayerBase<Scalar, Device_>* _layer)
       : layer(_layer) {
 
