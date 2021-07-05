@@ -16,7 +16,7 @@
 // http://www.boost.org/doc/libs/1_76_0/libs/graph/doc/bundles.html
 
 namespace EigenSinn {
-  
+
   template <typename Scalar, typename Device_>
   using PtrLayer = std::shared_ptr<LayerBase<Scalar, Device_>>;
 
@@ -26,21 +26,18 @@ namespace EigenSinn {
   // vertex properties
   template <typename Scalar, typename Device_>
   struct VertexData {
-    std::string op_name; //layer or operation
+
     PtrLayer<Scalar, Device_> layer;
 
-    std::string out_name;
+    VertexData(LayerBase<Scalar, Device_>* _layer)
+      : layer(_layer) {
 
-    VertexData(const std::string& _op_name, LayerBase<Scalar, Device_> * _layer, std::string& _out_name)
-      : op_name(_op_name)
-      , layer(_layer)
-      , out_name(_out_name)  {
-        
     }
   };
 
   template <typename Scalar, typename Device_>
-  using NetworkGraph =  boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, VertexData<Scalar, Device_>>;
+  using NetworkGraph = boost::adjacency_list<boost::setS, boost::vecS, boost::directedS,
+    boost::property<boost::vertex_name_t, std::string, VertexData<Scalar, Device_>>;
 
   template <typename Scalar, typename Device_>
   using OptionalNetworkGraph = std::optional<NetworkGraph<Scalar, Device_>>;
@@ -54,26 +51,33 @@ namespace EigenSinn {
     NetworkBase() {
     }
 
+    // seed the graph with network inputs
     std::string add(Input<Scalar, Device_>* inp_layer) {
-      return std::string();
+
+      // we've been here before!
+      if (!inp_layer->get_layer_name().empty()) {
+        return inp_layer->get_layer_name();
+      }
+
+      inp_layer->set_layer_name(get_layer_name());
+      std::string out_name(get_out_name());
+      input_vertices.push_back(VertexData<Scalar, Device_>(inp_layer));
+      graph_capacity++;
+
     }
 
     // add one edge to the future graph
     std::string add(const std::string& input_name, LayerBase<Scalar, Device_>* layer) {
 
       // name the current vertex if it doesn't yet have a name
-      if (get_layer_name().empty()) {
-        std::stringstream opname_stream;
-        opname_stream << layer->get_op_name() << "_" << get_current_layer_suffix();
+      if (layer->get_layer_name().empty()) {
 
-        layer->set_layer_name(opname_stream.str());
+        layer->set_layer_name(get_layer_name());
+        net_vertices.insert(layer->get_layer_name(), VertexData<Scalar, Device_>(layer));
       }
-
-      // name output tensor
-      std::string out_name(get_out_name());
-
+      
       // crate the vertex & insert it into the map
-      VertexData<Scalar, Device_> vertex(layer->get_layer_name(), layer, out_name);
+      VertexData<Scalar, Device_> vertex = net_vertices[layer->get_layer_name()];
 
       if (vertices.find(input_name) == vertices.end()) {
         vertices.insert(vertex, std::vector< VertexData<Scalar, Device_>>);
@@ -93,10 +97,10 @@ namespace EigenSinn {
       }
 
       create_graph();
-      for(auto& inp_to_vertex : vertices)
+      for (auto& inp_to_vertex : vertices)
       {
         VertexList& out_vertices = inp_to_vertex.second;
-        
+
       }
     }
 
@@ -107,6 +111,12 @@ namespace EigenSinn {
       std::stringstream ss;
       ss << "out_" << current_output_suffix++;
       return ss.str();
+    }
+
+    std::string get_layer_name() {
+      std::stringstream opname_stream;
+      opname_stream << layer->get_op_name() << "_" << get_current_layer_suffix();
+      return opname_stream.str();
     }
 
     void add_vertices(VertexData<Scalar, Device_>& vertex, VertexList& out_vertices) {
@@ -131,8 +141,12 @@ namespace EigenSinn {
     int current_output_suffix = 400;
 
     // structure to build the graph from
-    std::map<std::string, std::vector<VertexData<Scalar, Device_>>> vertices;
-    
+    std::map<std::string, VertexList> vertices;
+
+    // this is how we "seed" the edges
+    std::vector<VertexList> input_vertices;
+    std::map<std::string, VertexData<Scalar, Device_>> net_vertices;
+
     int graph_capacity = 0;
   };
 
