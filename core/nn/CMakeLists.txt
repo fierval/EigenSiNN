@@ -7,27 +7,27 @@ set(TEST_EXE eigentest)
 
 # discover test sources
  file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "test/*.cu" "src/onnx/*.cc")
-set(TEST_SOURCES 
-    "src/onnx/onnx.proto3.pb.cc"
-    "test/onnx_test.cpp"
-    "test/batchnorm4d_test.cpp"
-    "test/network_graph_test.cpp"
+# set(TEST_SOURCES 
+#    "src/onnx/onnx.proto3.pb.cc"
+#    "test/onnx_test.cpp"
+#    "test/batchnorm4d_test.cpp"
+#    "test/network_graph_test.cpp"
 #    "test/sigmoid_gpu_test.cu"
 #    "test/sigmoid4d_gpu_test.cu"
 #    "test/sigmoid_test.cpp"
 #     "test/maxpooling4d_gpu_test.cu"
 #    "test/cudnn_test.cu"
-    "test/convlayer_test.cpp"
-    "test/convlayer_cudnn_test.cu"
+#    "test/convlayer_test.cpp"
+#    "test/convlayer_cudnn_test.cu"
 #    "test/convlayer_gpu_test.cu"
 #    "test/memory_test_gpu.cu"
-    "test/convlayer_trans_test.cpp"
+#    "test/convlayer_trans_test.cpp"
 #    "test/convlayer_trans_gpu_test.cu"
 #    "test/convlayer_trans_cudnn_test.cu"
 #    "test/maxpooling4d_test.cpp"
 #    "test/maxpooling4d_rowmajor_test.cpp"
 #    "test/maxpooling4d_gpu_test.cu"
-    )
+#    )
 
 message(STATUS "Sources: ${TEST_SOURCES}")
 message(STATUS "CUDA Include: ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
