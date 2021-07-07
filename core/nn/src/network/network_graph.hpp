@@ -31,7 +31,7 @@ namespace EigenSinn {
 
     typedef boost::property <boost::vertex_name_t, std::string, VertexData<Scalar, Device_>> VertexProperty;
 
-    typedef boost::adjacency_list<boost::setS, boost::vecS, boost::directedS, VertexProperty>
+    typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, VertexProperty>
       NetworkGraph;
 
     // property map
@@ -51,7 +51,8 @@ namespace EigenSinn {
     }
 
     void print_graph() {
-      boost::print_graph(graph);
+      vertex_name name = get(boost::vertex_name, graph);
+      boost::print_graph(graph, name);
     }
 
   protected:
@@ -101,12 +102,16 @@ namespace EigenSinn {
         assert(vertices.count(layer_name) == 0);
 
         v_out = boost::add_vertex(VertexProperty(layer_name), graph);
+        graph[v_out].layer.reset(layer);
+
         vertices.insert(std::make_pair(layer_name, v_out));
       }
 
       v_out = vertices[layer_name];
       v_in = vertices[input_name];
       boost::add_edge(v_in, v_out, graph);
+
+      std::cerr << "Layer property: " << graph[v_in].layer->get_layer_name() << " to " << graph[v_out].layer->get_layer_name() << std::endl;
       return layer_name;
     }
 
