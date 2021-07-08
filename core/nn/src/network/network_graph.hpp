@@ -59,8 +59,8 @@ namespace EigenSinn {
     // walk the vertices and attach the optimizer
     // add loss function
     template<typename Optimizer>
-    void compile(const std::string& logits, const Loss& loss) {
-
+    void add_loss(const std::string& logits, const Loss& loss) {
+      this->loss = std::make_pair(logits, loss);
     }
 
     int get_current_layer_suffix() { return current_name_suffix++; }
@@ -143,7 +143,7 @@ namespace EigenSinn {
     std::map<std::string, vertex_t> vertices;
     std::map<std::string, PtrOptimizer> optimizers;
 
-    Loss loss;
+    std::pair<std::string, Loss> name_loss;
 
   };
 
