@@ -21,6 +21,18 @@ namespace EigenSinn {
       assert(beta2 > 0.0);
     }
 
+    Adam(Adam& a) : OptimizerBase<Scalar, Device_, Layout>(a.lr) {
+      if (this == a) {
+        return;
+      }
+
+      beta1 = a.beta1;
+      beta2 = a.beta2;
+      eps = a.eps;
+      cur_beta1 = 1;
+      cur_beta2 = 1;
+    }
+
     // Computation: https://towardsdatascience.com/adam-latest-trends-in-deep-learning-optimization-6be9a291375c
     inline DeviceWeightBiasTuple<Scalar, Device_> step(LayerBase<Scalar, Device_>& layer) override {
 

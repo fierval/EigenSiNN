@@ -133,6 +133,8 @@ namespace EigenSinn {
 
     // structure to build the graph from
     std::map<std::string, vertex_t> vertices;
+    std::map<std::string, OptimizerBase<Scalar, Device_, RowMajor>> optimizers;
+
     Loss loss;
 
   };
