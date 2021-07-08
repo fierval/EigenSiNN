@@ -183,6 +183,8 @@ namespace EigenSinn {
       return layer_output.vec_dims();
     }
 
+    bool is_optimizable() override { return true; }
+
   private:
 
     DeviceTensor<Scalar, 2, Device_, Layout> weights;

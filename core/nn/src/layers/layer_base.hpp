@@ -60,6 +60,9 @@ namespace EigenSinn {
       layer_name = name;
     }
 
+    // does the layer have anything to be tuned with an optimizer?
+    virtual bool is_optimizable() { return false; }
+
   protected:
     bool is_cudnn = false;
     std::string op_name;

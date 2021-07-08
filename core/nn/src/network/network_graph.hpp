@@ -9,6 +9,8 @@
 #include <boost/graph/graph_utility.hpp>
 
 #include <layers/all.hpp>
+#include <optimizers/all.hpp>
+#include <losses/all.hpp>
 
 // the predefined property types are listed here:
 // http://www.boost.org/doc/libs/1_76_0/libs/graph/doc/using_adjacency_list.html#sec:adjacency-list-properties
@@ -16,17 +18,8 @@
 
 namespace EigenSinn {
 
-  template <typename Scalar, typename Device_>
-  using PtrLayer = std::shared_ptr<LayerBase<Scalar, Device_>>;
-
-  // vertex properties
-  template <typename Scalar, typename Device_>
-  struct VertexData {
-
-    PtrLayer<Scalar, Device_> layer;
-  };
-
-  template <typename Scalar, typename Device_>
+  template <typename Scalar, typename Device_,
+    template <typename Scalar, typename Actual, Index RankLoss, typename Device_, int Layout = RowMajor> class Loss>
   class NetworkBase {
 
     typedef boost::property <boost::vertex_name_t, std::string, VertexData<Scalar, Device_>> VertexProperty;
@@ -40,15 +33,21 @@ namespace EigenSinn {
     // vertex descriptor
     typedef typename boost::graph_traits<NetworkGraph>::vertex_descriptor vertex_t;
 
+    typedef std::shared_ptr<Loss> PtrLoss;
+    typedef std::shared_ptr<OptimizerBase<Scalar, Device_, RowMajor>> PtrOptimizer;
+    typedef std::shared_ptr<LayerBase<Scalar, Device_>> PtrLayer;
+
+    struct VertexData {
+
+      PtrLayer layer;
+      PtrOptimizer optimizer = nullptr;
+    };
+
   public:
     NetworkBase() {
+      static_assert(Layout == RowMajor, "Only RowMajor layout is supported");
     }
 
-    // seed the graph with network inputs
-    // walk the vertices and create an actual graph
-    void compile() {
-
-    }
 
     void print_graph() {
       vertex_name name = get(boost::vertex_name, graph);
@@ -56,6 +55,14 @@ namespace EigenSinn {
     }
 
   protected:
+
+    // walk the vertices and attach the optimizer
+    // add loss function
+    template<typename Optimizer>
+    void compile(const std::string& logits, const Loss<Scalar, Actual, Rank, Device_, Layout>& loss) {
+
+    }
+
     int get_current_layer_suffix() { return current_name_suffix++; }
 
     std::string get_layer_name(const std::string& op_name) {
@@ -89,7 +96,8 @@ namespace EigenSinn {
     }
 
     // add one edge to the future graph
-    std::string add(const std::string& input_name, LayerBase<Scalar, Device_>* layer) {
+    // for now we need to instantiate the optimizer together with the vertex.
+    std::string add(const std::string& input_name, LayerBase<Scalar, Device_>* layer, OptimizerBase<Scalar, Device_, Layout>* optimizer = nullptr) {
 
       assert(vertices.count(input_name) > 0);
       std::string& layer_name = layer->get_layer_name();
@@ -115,12 +123,18 @@ namespace EigenSinn {
       return layer_name;
     }
 
+    bool is_optimizable(vertex_t& v) {
+      return graph[v].layer->is_optimizable();
+    }
+
   private:
     NetworkGraph graph;
     int current_name_suffix = 1;
 
     // structure to build the graph from
     std::map<std::string, vertex_t> vertices;
+    Loss loss;
+
   };
 
 } // namespace EigenSinn

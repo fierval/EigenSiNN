@@ -227,6 +227,8 @@ namespace EigenSinn {
       return layer_output.vec_dims();
     }
 
+    bool is_optimizable() override { return true; }
+
   private:
     DeviceTensor<Scalar, 4, Device_, Layout> kernel, layer_output, dX, dW;
     DeviceTensor<Scalar, 1, Device_, Layout> bias, loss_by_bias_derivative;
