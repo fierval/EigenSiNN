@@ -21,14 +21,16 @@ namespace EigenSinn {
       assert(beta2 > 0.0);
     }
 
-    Adam(Adam& a) : OptimizerBase<Scalar, Device_, Layout>(a.lr) {
-      if (this == a) {
+    Adam(Adam& a)
+      : OptimizerBase<Scalar, Device_, Layout>(a.lr)
+      , beta1(a.beta1)
+      , beta2(a.beta2)
+      , eps(a.eps) {
+
+      if (this == &a) {
         return;
       }
 
-      beta1 = a.beta1;
-      beta2 = a.beta2;
-      eps = a.eps;
       cur_beta1 = 1;
       cur_beta2 = 1;
     }
@@ -36,8 +38,8 @@ namespace EigenSinn {
     // Computation: https://towardsdatascience.com/adam-latest-trends-in-deep-learning-optimization-6be9a291375c
     inline DeviceWeightBiasTuple<Scalar, Device_> step(LayerBase<Scalar, Device_>& layer) override {
 
-     DeviceTensor<Scalar, Rank, Device_, Layout> weights(layer.get_weights()), dweights(layer.get_loss_by_weights_derivative());
-     DeviceTensor<Scalar, 1, Device_, Layout> bias(layer.get_bias()), dbias(layer.get_loss_by_bias_derivative());
+      DeviceTensor<Scalar, Rank, Device_, Layout> weights(layer.get_weights()), dweights(layer.get_loss_by_weights_derivative());
+      DeviceTensor<Scalar, 1, Device_, Layout> bias(layer.get_bias()), dbias(layer.get_loss_by_bias_derivative());
 
       if (!param_set) {
         param_set = true;

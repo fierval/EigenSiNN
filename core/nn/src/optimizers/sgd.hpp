@@ -20,13 +20,10 @@ namespace EigenSinn {
       assert((nesterov && momentum > 0.0) || !nesterov);
     }
 
-    SGD(SGD& s) : OptimizerBase<Scalar, Device_, Layout>(a.lr) {
-
-      if (this == &s) {
-        return;
-      }
-      nesterov = s.nesterov;
-      momentum = s.momentum;
+    SGD(SGD& s) : OptimizerBase<Scalar, Device_, Layout>(a.lr)
+    : nesterov(s.nesterov)
+    , momentum(s.momentum){
+    
     }
 
     // PyTorch computation of SGD: https://pytorch.org/docs/stable/_modules/torch/optim/sgd.html#SGD

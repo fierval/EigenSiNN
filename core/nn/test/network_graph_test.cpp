@@ -15,6 +15,6 @@ protected:
 
 TEST_F(GraphTest, Create) {
 
-  Cifar10<float, ThreadPoolDevice> cifar10(10);
+  Cifar10<float, std::uint8_t, ThreadPoolDevice> cifar10(10, 0.001);
   cifar10.print_graph();
 }

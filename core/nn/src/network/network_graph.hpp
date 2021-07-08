@@ -18,11 +18,17 @@
 
 namespace EigenSinn {
 
-  template <typename Scalar, typename Device_,
-    template <typename Scalar, typename Actual, Index RankLoss, typename Device_, int Layout = RowMajor> class Loss>
+  template <typename Scalar, typename Device_, typename Loss>
   class NetworkBase {
 
-    typedef boost::property <boost::vertex_name_t, std::string, VertexData<Scalar, Device_>> VertexProperty;
+    typedef std::shared_ptr<LayerBase<Scalar, Device_>> PtrLayer;
+
+    struct VertexData {
+
+      PtrLayer layer;
+    };
+
+    typedef boost::property <boost::vertex_name_t, std::string, VertexData> VertexProperty;
 
     typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, VertexProperty>
       NetworkGraph;
@@ -35,17 +41,11 @@ namespace EigenSinn {
 
     typedef std::shared_ptr<Loss> PtrLoss;
     typedef std::shared_ptr<OptimizerBase<Scalar, Device_, RowMajor>> PtrOptimizer;
-    typedef std::shared_ptr<LayerBase<Scalar, Device_>> PtrLayer;
-
-    struct VertexData {
-
-      PtrLayer layer;
-      PtrOptimizer optimizer = nullptr;
-    };
+    
 
   public:
     NetworkBase() {
-      static_assert(Layout == RowMajor, "Only RowMajor layout is supported");
+      
     }
 
 
@@ -59,7 +59,7 @@ namespace EigenSinn {
     // walk the vertices and attach the optimizer
     // add loss function
     template<typename Optimizer>
-    void compile(const std::string& logits, const Loss<Scalar, Actual, Rank, Device_, Layout>& loss) {
+    void compile(const std::string& logits, const Loss& loss) {
 
     }
 
@@ -97,7 +97,7 @@ namespace EigenSinn {
 
     // add one edge to the future graph
     // for now we need to instantiate the optimizer together with the vertex.
-    std::string add(const std::string& input_name, LayerBase<Scalar, Device_>* layer, OptimizerBase<Scalar, Device_, Layout>* optimizer = nullptr) {
+    std::string add(const std::string& input_name, LayerBase<Scalar, Device_>* layer, OptimizerBase<Scalar, Device_, RowMajor>* optimizer = nullptr) {
 
       assert(vertices.count(input_name) > 0);
       std::string& layer_name = layer->get_layer_name();
@@ -120,6 +120,11 @@ namespace EigenSinn {
       boost::add_edge(v_in, v_out, graph);
 
       std::cerr << "Layer property: " << graph[v_in].layer->get_layer_name() << " to " << graph[v_out].layer->get_layer_name() << std::endl;
+
+      if (optimizer != nullptr) {
+        optimizers.insert(std::make_pair(layer_name, PtrOptimizer(optimizer)));
+      }
+
       return layer_name;
     }
 
@@ -133,7 +138,7 @@ namespace EigenSinn {
 
     // structure to build the graph from
     std::map<std::string, vertex_t> vertices;
-    std::map<std::string, OptimizerBase<Scalar, Device_, RowMajor>> optimizers;
+    std::map<std::string, PtrOptimizer> optimizers;
 
     Loss loss;
 
