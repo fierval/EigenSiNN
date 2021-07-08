@@ -100,6 +100,9 @@ namespace EigenSinn {
     std::string add(const std::string& input_name, LayerBase<Scalar, Device_>* layer, OptimizerBase<Scalar, Device_, RowMajor>* optimizer = nullptr) {
 
       assert(vertices.count(input_name) > 0);
+
+      assert((layer->is_optimizable() && optimizer != nullptr) || (!layer->is_optimizable() && optimizer == nullptr));
+
       std::string& layer_name = layer->get_layer_name();
       vertex_t v_out, v_in;
 
