@@ -48,8 +48,9 @@ namespace EigenSinn {
     // smart pointers to data
     typedef std::shared_ptr<Loss> PtrLoss;
     typedef std::shared_ptr<OptimizerBase<Scalar, Device_, RowMajor>> PtrOptimizer;
-
-
+    typedef PtrTensorAdapter<Scalar, Device_> PtrTensor;
+    typedef std::vector<PtrTensorAdapter<Scalar, Device_>> TensorVector;
+        
   public:
     NetworkBase() {
 
@@ -103,7 +104,7 @@ namespace EigenSinn {
 
       for (auto& v : forward_order) {
 
-        std::vector<PtrTensorAdapter<Scalar, Device_>> inputs;
+        TensorVector inputs;
         InEdgeIter in, in_end;
 
         // input layer
@@ -122,7 +123,26 @@ namespace EigenSinn {
 
     }
 
+    std::vector<std::string>& get_input_names() {
+      return input_vertices;
+    }
+
   protected:
+
+    // single input network
+    void set_input(PtrTensor& input) {
+      
+      assert(input_vertices.size() == 1);
+      graph[vertices[input_vertices[0]]].layer->set_input(input);
+    }
+
+    void set_input(std::map<std::string, PtrTensor>& inputs) {
+
+      assert(inputs.size() > 0);
+      std::for_each(inputs.begin(), inputs.end(), [&](std::pair<std::string, PtrTensor> p) {
+        graph[vertices[p.first]].layer->set_input(p.second);
+        });
+    }
 
     // walk the vertices and attach the optimizer
     // add loss function
@@ -161,7 +181,10 @@ namespace EigenSinn {
       vertex_t v = boost::add_vertex(VertexProperty(inp_layer_name), graph);
       graph[v].layer.reset(inp_layer);
 
-      vertices.insert(std::make_pair(inp_layer_name, v));
+      auto name_vertex = std::make_pair(inp_layer_name, v);
+      vertices.insert(name_vertex);
+      input_vertices.push_back(inp_layer_name);
+
       return inp_layer_name;
     }
 
@@ -213,6 +236,7 @@ namespace EigenSinn {
     std::map<std::string, PtrOptimizer> optimizers;
 
     std::pair<std::string, std::shared_ptr<Loss>> name_loss;
+    std::vector<std::string> input_vertices;
 
     std::deque<vertex_t> forward_order;
     bool inited = false;

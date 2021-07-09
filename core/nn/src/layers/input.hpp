@@ -39,6 +39,10 @@ namespace EigenSinn {
       input = const_cast<DeviceTensor<Scalar, Rank, Device_, Layout>&>(inp_tensor).raw();
     }
 
+    void set_input(PtrTensorAdapter<Scalar, Device_>& raw_input) {
+      input = raw_input;
+    }
+
     // Required overrides
     void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer_base) override {};
     void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {};
