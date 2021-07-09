@@ -84,6 +84,44 @@ namespace EigenSinn {
           });
       }
     }
+
+    void init() {
+      assert(!inited);
+      for (auto& v : forward_order) {
+        graph[v].layer->init();
+      }
+      inited = true;
+    }
+
+    void forward() {
+      // we should have topologically sorted the graph
+      assert(vertices.size() > 0);
+
+      if (!inited) {
+        init();
+      }
+
+      for (auto& v : forward_order) {
+
+        std::vector<PtrTensorAdapter<Scalar, Device_>> inputs;
+        InEdgeIter in, in_end;
+
+        // input layer
+        if (in == in_end) { continue; }
+
+        for (boost::tie(in, in_end) = boost::in_edges(v, graph); in != in_end; in++) {
+
+          vertex_t inp = boost::source(*in, graph);
+          inputs.push_back(graph[inp].layer->get_output());
+        }
+
+        // TODO: enable multi-input layers!!!
+        PtrLayer current_layer = graph[v].layer;
+        current_layer->forward(inputs);
+      }
+
+    }
+
   protected:
 
     // walk the vertices and attach the optimizer
@@ -165,31 +203,6 @@ namespace EigenSinn {
       return graph[v].layer->is_optimizable();
     }
 
-    void forward() {
-      // we should have topologically sorted the graph
-      assert(vertices.size() > 0);
-
-      for (auto& v : vertices) {
-        
-        std::vector<PtrLayer> inputs;
-        InEdgeIter in, in_end;
-
-        // input layer
-        if (in == in_end) { continue; }
-
-        for (std::tie(in, in_end) = boost::in_edges(v, graph); in != in_end; in++) {
-
-          vertex_t inp = boost::source(*in, graph);
-          inputs.push_back(graph[inp].layer);
-        }
-
-        // TODO: enable multi-input layers!!!
-        PtrLayer current_layer = graph[v].layer;
-        current_layer->forward(inputs);
-      }
-
-    }
-
   private:
     NetworkGraph graph;
 
@@ -202,7 +215,7 @@ namespace EigenSinn {
     std::pair<std::string, std::shared_ptr<Loss>> name_loss;
 
     std::deque<vertex_t> forward_order;
-
+    bool inited = false;
   };
 
 } // namespace EigenSinn
