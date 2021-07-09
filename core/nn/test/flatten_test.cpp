@@ -30,9 +30,9 @@ namespace EigenSinnTest {
 
     Flatten<float> conv2d;
 
-    conv2d.forward(input);
+    conv2d.forward(input.get_output());
 
-    conv2d.backward(input, conv2d.get_output());
+    conv2d.backward(input.get_output(), conv2d.get_output());
 
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.convInput, conv2d.get_loss_by_input_derivative()));

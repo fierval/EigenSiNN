@@ -27,7 +27,7 @@ namespace EigenSinnTest {
     input.set_input(cd.linearInput);
 
     EigenSinn::Dropout<float, 2> dropout;
-    dropout.forward(input);
+    dropout.forward(input.get_output());
 
     auto linearInput = cd.linearInput.to_host();
     Tensor<float, 2, RowMajor> output = DeviceTensor<float, 2>(dropout.get_output()).to_host();
@@ -59,8 +59,8 @@ namespace EigenSinnTest {
 
 
     EigenSinn::Dropout<float, 2> dropout;
-    dropout.forward(input);
-    dropout.backward(input, cd.linearLoss.raw());
+    dropout.forward(input.get_output());
+    dropout.backward(input.get_output(), cd.linearLoss.raw());
 
     Tensor<float, 2, RowMajor> dinput = DeviceTensor<float, 2>(dropout.get_loss_by_input_derivative()).to_host();
 

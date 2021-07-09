@@ -37,11 +37,15 @@ namespace EigenSinn {
 
     // property map
     typedef typename boost::property_map<NetworkGraph, boost::vertex_name_t >::type vertex_name;
-    typedef typename boost::property_map<boost::reverse_graph<NetworkGraph>, boost::vertex_name_t >::type vertex_name_rev;
 
     // vertex descriptor
     typedef typename boost::graph_traits<NetworkGraph>::vertex_descriptor vertex_t;
 
+    // edge iterators
+    typedef typename boost::graph_traits<NetworkGraph>::out_edge_iterator OutEdgeIter;
+    typedef typename boost::graph_traits<NetworkGraph>::in_edge_iterator InEdgeIter;
+
+    // smart pointers to data
     typedef std::shared_ptr<Loss> PtrLoss;
     typedef std::shared_ptr<OptimizerBase<Scalar, Device_, RowMajor>> PtrOptimizer;
 
@@ -84,7 +88,7 @@ namespace EigenSinn {
 
     // walk the vertices and attach the optimizer
     // add loss function
-    void add_loss_and_terminate(const std::string& logits) {
+    void add_loss_and_complete(const std::string& logits) {
       this->name_loss = std::make_pair(logits, std::make_shared<Loss>());
 
       // we will reverse-iterate during backprop
@@ -159,6 +163,31 @@ namespace EigenSinn {
 
     bool is_optimizable(vertex_t& v) {
       return graph[v].layer->is_optimizable();
+    }
+
+    void forward() {
+      // we should have topologically sorted the graph
+      assert(vertices.size() > 0);
+
+      for (auto& v : vertices) {
+        
+        std::vector<PtrLayer> inputs;
+        InEdgeIter in, in_end;
+
+        // input layer
+        if (in == in_end) { continue; }
+
+        for (std::tie(in, in_end) = boost::in_edges(v, graph); in != in_end; in++) {
+
+          vertex_t inp = boost::source(*in, graph);
+          inputs.push_back(graph[inp].layer);
+        }
+
+        // TODO: enable multi-input layers!!!
+        PtrLayer current_layer = graph[v].layer;
+        current_layer->forward(inputs);
+      }
+
     }
 
   private:

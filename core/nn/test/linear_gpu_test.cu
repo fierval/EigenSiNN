@@ -29,8 +29,8 @@ namespace EigenSinnTest {
     Linear<float, GpuDevice> linear(cd.dims[1], cd.out_dims[1]);
 
     linear.init(cd.weights.to_host());
-    linear.forward(input);
-    linear.backward(input, cd.fakeloss.raw());
+    linear.forward(input.get_output());
+    linear.backward(input.get_output(), cd.fakeloss.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.output, linear.get_output()));
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dinput, linear.get_loss_by_input_derivative()));
@@ -45,8 +45,8 @@ namespace EigenSinnTest {
     Linear<float, GpuDevice> linear(cd.dims[1], cd.out_dims[1]);
 
     linear.init(cd.weights.to_host(), cd.bias.to_host());
-    linear.forward(input);
-    linear.backward(input, cd.fakeloss.raw());
+    linear.forward(input.get_output());
+    linear.backward(input.get_output(), cd.fakeloss.raw());
 
     cd.output.setValues({ { 0.23947978,  1.57379603,  0.23219500,  0.99900943},
         { 1.11431766, -1.17991734, -0.41367567,  1.14438200},

@@ -22,9 +22,9 @@ namespace EigenSinn {
 
     }
 
-    void forward(LayerBase<Scalar, Device_>& prev_layer) override {
+    void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer) override {
 
-      DeviceTensor<Scalar, Rank, Device_, Layout> x(prev_layer.get_output());
+      DeviceTensor<Scalar, Rank, Device_, Layout> x(prev_layer);
 
 #ifdef __CUDACC__
       // no need to allocate output memory if we aren't using cudnn
@@ -48,7 +48,7 @@ namespace EigenSinn {
       mask = res.first;
     }
 
-    void backward(LayerBase<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {
+    void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> y(next_layer_grad);
 #ifdef __CUDACC__

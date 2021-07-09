@@ -24,7 +24,7 @@ namespace EigenSinnTest {
       fc = new Linear<float, ThreadPoolDevice, ColMajor>(cd.dims[1], cd.out_dims[1]);
 
       fc->init(cd.weights.to_host());
-      fc->forward(inp);
+      fc->forward(inp.get_output());
     }
 
     void TearDown() {

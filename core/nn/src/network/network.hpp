@@ -49,7 +49,7 @@ namespace EigenSinn {
       }
 
       for (int i = 1; i < network.size(); i++) {
-        network[i].layer->forward(*network[i - 1].layer);
+        network[i].layer->forward(network[i - 1].layer->get_output());
       }
     }
 
@@ -66,10 +66,10 @@ namespace EigenSinn {
       for (size_t i = network.size() - 1; i > 0; i--) {
 
         if (i == network.size() - 1) {
-          network[i].layer->backward(*network[i - 1].layer, loss_derivative);
+          network[i].layer->backward(network[i - 1].layer->get_output(), loss_derivative);
           continue;
         }
-        network[i].layer->backward(*network[i - 1].layer, network[i + 1].layer->get_loss_by_input_derivative());
+        network[i].layer->backward(network[i - 1].layer->get_output(), network[i + 1].layer->get_loss_by_input_derivative());
       }
     }
 

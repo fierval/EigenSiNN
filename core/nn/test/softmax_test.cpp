@@ -47,8 +47,8 @@ namespace EigenSinnTest {
 
     EigenSinn::Softmax<float, 2> softmax;
     softmax.init();
-    softmax.forward(input);
-    softmax.backward(input, cd.linearLoss.raw());
+    softmax.forward(input.get_output());
+    softmax.backward(input.get_output(), cd.linearLoss.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(softmax.get_output(), output));
     EXPECT_TRUE(is_elementwise_approx_eq(softmax.get_loss_by_input_derivative(), dinput));

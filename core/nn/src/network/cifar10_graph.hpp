@@ -39,7 +39,7 @@ namespace EigenSinn {
       // cross-entropy loss includes the softmax non-linearity
       x = add(x, new Linear<Scalar, Device_, RowMajor>(84, num_classes), new Adam(*adam_2rank));
 
-      add_loss_and_terminate(x);
+      add_loss_and_complete(x);
 
     }
   };

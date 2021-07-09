@@ -31,8 +31,8 @@ namespace EigenSinnTest {
 
     ReLU<float, 4, GpuDevice, RowMajor> rl;
     rl.init();
-    rl.forward(input);
-    rl.backward(input, cd.convInput.raw());
+    rl.forward(input.get_output());
+    rl.backward(input.get_output(), cd.convInput.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(rl.get_loss_by_input_derivative(), rd.dreluInput, 3e-5));
 
@@ -46,10 +46,10 @@ namespace EigenSinnTest {
     ReLU<float, 4, GpuDevice, RowMajor> rl;
     rl.set_cudnn(true);
     rl.init();
-    rl.forward(input);
+    rl.forward(input.get_output());
     EXPECT_TRUE(is_elementwise_approx_eq(rl.get_output(), rd.reluOutput, 3e-5));
     
-    rl.backward(input, cd.convInput.raw());
+    rl.backward(input.get_output(), cd.convInput.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(rl.get_loss_by_input_derivative(), rd.dreluInput, 3e-5));
 
@@ -62,10 +62,10 @@ namespace EigenSinnTest {
 
     LeakyReLU<float, 4, GpuDevice, RowMajor> rl(rd.leaky_thres);
     rl.init();
-    rl.forward(input);
+    rl.forward(input.get_output());
     EXPECT_TRUE(is_elementwise_approx_eq(rl.get_output(), rd.leakyReluOutput, 3e-5));
 
-    rl.backward(input, cd.convInput.raw());
+    rl.backward(input.get_output(), cd.convInput.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(rl.get_loss_by_input_derivative(), rd.dleakyReluInput, 3e-5));
 

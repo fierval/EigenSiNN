@@ -58,12 +58,12 @@ namespace EigenSinnTest {
       {1.90745224e-04, 3.91245958e-05, -1.86752446e-03, -4.88256179e-02, -2.96444632e-04 }});
 
     bn.init(beta, gamma);
-    bn.forward(input_layer);
+    bn.forward(input_layer.get_output());
 
     EXPECT_TRUE(is_elementwise_approx_eq(DeviceTensor<float, 2>(output), bn.get_output()));
 
     DeviceTensor<float, 2> loss_device(loss);
-    bn.backward(input_layer, loss_device.raw());
+    bn.backward(input_layer.get_output(), loss_device.raw());
 
     EXPECT_TRUE((is_elementwise_approx_eq<float, 2>(expected_derivative, bn.get_loss_by_input_derivative(), 4e-5)));
     EXPECT_TRUE((is_elementwise_approx_eq<float, 1>(exp_dbeta, bn.get_loss_by_bias_derivative(), 1e-5)));

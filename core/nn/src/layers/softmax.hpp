@@ -25,9 +25,9 @@ namespace EigenSinn {
       reshape_dims[Rank - 1] = 1;
     }
 
-    void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
+    void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer_any) override {
 
-      DeviceTensor<Scalar, Rank, Device_, Layout> prev_layer(prev_layer_any.get_output());
+      DeviceTensor<Scalar, Rank, Device_, Layout> prev_layer(prev_layer_any);
       
       // we have never initialized or switched from train to test
       // initialize the "1" tensor used for sigmoid backprop
@@ -48,7 +48,7 @@ namespace EigenSinn {
       layer_output.view() = *exp_all / *exp_sum_broadcast;
     }
 
-    void backward(LayerBase<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
+    void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
       
       DeviceTensor<Scalar, Rank, Device_, Layout> dout(next_layer_grad_any);
 

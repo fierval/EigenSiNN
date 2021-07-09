@@ -238,8 +238,8 @@ namespace EigenSinnTest {
     MaxPooling<float, 4, ThreadPoolDevice, ColMajor> pl(extents2d, stride);
 
     pl.init();
-    pl.forward(input);
-    pl.backward(input, fakeloss.raw());
+    pl.forward(input.get_output());
+    pl.backward(input.get_output(), fakeloss.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(pl.get_output(), output));
     EXPECT_TRUE(is_elementwise_approx_eq(pl.get_loss_by_input_derivative(), dinput));
@@ -256,8 +256,8 @@ namespace EigenSinnTest {
     MaxPooling<float, 4, ThreadPoolDevice, ColMajor> pl(extents2d, stride1);
 
     pl.init();
-    pl.forward(input);
-    pl.backward(input, fakeloss.raw());
+    pl.forward(input.get_output());
+    pl.backward(input.get_output(), fakeloss.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(pl.get_output(), output));
     EXPECT_TRUE(is_elementwise_approx_eq(pl.get_loss_by_input_derivative(), dinput));

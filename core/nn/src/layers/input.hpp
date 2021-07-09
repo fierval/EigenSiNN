@@ -40,8 +40,8 @@ namespace EigenSinn {
     }
 
     // Required overrides
-    void forward(LayerBase<Scalar, Device_>& prev_layer_base) override {};
-    void backward(LayerBase<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {};
+    void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer_base) override {};
+    void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {};
 
     std::vector<Index> get_dims() {
       return input->get_dims();

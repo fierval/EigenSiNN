@@ -35,9 +35,9 @@ namespace EigenSinn {
     }
 
     // prev_layer_out: X[l-1], dim: [N, D]
-    void forward(LayerBase<Scalar, Device_>& prev_layer) override {
+    void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer) override {
 
-      DeviceTensor<Scalar, 2, Device_, Layout > prev_layer_tensor(prev_layer.get_output());
+      DeviceTensor<Scalar, 2, Device_, Layout > prev_layer_tensor(prev_layer);
 
       int batch_size = prev_layer_tensor->dimension(0);
 
@@ -59,9 +59,9 @@ namespace EigenSinn {
 
     // next_layer_grad: delta[l+1] = dL/dX[l+1], dims: [N, M] (same as X[l+1])
     // when we are feeding backward from the loss function
-    void backward(LayerBase<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
+    void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
 
-      DeviceTensor<Scalar, 2, Device_, Layout> prev_layer(prev_layer_any.get_output());
+      DeviceTensor<Scalar, 2, Device_, Layout> prev_layer(prev_layer_any);
       DeviceTensor<Scalar, 2, Device_, Layout> next_layer_grad(next_layer_grad_any);
 
       // this will be fed to the previous backprop layer as the delta parameter

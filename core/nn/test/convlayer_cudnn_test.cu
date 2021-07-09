@@ -34,7 +34,7 @@ namespace EigenSinnTest {
     conv2d.set_cudnn(true);
 
     conv2d.init(cd.convWeights.to_host());
-    conv2d.forward(input);
+    conv2d.forward(input.get_output());
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.output, conv2d.get_output()));
 
@@ -51,7 +51,7 @@ namespace EigenSinnTest {
     DeviceTensor<float, 4, GpuDevice, RowMajor> input_tensor(2, 3, 4, 4);
     input_tensor.setRandom();
 
-    ConvolutionParams<4> params(input_tensor.dimensions(), cd.convWeights.dimensions(), Padding2D{ 1, 1 }, 1, 1, false, true);
+    ConvolutionParams<4> params(input.get_output()_tensor.dimensions(), cd.convWeights.dimensions(), Padding2D{ 1, 1 }, 1, 1, false, true);
     CudnnWorkspace W(params);
     DSizes<Index, 4> out_dims = set_output_dims(W.conv_desc, W.input_desc, W.filter_desc);
     DeviceTensor<float, 4, GpuDevice, RowMajor> layer_output(out_dims);
@@ -67,13 +67,13 @@ namespace EigenSinnTest {
       W.output_desc, layer_output->data());
 #endif
     conv2d.init(cd.convWeights.to_host());
-    conv2d.forward(input);
+    conv2d.forward(input.get_output());
     
     DeviceTensor<float, 4, GpuDevice, RowMajor> conv2dout(conv2d.get_output());
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.outputDilated2Padded1, conv2dout));
 
-    conv2d.backward(input, cd.convLoss.raw());
+    conv2d.backward(input.get_output(), cd.convLoss.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dinputDilated2Padded1, conv2d.get_loss_by_input_derivative()));
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dweightsDilated2Padded1, conv2d.get_loss_by_weights_derivative()));
@@ -89,11 +89,11 @@ namespace EigenSinnTest {
     conv2d.set_cudnn(true);
 
     conv2d.init(cd.convWeights.to_host());
-    conv2d.forward(input);
+    conv2d.forward(input.get_output());
     
     EXPECT_TRUE(is_elementwise_approx_eq(cd.output, conv2d.get_output()));
 
-    conv2d.backward(input, cd.convLoss.raw());
+    conv2d.backward(input.get_output(), cd.convLoss.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dinput, conv2d.get_loss_by_input_derivative()));
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dweight, conv2d.get_loss_by_weights_derivative()));
@@ -110,11 +110,11 @@ namespace EigenSinnTest {
     conv2d.set_cudnn(true);
 
     conv2d.init(cd.convWeights.to_host(), cd.bias.to_host());
-    conv2d.forward(input);
+    conv2d.forward(input.get_output());
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.output, conv2d.get_output()));
 
-    conv2d.backward(input, cd.convLoss.raw());
+    conv2d.backward(input.get_output(), cd.convLoss.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dinput, conv2d.get_loss_by_input_derivative()));
     EXPECT_TRUE(is_elementwise_approx_eq(cd.dweight, conv2d.get_loss_by_weights_derivative()));
@@ -165,9 +165,9 @@ namespace EigenSinnTest {
 #endif // TEST_FWD_ALGO
 
     conv2d.init(cd.convWeights.to_host());
-    conv2d.forward(input);
+    conv2d.forward(input.get_output());
 
-    conv2d.backward(input, cd1p.convLoss.raw());
+    conv2d.backward(input.get_output(), cd1p.convLoss.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd1p.dinput, conv2d.get_loss_by_input_derivative()));
     EXPECT_TRUE(is_elementwise_approx_eq(cd1p.dweight, conv2d.get_loss_by_weights_derivative()));

@@ -92,8 +92,8 @@ namespace EigenSinnTest {
 
     Tanh<float, 4, GpuDevice, RowMajor> tanh;
     tanh.init();
-    tanh.forward(input);
-    tanh.backward(input, cd.convInput.raw());
+    tanh.forward(input.get_output());
+    tanh.backward(input.get_output(), cd.convInput.raw());
  
     EXPECT_TRUE(is_elementwise_approx_eq(tanh.get_output(), output));
     EXPECT_TRUE(is_elementwise_approx_eq(tanh.get_loss_by_input_derivative(), dinput));
@@ -107,8 +107,8 @@ namespace EigenSinnTest {
     Tanh<float, 4, GpuDevice, RowMajor> tanh;
     tanh.set_cudnn(true);
     tanh.init();
-    tanh.forward(input);
-    tanh.backward(input, cd.convInput.raw());
+    tanh.forward(input.get_output());
+    tanh.backward(input.get_output(), cd.convInput.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(tanh.get_output(), output));
     EXPECT_TRUE(is_elementwise_approx_eq(tanh.get_loss_by_input_derivative(), dinput));

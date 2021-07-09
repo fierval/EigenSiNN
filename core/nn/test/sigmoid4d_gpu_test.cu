@@ -94,8 +94,8 @@ namespace EigenSinnTest {
 
     EigenSinn::Sigmoid<float, 4, GpuDevice, RowMajor> sg;
     sg.init();
-    sg.forward(input);
-    sg.backward(input, cd.convInput.raw());
+    sg.forward(input.get_output());
+    sg.backward(input.get_output(), cd.convInput.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(sg.get_output(), output));
     EXPECT_TRUE(is_elementwise_approx_eq(sg.get_loss_by_input_derivative(), dinput));
@@ -109,8 +109,8 @@ namespace EigenSinnTest {
     EigenSinn::Sigmoid<float, 4, GpuDevice, RowMajor> sg;
     sg.set_cudnn(true);
     sg.init();
-    sg.forward(input);
-    sg.backward(input, cd.convInput.raw());
+    sg.forward(input.get_output());
+    sg.backward(input.get_output(), cd.convInput.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(sg.get_output(), output));
     EXPECT_TRUE(is_elementwise_approx_eq(sg.get_loss_by_input_derivative(), dinput));

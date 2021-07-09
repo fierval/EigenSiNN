@@ -17,9 +17,9 @@ namespace EigenSinn {
     
     }
 
-    void forward(LayerBase<Scalar, Device_>& prev_layer_any) {
+    void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer_any) {
       
-      DeviceTensor<Scalar, 4, Device_, Layout> orig(prev_layer_any.get_output());
+      DeviceTensor<Scalar, 4, Device_, Layout> orig(prev_layer_any);
 
       original_dimensions = orig.dimensions();
 
@@ -27,7 +27,7 @@ namespace EigenSinn {
 
     }
 
-    void backward(LayerBase<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) {
+    void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) {
 
       DeviceTensor<Scalar, 2, Device_, Layout> unf_dout(next_layer_grad);
 

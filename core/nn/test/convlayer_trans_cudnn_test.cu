@@ -34,10 +34,10 @@ namespace EigenSinnTest {
     conv2d.set_cudnn(true);
 
     conv2d.init(cd1p.weights.to_host());
-    conv2d.forward(input);
+    conv2d.forward(input.get_output());
     EXPECT_TRUE(is_elementwise_approx_eq(cd1p.output_trans, conv2d.get_output()));
 
-    conv2d.backward(input, cd1p.convLossTrans.raw());
+    conv2d.backward(input.get_output(), cd1p.convLossTrans.raw());
 
     EXPECT_TRUE(is_elementwise_approx_eq(cd1p.dinput_trans, conv2d.get_loss_by_input_derivative()));
     EXPECT_TRUE(is_elementwise_approx_eq(cd1p.dweight_trans, conv2d.get_loss_by_weights_derivative()));

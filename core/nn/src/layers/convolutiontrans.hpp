@@ -47,9 +47,9 @@ namespace EigenSinn {
       kernel.set_from_host(_weights);
     }
 
-    void forward(LayerBase<Scalar, Device_>& prev_layer_any) override {
+    void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer_any) override {
 
-      DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any.get_output());
+      DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any);
 
       if (!params || params->check(prev_layer.dimensions())) {
         params = std::make_shared<ConvolutionParams<4>>(prev_layer.dimensions(), kernel.dimensions(), padding, stride, dilation, true, is_cudnn);
@@ -103,9 +103,9 @@ namespace EigenSinn {
 
     }
 
-    void backward(LayerBase<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
+    void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
 
-      DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any.get_output());
+      DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any);
       DeviceTensor<Scalar, 4, Device_, Layout> next_layer_grad(next_layer_grad_any);
       //bias
       loss_by_bias_derivative.view() = next_layer_grad->sum(array<Index, 3>{0, 2, 3});

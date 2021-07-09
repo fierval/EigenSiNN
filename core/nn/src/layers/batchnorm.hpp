@@ -49,9 +49,9 @@ namespace EigenSinn {
       gamma.set_from_host(_gamma);
     }
 
-    void forward(LayerBase<Scalar, Device_>& prev_layer_base) override {
+    void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer_base) override {
 
-      DeviceTensor<Scalar, Rank, Device_, Layout> prev_layer(prev_layer_base.get_output());
+      DeviceTensor<Scalar, Rank, Device_, Layout> prev_layer(prev_layer_base);
 
       if (!xhat) {
         DSizes<Index, Rank> dims = prev_layer.dimensions();
@@ -67,9 +67,9 @@ namespace EigenSinn {
 
     // see https://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html
     // for derivations
-    void backward(LayerBase<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
+    void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
 
-      DeviceTensor<Scalar, Rank, Device_, Layout> prev_layer(prev_layer_any.get_output());
+      DeviceTensor<Scalar, Rank, Device_, Layout> prev_layer(prev_layer_any);
       DeviceTensor<Scalar, Rank, Device_, Layout> dout(next_layer_grad_any);
 
       DSizes<Index, Rank - 1> reduction_dims;

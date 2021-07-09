@@ -38,7 +38,7 @@ namespace EigenSinnTest {
       for (int i = 0; i < epochs; i++) {
 
         // propagate forward through the model
-        linear.forward(input);
+        linear.forward(input.get_output());
 
         DeviceTensor<float, 2> output(linear.get_output());
 
@@ -51,7 +51,7 @@ namespace EigenSinnTest {
 
         // propagate back through the fc layer
         // compute dL/dw, dL/db, dL/dx
-        linear.backward(input, dloss.raw());
+        linear.backward(input.get_output(), dloss.raw());
 
         PtrTensorAdapter<float, ThreadPoolDevice> weights_any, bias_any;
         sgd.step(linear);

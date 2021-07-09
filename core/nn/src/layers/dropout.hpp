@@ -38,11 +38,11 @@ namespace EigenSinn {
       prob_tensor.setConstant(prob);
     }
 
-    void forward(LayerBase<Scalar, Device_>& prev_layer) override {
+    void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer) override {
       
       if (!is_training) { return; }
 
-      DeviceTensor<Scalar, Rank, Device_, Layout> x(prev_layer.get_output());
+      DeviceTensor<Scalar, Rank, Device_, Layout> x(prev_layer);
 
       if (!inited) {
         inited = true;
@@ -60,7 +60,7 @@ namespace EigenSinn {
     }
 
     // for derivations
-    void backward(LayerBase<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
+    void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> next_layer_grad(next_layer_grad_any);
 
