@@ -31,7 +31,10 @@ namespace EigenSinn {
       dsum.setConstant(cnst);
     }
 
-    void step(DeviceTensor<Scalar, Rank, Device_, Layout>& predicted, DeviceTensor<Actual, Rank, Device_, Layout>& actual) override {
+    void step(TensorAdapter<Scalar, Device_>& predicted_adapter, TensorAdapter<Actual, Device_>& actual_adapter) override {
+
+      DeviceTensor<Scalar, Rank, Device_, Layout> predicted(predicted_adapter);
+      DeviceTensor<Actual, Rank, Device_, Layout> predicted(actual_adapter);
 
       initialize(predicted, actual);
 

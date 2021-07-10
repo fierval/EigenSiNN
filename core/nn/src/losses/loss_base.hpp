@@ -13,7 +13,7 @@ namespace EigenSinn {
 
   public:
 
-    virtual void step(DeviceTensor<Scalar, Rank, Device_, Layout>& predictions_any, DeviceTensor<Actual, Rank, Device_, Layout>& actual_any) = 0;
+    virtual void step(TensorAdapter<Scalar, Device_>& predictions_any, TensorAdapter<Actual, Device_>& actual_any) = 0;
 
     virtual Scalar get_output() {
       return loss;

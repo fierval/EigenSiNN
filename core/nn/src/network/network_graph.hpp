@@ -49,8 +49,10 @@ namespace EigenSinn {
     typedef std::shared_ptr<Loss> PtrLoss;
     typedef std::shared_ptr<OptimizerBase<Scalar, Device_, RowMajor>> PtrOptimizer;
     typedef PtrTensorAdapter<Scalar, Device_> PtrTensor;
+    typedef PtrTensorAdapter<Actual, Device_> PtrTensorActual;
     typedef std::vector<PtrTensorAdapter<Scalar, Device_>> TensorVector;
-        
+    typedef std::shared_ptr<Loss> PtrLoss;
+
   public:
     NetworkBase() {
 
@@ -94,63 +96,134 @@ namespace EigenSinn {
       inited = true;
     }
 
-    void forward() {
+    // forward step with the map of input names -> inputs and logit names -> labels
+    void forward(std::map<std::string, PtrTensor> tensors, std::map<std::string, PtrTensorActual> labels) {
+
+      if (tensors.empty() || labels.empty()) {
+        throw std::invalid_argument("inputs and labels must be non-empty");
+      }
+
       // we should have topologically sorted the graph
-      assert(vertices.size() > 0);
+      assert(forward_order.size() > 0);
 
       if (!inited) {
         init();
       }
 
+      set_input(tensors);
+
       for (auto& v : forward_order) {
 
-        TensorVector inputs;
-        InEdgeIter in, in_end;
+        TensorVector inputs = collect_inputs(v);
 
-        // input layer
-        if (in == in_end) { continue; }
+        // input layer. all inputs are set by the set_input call
+        if (inputs.empty()) { continue; }
+        
+        graph[v].layer->forward(inputs);
 
-        for (boost::tie(in, in_end) = boost::in_edges(v, graph); in != in_end; in++) {
+        // if we have reached a terminal node - compute loss
+        auto& layer_name = graph[v].layer->get_layer_name();
+        if (name_loss.count(layer_name) > 0) {
+          PtrLoss& loss = name_loss[layer_name];
 
-          vertex_t inp = boost::source(*in, graph);
-          inputs.push_back(graph[inp].layer->get_output());
+          loss->step(graph[v].layer->get_output(), labels[layer_name]);
         }
-
-        // TODO: enable multi-input layers!!!
-        PtrLayer current_layer = graph[v].layer;
-        current_layer->forward(inputs);
       }
+    }
 
+    void forward(PtrTensor& tensor, PtrTensorActual& label) {
+
+      std::map<std::string, PtrTensor> inputs;
+      std::map<std::string, PtrTensorActual> labels;
+
+      inputs.insert(std::make_pair(input_vertices[0], tensor));
+      labels.insert(std::make_pair(name_loss.begin()->first, label));
+
+      forward(inputs, labels);
     }
 
     std::vector<std::string>& get_input_names() {
       return input_vertices;
     }
 
+    void backward() {
+
+      assert(forward_order.size() > 0);
+
+      OutEdgeIter out_layer_edge, out_layer_edge_end;
+
+      // vertex names when we need to retrieve losses
+      vertex_name names = get(boost::vertex_name, graph);
+
+      // iterate over sorted vertices in reverse order
+      for (auto it = forward_order.rbegin(); it != forward_order.rend(); it++) {
+        vertex_t v = *it;
+
+        TensorVector prev_layers = collect_inputs(v);
+
+        // reached input layer
+        if (prev_layers.empty()) { continue; }
+
+        // TODO: for now should only be a single one
+        boost::tie(out_layer_edge, out_layer_edge_end) = boost::out_edges(v, graph);
+
+        PtrTensor incoming_derivative;
+
+        // No outputs meaning we need to attach a loss
+        if (out_layer_edge == out_layer_edge_end) {
+          PtrLoss& loss = name_loss[names[v]];
+          incoming_derivative.reset(loss->get_loss_derivative_by_input());
+        }
+        else {
+          vertex_t target = boost::target(*out_layer_edge, graph);
+          incoming_derivative.reset(graph[target].layer->get_loss_by_input_derivative());
+        }
+
+        graph[v].layer->backward(prev_layers, incoming_derivative);
+      }
+
+    }
+
   protected:
 
     // single input network
     void set_input(PtrTensor& input) {
-      
+
       assert(input_vertices.size() == 1);
-      graph[vertices[input_vertices[0]]].layer->set_input(input);
+
+      std::map<std::string, PtrTensor> inputs;
+      inputs.insert(std::make_pair(input_vertices[0], input));
+      set_input(inputs);
     }
 
     void set_input(std::map<std::string, PtrTensor>& inputs) {
 
       assert(inputs.size() > 0);
       std::for_each(inputs.begin(), inputs.end(), [&](std::pair<std::string, PtrTensor> p) {
-        graph[vertices[p.first]].layer->set_input(p.second);
+        PtrLayer layer = graph[vertices[p.first]].layer;
+        Input* input_layer = dynamic_cast<Input<Scalar, Device_>*>(layer.get());
+        input_layer->set_input(p.second);
         });
     }
 
     // walk the vertices and attach the optimizer
     // add loss function
-    void add_loss_and_complete(const std::string& logits) {
-      this->name_loss = std::make_pair(logits, std::make_shared<Loss>());
+    void add_loss(const std::string& logits) {
+      name_loss.insert(std::make_pair(logits, std::make_shared<Loss>()));
+    }
+
+    void complete() {
+      assert(forward_order.size() == 0);
 
       // we will reverse-iterate during backprop
       boost::topological_sort(graph, std::front_inserter(forward_order));
+
+    }
+
+    // for the case of a single loss
+    void add_loss_and_complete(const std::string& logits) {
+      add_loss(logits);
+      complete();
     }
 
     int get_current_layer_suffix() { return current_name_suffix++; }
@@ -226,6 +299,21 @@ namespace EigenSinn {
       return graph[v].layer->is_optimizable();
     }
 
+    // given a vertex return all vertices feeding into it
+    TensorVector collect_inputs(vertext_t& v) {
+
+      TensorVector inputs;
+      InEdgeIter in, in_end;
+
+      for (boost::tie(in, in_end) = boost::in_edges(v, graph); in != in_end; in++) {
+
+        vertex_t inp = boost::source(*in, graph);
+        inputs.push_back(graph[inp].layer->get_output());
+      }
+
+      return inputs;
+    }
+
   private:
     NetworkGraph graph;
 
@@ -235,7 +323,8 @@ namespace EigenSinn {
     std::map<std::string, vertex_t> vertices;
     std::map<std::string, PtrOptimizer> optimizers;
 
-    std::pair<std::string, std::shared_ptr<Loss>> name_loss;
+    // TODO: a single output NN.
+    std::map<std::string, PtrLoss> name_loss;
     std::vector<std::string> input_vertices;
 
     std::deque<vertex_t> forward_order;
