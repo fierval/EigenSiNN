@@ -223,10 +223,10 @@ namespace EigenSinn {
         base_optimizer = create_optimizer<1>(optimizer_name, lr);
         break;
       case 2:
-        base_optimizer = create_optimizer<1>(optimizer_name, lr);
+        base_optimizer = create_optimizer<2>(optimizer_name, lr);
         break;
       case 4:
-        base_optimizer = create_optimizer<1>(optimizer_name, lr);
+        base_optimizer = create_optimizer<4>(optimizer_name, lr);
         break;
       default:
         return;
