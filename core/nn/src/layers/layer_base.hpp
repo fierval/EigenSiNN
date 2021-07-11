@@ -70,7 +70,13 @@ namespace EigenSinn {
     }
 
     // dimensions of the weights for the optimizer
-    virtual bool get_optimizer_rank() { return get_weights()->get_dims().size(); }
+    virtual Index get_optimizer_rank() { 
+      PtrTensorAdapter<Scalar, Device_> weights = get_weights();
+      if (!weights) {
+        return 0;
+      }
+      return weights->get_dims().size();
+    }
 
   protected:
     bool is_cudnn = false;

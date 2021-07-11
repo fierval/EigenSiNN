@@ -217,6 +217,7 @@ namespace EigenSinn {
 
       PtrOptimizer base_optimizer;
       
+      Index rank = get_optimizer_rank(v);
       switch (get_optimizer_rank(v))
       {
       case 1:
@@ -236,7 +237,7 @@ namespace EigenSinn {
     }
 
     // TODO: This is SO ugly!!! Due to the stupid optimizer rank
-    template<int Rank>
+    template<Index Rank>
     PtrOptimizer create_optimizer(Optimizers optimizer_name, float lr) {
 
       PtrOptimizer base_optimizer;
@@ -340,7 +341,7 @@ namespace EigenSinn {
       return layer_name;
     }
 
-    bool get_optimizer_rank(vertex_t& v) {
+    Index get_optimizer_rank(vertex_t& v) {
       return graph[v].layer->get_optimizer_rank();
     }
 
