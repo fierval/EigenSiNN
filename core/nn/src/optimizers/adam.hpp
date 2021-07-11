@@ -9,7 +9,7 @@ namespace EigenSinn {
   class Adam : public OptimizerBase<Scalar, Device_, Layout> {
 
   public:
-    Adam(Scalar _lr, float _beta1 = 0.9, float _beta2 = 0.999, float _eps = 1e-8)
+    Adam(float _lr, float _beta1 = 0.9, float _beta2 = 0.999, float _eps = 1e-8)
       : OptimizerBase<Scalar, Device_, Layout>(_lr)
       , beta1(_beta1)
       , beta2(_beta2)

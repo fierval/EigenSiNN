@@ -31,11 +31,8 @@ namespace EigenSinn {
 
       if (is_initialized) { return; }
 
-      array<Index, Rank> predicted_dims = predicted.dimensions();
-      array<Index, Rank> actual_dims = actual.dimensions();
-
       orig_dims = actual.dimensions();
-      dloss.resize(actual_dims);
+      dloss.resize(orig_dims);
 
       // once we reduce only batch dimension is left
       reduced_dims[0] = predicted_dims[0];
@@ -59,9 +56,6 @@ namespace EigenSinn {
         spread_grad.view() = *spread_grad / static_cast<Scalar>(orig_dims[i]);
       }
 
-      for (int i = 0; i < Rank; i++) {
-        assert(predicted_dims[i] == orig_dims[i]);
-      }
       is_initialized = true;
     }
 

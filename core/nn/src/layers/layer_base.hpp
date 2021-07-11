@@ -69,8 +69,8 @@ namespace EigenSinn {
       layer_name = name;
     }
 
-    // does the layer have anything to be tuned with an optimizer?
-    virtual bool is_optimizable() { return false; }
+    // dimensions of the weights for the optimizer
+    virtual bool get_optimizer_rank() { get_weights()->get_dims().size(); }
 
   protected:
     bool is_cudnn = false;

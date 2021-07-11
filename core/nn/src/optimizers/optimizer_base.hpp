@@ -18,7 +18,7 @@ namespace EigenSinn {
 
   public:
     
-    OptimizerBase(Scalar _lr) 
+    OptimizerBase(float _lr) 
       : param_set(false)
     , lr(_lr) {
 
@@ -28,7 +28,7 @@ namespace EigenSinn {
 
   protected:
     // learing rate
-    Scalar lr;
+    float lr;
     bool param_set;
 
   };

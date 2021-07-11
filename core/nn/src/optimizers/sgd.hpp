@@ -9,7 +9,7 @@ namespace EigenSinn {
   class SGD : public OptimizerBase<Scalar, Device_, Layout> {
 
   public:
-    SGD(Scalar _lr, Scalar _momentum = 0, bool _nesterov = false)
+    SGD(float _lr, float _momentum = 0, bool _nesterov = false)
       : OptimizerBase<Scalar, Device_, Layout>(_lr)
       , nesterov(_nesterov)
       , momentum(_momentum)

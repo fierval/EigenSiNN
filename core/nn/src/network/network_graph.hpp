@@ -20,7 +20,8 @@
 
 namespace EigenSinn {
 
-  template <typename Scalar, typename Device_, typename Loss>
+  // Loss is the actual template and Optimizer is the name of the type
+  template <typename Scalar, typename Device_, typename Loss, typename Optimizer>
   class NetworkBase {
 
     typedef std::shared_ptr<LayerBase<Scalar, Device_>> PtrLayer;
@@ -46,7 +47,6 @@ namespace EigenSinn {
     typedef typename boost::graph_traits<NetworkGraph>::in_edge_iterator InEdgeIter;
 
     // smart pointers to data
-    typedef std::shared_ptr<Loss> PtrLoss;
     typedef std::shared_ptr<OptimizerBase<Scalar, Device_, RowMajor>> PtrOptimizer;
     typedef PtrTensorAdapter<Scalar, Device_> PtrTensor;
     typedef PtrTensorAdapter<Actual, Device_> PtrTensorActual;
@@ -206,14 +206,44 @@ namespace EigenSinn {
         });
     }
 
-    // walk the vertices and attach the optimizer
-    // add loss function
+    // add loss function. There may be several output nodes
+    // so we may call this several times
     void add_loss(const std::string& logits) {
       name_loss.insert(std::make_pair(logits, std::make_shared<Loss>()));
     }
 
-    void complete() {
+    // optimizers have different parameters, override this for tweaking
+    // something other than lr
+    virtual void add_optimizer(vertex_t v, Scalar lr) {
+
+      PtrOptimizer base_optimizer;
+
+      switch (get_optimizer_rank(v))
+      {
+      case 1:
+        base_optimizer.reset(new Optimizer<Scalar, 1, Device_>(lr));
+        break;
+      case 2:
+        base_optimizer.reset(new Optimizer<Scalar, 2, Device_>(lr));
+        break;
+      case 4:
+        base_optimizer.reset(new Optimizer<Scalar, 4, Device_>(lr));
+        break;
+      default:
+        return;
+      }
+
+      optimizers.insert(std::make_pair(layer_name, base_optimizer));
+    }
+
+    // add optimizers where they belong and produce forward traversal
+    void compile(float lr) {
       assert(forward_order.size() == 0);
+
+      // find opimizable layers and hang an optimizer on them
+      std::for_each(vertices.begin(), vertices.end(), [&](std::pair<std::string, vertex_t> p) {
+        add_optimizer(v, lr);
+        });
 
       // we will reverse-iterate during backprop
       boost::topological_sort(graph, std::front_inserter(forward_order));
@@ -221,9 +251,9 @@ namespace EigenSinn {
     }
 
     // for the case of a single loss
-    void add_loss_and_complete(const std::string& logits) {
+    void add_loss_and_compile(const std::string& logits, float lr) {
       add_loss(logits);
-      complete();
+      compile();
     }
 
     int get_current_layer_suffix() { return current_name_suffix++; }
@@ -263,7 +293,7 @@ namespace EigenSinn {
 
     // add one edge to the future graph
     // for now we need to instantiate the optimizer together with the vertex.
-    std::string add(const std::string& input_name, LayerBase<Scalar, Device_>* layer, OptimizerBase<Scalar, Device_, RowMajor>* optimizer = nullptr) {
+    std::string add(const std::string& input_name, LayerBase<Scalar, Device_>* layer) {
 
       assert(vertices.count(input_name) > 0);
 
@@ -288,15 +318,11 @@ namespace EigenSinn {
       v_in = vertices[input_name];
       boost::add_edge(v_in, v_out, graph);
 
-      if (optimizer != nullptr) {
-        optimizers.insert(std::make_pair(layer_name, PtrOptimizer(optimizer)));
-      }
-
       return layer_name;
     }
 
-    bool is_optimizable(vertex_t& v) {
-      return graph[v].layer->is_optimizable();
+    bool get_optimizer_rank(vertex_t& v) {
+      return graph[v].layer->get_optimizer_rank();
     }
 
     // given a vertex return all vertices feeding into it
