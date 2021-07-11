@@ -97,7 +97,7 @@ namespace EigenSinn {
 
       // loss step
       DeviceTensor<Scalar, OutputRank, Device_, Layout> output(network.rbegin()->layer->get_output());
-      loss.step(output, label_tensor);
+      loss.step(output.raw(), label_tensor.raw());
 
       // backward step
       backward(loss.get_loss_derivative_by_input());

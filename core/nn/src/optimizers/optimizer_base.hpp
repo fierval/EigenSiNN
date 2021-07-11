@@ -7,6 +7,11 @@
 
 using namespace Eigen;
 
+enum Optimizers : int{
+  Adam,
+  SGD
+};
+
 namespace EigenSinn {
 
   template<typename Scalar, typename Device_>

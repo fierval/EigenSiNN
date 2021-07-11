@@ -107,6 +107,11 @@ namespace EigenSinn
       tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), vec2dims<Rank>(adapter->get_dims())));
     }
 
+    explicit DeviceTensor(TensorAdapter<Scalar, Device_>& adapter) 
+      : DeviceTensor(std::make_shared<TensorAdapter<Scalar, Device_>>(&adapter)) {
+    
+    }
+
     Tensor<Scalar, Rank, Layout> to_host() const {
 
 #ifdef EIGEN_USE_GPU

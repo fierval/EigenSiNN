@@ -20,8 +20,7 @@
 
 namespace EigenSinn {
 
-  // Loss is the actual template and Optimizer is the name of the type
-  template <typename Scalar, typename Device_, typename Loss, typename Optimizer>
+  template <typename Scalar, typename Actual, typename Loss, typename Device_>
   class NetworkBase {
 
     typedef std::shared_ptr<LayerBase<Scalar, Device_>> PtrLayer;
@@ -201,7 +200,7 @@ namespace EigenSinn {
       assert(inputs.size() > 0);
       std::for_each(inputs.begin(), inputs.end(), [&](std::pair<std::string, PtrTensor> p) {
         PtrLayer layer = graph[vertices[p.first]].layer;
-        Input* input_layer = dynamic_cast<Input<Scalar, Device_>*>(layer.get());
+        Input<Scalar, Device_>* input_layer = dynamic_cast<Input<Scalar, Device_>*>(layer.get());
         input_layer->set_input(p.second);
         });
     }
@@ -214,35 +213,56 @@ namespace EigenSinn {
 
     // optimizers have different parameters, override this for tweaking
     // something other than lr
-    virtual void add_optimizer(vertex_t v, Scalar lr) {
+    virtual void add_optimizer(vertex_t v, const Optimizers optimizer_name, float lr) {
 
       PtrOptimizer base_optimizer;
-
+      
       switch (get_optimizer_rank(v))
       {
       case 1:
-        base_optimizer.reset(new Optimizer<Scalar, 1, Device_>(lr));
+        base_optimizer = create_optimizer<1>(optimizer_name, lr);
         break;
       case 2:
-        base_optimizer.reset(new Optimizer<Scalar, 2, Device_>(lr));
+        base_optimizer = create_optimizer<1>(optimizer_name, lr);
         break;
       case 4:
-        base_optimizer.reset(new Optimizer<Scalar, 4, Device_>(lr));
+        base_optimizer = create_optimizer<1>(optimizer_name, lr);
         break;
       default:
         return;
       }
 
-      optimizers.insert(std::make_pair(layer_name, base_optimizer));
+      optimizers.insert(std::make_pair(graph[v].layer->get_layer_name(), base_optimizer));
+    }
+
+    // TODO: This is SO ugly!!! Due to the stupid optimizer rank
+    template<int Rank>
+    PtrOptimizer create_optimizer(Optimizers optimizer_name, float lr) {
+
+      PtrOptimizer base_optimizer;
+
+      switch (optimizer_name) {
+      case Optimizers::Adam:
+        base_optimizer.reset(new Adam<Scalar, Rank, Device_>(lr));
+        break;
+      case Optimizers::SGD:
+        base_optimizer.reset(new SGD<Scalar, Rank, Device_>(lr));
+        break;
+      default:
+        throw std::invalid_argument("Undknown uptimizer");
+      }
+
+      return base_optimizer;
+
     }
 
     // add optimizers where they belong and produce forward traversal
-    void compile(float lr) {
+    void compile(Optimizers optimizer_name, float lr) {
       assert(forward_order.size() == 0);
 
       // find opimizable layers and hang an optimizer on them
       std::for_each(vertices.begin(), vertices.end(), [&](std::pair<std::string, vertex_t> p) {
-        add_optimizer(v, lr);
+        add_optimizer(p.second, optimizer_name, lr);
         });
 
       // we will reverse-iterate during backprop
@@ -251,9 +271,9 @@ namespace EigenSinn {
     }
 
     // for the case of a single loss
-    void add_loss_and_compile(const std::string& logits, float lr) {
+    void add_loss_and_compile(const std::string& logits, Optimizers optimizer_name, float lr) {
       add_loss(logits);
-      compile();
+      compile(optimizer_name, lr);
     }
 
     int get_current_layer_suffix() { return current_name_suffix++; }
@@ -325,7 +345,7 @@ namespace EigenSinn {
     }
 
     // given a vertex return all vertices feeding into it
-    TensorVector collect_inputs(vertext_t& v) {
+    TensorVector collect_inputs(vertex_t& v) {
 
       TensorVector inputs;
       InEdgeIter in, in_end;

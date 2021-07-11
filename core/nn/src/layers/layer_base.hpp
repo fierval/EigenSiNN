@@ -70,7 +70,7 @@ namespace EigenSinn {
     }
 
     // dimensions of the weights for the optimizer
-    virtual bool get_optimizer_rank() { get_weights()->get_dims().size(); }
+    virtual bool get_optimizer_rank() { return get_weights()->get_dims().size(); }
 
   protected:
     bool is_cudnn = false;

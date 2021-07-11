@@ -7,7 +7,7 @@
 namespace EigenSinn {
 
   template <typename Scalar, typename Actual, typename Device_>
-  class Cifar10 : public NetworkBase<Scalar, Device_, CrossEntropyLoss<Scalar, Actual, 2, Device_>, Adam> {
+  class Cifar10 : public NetworkBase<Scalar, Actual, CrossEntropyLoss<Scalar, Actual, 2, Device_>, Device_> {
 
   public:
     Cifar10(int num_classes, float lr = 0.001) : NetworkBase() {
@@ -36,7 +36,7 @@ namespace EigenSinn {
       // cross-entropy loss includes the softmax non-linearity
       x = add(x, new Linear<Scalar, Device_, RowMajor>(84, num_classes));
 
-      add_loss_and_compile(x, lr);
+      add_loss_and_compile(x, Optimizers::Adam, lr);
 
     }
   };

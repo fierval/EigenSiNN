@@ -10,19 +10,35 @@ class GraphTest : public ::testing::Test {
 protected:
   void SetUp() override {
 
+    rand_image.resize(cifar_dims);
+    rand_image.setRandom();
+
+    cifar10 = std::make_shared<Cifar10<float, std::uint8_t, ThreadPoolDevice>>(10, 0.001);
+
+    // need to go through network at least once before saving
+    // random labels
+    std::vector<uint8_t> values(cifar_dims[0] * 10);
+    std::transform(values.begin(), values.end(), values.begin(), [](uint8_t i) {return rand() % 10; });
+
+    DeviceTensor<uint8_t, 2> rand_labels(values.data(), DSizes<Index, 2>{cifar_dims[0], 10});
+
+    cifar10->forward(rand_image.raw(), rand_labels.raw());
   }
+
+  std::shared_ptr<Cifar10<float, std::uint8_t, ThreadPoolDevice>> cifar10;
+  std::string input_node_name = "input.1";
+  DSizes<Index, 4> cifar_dims{ 10, 3, 32, 32 };
+  DeviceTensor<float, 4> rand_image;
+  EigenModel model;
 };
 
 TEST_F(GraphTest, Create) {
 
-  Cifar10<float, std::uint8_t, ThreadPoolDevice> cifar10(10, 0.001);
-  cifar10.print_graph();
+  cifar10->print_graph();
   std::ofstream graphviz("c:\\temp\\gviz.dot", std::ios::binary);
-  cifar10.write_graphviz(graphviz);
+  cifar10->write_graphviz(graphviz);
 
-  cifar10.print_traversal();
+  cifar10->print_traversal();
   std::cerr << "=======================================" << std::endl;
-  cifar10.print_traversal(false);
-
-  cifar10.forward();
+  cifar10->print_traversal(false);
 }

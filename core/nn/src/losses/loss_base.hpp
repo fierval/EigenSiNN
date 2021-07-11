@@ -13,7 +13,7 @@ namespace EigenSinn {
 
   public:
 
-    virtual void step(TensorAdapter<Scalar, Device_>& predictions_any, TensorAdapter<Actual, Device_>& actual_any) = 0;
+    virtual void step(PtrTensorAdapter<Scalar, Device_>& predictions_any, PtrTensorAdapter<Actual, Device_>& actual_any) = 0;
 
     virtual Scalar get_output() {
       return loss;
@@ -35,7 +35,7 @@ namespace EigenSinn {
       dloss.resize(orig_dims);
 
       // once we reduce only batch dimension is left
-      reduced_dims[0] = predicted_dims[0];
+      reduced_dims[0] = predicted.dimensions()[0];
 
       // dimensions reduced by all except batch dimension
       for (int i = 1; i < Rank; i++) { 
