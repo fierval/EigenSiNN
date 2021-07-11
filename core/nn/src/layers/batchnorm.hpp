@@ -242,8 +242,6 @@ namespace EigenSinn {
 
     }
 
-    bool is_optimizable() override { return true; }
-
   private:
 
     DeviceTensor<Scalar, Rank, Device_, Layout> layer_output, layer_gradient, xhat;

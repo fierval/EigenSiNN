@@ -295,9 +295,8 @@ namespace EigenSinn {
     // for now we need to instantiate the optimizer together with the vertex.
     std::string add(const std::string& input_name, LayerBase<Scalar, Device_>* layer) {
 
+      // make sure the input has been added
       assert(vertices.count(input_name) > 0);
-
-      assert((layer->is_optimizable() && optimizer != nullptr) || (!layer->is_optimizable() && optimizer == nullptr));
 
       std::string& layer_name = layer->get_layer_name();
       vertex_t v_out, v_in;
