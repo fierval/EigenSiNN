@@ -171,11 +171,11 @@ namespace EigenSinn {
         // No outputs meaning we need to attach a loss
         if (out_layer_edge == out_layer_edge_end) {
           PtrLoss& loss = name_loss[names[v]];
-          incoming_derivative.reset(loss->get_loss_derivative_by_input());
+          incoming_derivative = loss->get_loss_derivative_by_input();
         }
         else {
           vertex_t target = boost::target(*out_layer_edge, graph);
-          incoming_derivative.reset(graph[target].layer->get_loss_by_input_derivative());
+          incoming_derivative = graph[target].layer->get_loss_by_input_derivative();
         }
 
         graph[v].layer->backward(prev_layers, incoming_derivative);

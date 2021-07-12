@@ -23,6 +23,7 @@ protected:
     DeviceTensor<uint8_t, 2> rand_labels(values.data(), DSizes<Index, 2>{cifar_dims[0], 10});
 
     cifar10->forward(rand_image.raw(), rand_labels.raw());
+    cifar10->backward();
   }
 
   std::shared_ptr<Cifar10<float, std::uint8_t, ThreadPoolDevice>> cifar10;
