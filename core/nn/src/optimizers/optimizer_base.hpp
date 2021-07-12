@@ -7,7 +7,7 @@
 
 using namespace Eigen;
 
-enum Optimizers : int{
+enum class Optimizers {
   Adam,
   SGD
 };

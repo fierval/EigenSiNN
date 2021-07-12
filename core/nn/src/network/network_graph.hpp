@@ -169,6 +169,8 @@ namespace EigenSinn {
         PtrTensor incoming_derivative;
 
         // No outputs meaning we need to attach a loss
+        // we have already computed the loss and its derivative
+        // in the "forward" step
         if (out_layer_edge == out_layer_edge_end) {
           PtrLoss& loss = name_loss[names[v]];
           incoming_derivative = loss->get_loss_derivative_by_input();
@@ -181,6 +183,30 @@ namespace EigenSinn {
         graph[v].layer->backward(prev_layers, incoming_derivative);
       }
 
+    }
+
+    void optimize() {
+      for (auto& p : optimizers) {
+        vertex_t v = vertices[p.first];
+        p.second->step(*graph[v].layer);
+      }
+    }
+
+    void step(std::map<std::string, PtrTensor> tensors, std::map<std::string, PtrTensorActual> labels) {
+      forward(tensors, labels);
+      backward();
+      optimize();
+    }
+
+    void step(PtrTensor& tensor, PtrTensorActual& label) {
+
+      std::map<std::string, PtrTensor> inputs;
+      std::map<std::string, PtrTensorActual> labels;
+
+      inputs.insert(std::make_pair(input_vertices[0], tensor));
+      labels.insert(std::make_pair(name_loss.begin()->first, label));
+
+      step(inputs, labels);
     }
 
   protected:
