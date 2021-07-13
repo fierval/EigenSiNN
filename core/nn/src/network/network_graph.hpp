@@ -387,6 +387,14 @@ namespace EigenSinn {
       return inputs;
     }
 
+    void clear() {
+      vertices.clear();
+      optimizers.clear();
+      name_loss.clear();
+      forward_order.clear();
+      graph.clear();
+    }
+
     NetworkGraph graph;
 
     int current_name_suffix = 1;

@@ -56,7 +56,35 @@ namespace EigenSinn {
 			return model;
 		}
 
-		void load(EigenModel& model) {
+		void load(EigenModel& model, bool weights_only = false) {
+			
+			// TODO: we start from scratch
+			clear();
+
+			OnnxLoader<Scalar, Device_> onnx_layers(model);
+			onnx::GraphProto& graph = onnx_layer.get_graph();
+
+			if (weights_only) {
+				load_weights_only(graph);
+			}
+			else {
+				load_entire_model(graph);
+			}
+		}
+
+	protected:
+		void load_entire_model(onnx::GraphProto& onnx_graph) {
+
+			// loaded in traversal order
+			for (auto& node : graph->node()) {
+				auto* layer = onnx_layers.create_from_node(node);
+				add(layer);
+				layer->set_cudnn(CuDnn);
+			}
+
+		}
+
+		void load_weights_only(onnx::GraphProto& onnx_graph) {
 
 		}
 

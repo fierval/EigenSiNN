@@ -397,6 +397,9 @@ namespace EigenSinn {
 
     EigenModel& model;
 
+    onnx::GraphProto& get_onnx_graph() { return *model.get_graph(); }
+
+    // map where functions to load specific layers are marinated
     struct cmp_str
     {
       bool operator()(char const* a, char const* b) const
