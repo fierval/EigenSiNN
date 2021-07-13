@@ -30,13 +30,26 @@ namespace EigenSinn {
 
     // REVIEW: most layers have a single input, but not necessarily. Presence of the overloaded forward is legacy
     virtual void forward(std::vector<PtrTensorAdapter<Scalar, Device_>>& inputs) {
-      forward(inputs[0]);
+      if (inputs.size() == 1) {
+        forward(inputs[0]);
+        return;
+      }
+
+      // otherwise override!
+      assert(false);
     }
     virtual void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) = 0;
 
     // REVIEW: see above
     virtual void backward(std::vector<PtrTensorAdapter<Scalar, Device_>>& prev_layer, PtrTensorAdapter<Scalar, Device_>& next_layer_grad_any) {
-      backward(prev_layer[0], next_layer_grad_any);
+
+      if (prev_layer.size() == 1) {
+        backward(prev_layer[0], next_layer_grad_any);
+        return;
+      }
+
+      // otherwise override!
+      assert(false);
     }
 
     virtual  PtrTensorAdapter<Scalar, Device_> get_output() = 0;
