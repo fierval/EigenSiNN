@@ -312,7 +312,9 @@ namespace EigenSinn {
     }
 
     std::string& name_the_layer(LayerBase<Scalar, Device_>* layer) {
-      layer->set_layer_name(get_layer_name(layer->get_op_name()));
+      if (layer->get_layer_name().empty()) {
+        layer->set_layer_name(get_layer_name(layer->get_op_name()));
+      }
       return layer->get_layer_name();
     }
 
@@ -320,9 +322,8 @@ namespace EigenSinn {
 
       std::string& inp_layer_name = inp_layer->get_layer_name();
 
-      // we've been here before!
-      if (!inp_layer_name.empty()) {
-        assert(vertices.count(inp_layer_name) > 0);
+      // we may been here before, but not necessarily!
+      if (!inp_layer_name.empty() && vertices.count(inp_layer_name) == 0) {
         return inp_layer_name;
       }
 
@@ -342,17 +343,15 @@ namespace EigenSinn {
     // for now we need to instantiate the optimizer together with the vertex.
     std::string add(const std::string& input_name, LayerBase<Scalar, Device_>* layer) {
 
-      // make sure the input has been added
+      // we need to have the input already inserted
       assert(vertices.count(input_name) > 0);
 
       std::string& layer_name = layer->get_layer_name();
       vertex_t v_out, v_in;
 
       // name the current vertex if it doesn't yet have a name
-      if (layer_name.empty()) {
+      if (layer_name.empty() || vertices.count(layer_name) == 0) {
         layer_name = name_the_layer(layer);
-
-        assert(vertices.count(layer_name) == 0);
 
         v_out = boost::add_vertex(VertexProperty(layer_name), graph);
         graph[v_out].layer.reset(layer);
