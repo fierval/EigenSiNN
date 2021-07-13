@@ -9,15 +9,18 @@ namespace EigenSinn {
 	class PersistentNetworkBase : public NetworkBase<Scalar, Actual, Loss, Device_>
 	{
 	public:
+		typedef std::shared_ptr<EigenModel> PtrEigenModel;
+
 		PersistentNetworkBase() {
 
 		}
 
-		void save(bool for_training = true) {
+		PtrEigenModel save(bool for_training = true) {
 
 			// need to make sure we have topologically sorted vertices
 			assert(forward_order.size() > 0);
-			EigenModel model(for_training);
+			PtrEigenModel model = std::make_shared<EigenModel>(for_training);
+
 			vertex_name names = boost::get(boost::vertex_name, graph);
 
 			// we need to save the model based on the topological order
@@ -47,9 +50,15 @@ namespace EigenSinn {
 
 				// we'll get back the name of the output edge for this tensor and use it to
 				// keep building the graph
-				std::string layer_output_name = graph[v].layer->add_onnx_node(model, tensor_input_names);
+				std::string layer_output_name = graph[v].layer->add_onnx_node(*model, tensor_input_names);
 				layer_output.insert(std::make_pair(v_name, layer_output_name));
 			}
+
+			return model;
+		}
+
+		void load(EigenModel& model) {
+
 		}
 
 	private:
