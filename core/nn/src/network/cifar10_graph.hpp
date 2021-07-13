@@ -1,16 +1,16 @@
 #pragma once
 
 
-#include "network_graph.hpp"
+#include "persistent_network.hpp"
 
 
 namespace EigenSinn {
 
   template <typename Scalar, typename Actual, typename Device_>
-  class Cifar10 : public NetworkBase<Scalar, Actual, CrossEntropyLoss<Scalar, Actual, 2, Device_>, Device_> {
+  class Cifar10 : public PersistentNetworkBase<Scalar, Actual, CrossEntropyLoss<Scalar, Actual, 2, Device_>, Device_> {
 
   public:
-    Cifar10(int num_classes, float lr = 0.001) : NetworkBase() {
+    Cifar10(int num_classes, float lr = 0.001) {
       auto x = add(new Input<float, Device_>);
 
       x = add(x, new Conv2d<Scalar, Device_, RowMajor>(DSizes<Index, 4>{6, 3, 5, 5}, Padding2D{ 0, 0 }, 1));
