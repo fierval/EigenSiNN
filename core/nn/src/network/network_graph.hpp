@@ -23,6 +23,8 @@ namespace EigenSinn {
   template <typename Scalar, typename Actual, typename Loss, typename Device_>
   class NetworkBase {
 
+  public:
+
     typedef std::shared_ptr<LayerBase<Scalar, Device_>> PtrLayer;
 
     struct VertexData {
@@ -52,7 +54,7 @@ namespace EigenSinn {
     typedef std::vector<PtrTensorAdapter<Scalar, Device_>> TensorVector;
     typedef std::shared_ptr<Loss> PtrLoss;
 
-  public:
+
     NetworkBase() {
 
     }
@@ -385,7 +387,6 @@ namespace EigenSinn {
       return inputs;
     }
 
-  private:
     NetworkGraph graph;
 
     int current_name_suffix = 1;

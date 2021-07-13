@@ -21,7 +21,7 @@ namespace EigenSinn {
 
   public:
     LayerBase(const char* _op_name) : op_name(_op_name) {
-      
+
     }
 
     virtual void init() {};
@@ -66,24 +66,35 @@ namespace EigenSinn {
     virtual void set_bias(PtrTensorAdapter<Scalar, Device_>&) {}
 
     virtual ~LayerBase() = default;
-    
+
     virtual void set_cudnn(bool _is_cudnn) {}
 
     virtual const std::string add_onnx_node(EigenModel& model, const std::string& input_name) { return std::string(""); }
+    virtual const std::string add_onnx_node(EigenModel& model, std::vector<std::string>& input_names) {
+
+      if (input_names.size() == 1) {
+        return add_onnx_node(model, input_names[0]);
+        
+      }
+
+      // override!
+      throw std::logic_error("Not implemented");
+    }
+
     virtual const std::vector<Index> onnx_out_dims() { return std::vector<Index>(); }
 
     virtual void load_onnx_data(EigenModel& model, std::vector<std::string>& inputs) {}
 
     std::string& get_op_name() { return op_name; }
     std::string& get_layer_name() { return layer_name; }
-    
+
     void set_layer_name(std::string& name) {
       assert(!name.empty());
       layer_name = name;
     }
 
     // dimensions of the weights for the optimizer
-    virtual Index get_optimizer_rank() { 
+    virtual Index get_optimizer_rank() {
       PtrTensorAdapter<Scalar, Device_> weights = get_weights();
       if (!weights) {
         return 0;

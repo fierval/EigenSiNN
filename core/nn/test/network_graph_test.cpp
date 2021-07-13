@@ -41,4 +41,5 @@ TEST_F(GraphTest, Create) {
   cifar10->print_traversal();
   std::cerr << "=======================================" << std::endl;
   cifar10->print_traversal(false);
+  cifar10->save();
 }

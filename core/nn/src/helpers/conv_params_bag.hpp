@@ -114,14 +114,15 @@ namespace EigenSinn {
       dilations_attr->add_ints(dilation);
       dilations_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INTS);
 
-      create_onnx_attributes_common(node);
+      create_onnx_attributes_common(node, true);
 
     }
 
   protected:
 
     // ONNX: common attributes for convolution and maxpool
-    inline void create_onnx_attributes_common(onnx::NodeProto* node) {
+    // is_convolution for kernel_shape attributes
+    inline void create_onnx_attributes_common(onnx::NodeProto* node, bool is_convolution) {
       // pads
       auto pads_attr = node->add_attribute();
       pads_attr->set_name("pads");
@@ -141,6 +142,12 @@ namespace EigenSinn {
       // kernel_shape
       auto kernel_shape_attr = node->add_attribute();
       kernel_shape_attr->set_name("kernel_shape");
+
+      if (is_convolution) {
+        kernel_shape_attr->add_ints(kernel_dims[(int)ImageDims::batch]);
+        kernel_shape_attr->add_ints(kernel_dims[(int)ImageDims::channel]);
+      }
+
       kernel_shape_attr->add_ints(kernel_dims[(int)ImageDims::height]);
       kernel_shape_attr->add_ints(kernel_dims[(int)ImageDims::width]);
       kernel_shape_attr->set_type(onnx::AttributeProto::AttributeType::AttributeProto_AttributeType_INTS);
@@ -222,7 +229,7 @@ namespace EigenSinn {
     // serialize relevant attributes in the node
     inline void create_onnx_attributes(onnx::NodeProto* node) {
 
-      create_onnx_attributes_common(node);
+      create_onnx_attributes_common(node, false);
     }
 
     // range for parallel max_pooling
