@@ -34,9 +34,7 @@ namespace EigenSinn {
 				// input layer.
 				// the "output" of the input layer is the input layer itself
 				if (input_names.empty()) {
-					if (layer_output.count(v_name) == 0) {
-						layer_output.insert(std::make_pair(v_name, v_name));
-					}
+					add_layer_output(v_name, v_name);
 					continue;
 				}
 
@@ -51,7 +49,8 @@ namespace EigenSinn {
 				// we'll get back the name of the output edge for this tensor and use it to
 				// keep building the graph
 				std::string layer_output_name = graph[v].layer->add_onnx_node(*model, tensor_input_names);
-				layer_output.insert(std::make_pair(v_name, layer_output_name));
+
+				add_layer_output(v_name, layer_output_name);
 			}
 
 			return model;
@@ -76,6 +75,14 @@ namespace EigenSinn {
 			}
 
 			return input_names;
+		}
+
+		// add name of the output to the map if it is not yet there
+		void add_layer_output(std::string& layer_name, std::string& output_name) {
+			if (layer_output.count(layer_name) > 0) {
+				return;
+			}
+			layer_output.insert(std::make_pair(layer_name, output_name));
 		}
 
 		// REVIEW: this assumes only one actual output from a layer
