@@ -7,11 +7,13 @@
 #include "model.h"
 #include "op_defs.h"
 
-#define make_func(a) std::bind((&OnnxLoader<Scalar, Device_>::a), this, std::placeholders::_1)
+#define make_func(a) std::bind((&OnnxLoader<Scalar, Device_>::a), this, std::placeholders::_1, std::placeholders::_2)
 
 using namespace Eigen;
 
 namespace EigenSinn {
+
+  typedef std::vector<std::string> StringVector;
 
   template<typename Scalar, typename Device_>
   struct OnnxLoader {
@@ -33,21 +35,29 @@ namespace EigenSinn {
       layer_loaders.insert(std::make_pair(tanh_op, make_func(LoadTanh)));
     }
 
-    inline LayerBase<Scalar, Device_> * create_from_node(const onnx::NodeProto& node) {
+    inline std::tuple<StringVector, std::string, LayerBase<Scalar, Device_> *> create_from_node(const onnx::NodeProto& node) {
       
       const std::string& op_type = node.op_type();
 
       // unsopported layer!
       if (layer_loaders.find(op_type.c_str()) == layer_loaders.end()) {
-        return nullptr;
+        throw std::invalid_argument(std::string("Undrecognized operation: ") + op_type);
       }
 
       // get the actual layer
-      return layer_loaders[op_type.c_str()](node);
+      StringVector inputs = get_node_inputs(node);
+      std::string output = get_node_output(node);
+      LayerBase<Scalar, Device_>* layer = layer_loaders[op_type.c_str()](node, inputs);
+
+      return std::make_tuple(inputs, output, layer);
+    }
+
+    std::vector <std::string> get_input_layer_nodes(const onnx::NodeProto& node, StringVector& inputs) {
+
     }
 
   protected:
-    inline LayerBase<Scalar, Device_>* LoadBatchNormalization(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadBatchNormalization(const onnx::NodeProto& node, StringVector& inputs) {
 
       // epsilon
       auto eps = node.attribute(0).f();
@@ -78,74 +88,62 @@ namespace EigenSinn {
         break;
       }
       
-      std::vector<std::string> inputs = get_node_inputs(node);
-
       out->load_onnx_data(model, inputs);
       return out;
     }
 
-    inline LayerBase<Scalar, Device_>* LoadConv(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadConv(const onnx::NodeProto& node, StringVector& inputs) {
 
-      DSizes<Index, 4> real_kernel_dims;
+      std::vector<Index> real_kernel_dims;
       Padding2D padding;
       int stride;
       int dilation;
-      std::vector<std::string> inputs;
 
-      std::tie(inputs, real_kernel_dims, padding, stride, dilation) = common_conv_params(node);
+      std::tie(real_kernel_dims, padding, stride, dilation) = common_conv_params(node, inputs);
 
-      auto* out = new Conv2d<Scalar, Device_, RowMajor>(real_kernel_dims, padding, stride, dilation);
+      auto* out = new Conv2d<Scalar, Device_, RowMajor>(vec2dims<4>(real_kernel_dims), padding, stride, dilation);
       out->load_onnx_data(model, inputs);
       return out;
 
     }
 
-    std::tuple<std::vector<std::string>, DSizes<Index, 4>, Padding2D, int, int> common_conv_params(const onnx::NodeProto& node) {
-      DSizes<Index, 2> kernel_dims;
+    std::tuple<std::vector<Index>, Padding2D, int, int> common_conv_params(const onnx::NodeProto& node, StringVector& inputs) {
+
+      std::vector<Index> kernel_dims;
       Padding2D padding;
       int stride;
       int dilation;
 
       std::tie(kernel_dims, padding, stride, dilation) = get_conv_node_attributes(node);
 
-      auto inputs = get_node_inputs(node);
-
       std::vector<std::vector<Index>> dimensions;
       std::vector<onnx::TensorProto> values;
 
       // kernel dimensions are second
-      DSizes<Index, 4> real_kernel_dims;
       std::tie(values, dimensions) = model.get_input_data_and_dimensions<Scalar>(inputs);
 
-      real_kernel_dims = vec2dims<4>(dimensions[0]);
-
-      // consistent between attributes and actual dimensions
-      assert(kernel_dims[0] == real_kernel_dims[2] && kernel_dims[1] == real_kernel_dims[3]);
-
-      return std::make_tuple(inputs, real_kernel_dims, padding, stride, dilation);
+      return std::make_tuple(dimensions[0], padding, stride, dilation);
 
     }
 
-    inline LayerBase<Scalar, Device_>* LoadConvTranspose(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadConvTranspose(const onnx::NodeProto& node, StringVector& inputs) {
 
-      DSizes<Index, 4> real_kernel_dims;
+      std::vector<Index> real_kernel_dims;
       Padding2D padding;
       int stride;
       int dilation;
-      std::vector<std::string> inputs;
 
-      std::tie(inputs, real_kernel_dims, padding, stride, dilation) = common_conv_params(node);
+      std::tie(real_kernel_dims, padding, stride, dilation) = common_conv_params(node, inputs);
 
-      auto * out = new TransConv2d<Scalar, Device_, RowMajor>(real_kernel_dims, padding, stride, dilation);
+      auto * out = new TransConv2d<Scalar, Device_, RowMajor>(vec2dims<4>(real_kernel_dims), padding, stride, dilation);
       out->load_onnx_data(model, inputs);
       return out;
 
     }
 
-    inline LayerBase<Scalar, Device_>* LoadDropout(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadDropout(const onnx::NodeProto& node, StringVector& inputs) {
 
       // dropout probability is saved as input
-      auto inputs = get_node_inputs(node);
       std::vector<onnx::TensorProto> prob_data;
       std::vector<std::vector<Index>> prob_data_dims;
 
@@ -174,14 +172,12 @@ namespace EigenSinn {
       return out;
     }
 
-    inline LayerBase<Scalar, Device_>* LoadFlatten(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadFlatten(const onnx::NodeProto& node, StringVector& inputs) {
       // flatten is always agains dim 1
       return new EigenSinn::Flatten<Scalar, Device_, RowMajor>();
     }
 
-    inline LayerBase<Scalar, Device_>* LoadGemm(const onnx::NodeProto& node) {
-
-      auto inputs = get_node_inputs(node);
+    inline LayerBase<Scalar, Device_>* LoadGemm(const onnx::NodeProto& node, StringVector& inputs) {
 
       std::vector<std::vector<Index>> dimensions;
       std::vector<onnx::TensorProto> values;
@@ -196,38 +192,21 @@ namespace EigenSinn {
       return out;
     }
 
-    inline LayerBase<Scalar, Device_>* LoadMaxPool(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadMaxPool(const onnx::NodeProto& node, StringVector& inputs) {
 
-      DSizes<Index, 2> kernel_dims;
+      std::vector<Index> kernel_dims;
       Padding2D padding;
       int stride;
       
       std::tie(kernel_dims, padding, stride) = get_conv_node_common_attributes(node);
 
-      auto rank_attr = get_node_attributes(node)["rank"].i();
-
       // create layer
-      LayerBase<Scalar, Device_>* out;
-
-      switch (rank_attr)
-      {
-      case 2:
-        out = new MaxPooling<Scalar, 4, Device_, RowMajor>(kernel_dims, stride, padding);
-        break;
-      case 4:
-        out = new MaxPooling<Scalar, 4, Device_, RowMajor>(kernel_dims, stride, padding);
-        break;
-
-      default:
-        throw std::logic_error("Unsupported rank");
-        break;
-      }
-
+      LayerBase<Scalar, Device_>* out = new MaxPooling<Scalar, 4, Device_, RowMajor>(vec2dims<2>(kernel_dims), stride, padding);;
       return out;
 
     }
 
-    inline LayerBase<Scalar, Device_>* LoadLeakyRelu(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadLeakyRelu(const onnx::NodeProto& node, StringVector& inputs) {
       
       auto attrs = get_node_attributes(node);
       auto rank_attr = attrs["rank"].i();
@@ -252,7 +231,7 @@ namespace EigenSinn {
       return out;
     }
 
-    inline LayerBase<Scalar, Device_>* LoadRelu(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadRelu(const onnx::NodeProto& node, StringVector& inputs) {
 
       auto rank_attr = get_node_attributes(node)["rank"].i();
 
@@ -276,7 +255,7 @@ namespace EigenSinn {
       return out;
     }
 
-    inline LayerBase<Scalar, Device_>* LoadSigmoid(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadSigmoid(const onnx::NodeProto& node, StringVector& inputs) {
       auto rank_attr = get_node_attributes(node)["rank"].i();
 
       // create layer
@@ -299,7 +278,7 @@ namespace EigenSinn {
 
     }
 
-    inline LayerBase<Scalar, Device_>* LoadSoftmax(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadSoftmax(const onnx::NodeProto& node, StringVector& inputs) {
       auto rank_attr = get_node_attributes(node)["rank"].i();
 
       // create layer
@@ -321,7 +300,7 @@ namespace EigenSinn {
       return out;
     }
 
-    inline LayerBase<Scalar, Device_>* LoadTanh(const onnx::NodeProto& node) {
+    inline LayerBase<Scalar, Device_>* LoadTanh(const onnx::NodeProto& node, StringVector& inputs) {
       auto rank_attr = get_node_attributes(node)["rank"].i();
 
       // create layer
@@ -343,12 +322,19 @@ namespace EigenSinn {
       return out;
     }
 
-    std::vector<std::string> get_node_inputs(const onnx::NodeProto& node) {
+    StringVector get_node_inputs(const onnx::NodeProto& node) {
 
-      std::vector<std::string> out(node.input_size());
+      StringVector out(node.input_size());
 
       std::transform(node.input().begin(), node.input().end(), out.begin(), [](const std::string& s) {return s; });
       return out;
+    }
+
+    std::string get_node_output(const onnx::NodeProto& node) {
+
+      // REVIEW: Single output name to link with possibly more than one node
+      // E.g.: an output can be convolved and also used as input to a different layer
+      return node.output().Get(0);
     }
 
     std::map<const std::string, onnx::AttributeProto> get_node_attributes(const onnx::NodeProto& node) {
@@ -360,11 +346,11 @@ namespace EigenSinn {
     }
 
     // kernel_shape is only good for debugging as we don't get all the dimensions
-    std::tuple<DSizes<Index, 2>, Padding2D, int, int> get_conv_node_attributes(const onnx::NodeProto& node) {
+    std::tuple<std::vector<Index>, Padding2D, int, int> get_conv_node_attributes(const onnx::NodeProto& node) {
 
       auto attrs = get_node_attributes(node);
 
-      DSizes<Index, 2> kernel_dims;
+      std::vector<Index> kernel_dims;
 
       Padding2D padding;
       int stride;
@@ -377,11 +363,11 @@ namespace EigenSinn {
     }
 
     // Attributes in common for maxpool and conv
-    std::tuple<DSizes<Index, 2>, Padding2D, int> get_conv_node_common_attributes(const onnx::NodeProto& node) {
+    std::tuple<std::vector<Index>, Padding2D, int> get_conv_node_common_attributes(const onnx::NodeProto& node) {
 
       auto attrs = get_node_attributes(node);
 
-      DSizes<Index, 2> kernel_dims = vec2dims<2>(get_attr_dims(attrs["kernel_shape"]));
+      std::vector<Index> kernel_dims = get_attr_dims(attrs["kernel_shape"]);
       Padding2D padding{ (long)attrs["pads"].ints().Get(2), (long)attrs["pads"].ints().Get(3) };
       int stride = attrs["strides"].ints().Get(0);
 
@@ -397,7 +383,7 @@ namespace EigenSinn {
 
     EigenModel& model;
 
-    onnx::GraphProto& get_onnx_graph() { return *model.get_graph(); }
+    onnx::GraphProto& get_onnx_graph() { return model.get_graph(); }
 
     // map where functions to load specific layers are marinated
     struct cmp_str
@@ -408,7 +394,7 @@ namespace EigenSinn {
       }
     };
 
-    std::map<const char*, std::function<LayerBase<Scalar, Device_>* (const onnx::NodeProto&)>, cmp_str> layer_loaders;
+    std::map<const char*, std::function<LayerBase<Scalar, Device_>* (const onnx::NodeProto&, StringVector&)>, cmp_str> layer_loaders;
 
   };
 }

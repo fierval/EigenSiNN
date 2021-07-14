@@ -15,7 +15,7 @@ namespace EigenSinn {
 
 		}
 
-		PtrEigenModel save(bool for_training = true) {
+		inline PtrEigenModel save(bool for_training = true) {
 
 			// need to make sure we have topologically sorted vertices
 			assert(forward_order.size() > 0);
@@ -56,13 +56,12 @@ namespace EigenSinn {
 			return model;
 		}
 
-		void load(EigenModel& model, bool weights_only = false) {
+		inline void load(EigenModel& model, bool weights_only = false) {
 			
 			// TODO: we start from scratch
 			clear();
 
 			OnnxLoader<Scalar, Device_> onnx_layers(model);
-			onnx::GraphProto& graph = onnx_layer.get_graph();
 
 			if (weights_only) {
 				load_weights_only(graph);
@@ -73,9 +72,13 @@ namespace EigenSinn {
 		}
 
 	protected:
-		void load_entire_model(onnx::GraphProto& onnx_graph) {
+		inline void load_entire_model(OnnxLoader<Scalar, Device_>& onnx_layers) {
 
-			// loaded in traversal order
+			onnx::GraphProto& graph = onnx_layer.get_graph();
+
+			// loaded in traversal order.
+			// we are guaranteed to start with a layer that has "Input_N"
+			// as one of the inputs
 			for (auto& node : graph->node()) {
 				auto* layer = onnx_layers.create_from_node(node);
 				add(layer);
@@ -84,8 +87,8 @@ namespace EigenSinn {
 
 		}
 
-		void load_weights_only(onnx::GraphProto& onnx_graph) {
-
+		inline void load_weights_only(OnnxLoader<Scalar, Device_>& onnx_layers) {
+			onnx::GraphProto& graph = onnx_layer.get_graph();
 		}
 
 	private:
