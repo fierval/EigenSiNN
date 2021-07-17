@@ -13,4 +13,5 @@ namespace EigenSinn {
   constexpr static char sigmoid_op[] = "Sigmoid";
   constexpr static char softmax_op[] = "Softmax";
   constexpr static char tanh_op[] = "Tanh";
+  constexpr static char input_op[] = "Input";
 }

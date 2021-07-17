@@ -325,7 +325,7 @@ namespace EigenSinn {
       std::string& inp_layer_name = inp_layer->get_layer_name();
 
       // we may been here before, but not necessarily!
-      if (!inp_layer_name.empty() && vertices.count(inp_layer_name) == 0) {
+      if (!inp_layer_name.empty() && vertices.count(inp_layer_name) > 0) {
         return inp_layer_name;
       }
 
