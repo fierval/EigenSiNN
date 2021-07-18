@@ -29,7 +29,6 @@ protected:
   std::string input_node_name = "input.1";
   DSizes<Index, 4> cifar_dims{ 10, 3, 32, 32 };
   DeviceTensor<float, 4> rand_image;
-  EigenModel model;
 };
 
 //TEST_F(GraphTest, Create) {
@@ -55,6 +54,9 @@ TEST_F(GraphTest, LoadModel) {
   cifar10->print_traversal(false);
  
   auto model = cifar10->save();
+  model->dump("c:\\temp\\cifar10_graph.txt");
+  model->flush("c:\\temp\\cifar10_graph.onnx");
+
   cifar10->load(*model, false);
   
 }

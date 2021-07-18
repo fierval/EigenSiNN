@@ -10,7 +10,7 @@ namespace EigenSinn {
   {
   public:
     typedef std::shared_ptr<EigenModel> PtrEigenModel;
-
+    
     PersistentNetworkBase() {
 
     }
@@ -20,6 +20,10 @@ namespace EigenSinn {
       // need to make sure we have topologically sorted vertices
       assert(forward_order.size() > 0);
       PtrEigenModel model = std::make_shared<EigenModel>(for_training);
+
+      // keep track of outputs that become inputs to other layers.
+      // if they don't - we have reached an output layer
+      std::unordered_set<std::string> in_names;
 
       vertex_name names = boost::get(boost::vertex_name, graph);
       std::map<std::string, std::string> layer_output;
@@ -36,6 +40,7 @@ namespace EigenSinn {
         // the "output" of the input layer is the input layer itself
         if (input_names.empty()) {
           add_layer_output(layer_output, v_name, v_name);
+          graph[v].layer->add_onnx_node(*model, v_name);
           continue;
         }
 
@@ -44,7 +49,9 @@ namespace EigenSinn {
         std::vector<std::string> tensor_input_names(input_names.size());
 
         std::transform(input_names.begin(), input_names.end(), tensor_input_names.begin(), [&](std::string& in_layer) {
-          return layer_output[in_layer];
+          std::string& in_name = layer_output[in_layer];
+          in_names.insert(in_name);
+          return in_name;
           });
 
         // we'll get back the name of the output edge for this tensor and use it to
@@ -53,6 +60,21 @@ namespace EigenSinn {
 
         add_layer_output(layer_output, v_name, layer_output_name);
       }
+
+      // figure out which layers are actually "output" layers: not leading to any other layers
+      for (auto& p : layer_output) {
+        
+        // this is leading somewhere, so not the network output
+        if (in_names.find(p.second) != in_names.end()) {
+          continue;
+        }
+
+        // found an output!
+        auto v = vertices[p.first];
+        auto layer = graph[v].layer;
+        model->add_output(p.second, layer->onnx_out_dims(), onnx_data_type_from_scalar<Scalar>());
+      }
+
 
       return model;
     }

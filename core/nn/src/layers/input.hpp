@@ -51,8 +51,12 @@ namespace EigenSinn {
       return input->get_dims();
     }
 
-  private:
+    const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
+      model.add_input(input_name, get_dims(), onnx_data_type_from_scalar<Scalar>());
+      return input_name;
+    }
 
+  private:
     PtrTensorAdapter<Scalar, Device_> input;
   };
 }
