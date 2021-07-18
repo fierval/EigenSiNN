@@ -58,6 +58,8 @@ namespace EigenSinn {
 
     }
 
+    onnx::GraphProto& get_onnx_graph() { return *model.get_graph(); }
+
   protected:
     inline LayerBase<Scalar, Device_>* LoadBatchNormalization(const onnx::NodeProto& node, StringVector& inputs) {
 
@@ -384,8 +386,6 @@ namespace EigenSinn {
     }
 
     EigenModel& model;
-
-    onnx::GraphProto& get_onnx_graph() { return model.get_graph(); }
 
     // map where functions to load specific layers are marinated
     struct cmp_str

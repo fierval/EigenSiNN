@@ -31,6 +31,8 @@ set(TEST_EXE eigentest)
 
 message(STATUS "Sources: ${TEST_SOURCES}")
 message(STATUS "CUDA Include: ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
+message("VS version: ${MSVC_VERSION}")
+
 find_package(Boost REQUIRED COMPONENTS graph system serialization)
 
 # build test exe
@@ -43,6 +45,10 @@ set_property(TARGET ${TEST_EXE}
              PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 
 set(CMAKE_CUDA_ARCHITECTURES 70 CACHE STRING "CUDA Arches" FORCE)
+
+if(DEFINED MSVC_VERSION)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+endif()
 
 set_property(TARGET ${TEST_EXE} 
              PROPERTY CMAKE_CUDA_ARCHITECTURES $CMAKE_CUDA_ARCHITECTURES)

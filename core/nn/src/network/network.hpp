@@ -162,10 +162,10 @@ namespace EigenSinn {
       for (auto& node : graph->node()) {
         StringVector inputs;
         std::string output;
-        LayerBase<Scalar, Device_> * layer;
+        OnnxLoader<Scalar, Device_>::PtrLayer layer;
         std::tie(inputs, output, layer) = onnx_layers.create_from_node(node);
 
-        add(layer);
+        add(layer.get());
         layer->set_cudnn(CuDnn);
       }
 

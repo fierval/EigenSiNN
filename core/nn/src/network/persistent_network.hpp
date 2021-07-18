@@ -60,58 +60,42 @@ namespace EigenSinn {
     inline void load(EigenModel& model, bool weights_only = false) {
 
       OnnxLoader<Scalar, Device_> onnx_layers(model);
-      onnx::GraphProto& onnx_graph = onnx_layer.get_graph();
+      onnx::GraphProto& onnx_graph = onnx_layers.get_onnx_graph();
 
       // structures for loading onnx graph
       std::map<std::string, PtrLayer> name_layer_map;
       std::map<std::string, std::string> output_of_layer;
       std::map<std::string, StringVector> layer_s_inputs;
 
-      for (auto& node : onnx_graph->node()) {
+      for (auto& node : onnx_graph.node()) {
         StringVector inputs;
         std::string output;
         PtrLayer layer;
 
         std::tie(inputs, output, layer) = onnx_layers.create_from_node(node);
-        layer->set_cudnn(CuDnn);
+        layer->set_cudnn(true);
 
         std::string name = layer->get_layer_name();
 
         name_layer_map.insert(std::make_pair(name, layer));
         output_of_layer.insert(std::make_pair(output, name));
-        layer_s_input.insert(std::make_pair(name, inputs));
+        layer_s_inputs.insert(std::make_pair(name, inputs));
       }
       
       if (!weights_only) {
         clear();
+        add_vertices(name_layer_map, output_of_layer, layer_s_inputs);
+        add_edges(name_layer_map, output_of_layer, layer_s_inputs);
+        return;
       }
 
+      // otherwise just add weights
       for (auto& p : name_layer_map) {
         std::string name = p.first;
         PtrLayer layer = p.second;
 
-        if (weights_only) {
           vertex_t v = vertices[name];
           graph[v].layer.reset(layer.get());
-        }
-        else {
-          add_recursive(name_layer_map, output_of_layer, layer_s_inputs, name);
-        }
-      }
-    }
-
-  protected:
-    inline void load_entire_model() {
-
-
-      // (re-)loading the model from scratch
-      clear();
-
-      // build the graph in any order of vertices
-      for (auto& p : name_layer_map) {
-        std::string name = p.first;
-
-        add_recursive(name);
       }
     }
 
@@ -144,40 +128,57 @@ namespace EigenSinn {
       return input_name.rfind(input_op, 0) == 0;
     }
 
-    // iterate over the "edges" stored in our maps
-    // and build the graph. In case we are not reading it
-    // in traversal order
-    void add_recursive(std::map<std::string, PtrLayer>& name_layer_map, 
-      std::map<std::string, std::string>& output_of_layer, 
-      std::map<std::string, StringVector>& layer_s_inputs,
-      std::string& layer_name) {
+    void add_vertices(std::map<std::string, PtrLayer>& name_layer_map, std::map<std::string, std::string>& output_of_layer, std::map<std::string, StringVector>& layer_s_inputs) {
 
-      if (vertices.count(input_name) != 0) {
-        return;
+      // add all the vertices don't forget the inputs
+      // not reflected in the name_layer_map
+      for (auto& p : name_layer_map) {
+        std::string name = p.first;
+        PtrLayer layer = p.second;
+
+        auto v = boost::add_vertex(VertexProperty(name), graph);
+        vertices.insert(std::make_pair(name, v));
+        graph[v].layer = layer;
+
+        // check if the layer has inputs and add them
+        StringVector inputs = get_layer_inputs(layer_s_inputs, output_of_layer, name);
+        StringVector input_layer_names;
+        std::copy_if(inputs.begin(), inputs.end(), std::back_inserter(input_layer_names), [this](std::string& s) {return this->is_input_layer(s); });
+        for(auto& in_name : input_layer_names) {
+
+          auto inp_layer = new Input<Scalar, Device_>;
+          inp_layer->set_layer_name(in_name);
+          add(inp_layer);
+        }
       }
+    }
+
+    void add_edges(std::map<std::string, PtrLayer>& name_layer_map, std::map<std::string, std::string>& output_of_layer, std::map<std::string, StringVector>& layer_s_inputs) {
+
+      // at this point all the vertices are in-place. Just need to connect them
+      // all inputs have also been added so all we need is go through each vertex and connect them
+      // name_layer_map does not contain input layers so no need to check
+      for (auto& p : name_layer_map) {
+        std::string name = p.first;
+
+        auto inputs = get_layer_inputs(layer_s_inputs, output_of_layer, name);
+        for (auto& i : inputs) {
+          auto v_in = vertices[i];
+          auto v_out = vertices[name];
+          boost::add_edge(v_in, v_out, graph);
+        }
+      }
+    }
+
+    StringVector get_layer_inputs(std::map<std::string, StringVector>& layer_s_inputs, std::map<std::string, std::string>& output_of_layer, std::string& layer_name) {
 
       // find what layer outputs this input and add it first
       StringVector& inputs = layer_s_inputs[layer_name];
       StringVector true_inputs;
 
+      // a true input is an output of some other layer
       std::copy_if(inputs.begin(), inputs.end(), std::back_inserter(true_inputs), [&](std::string& s) {return output_of_layer.count(s) > 0; });
-
-      for (auto& true_inp : true_inputs) {
-        std::string input_layer_name = is_input_layer(input_name) ? input_name : output_of_layer[true_inp];
-
-        // inputs are not represented as "vertices" in the
-        // ONNX graph, we need to make one
-        if (is_input_layer(input_layer_name)) {
-          auto inp_layer = new Input<Scalar, Device_>;
-          inp_layer->set_layer_name(input_layer_name);
-          add(inp_layer);
-          add(input_layer_name, name_layer_map[layer_name].get());
-          continue;
-        }
-
-        add_recursive(name_layer_map, output_of_layer, layer_s_inputs, input_layer_name);
-        add(input_layer_name, name_layer_map[layer_name].get());
-      }
+      return true_inputs;
     }
   };
 }

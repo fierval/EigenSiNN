@@ -32,7 +32,19 @@ protected:
   EigenModel model;
 };
 
-TEST_F(GraphTest, Create) {
+//TEST_F(GraphTest, Create) {
+//
+//  cifar10->print_graph();
+//  std::ofstream graphviz("c:\\temp\\gviz.dot", std::ios::binary);
+//  cifar10->write_graphviz(graphviz);
+//
+//  cifar10->print_traversal();
+//  std::cerr << "=======================================" << std::endl;
+//  cifar10->print_traversal(false);
+//  cifar10->save();
+//}
+
+TEST_F(GraphTest, LoadModel) {
 
   cifar10->print_graph();
   std::ofstream graphviz("c:\\temp\\gviz.dot", std::ios::binary);
@@ -41,5 +53,8 @@ TEST_F(GraphTest, Create) {
   cifar10->print_traversal();
   std::cerr << "=======================================" << std::endl;
   cifar10->print_traversal(false);
-  cifar10->save();
+ 
+  auto model = cifar10->save();
+  cifar10->load(*model, false);
+  
 }
