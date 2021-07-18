@@ -49,10 +49,9 @@ namespace EigenSinnTest {
     model.flush("c:\\temp\\cifar10.onnx");
     model.dump("c:\\temp\\cifar10.txt");
 
-    net->clear();
-
+    auto clear_net = std::make_shared<NetBase<float, 4, CrossEntropyLoss<float, uint8_t, 2, ThreadPoolDevice, RowMajor>, ThreadPoolDevice, RowMajor, true>>();
     auto str_model = model.flush_to_string();
-    net->load_from_onnx(str_model);
+    clear_net->load_from_onnx(str_model);
   }
 
 } // EigenSinnTest

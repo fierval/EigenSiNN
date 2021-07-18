@@ -22,13 +22,13 @@ namespace EigenSinn {
       PtrEigenModel model = std::make_shared<EigenModel>(for_training);
 
       vertex_name names = boost::get(boost::vertex_name, graph);
+      std::map<std::string, std::string> layer_output;
 
       // we need to save the model based on the topological order
       // or else we won't be able to define edges in the ONNX graph
       for (auto& v : forward_order) {
 
         std::string v_name = names(v);
-        std::map<std::string, std::string> layer_output;
 
         auto input_names = collect_input_names(v);
 
@@ -63,14 +63,14 @@ namespace EigenSinn {
       onnx::GraphProto& onnx_graph = onnx_layers.get_onnx_graph();
 
       // structures for loading onnx graph
-      std::map<std::string, PtrLayer> name_layer_map;
+      std::map<std::string, LayerBase<Scalar, Device_> *> name_layer_map;
       std::map<std::string, std::string> output_of_layer;
       std::map<std::string, StringVector> layer_s_inputs;
 
       for (auto& node : onnx_graph.node()) {
         StringVector inputs;
         std::string output;
-        PtrLayer layer;
+        LayerBase<Scalar, Device_>* layer;
 
         std::tie(inputs, output, layer) = onnx_layers.create_from_node(node);
         layer->set_cudnn(true);
@@ -81,7 +81,7 @@ namespace EigenSinn {
         output_of_layer.insert(std::make_pair(output, name));
         layer_s_inputs.insert(std::make_pair(name, inputs));
       }
-      
+
       if (!weights_only) {
         clear();
         add_vertices(name_layer_map, output_of_layer, layer_s_inputs);
@@ -92,10 +92,10 @@ namespace EigenSinn {
       // otherwise just add weights
       for (auto& p : name_layer_map) {
         std::string name = p.first;
-        PtrLayer layer = p.second;
+        LayerBase<Scalar, Device_> * layer = p.second;
 
-          vertex_t v = vertices[name];
-          graph[v].layer.reset(layer.get());
+        vertex_t v = vertices[name];
+        graph[v].layer.reset(layer);
       }
     }
 
@@ -128,23 +128,23 @@ namespace EigenSinn {
       return input_name.rfind(input_op, 0) == 0;
     }
 
-    void add_vertices(std::map<std::string, PtrLayer>& name_layer_map, std::map<std::string, std::string>& output_of_layer, std::map<std::string, StringVector>& layer_s_inputs) {
+    void add_vertices(std::map<std::string, LayerBase<Scalar, Device_> *>& name_layer_map, std::map<std::string, std::string>& output_of_layer, std::map<std::string, StringVector>& layer_s_inputs) {
 
       // add all the vertices don't forget the inputs
       // not reflected in the name_layer_map
       for (auto& p : name_layer_map) {
         std::string name = p.first;
-        PtrLayer layer = p.second;
+        LayerBase<Scalar, Device_> * layer = p.second;
 
         auto v = boost::add_vertex(VertexProperty(name), graph);
         vertices.insert(std::make_pair(name, v));
-        graph[v].layer = layer;
+        graph[v].layer.reset(layer);
 
         // check if the layer has inputs and add them
         StringVector inputs = get_layer_inputs(layer_s_inputs, output_of_layer, name);
         StringVector input_layer_names;
         std::copy_if(inputs.begin(), inputs.end(), std::back_inserter(input_layer_names), [this](std::string& s) {return this->is_input_layer(s); });
-        for(auto& in_name : input_layer_names) {
+        for (auto& in_name : input_layer_names) {
 
           auto inp_layer = new Input<Scalar, Device_>;
           inp_layer->set_layer_name(in_name);
@@ -153,7 +153,7 @@ namespace EigenSinn {
       }
     }
 
-    void add_edges(std::map<std::string, PtrLayer>& name_layer_map, std::map<std::string, std::string>& output_of_layer, std::map<std::string, StringVector>& layer_s_inputs) {
+    void add_edges(std::map<std::string, LayerBase<Scalar, Device_> *>& name_layer_map, std::map<std::string, std::string>& output_of_layer, std::map<std::string, StringVector>& layer_s_inputs) {
 
       // at this point all the vertices are in-place. Just need to connect them
       // all inputs have also been added so all we need is go through each vertex and connect them

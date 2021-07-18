@@ -32,6 +32,7 @@ set(TEST_EXE eigentest)
 message(STATUS "Sources: ${TEST_SOURCES}")
 message(STATUS "CUDA Include: ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
 message("VS version: ${MSVC_VERSION}")
+message("MSVC: ${MSVC}")
 
 find_package(Boost REQUIRED COMPONENTS graph system serialization)
 

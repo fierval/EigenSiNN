@@ -19,8 +19,8 @@ namespace EigenSinn {
 
   template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   struct NetworkNode {
-    std::unique_ptr<LayerBase<Scalar, Device_>> layer;
-    std::unique_ptr<OptimizerBase<Scalar, Device_, Layout>> optimizer;
+    std::shared_ptr<LayerBase<Scalar, Device_>> layer;
+    std::shared_ptr<OptimizerBase<Scalar, Device_, Layout>> optimizer;
 
     NetworkNode(LayerBase<Scalar, Device_>* _layer, OptimizerBase<Scalar, Device_, Layout>* _optimizer = nullptr) : layer(_layer), optimizer(_optimizer) {}
 
@@ -36,6 +36,7 @@ namespace EigenSinn {
   class NetBase {
 
     typedef std::vector<NetworkNode<Scalar, Device_>> Network;
+    typedef typename OnnxLoader<Scalar, Device_>::PtrLayer PtrLayer;
 
   public:
 
@@ -162,10 +163,10 @@ namespace EigenSinn {
       for (auto& node : graph->node()) {
         StringVector inputs;
         std::string output;
-        OnnxLoader<Scalar, Device_>::PtrLayer layer;
+        LayerBase<Scalar, Device_> * layer;
         std::tie(inputs, output, layer) = onnx_layers.create_from_node(node);
 
-        add(layer.get());
+        add(layer);
         layer->set_cudnn(CuDnn);
       }
 

@@ -19,6 +19,7 @@ namespace EigenSinn {
   struct OnnxLoader {
 
     typedef std::shared_ptr<LayerBase<Scalar, Device_>> PtrLayer;
+    typedef LayerBase<Scalar, Device_> BaseLayer;
 
     OnnxLoader(EigenModel& model) 
      : model(model) {
@@ -37,7 +38,7 @@ namespace EigenSinn {
       layer_loaders.insert(std::make_pair(tanh_op, make_func(LoadTanh)));
     }
 
-    inline std::tuple<StringVector, std::string, PtrLayer> create_from_node(const onnx::NodeProto& node) {
+    inline std::tuple<StringVector, std::string, BaseLayer*> create_from_node(const onnx::NodeProto& node) {
       
       const std::string& op_type = node.op_type();
 
@@ -49,7 +50,7 @@ namespace EigenSinn {
       // get the actual layer
       StringVector inputs = get_node_inputs(node);
       std::string output = get_node_output(node);
-      PtrLayer layer(layer_loaders[op_type.c_str()](node, inputs));
+      BaseLayer * layer = layer_loaders[op_type.c_str()](node, inputs);
 
       return std::make_tuple(inputs, output, layer);
     }
