@@ -87,6 +87,26 @@ namespace EigenSinn {
 
     }
 
+    EigenModel(EigenModel& m) {
+
+      model = m.model;
+      current_value_name = m.current_value_name;
+      current_layer_suffix = m.current_layer_suffix;
+      is_training = m.is_training;
+    }
+
+
+    EigenModel& operator=(const EigenModel& m) {
+      if (this == &m) { return *this; }
+
+      model = m.model;
+      current_value_name = m.current_value_name;
+      current_layer_suffix = m.current_layer_suffix;
+      is_training = m.is_training;
+
+      return *this;
+    }
+
     // add input/output tensor descriptors to the graph
     inline void add_input(const std::string& name, std::vector<Index>& dims, onnx::TensorProto_DataType data_type) {
 
@@ -141,13 +161,13 @@ namespace EigenSinn {
     }
 
     // adds a graph node with descriptions and references to inputs/outputs
-    inline onnx::NodeProto * add_graph_node(const char* op_type, const std::string& input_name) {
+    inline onnx::NodeProto * add_graph_node(const std::string& op_type, const std::string& input_name) {
 
       std::vector<std::string> names{ input_name };
       return add_graph_node(op_type, names);
     }
 
-    inline onnx::NodeProto* add_graph_node(const char* op_type, std::vector<std::string>& input_names) {
+    inline onnx::NodeProto* add_graph_node(const std::string& op_type, std::vector<std::string>& input_names) {
 
       std::ostringstream layer_name_stream;
       layer_name_stream << op_type << "_" << get_layer_suffix();
@@ -190,6 +210,23 @@ namespace EigenSinn {
       std::string data;
       gp::TextFormat::PrintToString(model, &data);
       out << data;
+    }
+
+    static inline EigenModel FromFile(const std::string& file_name) {
+
+      std::ifstream in(file_name, std::ofstream::binary);
+
+      EigenModel m;
+      m.model.ParseFromIstream(&in);
+
+      return m;
+    }
+
+    static inline EigenModel FromString(const std::string& str) {
+      EigenModel m;
+
+      m.model.ParseFromString(str);
+      return m;
     }
 
     inline std::string to_string() {

@@ -88,7 +88,12 @@ namespace EigenSinn {
     std::string& get_op_name() { return op_name; }
     std::string& get_layer_name() { return layer_name; }
 
-    void set_layer_name(std::string& name) {
+    void set_layer_name(const std::string& name) {
+      assert(!name.empty());
+      layer_name = name;
+    }
+
+    void set_layer_name(const std::string&& name) {
       assert(!name.empty());
       layer_name = name;
     }

@@ -51,6 +51,8 @@ namespace EigenSinn {
       StringVector inputs = get_node_inputs(node);
       std::string output = get_node_output(node);
       BaseLayer * layer = layer_loaders[op_type.c_str()](node, inputs);
+      
+      layer->set_layer_name(node.name());
 
       return std::make_tuple(inputs, output, layer);
     }

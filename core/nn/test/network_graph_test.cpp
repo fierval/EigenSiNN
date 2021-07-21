@@ -57,6 +57,8 @@ TEST_F(GraphTest, LoadModel) {
   model->dump("c:\\temp\\cifar10_graph.txt");
   model->flush("c:\\temp\\cifar10_graph.onnx");
 
-  cifar10->load(*model, false);
+  EigenModel m = EigenModel::FromFile("c:\\temp\\cifar10_graph.onnx");
+
+  cifar10->load(m, false);
   
 }

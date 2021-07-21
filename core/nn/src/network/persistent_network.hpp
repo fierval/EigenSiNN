@@ -10,7 +10,7 @@ namespace EigenSinn {
   {
   public:
     typedef std::shared_ptr<EigenModel> PtrEigenModel;
-    
+
     PersistentNetworkBase() {
 
     }
@@ -63,7 +63,7 @@ namespace EigenSinn {
 
       // figure out which layers are actually "output" layers: not leading to any other layers
       for (auto& p : layer_output) {
-        
+
         // this is leading somewhere, so not the network output
         if (in_names.find(p.second) != in_names.end()) {
           continue;
@@ -85,7 +85,7 @@ namespace EigenSinn {
       onnx::GraphProto& onnx_graph = onnx_layers.get_onnx_graph();
 
       // structures for loading onnx graph
-      std::map<std::string, LayerBase<Scalar, Device_> *> name_layer_map;
+      std::map<std::string, LayerBase<Scalar, Device_>*> name_layer_map;
       std::map<std::string, std::string> output_of_layer;
       std::map<std::string, StringVector> layer_s_inputs;
 
@@ -102,6 +102,18 @@ namespace EigenSinn {
         name_layer_map.insert(std::make_pair(name, layer));
         output_of_layer.insert(std::make_pair(output, name));
         layer_s_inputs.insert(std::make_pair(name, inputs));
+
+        // check if the layer has inputs reprsented by Input_ layers (from the data, not from other layers) and add them
+        StringVector data_inputs = get_layer_inputs(layer_s_inputs, output_of_layer, name, true);
+        for (auto& in_name : data_inputs) {
+          auto inp_layer = new Input<Scalar, Device_>;
+          inp_layer->set_layer_name(in_name);
+
+          name_layer_map.insert(std::make_pair(in_name, inp_layer));
+          // output of the input layer is the layer itself
+          output_of_layer.insert(std::make_pair(in_name, in_name));
+        }
+
       }
 
       if (!weights_only) {
@@ -114,7 +126,7 @@ namespace EigenSinn {
       // otherwise just add weights
       for (auto& p : name_layer_map) {
         std::string name = p.first;
-        LayerBase<Scalar, Device_> * layer = p.second;
+        LayerBase<Scalar, Device_>* layer = p.second;
 
         vertex_t v = vertices[name];
         graph[v].layer.reset(layer);
@@ -123,7 +135,7 @@ namespace EigenSinn {
 
   private:
 
-    std::vector<std::string> collect_input_names(vertex_t& v) {
+    inline std::vector<std::string> collect_input_names(vertex_t& v) {
 
       std::vector<std::string> input_names;
       InEdgeIter in, in_end;
@@ -139,43 +151,32 @@ namespace EigenSinn {
     }
 
     // add name of the output to the map if it is not yet there
-    void add_layer_output(std::map<std::string, std::string>& layer_output, std::string& layer_name, std::string& output_name) {
+    inline void add_layer_output(std::map<std::string, std::string>& layer_output, std::string& layer_name, std::string& output_name) {
       if (layer_output.count(layer_name) > 0) {
         return;
       }
       layer_output.insert(std::make_pair(layer_name, output_name));
     }
 
-    bool is_input_layer(const std::string& input_name) {
+    inline bool is_input_layer(const std::string& input_name) {
       return input_name.rfind(input_op, 0) == 0;
     }
 
-    void add_vertices(std::map<std::string, LayerBase<Scalar, Device_> *>& name_layer_map, std::map<std::string, std::string>& output_of_layer, std::map<std::string, StringVector>& layer_s_inputs) {
+    inline void add_vertices(std::map<std::string, LayerBase<Scalar, Device_>*>& name_layer_map, std::map<std::string, std::string>& output_of_layer, std::map<std::string, StringVector>& layer_s_inputs) {
 
       // add all the vertices don't forget the inputs
       // not reflected in the name_layer_map
       for (auto& p : name_layer_map) {
         std::string name = p.first;
-        LayerBase<Scalar, Device_> * layer = p.second;
+        LayerBase<Scalar, Device_>* layer = p.second;
 
         auto v = boost::add_vertex(VertexProperty(name), graph);
         vertices.insert(std::make_pair(name, v));
         graph[v].layer.reset(layer);
-
-        // check if the layer has inputs and add them
-        StringVector inputs = get_layer_inputs(layer_s_inputs, output_of_layer, name);
-        StringVector input_layer_names;
-        std::copy_if(inputs.begin(), inputs.end(), std::back_inserter(input_layer_names), [this](std::string& s) {return this->is_input_layer(s); });
-        for (auto& in_name : input_layer_names) {
-
-          auto inp_layer = new Input<Scalar, Device_>;
-          inp_layer->set_layer_name(in_name);
-          add(inp_layer);
-        }
       }
     }
 
-    void add_edges(std::map<std::string, LayerBase<Scalar, Device_> *>& name_layer_map, std::map<std::string, std::string>& output_of_layer, std::map<std::string, StringVector>& layer_s_inputs) {
+    inline void add_edges(std::map<std::string, LayerBase<Scalar, Device_>*>& name_layer_map, std::map<std::string, std::string>& output_of_layer, std::map<std::string, StringVector>& layer_s_inputs) {
 
       // at this point all the vertices are in-place. Just need to connect them
       // all inputs have also been added so all we need is go through each vertex and connect them
@@ -192,14 +193,24 @@ namespace EigenSinn {
       }
     }
 
-    StringVector get_layer_inputs(std::map<std::string, StringVector>& layer_s_inputs, std::map<std::string, std::string>& output_of_layer, std::string& layer_name) {
+    // actual_input_layers - do we want inputs coming from any and all layers(false), or from Input layers only (true)?
+    inline StringVector get_layer_inputs(std::map<std::string, StringVector>& layer_s_inputs, std::map<std::string, std::string>& output_of_layer, std::string& layer_name, bool actual_input_layers = false) {
 
       // find what layer outputs this input and add it first
       StringVector& inputs = layer_s_inputs[layer_name];
       StringVector true_inputs;
 
       // a true input is an output of some other layer
-      std::copy_if(inputs.begin(), inputs.end(), std::back_inserter(true_inputs), [&](std::string& s) {return output_of_layer.count(s) > 0; });
+      if (actual_input_layers) {
+        std::copy_if(inputs.begin(), inputs.end(), std::back_inserter(true_inputs), [&](std::string& s) {
+          return this->is_input_layer(s);
+          });
+      }
+      else {
+        std::copy_if(inputs.begin(), inputs.end(), std::back_inserter(true_inputs), [&](std::string& s) {
+          return output_of_layer.count(s) > 0;
+          });
+      }
       return true_inputs;
     }
   };
