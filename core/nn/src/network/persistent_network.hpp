@@ -121,8 +121,7 @@ namespace EigenSinn {
         add_vertices(name_layer_map, output_of_layer, layer_s_inputs);
         add_edges(name_layer_map, output_of_layer, layer_s_inputs);
 
-        // TODO: implement
-        attach_losses();
+        attach_losses(output_of_layer, layer_s_inputs);
         return;
       }
 
@@ -202,8 +201,26 @@ namespace EigenSinn {
 
     // figure out where the logits are and
     // attach losses
-    void attach_losses() {
+    void attach_losses(std::map<std::string, std::string>& output_of_layer, std::map<std::string, StringVector>& layer_s_inputs) {
 
+      // an output which is not present in the inputs to another layer means this layer is a "logit"
+      std::unordered_set<std::string> inputs_to_layer;
+      for (auto& p : layer_s_inputs) {
+        inputs_to_layer.insert(p.second.begin(), p.second.end());
+      }
+
+
+      for (auto& p : output_of_layer) {
+        
+        std::string output_name = p.first;
+        std::string layer_name = p.second;
+
+        if (inputs_to_layer.find(output_name) == inputs_to_layer.end()) {
+          logits.push_back(layer_name);
+        }
+      }
+
+      add_loss();
     }
 
     // actual_input_layers - do we want inputs coming from any and all layers(false), or from Input layers only (true)?

@@ -247,7 +247,9 @@ namespace EigenSinn {
 
     void add_loss() {
       assert(!logits.empty());
-      name_loss.insert(std::make_pair(logits, std::make_shared<Loss>()));
+      for (auto& l : logits) {
+        name_loss.insert(std::make_pair(l, std::make_shared<Loss>()));
+      }
     }
 
     // optimizers have different parameters, override this for tweaking
