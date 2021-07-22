@@ -235,7 +235,18 @@ namespace EigenSinn {
 
     // add loss function. There may be several output nodes
     // so we may call this several times
-    void add_loss(const std::string& logits) {
+    void add_loss(const std::string& logit) {
+      
+      add_loss({ logit });
+    }
+
+    void add_loss(const std::vector<std::string>& logits) {
+      this->logits = logits;
+      add_loss();
+    }
+
+    void add_loss() {
+      assert(!logits.empty());
       name_loss.insert(std::make_pair(logits, std::make_shared<Loss>()));
     }
 
@@ -406,6 +417,7 @@ namespace EigenSinn {
     // TODO: a single output NN.
     std::map<std::string, PtrLoss> name_loss;
     std::vector<std::string> input_vertices;
+    std::vector<std::string> logits;
 
     std::deque<vertex_t> forward_order;
     bool inited = false;

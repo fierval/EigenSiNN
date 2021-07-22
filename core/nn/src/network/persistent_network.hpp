@@ -120,6 +120,9 @@ namespace EigenSinn {
         clear();
         add_vertices(name_layer_map, output_of_layer, layer_s_inputs);
         add_edges(name_layer_map, output_of_layer, layer_s_inputs);
+
+        // TODO: implement
+        attach_losses();
         return;
       }
 
@@ -173,6 +176,9 @@ namespace EigenSinn {
         auto v = boost::add_vertex(VertexProperty(name), graph);
         vertices.insert(std::make_pair(name, v));
         graph[v].layer.reset(layer);
+        if (is_input_layer(name)) {
+          input_vertices.push_back(name);
+        }
       }
     }
 
@@ -185,12 +191,19 @@ namespace EigenSinn {
         std::string name = p.first;
 
         auto inputs = get_layer_inputs(layer_s_inputs, output_of_layer, name);
+
         for (auto& i : inputs) {
-          auto v_in = vertices[i];
+          auto v_in = vertices[output_of_layer[i]];
           auto v_out = vertices[name];
           boost::add_edge(v_in, v_out, graph);
         }
       }
+    }
+
+    // figure out where the logits are and
+    // attach losses
+    void attach_losses() {
+
     }
 
     // actual_input_layers - do we want inputs coming from any and all layers(false), or from Input layers only (true)?
