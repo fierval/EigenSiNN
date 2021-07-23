@@ -237,7 +237,7 @@ namespace EigenSinn {
     // so we may call this several times
     void add_loss(const std::string& logit) {
       
-      add_loss({ logit });
+      add_loss(std::vector<std::string>{ logit });
     }
 
     void add_loss(const std::vector<std::string>& logits) {

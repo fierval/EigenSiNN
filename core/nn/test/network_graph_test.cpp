@@ -44,6 +44,13 @@ protected:
 //}
 
 TEST_F(GraphTest, LoadModel) {
+  auto model = cifar10->save();
+  model->dump("c:\\temp\\cifar10_graph.txt");
+  model->flush("c:\\temp\\cifar10_graph.onnx");
+
+  EigenModel m = EigenModel::FromFile("c:\\temp\\cifar10_graph.onnx");
+
+  cifar10->load(m, false);
 
   cifar10->print_graph();
   std::ofstream graphviz("c:\\temp\\gviz.dot", std::ios::binary);
@@ -52,13 +59,6 @@ TEST_F(GraphTest, LoadModel) {
   cifar10->print_traversal();
   std::cerr << "=======================================" << std::endl;
   cifar10->print_traversal(false);
- 
-  auto model = cifar10->save();
-  model->dump("c:\\temp\\cifar10_graph.txt");
-  model->flush("c:\\temp\\cifar10_graph.onnx");
 
-  EigenModel m = EigenModel::FromFile("c:\\temp\\cifar10_graph.onnx");
-
-  cifar10->load(m, false);
   
 }
