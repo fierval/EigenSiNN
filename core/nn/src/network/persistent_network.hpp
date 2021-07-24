@@ -10,6 +10,9 @@ namespace EigenSinn {
   {
   public:
     typedef std::shared_ptr<EigenModel> PtrEigenModel;
+    typedef std::unordered_map<std::string, LayerBase<Scalar, Device_>*> LayerMap;
+    typedef std::unordered_map<std::string, std::string> StringMap;
+    typedef std::unordered_map<std::string, StringVector> StringVectorMap;
 
     PersistentNetworkBase() {
 
@@ -26,7 +29,7 @@ namespace EigenSinn {
       std::unordered_set<std::string> in_names;
 
       vertex_name names = boost::get(boost::vertex_name, graph);
-      std::map<std::string, std::string> layer_output;
+      StringMap layer_output;
 
       // we need to save the model based on the topological order
       // or else we won't be able to define edges in the ONNX graph
@@ -85,9 +88,9 @@ namespace EigenSinn {
       onnx::GraphProto& onnx_graph = onnx_layers.get_onnx_graph();
 
       // structures for loading onnx graph
-      std::map<std::string, LayerBase<Scalar, Device_>*> name_layer_map;
-      std::map<std::string, std::string> output_of_layer;
-      std::map<std::string, StringVector> layer_s_inputs;
+      LayerMap name_layer_map;
+      StringMap output_of_layer;
+      StringVectorMap layer_s_inputs;
 
       for (auto& node : onnx_graph.node()) {
         StringVector inputs;
@@ -154,7 +157,7 @@ namespace EigenSinn {
     }
 
     // add name of the output to the map if it is not yet there
-    inline void add_layer_output(std::map<std::string, std::string>& layer_output, std::string& layer_name, std::string& output_name) {
+    inline void add_layer_output(StringMap& layer_output, std::string& layer_name, std::string& output_name) {
       if (layer_output.count(layer_name) > 0) {
         return;
       }
@@ -165,7 +168,7 @@ namespace EigenSinn {
       return input_name.rfind(input_op, 0) == 0;
     }
 
-    inline void add_vertices(std::map<std::string, LayerBase<Scalar, Device_>*>& name_layer_map, std::map<std::string, std::string>& output_of_layer, std::map<std::string, StringVector>& layer_s_inputs) {
+    inline void add_vertices(LayerMap& name_layer_map, StringMap& output_of_layer, StringVectorMap& layer_s_inputs) {
 
       // add all the vertices don't forget the inputs
       // not reflected in the name_layer_map
@@ -182,7 +185,7 @@ namespace EigenSinn {
       }
     }
 
-    inline void add_edges(std::map<std::string, LayerBase<Scalar, Device_>*>& name_layer_map, std::map<std::string, std::string>& output_of_layer, std::map<std::string, StringVector>& layer_s_inputs) {
+    inline void add_edges(LayerMap& name_layer_map, StringMap& output_of_layer, StringVectorMap& layer_s_inputs) {
 
       // at this point all the vertices are in-place. Just need to connect them
       // all inputs have also been added so all we need is go through each vertex and connect them
@@ -202,7 +205,7 @@ namespace EigenSinn {
 
     // figure out where the logits are and
     // attach losses
-    void attach_losses(std::map<std::string, std::string>& output_of_layer, std::map<std::string, StringVector>& layer_s_inputs) {
+    void attach_losses(StringMap& output_of_layer, StringVectorMap& layer_s_inputs) {
 
       // an output which is not present in the inputs to another layer means this layer is a "logit"
       std::unordered_set<std::string> inputs_to_layer;
@@ -225,7 +228,7 @@ namespace EigenSinn {
     }
 
     // actual_input_layers - do we want inputs coming from any and all layers(false), or from Input layers only (true)?
-    inline StringVector get_layer_inputs(std::map<std::string, StringVector>& layer_s_inputs, std::map<std::string, std::string>& output_of_layer, std::string& layer_name, bool actual_input_layers = false) {
+    inline StringVector get_layer_inputs(StringVectorMap& layer_s_inputs, StringMap& output_of_layer, std::string& layer_name, bool actual_input_layers = false) {
 
       // find what layer outputs this input and add it first
       StringVector& inputs = layer_s_inputs[layer_name];

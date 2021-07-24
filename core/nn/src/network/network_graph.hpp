@@ -418,11 +418,11 @@ namespace EigenSinn {
     int current_name_suffix = 1;
 
     // structure to build the graph from
-    std::map<std::string, vertex_t> vertices;
-    std::map<std::string, PtrOptimizer> optimizers;
+    std::unordered_map<std::string, vertex_t> vertices;
+    std::unordered_map<std::string, PtrOptimizer> optimizers;
 
     // TODO: a single output NN.
-    std::map<std::string, PtrLoss> name_loss;
+    std::unordered_map<std::string, PtrLoss> name_loss;
     std::vector<std::string> input_vertices;
     std::vector<std::string> logits;
 
