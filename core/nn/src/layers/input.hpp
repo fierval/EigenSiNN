@@ -48,6 +48,9 @@ namespace EigenSinn {
     void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {};
 
     std::vector<Index> get_dims() {
+      if (!input) {
+        return dims;
+      }
       return input->get_dims();
     }
 
@@ -56,7 +59,14 @@ namespace EigenSinn {
       return input_name;
     }
 
+    // input dimensions independently of any inputs when we are loading the model!
+    void load_onnx_data(EigenModel& model, std::vector<std::string>& inputs) override {
+      dims = model.get_input_dims(inputs[0]);
+    }
+
   private:
     PtrTensorAdapter<Scalar, Device_> input;
+    // for ONNX loading when we need dimensions before we know the input
+    std::vector<Index> dims;
   };
 }

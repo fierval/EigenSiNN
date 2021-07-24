@@ -117,6 +117,28 @@ namespace EigenSinn {
       //add_value_proto(name, v, dims, data_type);
     }
 
+    // extract dimensions of the model input from model properties
+    inline std::vector<Index> get_input_dims(const std::string& input_name) {
+
+      auto graph = get_graph();
+      std::vector<onnx::ValueInfoProto> value_protos(1);
+       
+      std::copy_if(graph->value_info().begin(), graph->value_info().end(), value_protos.begin(), [&](const onnx::ValueInfoProto& v) {
+        return v.name() == input_name;
+        });
+      
+      auto value_proto = value_protos[0];
+
+      onnx::TypeProto type = value_proto.type();
+
+      auto tensor_type = type.tensor_type();
+
+      onnx::TensorShapeProto shape = tensor_type.shape();
+      std::vector<Index> out_dims(shape.dim_size());
+      std::transform(shape.dim().begin(), shape.dim().end(), out_dims.begin(), [](const onnx::TensorShapeProto_Dimension& d) {return d.dim_value(); });
+      return out_dims;
+    }
+
     inline void add_output(const std::string& name, const std::vector<Index>& dims, onnx::TensorProto_DataType data_type) {
 
       auto graph = get_graph();
