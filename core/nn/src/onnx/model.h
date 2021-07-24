@@ -161,21 +161,18 @@ namespace EigenSinn {
     }
 
     // adds a graph node with descriptions and references to inputs/outputs
-    inline onnx::NodeProto * add_graph_node(const std::string& op_type, const std::string& input_name) {
+    inline onnx::NodeProto * add_graph_node(const std::string& layer_name, const std::string& op_type, const std::string& input_name) {
 
       std::vector<std::string> names{ input_name };
-      return add_graph_node(op_type, names);
+      return add_graph_node(layer_name, op_type, names);
     }
 
-    inline onnx::NodeProto* add_graph_node(const std::string& op_type, std::vector<std::string>& input_names) {
-
-      std::ostringstream layer_name_stream;
-      layer_name_stream << op_type << "_" << get_layer_suffix();
+    inline onnx::NodeProto* add_graph_node(const std::string& layer_name, const std::string& op_type, std::vector<std::string>& input_names) {
 
       auto graph = get_graph();
       onnx::NodeProto * node = graph->add_node();
 
-      node->set_name(layer_name_stream.str());
+      node->set_name(layer_name);
       node->set_op_type(op_type);
 
       std::for_each(input_names.begin(), input_names.end(), [&](std::string& n) {

@@ -188,7 +188,7 @@ namespace EigenSinn {
   const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
 
     // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#MaxPool
-    onnx::NodeProto* node = model.add_graph_node(get_op_name(), input_name);
+    onnx::NodeProto* node = model.add_graph_node(get_layer_name(), get_op_name(), input_name);
 
     const std::string out_name = node->output().Get(0);
 

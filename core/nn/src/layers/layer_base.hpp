@@ -20,7 +20,7 @@ namespace EigenSinn {
   class LayerBase {
 
   public:
-    LayerBase(const char* _op_name) : op_name(_op_name) {
+    LayerBase(const char* _op_name) : op_name(_op_name), layer_name("") {
 
     }
 

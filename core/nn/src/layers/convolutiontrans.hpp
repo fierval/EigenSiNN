@@ -194,7 +194,7 @@ namespace EigenSinn {
 
       // 2. add ONNX node with its inputs, outputs, and names
       std::vector<std::string> names{ input_name, kernel.get_onnx_input_name(model), bias.get_onnx_input_name(model) };
-      onnx::NodeProto* node = model.add_graph_node(get_op_name(), names);
+      onnx::NodeProto* node = model.add_graph_node(get_layer_name(), get_op_name(), names);
 
       // single output
       const std::string out_name = node->output().Get(0);

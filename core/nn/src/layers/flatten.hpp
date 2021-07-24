@@ -46,7 +46,7 @@ namespace EigenSinn {
 
       // https://github.com/onnx/onnx/blob/v1.9.0/docs/Operators.md#Flatten
       // 1. add ONNX node with its inputs, outputs, and names
-      onnx::NodeProto* node = model.add_graph_node(get_op_name(), input_name);
+      onnx::NodeProto* node = model.add_graph_node(get_layer_name(), get_op_name(), input_name);
       // single output
       const std::string out_name = node->output().Get(0);
 

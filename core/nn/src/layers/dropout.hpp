@@ -97,7 +97,7 @@ namespace EigenSinn {
       prob_tensor.save_onnx_initializer(model);
 
       // 2. Add inputs
-      auto* node = model.add_graph_node(get_op_name(),
+      auto* node = model.add_graph_node(get_layer_name(), get_op_name(),
         std::vector<std::string>{input_name, prob_tensor.get_onnx_input_name(model)});
 
       // save rank, not part of ONNX but necessary for loading

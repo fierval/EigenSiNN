@@ -306,12 +306,15 @@ namespace EigenSinn {
       std::for_each(vertices.begin(), vertices.end(), [&](std::pair<std::string, vertex_t> p) {
         add_optimizer(p.second, optimizer_name, lr);
         });
+      
+      compile();
+    }
 
+    void compile() {
       // we will reverse-iterate during backprop
       boost::topological_sort(graph, std::front_inserter(forward_order));
 
     }
-
     // for the case of a single loss
     void add_loss_and_compile(const std::string& logits, Optimizers optimizer_name, float lr) {
       add_loss(logits);
@@ -406,6 +409,8 @@ namespace EigenSinn {
       name_loss.clear();
       forward_order.clear();
       graph.clear();
+      input_vertices.clear();
+      logits.clear();
     }
 
     NetworkGraph graph;

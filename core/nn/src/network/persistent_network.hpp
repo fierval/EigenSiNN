@@ -122,6 +122,7 @@ namespace EigenSinn {
         add_edges(name_layer_map, output_of_layer, layer_s_inputs);
 
         attach_losses(output_of_layer, layer_s_inputs);
+        compile();
         return;
       }
 

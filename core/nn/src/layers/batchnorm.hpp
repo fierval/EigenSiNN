@@ -197,7 +197,7 @@ namespace EigenSinn {
       
       names.insert(names.begin(), input_name);
 
-      onnx::NodeProto* node = model.add_graph_node(get_op_name(), names);
+      onnx::NodeProto* node = model.add_graph_node(get_layer_name(), get_op_name(), names);
       const std::string out_name = node->output().Get(0);
 
       // 2. Attributes
