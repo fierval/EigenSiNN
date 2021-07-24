@@ -31,16 +31,19 @@ namespace EigenSinn {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> temp(inp_tensor);
       input = temp.raw();
+      redim();
     }
 
     template<int Rank, int Layout = RowMajor>
     void set_input(const DeviceTensor<Scalar, Rank, Device_, Layout>& inp_tensor) {
 
       input = const_cast<DeviceTensor<Scalar, Rank, Device_, Layout>&>(inp_tensor).raw();
+      redim();
     }
 
     void set_input(PtrTensorAdapter<Scalar, Device_>& raw_input) {
       input = raw_input;
+      redim();
     }
 
     // Required overrides
@@ -65,6 +68,12 @@ namespace EigenSinn {
     }
 
   private:
+    // make sure dims reflects the right dimensions
+    void redim() {
+      assert(input);
+      dims = input->get_dims();
+    }
+
     PtrTensorAdapter<Scalar, Device_> input;
     // for ONNX loading when we need dimensions before we know the input
     std::vector<Index> dims;
