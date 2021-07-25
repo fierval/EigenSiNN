@@ -89,7 +89,7 @@ namespace EigenSinn {
       return model;
     }
 
-    inline void load(EigenModel& model, bool weights_only = false) {
+    inline void load(EigenModel& model) {
 
       OnnxLoader<Scalar, Device_> onnx_layers(model);
       onnx::GraphProto& onnx_graph = onnx_layers.get_onnx_graph();
@@ -126,24 +126,17 @@ namespace EigenSinn {
 
       }
 
-      if (!weights_only) {
-        clear();
-        add_vertices(name_layer_map, output_of_layer, layer_s_inputs);
-        add_edges(name_layer_map, output_of_layer, layer_s_inputs);
+      // rebuild the model graph
+      clear();
+      add_vertices(name_layer_map, output_of_layer, layer_s_inputs);
+      add_edges(name_layer_map, output_of_layer, layer_s_inputs);
 
-        attach_losses(output_of_layer, layer_s_inputs);
-        compile();
-        return;
+      attach_losses(output_of_layer, layer_s_inputs);
+      if (optimizer_type != Optimizers::None) {
+        add_optimizers();
       }
-
-      // otherwise just add weights
-      for (auto& p : name_layer_map) {
-        std::string name = p.first;
-        LayerBase<Scalar, Device_>* layer = p.second;
-
-        vertex_t v = vertices[name];
-        graph[v].layer.reset(layer);
-      }
+      compile();
+      return;
     }
 
   private:
@@ -222,7 +215,7 @@ namespace EigenSinn {
 
 
       for (auto& p : output_of_layer) {
-        
+
         std::string output_name = p.first;
         std::string layer_name = p.second;
 

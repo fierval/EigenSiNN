@@ -319,14 +319,17 @@ namespace EigenSinn {
       assert(forward_order.size() == 0);
       set_optimizer(optimizer_name, lr, args...);
 
+      add_optimizers();
+      compile();
+    }
+
+    void add_optimizers() {
       // find opimizable layers and hang an optimizer on them
       std::for_each(vertices.begin(), vertices.end(), [&](std::pair<std::string, vertex_t> p) {
         add_optimizer(p.second);
         });
 
-      compile();
     }
-
     void compile() {
       // we will reverse-iterate during backprop
       boost::topological_sort(graph, std::front_inserter(forward_order));

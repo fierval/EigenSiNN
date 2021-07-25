@@ -51,7 +51,7 @@ TEST_F(GraphTest, LoadModel) {
 
   EigenModel m = EigenModel::FromFile("c:\\temp\\cifar10_graph.onnx");
 
-  cifar10->load(m, false);
+  cifar10->load(m);
 
   cifar10->print_graph();
   std::ofstream graphviz("c:\\temp\\gviz.dot", std::ios::binary);
