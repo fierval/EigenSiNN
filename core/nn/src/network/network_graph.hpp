@@ -119,7 +119,7 @@ namespace EigenSinn {
 
         // input layer. all inputs are set by the set_input call
         if (inputs.empty()) { continue; }
-        
+
         graph[v].layer->forward(inputs);
 
         // if we have reached a terminal node - compute loss
@@ -236,7 +236,7 @@ namespace EigenSinn {
     // add loss function. There may be several output nodes
     // so we may call this several times
     void add_loss(const std::string& logit) {
-      
+
       add_loss(std::vector<std::string>{ logit });
     }
 
@@ -252,23 +252,35 @@ namespace EigenSinn {
       }
     }
 
-    // optimizers have different parameters, override this for tweaking
-    // something other than lr
-    virtual void add_optimizer(vertex_t v, const Optimizers optimizer_name, float lr) {
+    template <typename... Args>
+    void set_optimizer(const Optimizers optimizer_type, float lr, Args... args) {
+
+      this->optimizer_type = optimizer_type;
+      this->optimizer_args = { args... };
+      this->lr = lr;
+    }
+
+    // optimizers have different parameters
+    // either pass just lr
+
+    virtual void add_optimizer(vertex_t v) {
+
+      // set the optimizer first
+      assert(optimizer_type != Optimizers::None);
 
       PtrOptimizer base_optimizer;
-      
+      // rank = 0 for layers that don't need an optimizer
       Index rank = get_optimizer_rank(v);
       switch (get_optimizer_rank(v))
       {
       case 1:
-        base_optimizer = create_optimizer<1>(optimizer_name, lr);
+        base_optimizer = create_optimizer<1>();
         break;
       case 2:
-        base_optimizer = create_optimizer<2>(optimizer_name, lr);
+        base_optimizer = create_optimizer<2>();
         break;
       case 4:
-        base_optimizer = create_optimizer<4>(optimizer_name, lr);
+        base_optimizer = create_optimizer<4>();
         break;
       default:
         return;
@@ -279,34 +291,39 @@ namespace EigenSinn {
 
     // TODO: This is SO ugly!!! Due to the stupid optimizer rank
     template<Index Rank>
-    PtrOptimizer create_optimizer(Optimizers optimizer_name, float lr) {
+    PtrOptimizer create_optimizer() {
 
       PtrOptimizer base_optimizer;
 
-      switch (optimizer_name) {
+      switch (optimizer_type) {
+
       case Optimizers::Adam:
-        base_optimizer.reset(new Adam<Scalar, Rank, Device_>(lr));
+        base_optimizer.reset(new Adam<Scalar, Rank, Device_>(lr, optimizer_args));
         break;
+
       case Optimizers::SGD:
-        base_optimizer.reset(new SGD<Scalar, Rank, Device_>(lr));
+        base_optimizer.reset(new SGD<Scalar, Rank, Device_>(lr, optimizer_args));
         break;
+
       default:
         throw std::invalid_argument("Undknown uptimizer");
       }
 
       return base_optimizer;
-
     }
 
     // add optimizers where they belong and produce forward traversal
-    void compile(Optimizers optimizer_name, float lr) {
+    template<typename... Args>
+    void compile(Optimizers optimizer_name, float lr, Args... args) {
+      
       assert(forward_order.size() == 0);
+      set_optimizer(optimizer_name, lr, args...);
 
       // find opimizable layers and hang an optimizer on them
       std::for_each(vertices.begin(), vertices.end(), [&](std::pair<std::string, vertex_t> p) {
-        add_optimizer(p.second, optimizer_name, lr);
+        add_optimizer(p.second);
         });
-      
+
       compile();
     }
 
@@ -314,11 +331,6 @@ namespace EigenSinn {
       // we will reverse-iterate during backprop
       boost::topological_sort(graph, std::front_inserter(forward_order));
 
-    }
-    // for the case of a single loss
-    void add_loss_and_compile(const std::string& logits, Optimizers optimizer_name, float lr) {
-      add_loss(logits);
-      compile(optimizer_name, lr);
     }
 
     int get_current_layer_suffix() { return current_name_suffix++; }
@@ -428,6 +440,11 @@ namespace EigenSinn {
 
     std::deque<vertex_t> forward_order;
     bool inited = false;
+
+    // should be set by the implementation
+    Optimizers optimizer_type = Optimizers::None;
+    std::vector<float> optimizer_args;
+    float lr;
   };
 
 } // namespace EigenSinn

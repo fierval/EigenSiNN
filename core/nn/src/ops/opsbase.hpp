@@ -15,6 +15,7 @@
 #include <vector>
 #include <array>
 #include <optional>
+#include <cstdarg>
 
 using namespace Eigen;
 

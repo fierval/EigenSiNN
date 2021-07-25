@@ -10,7 +10,7 @@ namespace EigenSinn {
   class Cifar10 : public PersistentNetworkBase<Scalar, Actual, CrossEntropyLoss<Scalar, Actual, 2, Device_>, Device_> {
 
   public:
-    Cifar10(int num_classes, float lr = 0.001) {
+    Cifar10(int num_classes, Optimizers optimizer = Optimizers::Adam, float lr = 0.001) {
       auto x = add(new Input<float, Device_>);
 
       x = add(x, new Conv2d<Scalar, Device_, RowMajor>(DSizes<Index, 4>{6, 3, 5, 5}, Padding2D{ 0, 0 }, 1));
@@ -36,7 +36,8 @@ namespace EigenSinn {
       // cross-entropy loss includes the softmax non-linearity
       x = add(x, new Linear<Scalar, Device_, RowMajor>(84, num_classes));
 
-      add_loss_and_compile(x, Optimizers::Adam, lr);
+      add_loss(x);
+      compile(optimizer, lr);
 
     }
   };

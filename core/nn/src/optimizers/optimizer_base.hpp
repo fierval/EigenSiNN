@@ -8,6 +8,7 @@
 using namespace Eigen;
 
 enum class Optimizers {
+  None,
   Adam,
   SGD
 };

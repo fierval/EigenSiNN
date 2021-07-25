@@ -35,6 +35,16 @@ namespace EigenSinn {
       cur_beta2 = 1;
     }
 
+    Adam(float _lr, std::vector<float> remaining_args) : Adam(_lr) {
+
+      int len = remaining_args.size();
+      std::vector<float*> params{ &beta1, &beta2, &eps };
+      
+      for (int i = 0; i < remaining_args.size(); i++) {
+        *params[i] = remaining_args[i];
+      }
+
+    }
     // Computation: https://towardsdatascience.com/adam-latest-trends-in-deep-learning-optimization-6be9a291375c
     inline DeviceWeightBiasTuple<Scalar, Device_> step(LayerBase<Scalar, Device_>& layer) override {
 
@@ -82,8 +92,8 @@ namespace EigenSinn {
     }
 
   private:
-    const Scalar beta1, beta2, eps;
-    Scalar cur_beta1, cur_beta2;
+    float beta1, beta2, eps;
+    float cur_beta1, cur_beta2;
     DeviceTensor<Scalar, Rank, Device_, Layout> velocity_weights, momentum_weights;
     DeviceTensor<Scalar, 1, Device_, Layout> velocity_bias, momentum_bias;
   };

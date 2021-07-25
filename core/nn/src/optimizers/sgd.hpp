@@ -13,7 +13,7 @@ namespace EigenSinn {
       : OptimizerBase<Scalar, Device_, Layout>(_lr)
       , nesterov(_nesterov)
       , momentum(_momentum)
-      {
+    {
 
       assert(lr > 0.0);
       assert(momentum >= 0.0);
@@ -21,14 +21,25 @@ namespace EigenSinn {
     }
 
     SGD(SGD& s) : OptimizerBase<Scalar, Device_, Layout>(a.lr)
-    : nesterov(s.nesterov)
-    , momentum(s.momentum){
-    
+      : nesterov(s.nesterov)
+      , momentum(s.momentum) {
+
+    }
+
+    SGD(float _lr, std::vector<float> remaining_args) : SGD(_lr) {
+
+      int len = remaining_args.size();
+      std::vector<float*> params{ &momentum, &static_cast<float>(nesterov) };
+
+      for (int i = 0; i < remaining_args.size(); i++) {
+        *params[i] = remaining_args[i];
+      }
+
     }
 
     // PyTorch computation of SGD: https://pytorch.org/docs/stable/_modules/torch/optim/sgd.html#SGD
     inline DeviceWeightBiasTuple<Scalar, Device_> step(LayerBase<Scalar, Device_>& layer) override {
-      
+
       DeviceTensor<Scalar, Rank, Device_, Layout> weights(layer.get_weights()), dweights(layer.get_loss_by_weights_derivative());
       DeviceTensor<Scalar, 1, Device_, Layout> bias(layer.get_bias()), dbias(layer.get_loss_by_bias_derivative());
 
@@ -59,9 +70,9 @@ namespace EigenSinn {
     }
 
   private:
-    const Scalar momentum;
+    float momentum;
     DeviceTensor<Scalar, Rank, Device_, Layout> velocity_weights;
     DeviceTensor<Scalar, 1, Device_, Layout> velocity_bias;
-    const bool nesterov;
+    bool nesterov;
   };
 }
