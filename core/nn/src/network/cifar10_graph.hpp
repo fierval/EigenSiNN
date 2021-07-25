@@ -40,6 +40,13 @@ namespace EigenSinn {
       compile(optimizer, lr, args...);
 
     }
+
+  protected:
+
+    inline const std::string& model_name() override {
+      return "cifar10";
+    }
+
   };
 
 }

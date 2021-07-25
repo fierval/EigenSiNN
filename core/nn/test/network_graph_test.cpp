@@ -61,8 +61,7 @@ TEST_F(GraphTest, LoadModel) {
   std::cerr << "=======================================" << std::endl;
   cifar10->print_traversal(false);
 
-
-  cifar10->step(rand_image.raw(), rand_labels.raw());
+  cifar10->forward(rand_image.raw(), rand_labels.raw());
 
   model = cifar10->save();
   model->flush("c:\\temp\\cifar10_graph_roundtripped.onnx");

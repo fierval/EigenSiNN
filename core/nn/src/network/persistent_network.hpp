@@ -136,6 +136,9 @@ namespace EigenSinn {
         add_optimizers();
       }
       compile();
+
+      // it has been initialized by loading
+      inited = true;
       return;
     }
 

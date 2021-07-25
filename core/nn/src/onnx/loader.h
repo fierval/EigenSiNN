@@ -207,8 +207,11 @@ namespace EigenSinn {
       
       std::tie(kernel_dims, padding, stride) = get_conv_node_common_attributes(node);
 
+      // for maxpooling we just need extents, these are in the last two dimensions
+      std::vector<Index> extents{kernel_dims[2], kernel_dims[3]};
+
       // create layer
-      LayerBase<Scalar, Device_>* out = new MaxPooling<Scalar, 4, Device_, RowMajor>(vec2dims<2>(kernel_dims), stride, padding);;
+      LayerBase<Scalar, Device_>* out = new MaxPooling<Scalar, 4, Device_, RowMajor>(vec2dims<2>(extents), stride, padding);;
       return out;
 
     }

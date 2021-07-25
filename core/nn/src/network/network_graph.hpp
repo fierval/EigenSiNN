@@ -98,7 +98,7 @@ namespace EigenSinn {
     }
 
     // forward step with the map of input names -> inputs and logit names -> labels
-    void forward(std::map<std::string, PtrTensor> tensors, std::map<std::string, PtrTensorActual> labels) {
+    void forward(std::unordered_map<std::string, PtrTensor> tensors, std::unordered_map<std::string, PtrTensorActual> labels) {
 
       if (tensors.empty() || labels.empty()) {
         throw std::invalid_argument("inputs and labels must be non-empty");
@@ -116,6 +116,7 @@ namespace EigenSinn {
       for (auto& v : forward_order) {
 
         TensorVector inputs = collect_inputs(v);
+        auto& layer_name = graph[v].layer->get_layer_name();
 
         // input layer. all inputs are set by the set_input call
         if (inputs.empty()) { continue; }
@@ -123,7 +124,6 @@ namespace EigenSinn {
         graph[v].layer->forward(inputs);
 
         // if we have reached a terminal node - compute loss
-        auto& layer_name = graph[v].layer->get_layer_name();
         if (name_loss.count(layer_name) > 0) {
           PtrLoss& loss = name_loss[layer_name];
 
@@ -134,8 +134,8 @@ namespace EigenSinn {
 
     void forward(PtrTensor& tensor, PtrTensorActual& label) {
 
-      std::map<std::string, PtrTensor> inputs;
-      std::map<std::string, PtrTensorActual> labels;
+      std::unordered_map<std::string, PtrTensor> inputs;
+      std::unordered_map<std::string, PtrTensorActual> labels;
 
       inputs.insert(std::make_pair(input_vertices[0], tensor));
       labels.insert(std::make_pair(name_loss.begin()->first, label));
@@ -194,7 +194,7 @@ namespace EigenSinn {
       }
     }
 
-    void step(std::map<std::string, PtrTensor> tensors, std::map<std::string, PtrTensorActual> labels) {
+    void step(std::unordered_map<std::string, PtrTensor> tensors, std::unordered_map<std::string, PtrTensorActual> labels) {
       forward(tensors, labels);
       backward();
       optimize();
@@ -202,8 +202,8 @@ namespace EigenSinn {
 
     void step(PtrTensor& tensor, PtrTensorActual& label) {
 
-      std::map<std::string, PtrTensor> inputs;
-      std::map<std::string, PtrTensorActual> labels;
+      std::unordered_map<std::string, PtrTensor> inputs;
+      std::unordered_map<std::string, PtrTensorActual> labels;
 
       inputs.insert(std::make_pair(input_vertices[0], tensor));
       labels.insert(std::make_pair(name_loss.begin()->first, label));
@@ -218,12 +218,12 @@ namespace EigenSinn {
 
       assert(input_vertices.size() == 1);
 
-      std::map<std::string, PtrTensor> inputs;
+      std::unordered_map<std::string, PtrTensor> inputs;
       inputs.insert(std::make_pair(input_vertices[0], input));
       set_input(inputs);
     }
 
-    void set_input(std::map<std::string, PtrTensor>& inputs) {
+    void set_input(std::unordered_map<std::string, PtrTensor>& inputs) {
 
       assert(inputs.size() > 0);
       std::for_each(inputs.begin(), inputs.end(), [&](std::pair<std::string, PtrTensor> p) {
@@ -427,6 +427,9 @@ namespace EigenSinn {
       input_vertices.clear();
       logits.clear();
     }
+
+    // prevent direct instantiation
+    virtual const std::string& model_name() = 0;
 
     NetworkGraph graph;
 
