@@ -146,6 +146,22 @@ namespace EigenSinn {
       add_value_proto(name, value_proto, dims, data_type);
     }
 
+    inline void add_output(const std::string& name, onnx::TensorProto_DataType data_type) {
+
+      auto graph = get_graph();
+      auto value_proto = graph->add_output();
+      add_value_proto(name, value_proto, data_type);
+    }
+
+    inline void add_value_proto(const std::string& name, onnx::ValueInfoProto* value_proto, onnx::TensorProto_DataType data_type) {
+      value_proto->set_name(name);
+      onnx::TypeProto* type = value_proto->mutable_type();
+
+      auto* tensor_type = type->mutable_tensor_type();
+      tensor_type->set_elem_type(data_type);
+
+    }
+
     inline void add_value_proto(const std::string& name, onnx::ValueInfoProto* value_proto, const std::vector<Index>& dims, onnx::TensorProto_DataType data_type) {
 
       value_proto->set_name(name);
@@ -171,7 +187,7 @@ namespace EigenSinn {
     inline std::string get_tensor_value_name(std::vector<std::string>& input_names) {
       std::vector<int> input_ints;
 
-      std::transform(input_names.begin(), input_names.end(), input_ints.begin(), [](std::string& name) {
+      std::transform(input_names.begin(), input_names.end(), std::back_inserter(input_ints), [](std::string& name) {
         std::stringstream ss(name);
         int i = 0;
         ss >> i;
@@ -182,8 +198,8 @@ namespace EigenSinn {
 
       // REVIEW: what if we are branching? Should be ok as long we are traversing in topological order
       if (max_inp > 0) {
-        current_value_name = max_inp + 1;
-        return std::to_string(current_value_name);
+        current_value_name = max_inp + 2;
+        return std::to_string(max_inp + 1);
       }
       return input_names[input_names.size() - 1] + "_1";
     }

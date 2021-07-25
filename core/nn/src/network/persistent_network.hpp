@@ -75,7 +75,14 @@ namespace EigenSinn {
         // found an output!
         auto v = vertices[p.first];
         auto layer = graph[v].layer;
-        model->add_output(p.second, layer->onnx_out_dims(), onnx_data_type_from_scalar<Scalar>());
+        try {
+          model->add_output(p.second, layer->onnx_out_dims(), onnx_data_type_from_scalar<Scalar>());
+        }
+        catch (...) {
+          // TODO: we won't be able to output dimensions if this is saving right after loading
+          // since we haven't stepped through the graph and outputs are empty
+          model->add_output(p.second, onnx_data_type_from_scalar<Scalar>());
+        }
       }
 
 
