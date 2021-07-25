@@ -108,7 +108,7 @@ namespace EigenSinn {
     }
 
   protected:
-    bool is_cudnn = false;
+    bool is_cudnn = true;
     std::string op_name;
     std::string layer_name;
   };

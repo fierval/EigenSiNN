@@ -34,9 +34,18 @@ namespace EigenSinn {
 
       static_assert(Rank == 4, "MaxPooling is implemented only for Rank == 4");
 
-    }
+      // seed maxpooling params (required for ONNX loading)
+      DSizes<Index, Rank> kernel_dims, dims;
 
-    void init() override {
+      kernel_dims[0] = 1;
+      kernel_dims[1] = 1;
+      kernel_dims[2] = extents[0];
+      kernel_dims[3] = extents[1];
+
+      dims = kernel_dims;
+
+      params = std::make_shared<MaxPoolParams<Rank>>(dims, kernel_dims, padding, stride, dilation, false);
+
 
     }
 

@@ -28,6 +28,9 @@ namespace EigenSinn {
       , bias_broadcast({ 0, 0, 0, 0 })
       , loss_by_bias_derivative(kernelDims[0]) {
 
+      // seed convolution parameters storage
+      params = std::make_shared<ConvolutionParams<4>>(kernel.dimensions(), kernel.dimensions(), padding, stride, dilation, false, is_cudnn);
+
     }
 
 

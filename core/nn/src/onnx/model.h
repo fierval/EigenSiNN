@@ -167,6 +167,27 @@ namespace EigenSinn {
       return std::to_string(current_value_name++); 
     }
 
+    // an idempotent (hopefully) way of getting output names from the inputs
+    inline std::string get_tensor_value_name(std::vector<std::string>& input_names) {
+      std::vector<int> input_ints;
+
+      std::transform(input_names.begin(), input_names.end(), input_ints.begin(), [](std::string& name) {
+        std::stringstream ss(name);
+        int i = 0;
+        ss >> i;
+        return i;
+        });
+
+      int max_inp = *std::max_element(input_ints.begin(), input_ints.end());
+
+      // REVIEW: what if we are branching? Should be ok as long we are traversing in topological order
+      if (max_inp > 0) {
+        current_value_name = max_inp + 1;
+        return std::to_string(current_value_name);
+      }
+      return input_names[input_names.size() - 1] + "_1";
+    }
+
     inline std::vector<std::string> get_cool_display_tensor_value_names(const char* prefix, std::vector<const char*> suffixes) {
 
       int layer_idx = get_layer_suffix();
@@ -203,7 +224,7 @@ namespace EigenSinn {
         });
 
       std::string * output = node->add_output();
-      *output = get_tensor_value_name();
+      *output = get_tensor_value_name(input_names);
 
       return node;
     }
