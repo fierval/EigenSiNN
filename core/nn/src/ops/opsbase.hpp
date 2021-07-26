@@ -89,6 +89,10 @@ namespace EigenSinn {
   static inline DSizes<Index, Rank> vec2dims(const std::vector<Index>& dims) {
     DSizes<Index, Rank> out;
 
+    // make sure bugs like the one with loading maxpool extents don't happen
+    // maxpool "kernel" in ONNX is 4-dimensional, while the extents are 2-dimensional
+    assert(Rank == dims.size());
+
     for (Index i = 0; i < Rank; i++) {
       out[i] = dims[i];
     }
