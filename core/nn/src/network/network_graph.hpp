@@ -451,7 +451,7 @@ namespace EigenSinn {
     }
 
     // prevent direct instantiation
-    virtual const std::string& model_name() = 0;
+    virtual const std::string model_name() = 0;
 
     NetworkGraph graph;
 

@@ -45,7 +45,7 @@ namespace EigenSinnTest {
         // compute loss
         // start propagating back
         // 1. compute dL/dy
-        loss_func.step(output, cd.target);
+        loss_func.step(output.raw(), cd.target.raw());
 
         DeviceTensor<float, 2> dloss(loss_func.get_loss_derivative_by_input());
 

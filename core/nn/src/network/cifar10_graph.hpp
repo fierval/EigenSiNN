@@ -43,8 +43,8 @@ namespace EigenSinn {
 
   protected:
 
-    inline const std::string& model_name() override {
-      return "cifar10";
+    inline const std::string model_name() override {
+      return std::string("cifar10");
     }
   };
 

@@ -14,7 +14,7 @@ namespace EigenSinn {
     void step(PtrTensorAdapter<Scalar, Device_>& predicted_adapter, PtrTensorAdapter<Actual, Device_>& actual_adapter) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> predicted(predicted_adapter);
-      DeviceTensor<Actual, Rank, Device_, Layout> predicted(actual_adapter);
+      DeviceTensor<Actual, Rank, Device_, Layout> actual(actual_adapter);
 
       initialize(predicted, actual);
 

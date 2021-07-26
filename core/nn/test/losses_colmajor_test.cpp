@@ -49,7 +49,7 @@ namespace EigenSinnTest {
     DeviceTensor<float, 2, ThreadPoolDevice, ColMajor> output(fc->get_output());
 
     MseLoss<float, float, 2, ThreadPoolDevice, ColMajor> loss_func;
-    loss_func.step(output, cd.target);
+    loss_func.step(output.raw(), cd.target.raw());
 
     EXPECT_TRUE(loss - loss_func.get_output() < 1e-5);
     EXPECT_TRUE(is_elementwise_approx_eq(dloss, loss_func.get_loss_derivative_by_input()));
@@ -66,7 +66,7 @@ namespace EigenSinnTest {
     DeviceTensor<float, 2, ThreadPoolDevice, ColMajor> output(fc->get_output());
 
     CrossEntropyLoss<float, float, 2, ThreadPoolDevice, ColMajor> loss_func;
-    loss_func.step(output, cd.target);
+    loss_func.step(output.raw(), cd.target.raw());
 
     EXPECT_EQ(loss, loss_func.get_output());
     EXPECT_TRUE(is_elementwise_approx_eq(dloss, loss_func.get_loss_derivative_by_input()));
