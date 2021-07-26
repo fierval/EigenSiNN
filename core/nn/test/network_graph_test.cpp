@@ -3,6 +3,8 @@
 #include <gtest/gtest.h>
 
 #include <network/cifar10_graph.hpp>
+#include "include/testutils.hpp"
+#include "ops/comparisons.hpp"
 
 using namespace EigenSinn;
 
@@ -46,23 +48,27 @@ protected:
 
 TEST_F(GraphTest, LoadModel) {
   auto model = cifar10->save();
-  model->dump("c:\\temp\\cifar10_graph.txt");
   model->flush("c:\\temp\\cifar10_graph.onnx");
+
+  auto conv_2 = cifar10->get_layer("Conv_2");
+
+  DeviceTensor<float, 4> weights_expected(conv_2->get_weights());
 
   EigenModel m = EigenModel::FromFile("c:\\temp\\cifar10_graph.onnx");
 
+  // clears the original model
   cifar10->load(m);
 
-  cifar10->print_graph();
-  std::ofstream graphviz("c:\\temp\\gviz.dot", std::ios::binary);
-  cifar10->write_graphviz(graphviz);
+  auto conv_3 = cifar10->get_layer("Conv_2");
+  DeviceTensor<float, 4> weights_roundtripped(conv_3->get_weights());
 
-  cifar10->print_traversal();
-  std::cerr << "=======================================" << std::endl;
-  cifar10->print_traversal(false);
-
+  // still can feed-forward
   cifar10->forward(rand_image.raw(), rand_labels.raw());
 
+  // check integritylayer
   model = cifar10->save();
-  model->flush("c:\\temp\\cifar10_graph_roundtripped.onnx");
+  model->flush("c:\\temp\\cifar10_graph_roundtripped.onnx");  
+  
+  EXPECT_TRUE(is_elementwise_approx_eq(weights_expected, weights_roundtripped));
+
 }

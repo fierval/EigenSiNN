@@ -211,6 +211,28 @@ namespace EigenSinn {
       step(inputs, labels);
     }
 
+    // exploratory functions
+    // ======================
+
+
+    std::vector<std::string> get_layer_names() {
+
+      std::vector<std::string> out;
+      std::transform(vertices.begin(), vertices.end(), std::back_inserter(out),
+        [](std::pair<std::string, vertex_t>& p) {return p.first; });
+
+      return out;
+    }
+
+    PtrLayer get_layer(const std::string& name) {
+
+      if (vertices.count(name) == 0) {
+        throw std::invalid_argument("Invlaid layer name");
+      }
+
+      return graph[vertices[name]].layer;
+
+    }
   protected:
 
     // single input network
