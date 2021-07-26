@@ -20,6 +20,7 @@ namespace EigenSinn {
       : LayerBase<Scalar, Device_>(tanh_op)
       , inited(false)  {
 
+      is_cudnn = Rank > 2 && Layout == RowMajor;
     }
 
     void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer_any) override {

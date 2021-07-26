@@ -15,6 +15,8 @@ namespace EigenSinn {
       : LayerBase<Scalar, Device_>(softmax_op)
       , inited(false)
     {
+      is_cudnn = Rank > 2 && Layout == RowMajor;
+
       for (Index i = 0; i < Rank - 1; i++) {
           reduction_axes[i] = i + 1;
           reshape_dims[i] = 1;

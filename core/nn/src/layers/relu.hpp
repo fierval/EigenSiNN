@@ -19,7 +19,7 @@ namespace EigenSinn {
     LeakyReLU(float _thresh = 0.01)
       : LayerBase<Scalar, Device_>(leakyrelu_op)
       , thresh(_thresh)  {
-
+      is_cudnn = false;
     }
 
     void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer) override {
@@ -110,6 +110,7 @@ namespace EigenSinn {
   public:
     ReLU() : LeakyReLU<Scalar, Rank, Device_, Layout>(0) {
       op_name = std::string(relu_op);
+      is_cudnn = Rank > 2 && Layout == RowMajor;
     }
 
     const std::string add_onnx_node(EigenModel& model, const std::string& input_name) override {
