@@ -6,7 +6,7 @@ message(STATUS "Eigen path: ${EIGEN_PATH}")
 set(TEST_EXE eigentest)
 
 # discover test sources
- file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "src/onnx/*.cc")
+ file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false "test/*.cpp" "test/*.cu" "src/onnx/*.cc")
 # set(TEST_SOURCES 
 #    "src/onnx/onnx.proto3.pb.cc"
 #    "test/batchnorm4d_test.cpp"
@@ -44,10 +44,10 @@ message(STATUS "CUDA Flags: ${CMAKE_CUDA_FLAGS}")
 set_property(TARGET ${TEST_EXE} 
              PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 
-set(CMAKE_CUDA_ARCHITECTURES 70 CACHE STRING "CUDA Arches" FORCE)
+set(CMAKE_CUDA_ARCHITECTURES 70)
 
 if(MSVC)
-    add_definitions(/bigobj)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 endif()
 
 set_property(TARGET ${TEST_EXE} 
@@ -58,8 +58,8 @@ target_compile_definitions(${TEST_EXE} PRIVATE EIGEN_USE_THREADS EIGEN_USE_GPU E
 
 target_include_directories(${TEST_EXE} PRIVATE "src" ${EIGEN_PATH} ${Boost_INCLUDE_DIRS} ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} ${Protobuf_INCLUDE_DIRS})
 
-#target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${Boost_LIBRARIES} ${Protobuf_LIBRARIES} cudnn)
-target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${Boost_LIBRARIES} ${Protobuf_LIBRARIES})
+target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${Boost_LIBRARIES} ${Protobuf_LIBRARIES} cudnn)
+#target_link_libraries(${TEST_EXE} PUBLIC gtest_main ${Boost_LIBRARIES} ${Protobuf_LIBRARIES})
 
 # gtest specific
 set(gtest_force_shared_crt ON)
