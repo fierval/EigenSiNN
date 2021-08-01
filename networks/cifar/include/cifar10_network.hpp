@@ -11,7 +11,7 @@ public:
   Cifar10(DSizes<Index, 4> input_dims, int num_classes, float learning_rate) {
 
     // push back rvalues so we don't have to invoke the copy constructor
-    add(new Input<float, 4, Device_, Layout>);
+    add(new Input<float, Device_>);
 
     add(new Conv2d<float, Device_, Layout>(DSizes<Index, 4>{6, 3, 5, 5}, Padding2D{ 0, 0 }, 1), get_optimizer<4>(learning_rate));
     add(new ReLU<float, 4, Device_, Layout>);

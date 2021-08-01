@@ -20,8 +20,8 @@ namespace EigenSinn {
       assert((nesterov && momentum > 0.0) || !nesterov);
     }
 
-    SGD(SGD& s) : OptimizerBase<Scalar, Device_, Layout>(a.lr)
-      : nesterov(s.nesterov)
+    SGD(SGD& s) : OptimizerBase<Scalar, Device_, Layout>(s.lr)
+      , nesterov(s.nesterov)
       , momentum(s.momentum) {
 
     }
@@ -29,7 +29,7 @@ namespace EigenSinn {
     SGD(float _lr, std::vector<float> remaining_args) : SGD(_lr) {
 
       int len = remaining_args.size();
-      std::vector<float*> params{ &momentum, &static_cast<float>(nesterov) };
+      std::vector<float*> params{ &momentum, &nesterov };
 
       for (int i = 0; i < remaining_args.size(); i++) {
         *params[i] = remaining_args[i];
@@ -73,6 +73,6 @@ namespace EigenSinn {
     float momentum;
     DeviceTensor<Scalar, Rank, Device_, Layout> velocity_weights;
     DeviceTensor<Scalar, 1, Device_, Layout> velocity_bias;
-    bool nesterov;
+    float nesterov;
   };
 }
