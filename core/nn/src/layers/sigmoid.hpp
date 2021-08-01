@@ -17,7 +17,7 @@ namespace EigenSinn {
   public:
     // leaky relu if necessary
     Sigmoid()
-      : LayerBase<Scalar, Device_>(sigmoid_op)
+      : LayerBase<Scalar, Device_>(OnnxOpNames::sigmoid_op)
       , inited(false) {
 
       is_cudnn = Rank > 2 && Layout == RowMajor;

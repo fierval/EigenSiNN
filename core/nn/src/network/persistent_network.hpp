@@ -168,7 +168,7 @@ namespace EigenSinn {
     }
 
     inline bool is_input_layer(const std::string& input_name) {
-      return input_name.rfind(input_op, 0) == 0;
+      return input_name.rfind(OnnxOpNames::input_op, 0) == 0;
     }
 
     inline void add_vertices(LayerMap& name_layer_map, StringMap& output_of_layer, StringVectorMap& layer_s_inputs) {

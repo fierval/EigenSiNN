@@ -13,7 +13,7 @@ namespace EigenSinn {
   public:
 
     Dropout(float _prob = 0.5)
-      : LayerBase<Scalar, Device_>(dropout_op)
+      : LayerBase<Scalar, Device_>(OnnxOpNames::dropout_op)
       , prob(_prob)
       , is_training(true)
       , inited(false) {

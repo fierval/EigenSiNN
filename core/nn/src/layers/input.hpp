@@ -13,7 +13,7 @@ namespace EigenSinn {
 
   public:
 
-    Input() : LayerBase<Scalar, Device_>("Input") {};
+    Input() : LayerBase<Scalar, Device_>(OnnxOpNames::input_op) {};
 
     PtrTensorAdapter<Scalar, Device_> get_output() {
       return input;

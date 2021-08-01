@@ -17,7 +17,7 @@ namespace EigenSinn {
   public:
     // leaky relu if necessary
     Tanh()
-      : LayerBase<Scalar, Device_>(tanh_op)
+      : LayerBase<Scalar, Device_>(OnnxOpNames::tanh_op)
       , inited(false)  {
 
       is_cudnn = Rank > 2 && Layout == RowMajor;

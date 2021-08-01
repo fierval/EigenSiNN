@@ -24,18 +24,18 @@ namespace EigenSinn {
     OnnxLoader(EigenModel& model) 
      : model(model) {
 
-      layer_loaders.insert(std::make_pair(batch_norm_op, make_func(LoadBatchNormalization)));
-      layer_loaders.insert(std::make_pair(conv_op, make_func(LoadConv)));
-      layer_loaders.insert(std::make_pair(conv_transpose_op, make_func(LoadConvTranspose)));
-      layer_loaders.insert(std::make_pair(dropout_op, make_func(LoadDropout)));
-      layer_loaders.insert(std::make_pair(flatten_op, make_func(LoadFlatten)));
-      layer_loaders.insert(std::make_pair(gemm_op, make_func(LoadGemm)));
-      layer_loaders.insert(std::make_pair(maxpool_op, make_func(LoadMaxPool)));
-      layer_loaders.insert(std::make_pair(leakyrelu_op, make_func(LoadLeakyRelu)));
-      layer_loaders.insert(std::make_pair(relu_op, make_func(LoadRelu)));
-      layer_loaders.insert(std::make_pair(sigmoid_op, make_func(LoadSigmoid)));
-      layer_loaders.insert(std::make_pair(softmax_op, make_func(LoadSoftmax)));
-      layer_loaders.insert(std::make_pair(tanh_op, make_func(LoadTanh)));
+      layer_loaders.insert(std::make_pair(OnnxOpNames::batch_norm_op, make_func(LoadBatchNormalization)));
+      layer_loaders.insert(std::make_pair(OnnxOpNames::conv_op, make_func(LoadConv)));
+      layer_loaders.insert(std::make_pair(OnnxOpNames::conv_transpose_op, make_func(LoadConvTranspose)));
+      layer_loaders.insert(std::make_pair(OnnxOpNames::dropout_op, make_func(LoadDropout)));
+      layer_loaders.insert(std::make_pair(OnnxOpNames::flatten_op, make_func(LoadFlatten)));
+      layer_loaders.insert(std::make_pair(OnnxOpNames::gemm_op, make_func(LoadGemm)));
+      layer_loaders.insert(std::make_pair(OnnxOpNames::maxpool_op, make_func(LoadMaxPool)));
+      layer_loaders.insert(std::make_pair(OnnxOpNames::leakyrelu_op, make_func(LoadLeakyRelu)));
+      layer_loaders.insert(std::make_pair(OnnxOpNames::relu_op, make_func(LoadRelu)));
+      layer_loaders.insert(std::make_pair(OnnxOpNames::sigmoid_op, make_func(LoadSigmoid)));
+      layer_loaders.insert(std::make_pair(OnnxOpNames::softmax_op, make_func(LoadSoftmax)));
+      layer_loaders.insert(std::make_pair(OnnxOpNames::tanh_op, make_func(LoadTanh)));
     }
 
     inline std::tuple<StringVector, std::string, BaseLayer*> create_from_node(const onnx::NodeProto& node) {

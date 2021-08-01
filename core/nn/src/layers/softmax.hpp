@@ -12,7 +12,7 @@ namespace EigenSinn {
   class Softmax : public LayerBase<Scalar, Device_> {
   public:
     Softmax() 
-      : LayerBase<Scalar, Device_>(softmax_op)
+      : LayerBase<Scalar, Device_>(OnnxOpNames::softmax_op)
       , inited(false)
     {
       is_cudnn = Rank > 2 && Layout == RowMajor;

@@ -21,7 +21,7 @@ namespace EigenSinn {
   public:
 
     BatchNormalizationLayer(Index num_features, float _eps = 1e-5, float _momentum = 0.9, bool _is_training = true)
-      : LayerBase<Scalar, Device_>(batch_norm_op)
+      : LayerBase<Scalar, Device_>(OnnxOpNames::batch_norm_op)
       , momentum(_momentum)
       , eps(_eps)
       , is_training(_is_training)

@@ -13,3 +13,4 @@
 #include <layers/sigmoid.hpp>
 #include <layers/softmax.hpp>
 #include <layers/tanh.hpp>
+#include <layers/operations/add.hpp>

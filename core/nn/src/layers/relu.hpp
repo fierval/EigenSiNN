@@ -17,7 +17,7 @@ namespace EigenSinn {
   public:
     // leaky relu if necessary
     LeakyReLU(float _thresh = 0.01)
-      : LayerBase<Scalar, Device_>(leakyrelu_op)
+      : LayerBase<Scalar, Device_>(OnnxOpNames::leakyrelu_op)
       , thresh(_thresh)  {
       is_cudnn = false;
     }
@@ -109,7 +109,7 @@ namespace EigenSinn {
   class ReLU : public LeakyReLU<Scalar, Rank, Device_, Layout> {
   public:
     ReLU() : LeakyReLU<Scalar, Rank, Device_, Layout>(0) {
-      op_name = std::string(relu_op);
+      op_name = std::string(OnnxOpNames::relu_op);
       is_cudnn = Rank > 2 && Layout == RowMajor;
     }
 

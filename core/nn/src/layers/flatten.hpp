@@ -13,7 +13,7 @@ namespace EigenSinn {
   class Flatten : public LayerBase<Scalar, Device_> {
 
   public:
-    Flatten() : LayerBase<Scalar, Device_>(flatten_op) {
+    Flatten() : LayerBase<Scalar, Device_>(OnnxOpNames::flatten_op) {
     
     }
 
