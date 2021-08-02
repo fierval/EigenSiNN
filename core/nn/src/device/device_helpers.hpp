@@ -20,11 +20,11 @@ namespace EigenSinn {
 
 #ifdef __CUDACC__
   template<typename Scalar>
-  __global__ void add_kernel(Scalar * data1, Scalar * data2, long size) {
+  __global__ void add_kernel(Scalar * dst, Scalar * src, long size) {
 
     long idx = threadIdx.x + blockIdx.x * blockDim.x;
     if (idx < size) {
-      data1[idx] += data2[idx];
+      dst[idx] += src[idx];
     }
   }
 #endif
