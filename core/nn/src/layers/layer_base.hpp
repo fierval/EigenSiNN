@@ -24,6 +24,8 @@ namespace EigenSinn {
 
     }
 
+    typedef std::vector<PtrTensorAdapter<Scalar, Device_>> TensorAdapterVector;
+
     virtual void init() {};
 
     virtual void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer_base) = 0;
@@ -41,7 +43,7 @@ namespace EigenSinn {
     virtual void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) = 0;
 
     // REVIEW: see above
-    virtual void backward(std::vector<PtrTensorAdapter<Scalar, Device_>>& prev_layer, PtrTensorAdapter<Scalar, Device_>& next_layer_grad_any) {
+    virtual void backward(TensorAdapterVector& prev_layer, PtrTensorAdapter<Scalar, Device_>& next_layer_grad_any) {
 
       if (prev_layer.size() == 1) {
         backward(prev_layer[0], next_layer_grad_any);
@@ -49,6 +51,17 @@ namespace EigenSinn {
       }
 
       // otherwise override!
+      assert(false);
+    }
+
+    virtual void backward(TensorAdapterVector& prev_layer, TensorAdapterVector& next_layer_grad) {
+
+      if (next_layer_grad.size() == 1) {
+        backward(prev_layer, next_layer_grad[0]);
+        return;
+      }
+
+      //override!
       assert(false);
     }
 

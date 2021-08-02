@@ -165,24 +165,25 @@ namespace EigenSinn {
         // reached input layer
         if (prev_layers.empty()) { continue; }
 
-        // TODO: for now should only be a single one
         boost::tie(out_layer_edge, out_layer_edge_end) = boost::out_edges(v, graph);
-
-        PtrTensor incoming_derivative;
+        
+        std::vector<PtrTensor> derivatives;
 
         // No outputs meaning we need to attach a loss
         // we have already computed the loss and its derivative
         // in the "forward" step
         if (out_layer_edge == out_layer_edge_end) {
           PtrLoss& loss = name_loss[names[v]];
-          incoming_derivative = loss->get_loss_derivative_by_input();
+          derivatives.push_back(loss->get_loss_derivative_by_input());
         }
         else {
-          vertex_t target = boost::target(*out_layer_edge, graph);
-          incoming_derivative = graph[target].layer->get_loss_by_input_derivative();
+          for (; out_layer_edge != out_layer_edge_end; out_layer_edge++) {
+            vertex_t target = boost::target(*out_layer_edge, graph);
+            derivatives.push_back(graph[target].layer->get_loss_by_input_derivative());
+          }
         }
 
-        graph[v].layer->backward(prev_layers, incoming_derivative);
+        graph[v].layer->backward(prev_layers, derivatives);
       }
 
     }
