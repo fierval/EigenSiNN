@@ -8,10 +8,6 @@ using std::make_unique;
 // block size for CUDA operations
 #define BLOCK_SIZE 16
 
-#ifdef __INTELLISENSE__
-#define __CUDACC__
-#endif
-
 namespace EigenSinn {
 
   template<typename Device_, typename Scalar, Index Rank>
@@ -21,6 +17,17 @@ namespace EigenSinn {
       device.deallocate(t.data());
     }
   }
+
+#ifdef __CUDACC__
+  template<typename Scalar>
+  __global__ void add_kernel(Scalar * data1, Scalar * data2, long size) {
+
+    long idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if (idx < size) {
+      data1[idx] += data2[idx];
+    }
+  }
+#endif
 
   /// <summary>
   ///  Allocate memory on the device for the data

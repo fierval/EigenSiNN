@@ -61,8 +61,13 @@ namespace EigenSinn {
         return;
       }
 
-      //override!
-      assert(false);
+      // otherwise - add tensor adapters up!
+      PtrTensorAdapter<Scalar, Device_> acc(new TensorAdapter<Scalar, Device_>(next_layer_grad[0]->get_dims()));
+      acc->setZero();
+
+      for (auto& ta : next_layer_grad) {
+        *acc += *ta;
+      }
     }
 
     virtual  PtrTensorAdapter<Scalar, Device_> get_output() = 0;

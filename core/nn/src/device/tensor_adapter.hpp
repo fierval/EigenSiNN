@@ -13,11 +13,11 @@ namespace EigenSinn {
 
   public:
 
-    explicit TensorAdapter() 
+    explicit TensorAdapter()
       : device(dispatcher()) {}
 
-    explicit TensorAdapter(const std::vector<Index>& dims, Scalar *_data = nullptr)
-      : TensorAdapter()  {
+    explicit TensorAdapter(const std::vector<Index>& dims, Scalar* _data = nullptr)
+      : TensorAdapter() {
 
       set_dimensions(dims);
       // cannot have other
@@ -30,7 +30,7 @@ namespace EigenSinn {
       }
     }
 
-    explicit TensorAdapter(const TensorAdapter<Scalar, Device_>& t) 
+    explicit TensorAdapter(const TensorAdapter<Scalar, Device_>& t)
       : TensorAdapter() {
 
       data_ = t.data_;
@@ -52,27 +52,87 @@ namespace EigenSinn {
       }
     }
 
-    inline Scalar* data() { return data_; }
-    inline Device_& get_device() { return device; }
-    inline const std::vector<Index>& get_dims() { return dimensions; }
+    inline TensorAdapter& operator+=(TensorAdapter& t) {
+      assert(total_size == t.total_size);
 
-  private:
+#ifdef __INTELLISENSE__
+#define __CUDACC__
+#endif
 
-    void set_dimensions(const std::vector<Index>& dims) {
+#ifdef __CUDACC__
+      if (std::is_same<GpuDevice, Device_>::value) {
 
-      dimensions.resize(dims.size());
-      total_size = 1;
-      for (int i = 0; i < dims.size(); i++) {
-        dimensions[i] = dims[i];
-        total_size *= dims[i];
+        static int block(BLOCK_SIZE * BLOCK_SIZE);
+
+        dim3 grid(getGridSize(total_size, block));
+
+        add_kernel<Scalar> << <grid, block >> > (data(), t.data(), (long)total_size);
+
+        cudaDeviceSynchronize();
       }
+      else {
+#else
+      for (int i = 0; i < total_size; i++) {
+        data_[i] += t.data_[i];
+      }
+#endif
+#ifdef __CUDACC__
+      }
+#endif
+      return *this;
     }
 
-    static inline DeviceWrapper<Device_> dispatcher;
-    Device_& device;
+  friend inline TensorAdapter operator+(TensorAdapter& left, TensorAdapter& right) {
 
-    Scalar* data_ = nullptr;
-    std::vector<Index> dimensions;
-    Index total_size = 1;
+    TensorAdapter acc(left.get_dims());
+    acc.deep_copy(left);
+
+    acc += right;
+    return acc;
+  }
+
+  inline Scalar* data() { return data_; }
+  inline Device_& get_device() { return device; }
+  inline const std::vector<Index>& get_dims() { return dimensions; }
+
+  void setConstant(Scalar val) {
+    assert(data_ != nullptr);
+
+    std::vector<Scalar> const_mem(total_size);
+    std::fill_n(const_mem.begin(), total_size, val);
+
+    device.memcpyHostToDevice(data(), const_mem.data(), total_size * sizeof(Scalar));
+  }
+
+  void setZero() {
+    setConstant(0);
+  }
+
+private:
+
+  // should be used very rarely. This actually copies the data
+  inline void deep_copy(TensorAdapter& t) {
+    assert(total_size == t.total_size);
+    assert(data_ != nullptr);
+
+    device.memcpy(data_, t.data_, total_size * sizeof(Scalar));
+  }
+
+  void set_dimensions(const std::vector<Index>& dims) {
+
+    dimensions.resize(dims.size());
+    total_size = 1;
+    for (int i = 0; i < dims.size(); i++) {
+      dimensions[i] = dims[i];
+      total_size *= dims[i];
+    }
+  }
+
+  static inline DeviceWrapper<Device_> dispatcher;
+  Device_& device;
+
+  Scalar* data_ = nullptr;
+  std::vector<Index> dimensions;
+  Index total_size = 1;
   };
 }
