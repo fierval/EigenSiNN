@@ -74,13 +74,8 @@ namespace EigenSinn {
     virtual  PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() = 0;
 
     // generally we'll want the derivative by a given input
-    virtual PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivatives(std::string& layer_name) {
+    virtual PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative(std::string& layer_name) {
       return empty_tensor();
-    }
-
-    virtual std::vector<PtrTensorAdapter<Scalar, Device_>> get_loss_by_input_derivatives() {
-
-      throw std::logic_error("Not implemented for this layer!");
     }
 
     virtual  PtrTensorAdapter<Scalar, Device_> get_loss_by_weights_derivative() { return empty_tensor(); };

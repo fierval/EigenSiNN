@@ -36,6 +36,8 @@ namespace EigenSinn {
       layer_loaders.insert(std::make_pair(OnnxOpNames::sigmoid_op, make_func(LoadSigmoid)));
       layer_loaders.insert(std::make_pair(OnnxOpNames::softmax_op, make_func(LoadSoftmax)));
       layer_loaders.insert(std::make_pair(OnnxOpNames::tanh_op, make_func(LoadTanh)));
+      layer_loaders.insert(std::make_pair(OnnxOpNames::tanh_op, make_func(LoadAdd)));
+      layer_loaders.insert(std::make_pair(OnnxOpNames::tanh_op, make_func(LoadConcat)));
     }
 
     inline std::tuple<StringVector, std::string, BaseLayer*> create_from_node(const onnx::NodeProto& node) {
@@ -330,6 +332,14 @@ namespace EigenSinn {
         break;
       }
       return out;
+    }
+
+    inline LayerBase<Scalar, Device_>* LoadAdd(const onnx::NodeProto& node, StringVector& inputs) {
+      throw std::logic_error("Not implemented");
+    }
+
+    inline LayerBase<Scalar, Device_>* LoadConcat(const onnx::NodeProto& node, StringVector& inputs) {
+      throw std::logic_error("Not implemented");
     }
 
     StringVector get_node_inputs(const onnx::NodeProto& node) {

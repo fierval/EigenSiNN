@@ -9,13 +9,17 @@ using namespace  Eigen;
 namespace EigenSinn {
 
   template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
-  class Add : public LayerBase<Scalar, Device_> {
+  class Concat : public LayerBase<Scalar, Device_> {
 
   public:
 
     typedef std::unordered_map<std::string, PtrTensorAdapter<Scalar, Device_>> LayerTensorAdapterMap;
 
-    Add() : LayerBase<Scalar, Device_>(OnnxOpNames::add_op) { }
+    Concat(int _axis) 
+      : LayerBase<Scalar, Device_>(OnnxOpNames::concat_op) 
+      , axis(_axis) {
+    
+      }
 
     void forward(LayerTensorAdapterMap& inputs) override {
 
@@ -49,7 +53,7 @@ namespace EigenSinn {
 
     void forward(PtrTensorAdapter<Scalar, Device_>& inp) override {
 
-      static_assert("Add::forward with only one argument!!");
+      static_assert("Concat::forward with only one argument!!");
     }
 
     PtrTensorAdapter<Scalar, Device_> get_output() override {
@@ -58,7 +62,7 @@ namespace EigenSinn {
     }
 
     PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
-      static_assert("Add: use get_loss_by_input_derivative with layer name");
+      static_assert("Concat: use get_loss_by_input_derivative with a specific layer name!");
       return PtrTensorAdapter<Scalar, Device_>();
     }
 
@@ -69,6 +73,7 @@ namespace EigenSinn {
   private:
     DeviceTensor<Scalar, Rank, Device_, Layout> output;
     LayerTensorAdapterMap dinput;
+    int axis;
   };
 
 }

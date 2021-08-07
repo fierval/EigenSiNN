@@ -17,6 +17,6 @@ namespace EigenSinn {
     constexpr static char tanh_op[] = "Tanh";
     constexpr static char input_op[] = "Input";
     constexpr static char add_op[] = "Add";
-
+    constexpr static char concat_op[] = "Concat";
   };
 }
