@@ -12,15 +12,19 @@ namespace EigenSinn {
   class Add : public LayerBase<Scalar, Device_> {
 
   public:
+
+    typedef std::unordered_map<std::string, PtrTensorAdapter<Scalar, Device_>> LayerTensorAdapterMap;
+
     Add() : LayerBase<Scalar, Device_>(OnnxOpNames::add_op) { }
-  
-    void forward(std::vector<PtrTensorAdapter<Scalar, Device_>>& inputs) override {
+
+    void forward(LayerTensorAdapterMap& inputs) override {
 
       assert(inputs.size() == 2);
 
       // TODO: implement broadcasting?
-      DeviceTensor<Scalar, Rank, Device_, Layout> input1(inputs[0]);
-      DeviceTensor<Scalar, Rank, Device_, Layout> input2(inputs[1]);
+      auto it = inputs.begin();
+      DeviceTensor<Scalar, Rank, Device_, Layout> input1(it->second);
+      DeviceTensor<Scalar, Rank, Device_, Layout> input2((it + 1)->second);
 
       if (output.size() == 0) {
         output.resize(input1.dimensions());
@@ -29,26 +33,27 @@ namespace EigenSinn {
       output.view() = *input1 + *input2;
     }
 
-    void backward(std::vector<PtrTensorAdapter<Scalar, Device_>>& prev_layer, PtrTensorAdapter<Scalar, Device_>& next_layer_grad_any) override {
-    
+    void backward(LayerTensorAdapterMap& prev_layer, PtrTensorAdapter<Scalar, Device_>& next_layer_grad_any) override {
+
       // TODO: implement backprop with broadcasting, where next_layer_grad_any should be resized based on broadcasting
 
-      DeviceTensor<Scalar, Rank, Device_, Layout> next_layer_grad(next_layer_grad_any);
-
-      if (dinput.empty()) {
-        dinput.resize(2);
+      for (auto& kv : prev_layer) {
+        if (dinput.count(kv.first) == 0) {
+          dinput.insert(std::make_pair(kv.first, next_layer_grad_any));
+        }
+        else {
+          dinput[kv.first] = next_layer_grad_any;
+        }
       }
-
-      std::fill_n(dinput.begin(), 2, next_layer_grad);
     }
 
     void forward(PtrTensorAdapter<Scalar, Device_>& inp) override {
-      
+
       static_assert("Add::forward with only one argument!!");
     }
 
     PtrTensorAdapter<Scalar, Device_> get_output() override {
-    
+
       return output;
     }
 
@@ -57,15 +62,13 @@ namespace EigenSinn {
       return PtrTensorAdapter<Scalar, Device_>();
     }
 
-    std::vector<PtrTensorAdapter<Scalar, Device_>> get_loss_by_input_derivatives() {
-      
-
-      return dinput;
+    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivatives(std::string& layer_name) {
+      return dinput[layer_name];
     }
 
   private:
     DeviceTensor<Scalar, Rank, Device_, Layout> output;
-    std::vector<DeviceTensor<Scalar, Rank, Device_, Layout>> dinput;
+    LayerTensorAdapterMap dinput;
   };
 
 }
