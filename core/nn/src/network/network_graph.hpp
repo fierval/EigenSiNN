@@ -54,6 +54,8 @@ namespace EigenSinn {
     typedef std::vector<PtrTensorAdapter<Scalar, Device_>> TensorVector;
     typedef std::shared_ptr<Loss> PtrLoss;
 
+    typedef std::unordered_map<std::string, PtrTensorAdapter<Scalar, Device_>> LayerTensorMap;
+
 
     NetworkBase() {
 
@@ -115,7 +117,7 @@ namespace EigenSinn {
 
       for (auto& v : forward_order) {
 
-        TensorVector inputs = collect_inputs(v);
+        LayerTensorMap inputs = collect_inputs(v);
         auto& layer_name = graph[v].layer->get_layer_name();
 
         // input layer. all inputs are set by the set_input call
@@ -160,7 +162,7 @@ namespace EigenSinn {
       for (auto it = forward_order.rbegin(); it != forward_order.rend(); it++) {
         vertex_t v = *it;
 
-        TensorVector prev_layers = collect_inputs(v);
+        LayerTensorMap prev_layers = collect_inputs(v);
 
         // reached input layer
         if (prev_layers.empty()) { continue; }
@@ -427,15 +429,16 @@ namespace EigenSinn {
     }
 
     // given a vertex return all vertices feeding into it
-    TensorVector collect_inputs(vertex_t& v) {
+    LayerTensorMap collect_inputs(vertex_t& v) {
 
-      TensorVector inputs;
+      LayerTensorMap inputs;
       InEdgeIter in, in_end;
+      vertex_name names = get(boost::vertex_name, graph);
 
       for (boost::tie(in, in_end) = boost::in_edges(v, graph); in != in_end; in++) {
 
         vertex_t inp = boost::source(*in, graph);
-        inputs.push_back(graph[inp].layer->get_output());
+        inputs.insert(std::make_pair(names[inp], graph[inp].layer->get_output()));
       }
 
       return inputs;

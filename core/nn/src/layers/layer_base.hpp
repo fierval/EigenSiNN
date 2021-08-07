@@ -10,12 +10,6 @@ using namespace Eigen;
 
 namespace EigenSinn {
 
-  enum class DebugInit : int {
-    False = 0,
-    Weights = 1,
-    Bias = 2
-  };
-
   template <typename Scalar, typename Device_ = ThreadPoolDevice>
   class LayerBase {
 
@@ -25,28 +19,33 @@ namespace EigenSinn {
     }
 
     typedef std::vector<PtrTensorAdapter<Scalar, Device_>> TensorAdapterVector;
+    typedef std::unordered_map<std::string, PtrTensorAdapter<Scalar, Device_>> LayerTensorAdapterMap;
+
 
     virtual void init() {};
 
     virtual void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer_base) = 0;
 
     // REVIEW: most layers have a single input, but not necessarily. Presence of the overloaded forward is legacy
-    virtual void forward(std::vector<PtrTensorAdapter<Scalar, Device_>>& inputs) {
+    // many inputs going into one node
+    virtual void forward(LayerTensorAdapterMap& inputs) {
       if (inputs.size() == 1) {
-        forward(inputs[0]);
+        forward(inputs.begin()->second);
         return;
       }
 
       // otherwise override!
       assert(false);
-    }
+
+    };
+
     virtual void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) = 0;
 
     // REVIEW: see above
-    virtual void backward(TensorAdapterVector& prev_layer, PtrTensorAdapter<Scalar, Device_>& next_layer_grad_any) {
+    virtual void backward(LayerTensorAdapterMap& prev_layer, PtrTensorAdapter<Scalar, Device_>& next_layer_grad_any) {
 
       if (prev_layer.size() == 1) {
-        backward(prev_layer[0], next_layer_grad_any);
+        backward(prev_layer.begin()->second, next_layer_grad_any);
         return;
       }
 
@@ -54,7 +53,7 @@ namespace EigenSinn {
       assert(false);
     }
 
-    virtual void backward(TensorAdapterVector& prev_layer, TensorAdapterVector& next_layer_grad) {
+    virtual void backward(LayerTensorAdapterMap& prev_layer, TensorAdapterVector& next_layer_grad) {
 
       if (next_layer_grad.size() == 1) {
         backward(prev_layer, next_layer_grad[0]);
@@ -71,19 +70,24 @@ namespace EigenSinn {
     }
 
     virtual  PtrTensorAdapter<Scalar, Device_> get_output() = 0;
-
+    // optimization for a layer -> layer simple connection
     virtual  PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() = 0;
+
+    // generally we'll want the derivative by a given input
+    virtual PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivatives(std::string& layer_name) {
+      return empty_tensor();
+    }
 
     virtual std::vector<PtrTensorAdapter<Scalar, Device_>> get_loss_by_input_derivatives() {
 
       throw std::logic_error("Not implemented for this layer!");
     }
 
-    virtual  PtrTensorAdapter<Scalar, Device_> get_loss_by_weights_derivative() { return PtrTensorAdapter<Scalar, Device_>(); };
-    virtual  PtrTensorAdapter<Scalar, Device_> get_weights() { return PtrTensorAdapter<Scalar, Device_>(); };
+    virtual  PtrTensorAdapter<Scalar, Device_> get_loss_by_weights_derivative() { return empty_tensor(); };
+    virtual  PtrTensorAdapter<Scalar, Device_> get_weights() { return empty_tensor(); };
 
-    virtual  PtrTensorAdapter<Scalar, Device_> get_loss_by_bias_derivative() { return PtrTensorAdapter<Scalar, Device_>(); }
-    virtual  PtrTensorAdapter<Scalar, Device_> get_bias() { return PtrTensorAdapter<Scalar, Device_>(); }
+    virtual  PtrTensorAdapter<Scalar, Device_> get_loss_by_bias_derivative() { return empty_tensor(); }
+    virtual  PtrTensorAdapter<Scalar, Device_> get_bias() { return empty_tensor(); }
 
     virtual void set_weights(PtrTensorAdapter<Scalar, Device_>&) {}
     virtual void set_bias(PtrTensorAdapter<Scalar, Device_>&) {}
@@ -130,8 +134,16 @@ namespace EigenSinn {
       return weights->get_dims().size();
     }
 
+    // graph traversal identifies LayerBase vs OpLayerBase based on this flag
+    const bool is_multi_input() { return has_multiple_inputs; }
+
+    inline static PtrTensorAdapter<Scalar, Device_> empty_tensor() {
+      return PtrTensorAdapter<Scalar, Device_>();
+    }
+
   protected:
-    bool is_cudnn = true;
+    bool is_cudnn = true, has_multiple_inputs=false;
+
     std::string op_name;
     std::string layer_name;
   };

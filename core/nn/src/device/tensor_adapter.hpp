@@ -108,6 +108,9 @@ namespace EigenSinn {
     setConstant(0);
   }
 
+  inline static std::shared_ptr<TensorAdapter<Scalar, Device_>> empty_tensor() 
+    { return std::shared_ptr<TensorAdapter<Scalar, Device_>>(new TensorAdapter<Scalar, Device_>); }
+
 private:
 
   // should be used very rarely. This actually copies the data
@@ -135,4 +138,5 @@ private:
   std::vector<Index> dimensions;
   Index total_size = 1;
   };
+
 }
