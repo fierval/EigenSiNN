@@ -50,7 +50,7 @@ namespace EigenSinn {
     }
 
     // Implementation from darknet: https://github.com/pjreddie/darknet/blob/9a4b19c4158b064a164e34a83ec8a16401580850/src/maxpool_layer.c
-    void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer) override {
+    void forward(PtrTensorAdaptor<Scalar, Device_>& prev_layer) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> x(prev_layer);
 
@@ -137,7 +137,7 @@ namespace EigenSinn {
     }
 
   // for derivations
-  void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {
+  void backward(PtrTensorAdaptor<Scalar, Device_>& prev_layer, PtrTensorAdaptor<Scalar, Device_> next_layer_grad) override {
 
     DeviceTensor<Scalar, Rank, Device_, Layout> x(next_layer_grad);
 
@@ -174,11 +174,11 @@ namespace EigenSinn {
 #endif
   }
 
-  PtrTensorAdapter<Scalar, Device_> get_output() override {
+  PtrTensorAdaptor<Scalar, Device_> get_output() override {
     return layer_output.raw();
   }
 
-  PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
+  PtrTensorAdaptor<Scalar, Device_> get_loss_by_input_derivative() {
     return layer_gradient.raw();
   }
 

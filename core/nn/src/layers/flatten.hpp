@@ -17,7 +17,7 @@ namespace EigenSinn {
     
     }
 
-    void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer_any) {
+    void forward(PtrTensorAdaptor<Scalar, Device_>& prev_layer_any) {
       
       DeviceTensor<Scalar, 4, Device_, Layout> orig(prev_layer_any);
 
@@ -27,18 +27,18 @@ namespace EigenSinn {
 
     }
 
-    void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) {
+    void backward(PtrTensorAdaptor<Scalar, Device_>& prev_layer, PtrTensorAdaptor<Scalar, Device_> next_layer_grad) {
 
       DeviceTensor<Scalar, 2, Device_, Layout> unf_dout(next_layer_grad);
 
       folded = fold_kernel<Scalar>(unf_dout, original_dimensions);
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_output() override {
+    PtrTensorAdaptor<Scalar, Device_> get_output() override {
       return unfolded.raw();
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() override {
+    PtrTensorAdaptor<Scalar, Device_> get_loss_by_input_derivative() override {
       return folded.raw();
     }
 

@@ -9,15 +9,15 @@ namespace EigenSinn {
 
   // copying this object simply increases its ownership
   template<typename Scalar, typename Device_>
-  class TensorAdapter {
+  class TensorAdaptor {
 
   public:
 
-    explicit TensorAdapter()
+    explicit TensorAdaptor()
       : device(dispatcher()) {}
 
-    explicit TensorAdapter(const std::vector<Index>& dims, Scalar* _data = nullptr)
-      : TensorAdapter() {
+    explicit TensorAdaptor(const std::vector<Index>& dims, Scalar* _data = nullptr)
+      : TensorAdaptor() {
 
       set_dimensions(dims);
       // cannot have other
@@ -30,29 +30,29 @@ namespace EigenSinn {
       }
     }
 
-    explicit TensorAdapter(const TensorAdapter<Scalar, Device_>& t)
-      : TensorAdapter() {
+    explicit TensorAdaptor(const TensorAdaptor<Scalar, Device_>& t)
+      : TensorAdaptor() {
 
       data_ = t.data_;
       dimensions = t.dimensions;
       total_size = t.total_size;
     }
 
-    explicit TensorAdapter(const TensorAdapter<Scalar, Device_>&& t)
-      : TensorAdapter() {
+    explicit TensorAdaptor(const TensorAdaptor<Scalar, Device_>&& t)
+      : TensorAdaptor() {
 
       data_ = t.data_;
       dimensions = t.dimensions;
       total_size = t.total_size;
     }
 
-    ~TensorAdapter() {
+    ~TensorAdaptor() {
       if (data_ != nullptr) {
         device.deallocate(data_);
       }
     }
 
-    inline TensorAdapter& operator+=(TensorAdapter& t) {
+    inline TensorAdaptor& operator+=(TensorAdaptor& t) {
       assert(total_size == t.total_size);
 
 #ifdef __INTELLISENSE__
@@ -82,9 +82,9 @@ namespace EigenSinn {
       return *this;
     }
 
-  friend inline TensorAdapter operator+(TensorAdapter& left, TensorAdapter& right) {
+  friend inline TensorAdaptor operator+(TensorAdaptor& left, TensorAdaptor& right) {
 
-    TensorAdapter acc(left.get_dims());
+    TensorAdaptor acc(left.get_dims());
     acc.deep_copy(left);
 
     acc += right;
@@ -108,13 +108,13 @@ namespace EigenSinn {
     setConstant(0);
   }
 
-  inline static std::shared_ptr<TensorAdapter<Scalar, Device_>> empty_tensor() 
-    { return std::shared_ptr<TensorAdapter<Scalar, Device_>>(new TensorAdapter<Scalar, Device_>); }
+  inline static std::shared_ptr<TensorAdaptor<Scalar, Device_>> empty_tensor() 
+    { return std::shared_ptr<TensorAdaptor<Scalar, Device_>>(new TensorAdaptor<Scalar, Device_>); }
 
 private:
 
   // should be used very rarely. This actually copies the data
-  inline void deep_copy(TensorAdapter& t) {
+  inline void deep_copy(TensorAdaptor& t) {
     assert(total_size == t.total_size);
     assert(data_ != nullptr);
 

@@ -23,7 +23,7 @@ namespace EigenSinn {
       is_cudnn = Rank > 2 && Layout == RowMajor;
     }
 
-    void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer_any) override {
+    void forward(PtrTensorAdaptor<Scalar, Device_>& prev_layer_any) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> prev_layer(prev_layer_any);
 
@@ -55,7 +55,7 @@ namespace EigenSinn {
     }
 
 
-    void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
+    void backward(PtrTensorAdaptor<Scalar, Device_>& prev_layer_any, PtrTensorAdaptor<Scalar, Device_> next_layer_grad_any) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> next_layer_grad(next_layer_grad_any);
 
@@ -69,11 +69,11 @@ namespace EigenSinn {
       layer_grad.view() = *next_layer_grad * (*ones - layer_output->pow(2.));
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_output() override {
+    PtrTensorAdaptor<Scalar, Device_> get_output() override {
       return layer_output.raw();
     };
 
-    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() override {
+    PtrTensorAdaptor<Scalar, Device_> get_loss_by_input_derivative() override {
       return layer_grad.raw();
     };
 

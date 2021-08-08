@@ -49,12 +49,12 @@ namespace EigenSinn {
 
     // smart pointers to data
     typedef std::shared_ptr<OptimizerBase<Scalar, Device_, RowMajor>> PtrOptimizer;
-    typedef PtrTensorAdapter<Scalar, Device_> PtrTensor;
-    typedef PtrTensorAdapter<Actual, Device_> PtrTensorActual;
-    typedef std::vector<PtrTensorAdapter<Scalar, Device_>> TensorVector;
+    typedef PtrTensorAdaptor<Scalar, Device_> PtrTensor;
+    typedef PtrTensorAdaptor<Actual, Device_> PtrTensorActual;
+    typedef std::vector<PtrTensorAdaptor<Scalar, Device_>> TensorVector;
     typedef std::shared_ptr<Loss> PtrLoss;
 
-    typedef std::unordered_map<std::string, PtrTensorAdapter<Scalar, Device_>> LayerTensorMap;
+    typedef std::unordered_map<std::string, PtrTensorAdaptor<Scalar, Device_>> LayerTensorMap;
 
 
     NetworkBase() {

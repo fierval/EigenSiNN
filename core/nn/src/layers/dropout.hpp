@@ -38,7 +38,7 @@ namespace EigenSinn {
       prob_tensor.setConstant(prob);
     }
 
-    void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer) override {
+    void forward(PtrTensorAdaptor<Scalar, Device_>& prev_layer) override {
       
       if (!is_training) { return; }
 
@@ -60,7 +60,7 @@ namespace EigenSinn {
     }
 
     // for derivations
-    void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
+    void backward(PtrTensorAdaptor<Scalar, Device_>& prev_layer_any, PtrTensorAdaptor<Scalar, Device_> next_layer_grad_any) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> next_layer_grad(next_layer_grad_any);
 
@@ -69,11 +69,11 @@ namespace EigenSinn {
       layer_gradient.view() = *mask * *next_layer_grad;
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_output() override {
+    PtrTensorAdaptor<Scalar, Device_> get_output() override {
       return layer_output.raw();
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
+    PtrTensorAdaptor<Scalar, Device_> get_loss_by_input_derivative() {
       return layer_gradient.raw();
     }
 

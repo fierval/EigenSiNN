@@ -16,7 +16,7 @@ enum class Optimizers {
 namespace EigenSinn {
 
   template<typename Scalar, typename Device_>
-  using DeviceWeightBiasTuple = std::tuple<PtrTensorAdapter<Scalar, Device_>, PtrTensorAdapter<Scalar, Device_>>;
+  using DeviceWeightBiasTuple = std::tuple<PtrTensorAdaptor<Scalar, Device_>, PtrTensorAdaptor<Scalar, Device_>>;
 
   template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class OptimizerBase {

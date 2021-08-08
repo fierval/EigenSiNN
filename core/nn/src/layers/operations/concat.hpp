@@ -14,41 +14,31 @@ namespace EigenSinn {
 
   public:
 
-    typedef std::unordered_map<std::string, PtrTensorAdapter<Scalar, Device_>> LayerTensorAdapterMap;
+    typedef std::unordered_map<std::string, PtrTensorAdaptor<Scalar, Device_>> LayerTensorAdaptorMap;
+    typedef std::vector<PtrTensorAdaptor<Scalar, Device_>> TensorAdaptorVector;
+    typedef std::vector<std::string> StringVector;
 
-    Concat(int _axis) 
-      : LayerBase<Scalar, Device_>(OnnxOpNames::concat_op) 
+    Concat(int _axis)
+      : LayerBase<Scalar, Device_>(OnnxOpNames::concat_op)
       , axis(_axis) {
-    
-      }
 
-    void forward(LayerTensorAdapterMap& inputs) override {
+    }
 
-      assert(inputs.size() == 2);
+    void forward(LayerTensorAdaptorMap& inputs) override {
 
-      assert(inputs.size() == 2);
+      auto inp_vector = get_inputs_from_map(inputs);
+      auto inp_names = get_names_from_map(inputs);
 
-      // TODO: implement broadcasting?
-      auto it = inputs.begin();
-      PtrTensorAdapter<Scalar, Device_> input1 = it->second;
-      PtrTensorAdapter<Scalar, Device_> input2 = (it + 1)->second;
-
-      int rank = input1->get_dims().size();
+      int rank = inp_vector[0]->get_dims().size();
       switch (rank) {
       case 2:
-        DeviceTensor<Scalar, 2, Device_, Layout> o_2(input1->get_dims()), i1_2(input1), i2_2(input2);
-        o_2.view() = i1_2->concatenate(*i2_2, axis);
-        output = o_2.raw();
+        exec_forward<2>(inp_vector, inp_names);
         break;
       case 3:
-        DeviceTensor<Scalar, 3, Device_, Layout> o_3(input1->get_dims()), i1_3(input1), i2_3(input2);
-        o_3.view() = i1_3->concatenate(*i2_3, axis);
-        output = o_2.raw();
+        exec_forward<3>(inp_vector, inp_names);
         break;
       case 4:
-        DeviceTensor<Scalar, 4, Device_, Layout> o_4(input1->get_dims()), i1_4(input1), i2_4(input2);
-        o_4.view() = i1_4->concatenate(*i2_4, axis);
-        output = o_4.raw();
+        exec_forward<4>(inp_vector, inp_names);
         break;
       default:
         assert(false);
@@ -56,29 +46,22 @@ namespace EigenSinn {
       }
     }
 
-    void backward(LayerTensorAdapterMap& prev_layer, PtrTensorAdapter<Scalar, Device_>& next_layer_grad_any) override {
+    void backward(LayerTensorAdaptorMap& prev_layer, PtrTensorAdaptor<Scalar, Device_>& next_layer_grad_any) override {
 
-      auto it = prev_layer.begin();
-      PtrTensorAdapter<Scalar, Device_> input1 = it->second;
-      PtrTensorAdapter<Scalar, Device_> input2 = (it + 1)->second;
+      auto inp_vector = get_inputs_from_map(prev_layer);
+      auto inp_names = get_names_from_map(prev_layer);
 
-      std::string name1(it->first), name2((it + 1)->first);
+      int rank = inp_vector[0]->get_dims().size();
 
-      int rank = input1->get_dims().size();
       switch (rank) {
       case 2:
-        DeviceTensor<Scalar, 2, Device_, Layout> o_2(next_layer_grad_any->get_dims()), i1_2(input1->get_dims()), i2_2(input1->get_dims());
-        DSizes<Index, 2>
+        exec_backward<2>(next_layer_grad_any, names);
         break;
       case 3:
-        DeviceTensor<Scalar, 3, Device_, Layout> o_3(next_layer_grad_any->get_dims()), i1_3(input1->get_dims()), i2_3(input1->get_dims());
-        o_3.view() = i1_3->concatenate(*i2_3, axis);
-        output = o_2.raw();
+        exec_backward<3>(next_layer_grad_any, names);
         break;
       case 4:
-        DeviceTensor<Scalar, 4, Device_, Layout> o_4(next_layer_grad_any->get_dims()), i1_4(input1->get_dims()), i2_4(input1->get_dims());
-        o_4.view() = i1_4->concatenate(*i2_4, axis);
-        output = o_4.raw();
+        exec_backward<4>(next_layer_grad_any, names);
         break;
       default:
         assert(false);
@@ -95,29 +78,81 @@ namespace EigenSinn {
       }
     }
 
-    void forward(PtrTensorAdapter<Scalar, Device_>& inp) override {
+    void forward(PtrTensorAdaptor<Scalar, Device_>& inp) override {
 
       static_assert("Concat::forward with only one argument!!");
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_output() override {
+    PtrTensorAdaptor<Scalar, Device_> get_output() override {
 
       return output;
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
+    PtrTensorAdaptor<Scalar, Device_> get_loss_by_input_derivative() {
       static_assert("Concat: use get_loss_by_input_derivative with a specific layer name!");
-      return PtrTensorAdapter<Scalar, Device_>();
+      return PtrTensorAdaptor<Scalar, Device_>();
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative(std::string& layer_name) override {
+    PtrTensorAdaptor<Scalar, Device_> get_loss_by_input_derivative(std::string& layer_name) override {
       return dinput[layer_name];
     }
 
   private:
-    PtrTensorAdapter<Scalar, Device_> output;
-    LayerTensorAdapterMap dinput;
+    // Functions to do the actual work, rank and layout dependent
+    template<Index Rank, int Layout = RowMajor>
+    void exec_forward(TensorAdaptorVector& inputs, StringVector& names) {
+
+      auto in1_dims = inputs[0]->get_dims();
+      auto in2_dims = inputs[1]->get_dims();
+      auto out_dims(in1_dims.size());
+
+      // output dimensions grow around the concatenation axis
+      std::copy(in1_dims.begin(), in1_dims.end(), out_dims.begin());
+      out_dims[axis] += in2_dims[axis];
+
+      DeviceTensor<Scalar, Rank, Device_, Layout> out(out_dims), i1(inputs[0]), i2(inputs[1]);
+      // this will throw if all dimensions (except axis) aren't equal
+      out.view() = i1->concatenate(*i2, axis);
+      output = out.raw();
+
+      // store starting positions so we can correctly split on the backward step
+      if (layer_to_starts.empty()) {
+
+        std::vector<Index> sizes(rank);
+        std::fill_n(sizes.begin(), rank, 0);
+
+        layer_to_start.insert(names[0], sizes);
+        layer_to_extents.insert(names[0], in1_dims);
+
+        // the second layer starts where the first one ends
+        layer_to_start.insert(names[1], in1_dims);
+        layer_to_extents.insert(names[1], in2_dims);
+
+      }
+    }
+
+    // we don't need the in-coming tensors for this, just their dimensions 
+    // which we have saved
+    template<Index Rank, int Layout = RowMajor>
+    void exec_backward(PtrTensorAdaptor<Scalar, Device_>& next_layer_grad_any, StringVector& names) {
+
+      DeviceTensor<Scalar, Rank, Device_, Layout> out(next_layer_grad_any);
+
+      // the order of "names" vector is the order of in-coming layers in the prev_layer map
+      DeviceTensor<Scalar, Rank, Device_, layout> dinput1(layer_to_extents[names[0]]), dinput2(layer_to_extents[names[1]]);
+      dinput1.view() = out->slice(vec2dims<Rank>(layer_to_start[names[0]]), vec2dims<Rank>(layer_to_extents[names[0]]));
+      dinput2.view() = out->slice(vec2dims<Rank>(layer_to_start[names[1]]), vec2dims<Rank>(layer_to_extents[names[1]]));
+
+      dinput.clear();
+      dinput.insert(names[0], dinput1);
+      dinput.insert(names[1], dinput2);
+    }
+
+    PtrTensorAdaptor<Scalar, Device_> output;
+    LayerTensorAdaptorMap dinput;
     int axis;
+    std::unordered_map<std::string, std::vector<Index>> layer_to_starts, layer_to_extents;
+
   };
 
 }

@@ -2,13 +2,13 @@
 
 #include "device_helpers.hpp"
 #include "ops/opsbase.hpp"
-#include "tensor_adapter.hpp"
+#include "tensor_adaptor.hpp"
 #include "onnx/model.h"
 
 namespace EigenSinn
 {
   template<typename Scalar, typename Device_>
-  using PtrTensorAdapter = std::shared_ptr<TensorAdapter<Scalar, Device_>>;
+  using PtrTensorAdaptor = std::shared_ptr<TensorAdaptor<Scalar, Device_>>;
 
   template<typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class DeviceTensor {
@@ -49,7 +49,7 @@ namespace EigenSinn
     }
 
     explicit DeviceTensor(std::vector<Index>& dims)
-      : DeviceTensor(DSizes<Index, Rank>(vec2dims<Rank>(dims)) {
+      : DeviceTensor(DSizes<Index, Rank>(vec2dims<Rank>(dims))) {
 
     }
 
@@ -83,37 +83,37 @@ namespace EigenSinn
 
     DeviceTensor(const DeviceTensor& d) {
       if (!d.tensor_view) { return; }
-      create_device_tensor(d.dimensions(), d.tensor_adapter);
+      create_device_tensor(d.dimensions(), d.tensor_adaptor);
     }
 
     DeviceTensor(const DeviceTensor&& d) {
       if (!d.tensor_view) { return; }
-      tensor_adapter = std::move(d.tensor_adapter);
+      tensor_adaptor = std::move(d.tensor_adaptor);
       reset_view();
-      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), d.dimensions()));
+      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adaptor->data(), d.dimensions()));
     }
 
     DeviceTensor& operator=(const DeviceTensor& d) {
       if (this == &d) { return *this; }
 
-      create_device_tensor(d.dimensions(), d.tensor_adapter);
+      create_device_tensor(d.dimensions(), d.tensor_adaptor);
       return *this;
     }
 
     DeviceTensor& operator=(const DeviceTensor&& d) {
       if (this == &d) { return *this; }
 
-      create_device_tensor(d.dimensions(), d.tensor_adapter);
+      create_device_tensor(d.dimensions(), d.tensor_adaptor);
       return *this;
     }
 
-    explicit DeviceTensor(PtrTensorAdapter<Scalar, Device_>& adapter) {
-      tensor_adapter = adapter;
-      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), vec2dims<Rank>(adapter->get_dims())));
+    explicit DeviceTensor(PtrTensorAdaptor<Scalar, Device_>& adaptor) {
+      tensor_adaptor = adaptor;
+      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adaptor->data(), vec2dims<Rank>(adaptor->get_dims())));
     }
 
-    explicit DeviceTensor(TensorAdapter<Scalar, Device_>& adapter) 
-      : DeviceTensor(std::make_shared<TensorAdapter<Scalar, Device_>>(&adapter)) {
+    explicit DeviceTensor(TensorAdaptor<Scalar, Device_>& adaptor) 
+      : DeviceTensor(std::make_shared<TensorAdaptor<Scalar, Device_>>(&adaptor)) {
     
     }
 
@@ -141,7 +141,7 @@ namespace EigenSinn
 
     // resizing, setting values
     void resize(DSizes<Index, Rank> dims) {
-      tensor_adapter.reset();
+      tensor_adaptor.reset();
       reset_view();
       create_device_tensor(DSizes<Index, Rank>(dims), nullptr);
     }
@@ -230,9 +230,9 @@ namespace EigenSinn
 
     auto view() { return tensor_view->device(device()); }
 
-    Device_& device() const { return tensor_adapter->get_device(); }
+    Device_& device() const { return tensor_adaptor->get_device(); }
 
-    PtrTensorAdapter<Scalar, Device_> raw() { return tensor_adapter; }
+    PtrTensorAdaptor<Scalar, Device_> raw() { return tensor_adaptor; }
 
     void set_from_device(const Scalar* data, const DSizes<Index, Rank>& dims) {
       create_device_tensor(dims, nullptr);
@@ -252,7 +252,7 @@ namespace EigenSinn
     DeviceTensor clone() {
       DeviceTensor out;
 
-      out.set_from_device(tensor_adapter->data(), tensor_view->dimensions());
+      out.set_from_device(tensor_adaptor->data(), tensor_view->dimensions());
       return out;
     }
 
@@ -317,29 +317,29 @@ namespace EigenSinn
       }
     }
     void create_device_tensor() {
-      tensor_adapter = std::make_shared<TensorAdapter<Scalar, Device_>>();
+      tensor_adaptor = std::make_shared<TensorAdaptor<Scalar, Device_>>();
       reset_view();
     }
 
     void create_device_tensor(const DSizes<Index, Rank>& dims, Scalar* data) {
 
-      tensor_adapter = std::make_shared<TensorAdapter<Scalar, Device_>>(dims2vec(dims), data);
+      tensor_adaptor = std::make_shared<TensorAdaptor<Scalar, Device_>>(dims2vec(dims), data);
       reset_view();
-      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), dims));
+      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adaptor->data(), dims));
     }
 
     void create_device_tensor(const std::vector<Index>& dims, Scalar* data) {
 
-      tensor_adapter = std::make_shared<TensorAdapter<Scalar, Device_>>(dims, data);
+      tensor_adaptor = std::make_shared<TensorAdaptor<Scalar, Device_>>(dims, data);
       reset_view();
-      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), vec2dims<Rank>(dims)));
+      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adaptor->data(), vec2dims<Rank>(dims)));
     }
 
-    void create_device_tensor(const DSizes<Index, Rank>& dims, const PtrTensorAdapter<Scalar, Device_>& data) {
+    void create_device_tensor(const DSizes<Index, Rank>& dims, const PtrTensorAdaptor<Scalar, Device_>& data) {
 
-      tensor_adapter = data;
+      tensor_adaptor = data;
       reset_view();
-      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adapter->data(), dims));
+      tensor_view = OptionalTensorView<Scalar, Rank, Layout>(TensorView<Scalar, Rank, Layout>(tensor_adaptor->data(), dims));
     }
 
     // ONNX
@@ -382,7 +382,7 @@ namespace EigenSinn
     OptionalTensorView<Scalar, Rank, Layout> tensor_view;
 
     // for passing tensors around
-    std::shared_ptr<TensorAdapter<Scalar, Device_>> tensor_adapter;
+    std::shared_ptr<TensorAdaptor<Scalar, Device_>> tensor_adaptor;
 
     // name for ONNX node input/initializer
     std::string node_input_name;

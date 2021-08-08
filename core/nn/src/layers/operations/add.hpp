@@ -14,7 +14,7 @@ namespace EigenSinn {
 
   public:
 
-    typedef std::unordered_map<std::string, PtrTensorAdapter<Scalar, Device_>> LayerTensorAdapterMap;
+    typedef std::unordered_map<std::string, PtrTensorAdaptor<Scalar, Device_>> LayerTensorAdapterMap;
 
     Add() : LayerBase<Scalar, Device_>(OnnxOpNames::add_op) { }
 
@@ -24,8 +24,8 @@ namespace EigenSinn {
 
       // TODO: implement broadcasting?
       auto it = inputs.begin();
-      PtrTensorAdapter<Scalar, Device_> input1 = it->second;
-      PtrTensorAdapter<Scalar, Device_> input2 = (it + 1)->second;
+      PtrTensorAdaptor<Scalar, Device_> input1 = it->second;
+      PtrTensorAdaptor<Scalar, Device_> input2 = (it + 1)->second;
 
       int rank = input1->get_dims().size();
       switch (rank) {
@@ -50,7 +50,7 @@ namespace EigenSinn {
       }
     }
 
-    void backward(LayerTensorAdapterMap& prev_layer, PtrTensorAdapter<Scalar, Device_>& next_layer_grad_any) override {
+    void backward(LayerTensorAdapterMap& prev_layer, PtrTensorAdaptor<Scalar, Device_>& next_layer_grad_any) override {
 
       // TODO: implement backprop with broadcasting, where next_layer_grad_any should be resized based on broadcasting
 
@@ -64,27 +64,27 @@ namespace EigenSinn {
       }
     }
 
-    void forward(PtrTensorAdapter<Scalar, Device_>& inp) override {
+    void forward(PtrTensorAdaptor<Scalar, Device_>& inp) override {
 
       static_assert("Add::forward with only one argument!!");
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_output() override {
+    PtrTensorAdaptor<Scalar, Device_> get_output() override {
 
       return output;
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
+    PtrTensorAdaptor<Scalar, Device_> get_loss_by_input_derivative() {
       static_assert("Add: use get_loss_by_input_derivative with layer name");
-      return PtrTensorAdapter<Scalar, Device_>();
+      return PtrTensorAdaptor<Scalar, Device_>();
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative(std::string& layer_name) override {
+    PtrTensorAdaptor<Scalar, Device_> get_loss_by_input_derivative(std::string& layer_name) override {
       return dinput[layer_name];
     }
 
   private:
-    PtrTensorAdapter<Scalar, Device_> output;
+    PtrTensorAdaptor<Scalar, Device_> output;
     LayerTensorAdapterMap dinput;
   };
 

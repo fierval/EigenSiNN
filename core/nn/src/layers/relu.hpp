@@ -22,7 +22,7 @@ namespace EigenSinn {
       is_cudnn = false;
     }
 
-    void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer) override {
+    void forward(PtrTensorAdaptor<Scalar, Device_>& prev_layer) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> x(prev_layer);
 
@@ -48,7 +48,7 @@ namespace EigenSinn {
       mask = res.first;
     }
 
-    void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {
+    void backward(PtrTensorAdaptor<Scalar, Device_>& prev_layer, PtrTensorAdaptor<Scalar, Device_> next_layer_grad) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> y(next_layer_grad);
 #ifdef __CUDACC__
@@ -60,11 +60,11 @@ namespace EigenSinn {
       layer_grad = leaky_relu_back(y, mask);
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_output() override {
+    PtrTensorAdaptor<Scalar, Device_> get_output() override {
       return layer_output.raw();
     };
 
-    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() override {
+    PtrTensorAdaptor<Scalar, Device_> get_loss_by_input_derivative() override {
       return layer_grad.raw();
     };
 

@@ -53,7 +53,7 @@ namespace EigenSinnTest {
         // compute dL/dw, dL/db, dL/dx
         linear.backward(input.get_output(), dloss.raw());
 
-        PtrTensorAdapter<float, ThreadPoolDevice> weights_any, bias_any;
+        PtrTensorAdaptor<float, ThreadPoolDevice> weights_any, bias_any;
         sgd.step(linear);
       }
 

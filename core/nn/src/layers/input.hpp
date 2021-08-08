@@ -15,11 +15,11 @@ namespace EigenSinn {
 
     Input() : LayerBase<Scalar, Device_>(OnnxOpNames::input_op) {};
 
-    PtrTensorAdapter<Scalar, Device_> get_output() {
+    PtrTensorAdaptor<Scalar, Device_> get_output() {
       return input;
     };
 
-    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() { return nullptr; };
+    PtrTensorAdaptor<Scalar, Device_> get_loss_by_input_derivative() { return nullptr; };
 
     /// <summary>
     /// Grab data from the existing tensor
@@ -41,14 +41,14 @@ namespace EigenSinn {
       redim();
     }
 
-    void set_input(PtrTensorAdapter<Scalar, Device_>& raw_input) {
+    void set_input(PtrTensorAdaptor<Scalar, Device_>& raw_input) {
       input = raw_input;
       redim();
     }
 
     // Required overrides
-    void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer_base) override {};
-    void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad) override {};
+    void forward(PtrTensorAdaptor<Scalar, Device_>& prev_layer_base) override {};
+    void backward(PtrTensorAdaptor<Scalar, Device_>& prev_layer, PtrTensorAdaptor<Scalar, Device_> next_layer_grad) override {};
 
     std::vector<Index> get_dims() {
       if (!input) {
@@ -74,7 +74,7 @@ namespace EigenSinn {
       dims = input->get_dims();
     }
 
-    PtrTensorAdapter<Scalar, Device_> input;
+    PtrTensorAdaptor<Scalar, Device_> input;
     // for ONNX loading when we need dimensions before we know the input
     std::vector<Index> dims;
   };

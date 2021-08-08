@@ -49,7 +49,7 @@ namespace EigenSinn {
       gamma.set_from_host(_gamma);
     }
 
-    void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer_base) override {
+    void forward(PtrTensorAdaptor<Scalar, Device_>& prev_layer_base) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> prev_layer(prev_layer_base);
 
@@ -67,7 +67,7 @@ namespace EigenSinn {
 
     // see https://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html
     // for derivations
-    void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
+    void backward(PtrTensorAdaptor<Scalar, Device_>& prev_layer_any, PtrTensorAdaptor<Scalar, Device_> next_layer_grad_any) override {
 
       DeviceTensor<Scalar, Rank, Device_, Layout> prev_layer(prev_layer_any);
       DeviceTensor<Scalar, Rank, Device_, Layout> dout(next_layer_grad_any);
@@ -145,20 +145,20 @@ namespace EigenSinn {
       layer_gradient.view() = *dx1 + *dx2;
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_output() {
+    PtrTensorAdaptor<Scalar, Device_> get_output() {
 
       return layer_output.raw();
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() {
+    PtrTensorAdaptor<Scalar, Device_> get_loss_by_input_derivative() {
       return layer_gradient.raw();
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_loss_by_weights_derivative() override {
+    PtrTensorAdaptor<Scalar, Device_> get_loss_by_weights_derivative() override {
       return dgamma.raw();
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_loss_by_bias_derivative() override {
+    PtrTensorAdaptor<Scalar, Device_> get_loss_by_bias_derivative() override {
       return dbeta.raw();
     }
 
@@ -170,19 +170,19 @@ namespace EigenSinn {
       return is_training;
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_weights() override {
+    PtrTensorAdaptor<Scalar, Device_> get_weights() override {
       return gamma.raw();
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_bias() override {
+    PtrTensorAdaptor<Scalar, Device_> get_bias() override {
       return beta.raw();
     }
 
-    void set_weights(PtrTensorAdapter<Scalar, Device_>& v) override {
+    void set_weights(PtrTensorAdaptor<Scalar, Device_>& v) override {
       gamma = DeviceTensor<Scalar, 1, Device_, Layout>(v);
     }
 
-    void set_bias(PtrTensorAdapter<Scalar, Device_>& v) override {
+    void set_bias(PtrTensorAdaptor<Scalar, Device_>& v) override {
       beta = DeviceTensor<Scalar, 1, Device_, Layout>(v);
     }
 

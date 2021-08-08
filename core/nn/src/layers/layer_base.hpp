@@ -18,17 +18,17 @@ namespace EigenSinn {
 
     }
 
-    typedef std::vector<PtrTensorAdapter<Scalar, Device_>> TensorAdapterVector;
-    typedef std::unordered_map<std::string, PtrTensorAdapter<Scalar, Device_>> LayerTensorAdapterMap;
+    typedef std::vector<PtrTensorAdaptor<Scalar, Device_>> TensorAdaptorVector;
+    typedef std::unordered_map<std::string, PtrTensorAdaptor<Scalar, Device_>> LayerTensorAdaptorMap;
 
 
     virtual void init() {};
 
-    virtual void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer_base) = 0;
+    virtual void forward(PtrTensorAdaptor<Scalar, Device_>& prev_layer_base) = 0;
 
     // REVIEW: most layers have a single input, but not necessarily. Presence of the overloaded forward is legacy
     // many inputs going into one node
-    virtual void forward(LayerTensorAdapterMap& inputs) {
+    virtual void forward(LayerTensorAdaptorMap& inputs) {
       if (inputs.size() == 1) {
         forward(inputs.begin()->second);
         return;
@@ -39,10 +39,10 @@ namespace EigenSinn {
 
     };
 
-    virtual void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) = 0;
+    virtual void backward(PtrTensorAdaptor<Scalar, Device_>& prev_layer, PtrTensorAdaptor<Scalar, Device_> next_layer_grad_any) = 0;
 
     // REVIEW: see above
-    virtual void backward(LayerTensorAdapterMap& prev_layer, PtrTensorAdapter<Scalar, Device_>& next_layer_grad_any) {
+    virtual void backward(LayerTensorAdaptorMap& prev_layer, PtrTensorAdaptor<Scalar, Device_>& next_layer_grad_any) {
 
       if (prev_layer.size() == 1) {
         backward(prev_layer.begin()->second, next_layer_grad_any);
@@ -53,7 +53,7 @@ namespace EigenSinn {
       assert(false);
     }
 
-    virtual void backward(LayerTensorAdapterMap& prev_layer, TensorAdapterVector& next_layer_grad) {
+    virtual void backward(LayerTensorAdaptorMap& prev_layer, TensorAdaptorVector& next_layer_grad) {
 
       if (next_layer_grad.size() == 1) {
         backward(prev_layer, next_layer_grad[0]);
@@ -61,7 +61,7 @@ namespace EigenSinn {
       }
 
       // otherwise - add tensor adapters up!
-      PtrTensorAdapter<Scalar, Device_> acc(new TensorAdapter<Scalar, Device_>(next_layer_grad[0]->get_dims()));
+      PtrTensorAdaptor<Scalar, Device_> acc(new TensorAdaptor<Scalar, Device_>(next_layer_grad[0]->get_dims()));
       acc->setZero();
 
       for (auto& ta : next_layer_grad) {
@@ -69,23 +69,23 @@ namespace EigenSinn {
       }
     }
 
-    virtual  PtrTensorAdapter<Scalar, Device_> get_output() = 0;
+    virtual  PtrTensorAdaptor<Scalar, Device_> get_output() = 0;
     // optimization for a layer -> layer simple connection
-    virtual  PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() = 0;
+    virtual  PtrTensorAdaptor<Scalar, Device_> get_loss_by_input_derivative() = 0;
 
     // generally we'll want the derivative by a given input
-    virtual PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative(std::string& layer_name) {
+    virtual PtrTensorAdaptor<Scalar, Device_> get_loss_by_input_derivative(std::string& layer_name) {
       return empty_tensor();
     }
 
-    virtual  PtrTensorAdapter<Scalar, Device_> get_loss_by_weights_derivative() { return empty_tensor(); };
-    virtual  PtrTensorAdapter<Scalar, Device_> get_weights() { return empty_tensor(); };
+    virtual  PtrTensorAdaptor<Scalar, Device_> get_loss_by_weights_derivative() { return empty_tensor(); };
+    virtual  PtrTensorAdaptor<Scalar, Device_> get_weights() { return empty_tensor(); };
 
-    virtual  PtrTensorAdapter<Scalar, Device_> get_loss_by_bias_derivative() { return empty_tensor(); }
-    virtual  PtrTensorAdapter<Scalar, Device_> get_bias() { return empty_tensor(); }
+    virtual  PtrTensorAdaptor<Scalar, Device_> get_loss_by_bias_derivative() { return empty_tensor(); }
+    virtual  PtrTensorAdaptor<Scalar, Device_> get_bias() { return empty_tensor(); }
 
-    virtual void set_weights(PtrTensorAdapter<Scalar, Device_>&) {}
-    virtual void set_bias(PtrTensorAdapter<Scalar, Device_>&) {}
+    virtual void set_weights(PtrTensorAdaptor<Scalar, Device_>&) {}
+    virtual void set_bias(PtrTensorAdaptor<Scalar, Device_>&) {}
 
     virtual ~LayerBase() = default;
 
@@ -122,7 +122,7 @@ namespace EigenSinn {
 
     // dimensions of the weights for the optimizer
     virtual Index get_optimizer_rank() {
-      PtrTensorAdapter<Scalar, Device_> weights = get_weights();
+      PtrTensorAdaptor<Scalar, Device_> weights = get_weights();
       if (!weights) {
         return 0;
       }
@@ -132,11 +132,32 @@ namespace EigenSinn {
     // graph traversal identifies LayerBase vs OpLayerBase based on this flag
     const bool is_multi_input() { return has_multiple_inputs; }
 
-    inline static PtrTensorAdapter<Scalar, Device_> empty_tensor() {
-      return PtrTensorAdapter<Scalar, Device_>();
+    inline static PtrTensorAdaptor<Scalar, Device_> empty_tensor() {
+      return PtrTensorAdaptor<Scalar, Device_>();
     }
 
   protected:
+
+    TensorAdaptorVector get_inputs_from_map(LayerTensorAdaptorMap& inputs) {
+      assert(inputs.size() == 2);
+
+      auto it = inputs.begin();
+      PtrTensorAdaptor<Scalar, Device_> input1 = it->second;
+      PtrTensorAdaptor<Scalar, Device_> input2 = (it + 1)->second;
+
+      return std::vector{ input1, input2 };
+    }
+
+    std::vector<std::string> get_names_from_map(LayerTensorAdaptorMap& inputs) {
+      assert(inputs.size() == 2);
+
+      auto it = inputs.begin();
+     std::string input1 = it->first;
+     std::string input2 = (it + 1)->first;
+
+     return std::vector{ input1, input2 };
+    }
+
     bool is_cudnn = true, has_multiple_inputs=false;
 
     std::string op_name;

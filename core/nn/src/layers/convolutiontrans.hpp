@@ -50,7 +50,7 @@ namespace EigenSinn {
       kernel.set_from_host(_weights);
     }
 
-    void forward(PtrTensorAdapter<Scalar, Device_>& prev_layer_any) override {
+    void forward(PtrTensorAdaptor<Scalar, Device_>& prev_layer_any) override {
 
       DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any);
 
@@ -106,7 +106,7 @@ namespace EigenSinn {
 
     }
 
-    void backward(PtrTensorAdapter<Scalar, Device_>& prev_layer_any, PtrTensorAdapter<Scalar, Device_> next_layer_grad_any) override {
+    void backward(PtrTensorAdaptor<Scalar, Device_>& prev_layer_any, PtrTensorAdaptor<Scalar, Device_> next_layer_grad_any) override {
 
       DeviceTensor<Scalar, 4, Device_, Layout> prev_layer(prev_layer_any);
       DeviceTensor<Scalar, 4, Device_, Layout> next_layer_grad(next_layer_grad_any);
@@ -148,36 +148,36 @@ namespace EigenSinn {
 
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_loss_by_input_derivative() override {
+    PtrTensorAdaptor<Scalar, Device_> get_loss_by_input_derivative() override {
       return dX.raw();
     }
 
     // feed to optimizer
-    PtrTensorAdapter<Scalar, Device_> get_loss_by_weights_derivative() override {
+    PtrTensorAdaptor<Scalar, Device_> get_loss_by_weights_derivative() override {
       return dW.raw();
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_output() override {
+    PtrTensorAdaptor<Scalar, Device_> get_output() override {
       return layer_output.raw();
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_weights() override {
+    PtrTensorAdaptor<Scalar, Device_> get_weights() override {
       return kernel.raw();
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_bias() override {
+    PtrTensorAdaptor<Scalar, Device_> get_bias() override {
       return bias.raw();
     }
 
-    PtrTensorAdapter<Scalar, Device_> get_loss_by_bias_derivative() override {
+    PtrTensorAdaptor<Scalar, Device_> get_loss_by_bias_derivative() override {
       return loss_by_bias_derivative.raw();
     }
 
-    void set_weights(PtrTensorAdapter<Scalar, Device_>& v) override {
+    void set_weights(PtrTensorAdaptor<Scalar, Device_>& v) override {
       kernel = DeviceTensor<Scalar, 4, Device_, Layout>(v);
     }
 
-    void set_bias(PtrTensorAdapter<Scalar, Device_>& v) override {
+    void set_bias(PtrTensorAdaptor<Scalar, Device_>& v) override {
       bias = DeviceTensor<Scalar, 1, Device_, Layout>(v);
     }
 

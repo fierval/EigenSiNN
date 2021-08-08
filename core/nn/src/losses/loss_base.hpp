@@ -13,13 +13,13 @@ namespace EigenSinn {
 
   public:
 
-    virtual void step(PtrTensorAdapter<Scalar, Device_>& predictions_any, PtrTensorAdapter<Actual, Device_>& actual_any) = 0;
+    virtual void step(PtrTensorAdaptor<Scalar, Device_>& predictions_any, PtrTensorAdaptor<Actual, Device_>& actual_any) = 0;
 
     virtual Scalar get_output() {
       return loss;
     }
 
-    virtual PtrTensorAdapter<Scalar, Device_> get_loss_derivative_by_input() {
+    virtual PtrTensorAdaptor<Scalar, Device_> get_loss_derivative_by_input() {
       return dloss.raw();
     }
 

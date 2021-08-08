@@ -53,7 +53,7 @@ namespace EigenSinn {
   }
 
   template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
-  inline bool is_elementwise_approx_eq(const DeviceTensor<Scalar, Rank, Device_, Layout>& a, PtrTensorAdapter<Scalar, Device_>& b, float prec = 1e-5) {
+  inline bool is_elementwise_approx_eq(const DeviceTensor<Scalar, Rank, Device_, Layout>& a, PtrTensorAdaptor<Scalar, Device_>& b, float prec = 1e-5) {
 
     auto out = a.to_host();
     DeviceTensor<Scalar, Rank, Device_, Layout> tmp(b);
@@ -61,7 +61,7 @@ namespace EigenSinn {
   }
 
   template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
-  inline bool is_elementwise_approx_eq(PtrTensorAdapter<Scalar, Device_>& a, const DeviceTensor<Scalar, Rank, Device_, Layout>& b, float prec = 1e-5) {
+  inline bool is_elementwise_approx_eq(PtrTensorAdaptor<Scalar, Device_>& a, const DeviceTensor<Scalar, Rank, Device_, Layout>& b, float prec = 1e-5) {
 
     const auto out = b.to_host();
     DeviceTensor<Scalar, Rank, Device_, Layout> tmp(a);

@@ -62,7 +62,7 @@ namespace EigenSinn {
       inited = true;
     }
 
-    inline virtual void backward(const PtrTensorAdapter<Scalar, Device_>& loss_derivative) {
+    inline virtual void backward(const PtrTensorAdaptor<Scalar, Device_>& loss_derivative) {
 
       for (size_t i = network.size() - 1; i > 0; i--) {
 
@@ -107,7 +107,7 @@ namespace EigenSinn {
       optimizer();
     }
 
-    inline PtrTensorAdapter<Scalar, Device_> get_output() {
+    inline PtrTensorAdaptor<Scalar, Device_> get_output() {
       return network.rbegin()->layer.get()->get_output();
     }
 
