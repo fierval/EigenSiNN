@@ -8,7 +8,8 @@ using namespace  Eigen;
 
 namespace EigenSinn {
 
-  template <typename Scalar, Index Rank, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
+  // ditching the Rank for this op
+  template <typename Scalar, typename Device_ = ThreadPoolDevice, int Layout = RowMajor>
   class Add : public LayerBase<Scalar, Device_> {
 
   public:
@@ -23,14 +24,30 @@ namespace EigenSinn {
 
       // TODO: implement broadcasting?
       auto it = inputs.begin();
-      DeviceTensor<Scalar, Rank, Device_, Layout> input1(it->second);
-      DeviceTensor<Scalar, Rank, Device_, Layout> input2((it + 1)->second);
+      PtrTensorAdapter<Scalar, Device_> input1 = it->second;
+      PtrTensorAdapter<Scalar, Device_> input2 = (it + 1)->second;
 
-      if (output.size() == 0) {
-        output.resize(input1.dimensions());
+      int rank = input1->get_dims().size();
+      switch (rank) {
+      case 2:
+        DeviceTensor<Scalar, 2, Device_, Layout> o_2(input1->get_dims()), i1_2(input1), i2_2(input2);
+        o_2.view() = *i1_2 + *i2_2;
+        output = o_2.raw();
+        break;
+      case 3:
+        DeviceTensor<Scalar, 3, Device_, Layout> o_3(input1->get_dims()), i1_3(input1), i2_3(input2);
+        o_3.view() = *i1_3 + *i2_3;
+        output = o_2.raw();
+        break;
+      case 4:
+        DeviceTensor<Scalar, 4, Device_, Layout> o_4(input1->get_dims()), i1_4(input1), i2_4(input2);
+        o_4.view() = *i1_4 + *i2_4;
+        output = o_4.raw();
+        break;
+      default:
+        assert(false);
+        throw std::logic_error("not implemented for this rank");
       }
-
-      output.view() = *input1 + *input2;
     }
 
     void backward(LayerTensorAdapterMap& prev_layer, PtrTensorAdapter<Scalar, Device_>& next_layer_grad_any) override {
@@ -67,7 +84,7 @@ namespace EigenSinn {
     }
 
   private:
-    DeviceTensor<Scalar, Rank, Device_, Layout> output;
+    PtrTensorAdapter<Scalar, Device_> output;
     LayerTensorAdapterMap dinput;
   };
 

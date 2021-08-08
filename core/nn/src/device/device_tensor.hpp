@@ -48,6 +48,11 @@ namespace EigenSinn
 
     }
 
+    explicit DeviceTensor(std::vector<Index>& dims)
+      : DeviceTensor(DSizes<Index, Rank>(vec2dims<Rank>(dims)) {
+
+    }
+
     ///<summary>
     /// Take ownership of the pointer already on the device
     ///</summary
