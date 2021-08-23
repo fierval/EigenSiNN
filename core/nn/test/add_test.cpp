@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <layers/all.hpp>
 
-namespace namespace EigenSinnTest {
+namespace EigenSinnTest {
 
   class AddTest : public ::testing::Test {
 
