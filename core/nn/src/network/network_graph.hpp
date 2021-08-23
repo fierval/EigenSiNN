@@ -424,6 +424,12 @@ namespace EigenSinn {
       return layer_name;
     }
 
+    // for operations requiring 2 inputs (add, concat, etc)
+    std::string add(const std::string& input_name1, const std::string& input_name2, LayerBase<Scalar, Device_>* layer) {
+      add(input_name1, layer);
+      return add(input_name2, layer);
+    }
+
     Index get_optimizer_rank(vertex_t& v) {
       return graph[v].layer->get_optimizer_rank();
     }
