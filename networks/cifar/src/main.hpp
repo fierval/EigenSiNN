@@ -7,12 +7,13 @@
 #include <chrono>
 #include <vector>
 #include <string>
-#include "cifar10_network.hpp"
+#include "network/cifar10_graph.hpp"
 
 using namespace EigenSinn;
 
 template<typename Device_, int Layout = RowMajor>
-inline void TestNetwork(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Layout>, uint8_t, Layout>& dataset, Cifar10<Device_, Layout>& net, int num_classes, std::vector<cv::String>& classes) {
+inline void TestNetwork(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Layout>, uint8_t, Layout>& dataset, 
+              Cifar10<float, std::uint8_t, Device_>& net, int num_classes, std::vector<cv::String>& classes) {
 
   std::cout << "Starting test..." << std::endl;
   std::vector<int> test_len{ 20, 40, 80, 200, 1000, static_cast<int>(dataset.test_images.size()) };
@@ -72,7 +73,7 @@ inline void TestNetwork(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Lay
 }
 
 template<typename Device_, int Layout = RowMajor, bool CuDNN = true>
-inline void TestNetworkSingleBatch(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Layout>, uint8_t, Layout>& dataset, Cifar10<Device_, Layout, CuDNN>& net, int num_classes, std::vector<cv::String>& classes) {
+inline void TestNetworkSingleBatch(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Layout>, uint8_t, Layout>& dataset, Cifar10<float, std::uint8_t, Device_>& net, int num_classes, std::vector<cv::String>& classes) {
 
   std::cout << "Starting test..." << std::endl;
 

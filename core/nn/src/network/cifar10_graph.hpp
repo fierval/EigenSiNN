@@ -6,6 +6,7 @@
 
 namespace EigenSinn {
 
+  // Loss is CrossEntropyWithLogits
   template <typename Scalar, typename Actual, typename Device_, typename... Args>
   class Cifar10 : public PersistentNetworkBase<Scalar, Actual, CrossEntropyLoss<Scalar, Actual, 2, Device_>, Device_> {
 
@@ -40,6 +41,10 @@ namespace EigenSinn {
       compile(optimizer, lr, args...);
 
     }
+
+    Scalar get_loss() {
+      return name_loss.begin()->second->get_output();
+  }
 
   protected:
 

@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
   ImageContainer<RowMajor> next_images;
   LabelContainer next_labels;
 
-  auto net = Cifar10<ThreadPoolDevice, RowMajor>(DSizes<Index, 4>{(Index)batch_size, channels, side, side}, num_classes, learning_rate);
+  auto net = Cifar10<foat, std::uint8_t, ThreadPoolDevice, RowMajor>(DSizes<Index, 4>{(Index)batch_size, channels, side, side}, num_classes, learning_rate);
   net.init();
 
   auto start = std::chrono::high_resolution_clock::now();
