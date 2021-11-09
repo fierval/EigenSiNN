@@ -130,7 +130,7 @@ namespace EigenSinn {
     }
 
     // graph traversal identifies LayerBase vs OpLayerBase based on this flag
-    const bool is_multi_input() { return has_multiple_inputs; }
+    bool is_multi_input() { return has_multiple_inputs; }
 
     inline static PtrTensorAdaptor<Scalar, Device_> empty_tensor() {
       return PtrTensorAdaptor<Scalar, Device_>();

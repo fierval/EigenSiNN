@@ -2,8 +2,6 @@
 
 #include "dataset.h"
 
-#include <losses/crossentropyloss.hpp>
-#include <device/device_tensor.hpp>
 #include <chrono>
 #include <vector>
 #include <string>

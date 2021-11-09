@@ -37,7 +37,7 @@ namespace EigenSinn {
       case 3:
         DeviceTensor<Scalar, 3, Device_, Layout> o_3(input1->get_dims()), i1_3(input1), i2_3(input2);
         o_3.view() = *i1_3 + *i2_3;
-        output = o_2.raw();
+        output = o_3.raw();
         break;
       case 4:
         DeviceTensor<Scalar, 4, Device_, Layout> o_4(input1->get_dims()), i1_4(input1), i2_4(input2);

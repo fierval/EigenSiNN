@@ -19,7 +19,7 @@ namespace EigenSinn {
       initialize(predicted, actual);
 
       DeviceTensor<Scalar, Rank, Device_, Layout> predicted_actual_diff(orig_dims);
-      predicted_actual_diff.view() = *predicted - actual->cast<Scalar>();
+      predicted_actual_diff.view() = *predicted - actual->template cast<Scalar>();
 
       DeviceTensor<Scalar, 0, Device_, Layout> loss_t;
       loss_t.view() = predicted_actual_diff->pow(2).mean();

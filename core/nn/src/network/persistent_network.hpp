@@ -13,6 +13,9 @@ namespace EigenSinn {
     typedef std::unordered_map<std::string, LayerBase<Scalar, Device_>*> LayerMap;
     typedef std::unordered_map<std::string, std::string> StringMap;
     typedef std::unordered_map<std::string, StringVector> StringVectorMap;
+    
+    typedef typename boost::graph_traits<NetworkGraph>::in_edge_iterator InEdgeIter;
+    typedef typename boost::graph_traits<NetworkGraph>::vertex_descriptor vertex_t;
 
     PersistentNetworkBase() {
 
@@ -28,7 +31,7 @@ namespace EigenSinn {
       // if they don't - we have reached an output layer
       std::unordered_set<std::string> in_names;
 
-      vertex_name names = boost::get(boost::vertex_name, graph);
+      auto names = boost::get(boost::vertex_name, graph);
       StringMap layer_output;
 
       // we need to save the model based on the topological order
@@ -148,7 +151,7 @@ namespace EigenSinn {
 
       std::vector<std::string> input_names;
       InEdgeIter in, in_end;
-      vertex_name names = boost::get(boost::vertex_name, graph);
+      auto names = boost::get(boost::vertex_name, graph);
 
       for (boost::tie(in, in_end) = boost::in_edges(v, graph); in != in_end; in++) {
 
