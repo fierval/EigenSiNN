@@ -41,7 +41,7 @@ message(STATUS "OpenCV libs: ${OpenCV_LIBS}")
 
 set(APP_EXE simple_cifar)
 
-set(WITH_GPU false)
+set(WITH_GPU true)
 set(COL_MAJOR false)
 
 find_package(Boost REQUIRED COMPONENTS graph system serialization)
@@ -74,6 +74,8 @@ endif()
 if(WITH_GPU)
     set_property(TARGET ${APP_EXE} 
              PROPERTY CMAKE_CUDA_ARCHITECTURES $CMAKE_CUDA_ARCHITECTURES)
+    set_property(TARGET ${APP_EXE} 
+             PROPERTY CUDA_SEPARABLE_COMPILATION ON)
     set(COMPILE_DEFS ${COMPILE_DEFS} EIGEN_USE_GPU EIGEN_HAS_C99_MATH)
 endif()
 
