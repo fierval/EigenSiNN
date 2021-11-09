@@ -44,6 +44,7 @@ set(APP_EXE simple_cifar)
 set(WITH_GPU true)
 set(COL_MAJOR false)
 
+find_package(Boost REQUIRED COMPONENTS graph system serialization)
 # discover sources
 file(GLOB_RECURSE APP_SOURCES LIST_DIRECTORIES false "src/*.cpp")
 
@@ -77,5 +78,5 @@ if(WITH_GPU)
 endif()
 
 target_compile_definitions(${APP_EXE} PRIVATE ${COMPILE_DEFS})
-target_include_directories(${APP_EXE} PRIVATE ${OpenCV_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS} ${EIGENSINN_INCLUDE_DIR} ${CUR_INCLUDE_DIR} ${Protobuf_INCLUDE_DIRS})
-target_link_libraries(${APP_EXE} PUBLIC ${OpenCV_LIBS} ${Protobuf_LIBRARIES} cudnn)
+target_include_directories(${APP_EXE} PRIVATE ${OpenCV_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS} ${EIGENSINN_INCLUDE_DIR} ${CUR_INCLUDE_DIR} ${Protobuf_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
+target_link_libraries(${APP_EXE} PUBLIC ${OpenCV_LIBS} ${Protobuf_LIBRARIES}  ${Boost_LIBRARIES} cudnn)

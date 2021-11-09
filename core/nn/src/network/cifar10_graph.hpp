@@ -37,6 +37,8 @@ namespace EigenSinn {
       // cross-entropy loss includes the softmax non-linearity
       x = add(x, new Linear<Scalar, Device_, RowMajor>(84, num_classes));
 
+      output_layer = x;
+
       add_loss(x);
       compile(optimizer, lr, args...);
 
@@ -44,9 +46,16 @@ namespace EigenSinn {
 
     Scalar get_loss() {
       return name_loss.begin()->second->get_output();
-  }
+    }
+
+    PtrTensorAdaptor<Scalar, Device_>& get_output() {
+      auto v = vertices[output_layer];
+
+      return graph[v].layer->get_output();
+    }
 
   protected:
+    std::string output_layer;
 
     inline const std::string model_name() override {
       return std::string("cifar10");

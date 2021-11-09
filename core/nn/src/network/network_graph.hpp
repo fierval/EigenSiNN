@@ -100,7 +100,7 @@ namespace EigenSinn {
     }
 
     // forward step with the map of input names -> inputs and logit names -> labels
-    void forward(std::unordered_map<std::string, PtrTensor> tensors, std::unordered_map<std::string, PtrTensorActual> labels) {
+    void forward(std::unordered_map<std::string, PtrTensor>& tensors, std::unordered_map<std::string, PtrTensorActual>& labels) {
 
       if (tensors.empty() || labels.empty()) {
         throw std::invalid_argument("inputs and labels must be non-empty");
@@ -132,6 +132,31 @@ namespace EigenSinn {
           loss->step(graph[v].layer->get_output(), labels[layer_name]);
         }
       }
+    }
+    
+    void forward(std::unordered_map<std::string, PtrTensor>& tensors) {
+      assert(forward_order.size() > 0);
+
+      set_input(tensors);
+
+      for (auto& v : forward_order) {
+
+        LayerTensorMap inputs = collect_inputs(v);
+        auto& layer_name = graph[v].layer->get_layer_name();
+
+        // input layer. all inputs are set by the set_input call
+        if (inputs.empty()) { continue; }
+
+        graph[v].layer->forward(inputs);
+      }
+    }
+
+
+    void forward(PtrTensor& tensor) {
+
+      std::unordered_map<std::string, PtrTensor> input;
+      input.insert(std::make_pair(input_vertices[0], tensor));
+      forward(input);
     }
 
     void forward(PtrTensor& tensor, PtrTensorActual& label) {
@@ -168,7 +193,7 @@ namespace EigenSinn {
         if (prev_layers.empty()) { continue; }
 
         boost::tie(out_layer_edge, out_layer_edge_end) = boost::out_edges(v, graph);
-        
+
         std::vector<PtrTensor> derivatives;
 
         // No outputs meaning we need to attach a loss
@@ -236,9 +261,10 @@ namespace EigenSinn {
       return graph[vertices[name]].layer;
 
     }
+
+
   protected:
 
-    // single input network
     void set_input(PtrTensor& input) {
 
       assert(input_vertices.size() == 1);
@@ -247,6 +273,8 @@ namespace EigenSinn {
       inputs.insert(std::make_pair(input_vertices[0], input));
       set_input(inputs);
     }
+
+    // single input network
 
     void set_input(std::unordered_map<std::string, PtrTensor>& inputs) {
 
@@ -340,7 +368,7 @@ namespace EigenSinn {
     // add optimizers where they belong and produce forward traversal
     template<typename... Args>
     void compile(Optimizers optimizer_name, float lr, Args... args) {
-      
+
       assert(forward_order.size() == 0);
       set_optimizer(optimizer_name, lr, args...);
 
