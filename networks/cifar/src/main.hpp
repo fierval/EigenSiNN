@@ -25,8 +25,7 @@ inline void TestNetwork(cifar::CIFAR10_dataset<std::vector, Tensor<float, 3, Lay
     DeviceTensor<float, 4, Device_, Layout> batch_tensor(create_batch_tensor(dataset.test_images, 0, batch_size));
     Tensor<int, 1, Layout> label_tensor = create_1d_label_tensor<uint8_t, Layout>(dataset.test_labels).template cast<int>().slice(DSizes<Index, 1>{ 0 }, DSizes<Index, 1>{ batch_size });
 
-    net.set_input(batch_tensor);
-    net.forward();
+    net.forward(batch_tensor.raw());
 
     DeviceTensor<float, 2, Device_, Layout> d_test_output(net.get_output());
     Tensor<float, 2, Layout> test_output = d_test_output.to_host();

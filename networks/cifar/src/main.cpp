@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
   ImageContainer<RowMajor> next_images;
   LabelContainer next_labels;
 
-  auto net = Cifar10<foat, std::uint8_t, ThreadPoolDevice, RowMajor>(DSizes<Index, 4>{(Index)batch_size, channels, side, side}, num_classes, learning_rate);
+  auto net = Cifar10<float, std::uint8_t, ThreadPoolDevice>(num_classes, Optimizers::SGD, learning_rate);
   net.init();
 
   auto start = std::chrono::high_resolution_clock::now();
@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
       auto label_tensor = DeviceTensor<uint8_t, 2, ThreadPoolDevice, RowMajor>(create_2d_label_tensor<uint8_t, RowMajor>(dataset.training_labels, step - 1, batch_size, num_classes));
 
       // training step 
-      net.step(batch_tensor, label_tensor);
+      net.step(batch_tensor.raw(), label_tensor.raw());
 
       if (step % 1000 == 0) {
         stop = std::chrono::high_resolution_clock::now();
