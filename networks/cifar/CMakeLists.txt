@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20.2)
+cmake_minimum_required(VERSION 3.22)
 project(cifar LANGUAGES CXX CUDA)
 
 #set( CMAKE_TOOLCHAIN_FILE "C:/git/NN/vcpkg/scripts/buildsystems/vcpkg.cmake" )
@@ -44,7 +44,7 @@ set(APP_EXE simple_cifar)
 set(WITH_GPU true)
 set(COL_MAJOR false)
 
-find_package(Boost REQUIRED COMPONENTS graph system serialization)
+find_package(Boost REQUIRED COMPONENTS graph)
 # discover sources
 file(GLOB_RECURSE APP_SOURCES LIST_DIRECTORIES false "src/*.cpp")
 
